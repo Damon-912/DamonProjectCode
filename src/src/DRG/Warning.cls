@@ -1,5 +1,5 @@
 /// 预警服务类
-/// 提供预警规则管理、预警记录查询、预警处理等功能
+/// 提供预警规则管理、预警记录查询、预警处理等功能111
 /// 
 /// 接口Code规范: 020101xx
 Class src.DRG.Warning Extends (%RegisteredObject, %XML.Adaptor) [ Not ProcedureBlock ]
