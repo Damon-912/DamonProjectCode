@@ -1,0 +1,275 @@
+/// 盈亏分析表
+Class User.BSDRGProfitAnalysis Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = BS_DRGProfitAnalysis ]
+{
+
+Parameter %JSONREFERENCE = "ID";
+
+/// 分析期间-年
+Property Year As %Integer [ Required, SqlColumnNumber = 2, SqlFieldName = Year ];
+
+/// 分析期间-月
+Property Month As %Integer [ Required, SqlColumnNumber = 3, SqlFieldName = Month ];
+
+/// 科室代码
+Property DeptCode As %String(COLLATION = "UPPER", MAXLEN = 20) [ SqlColumnNumber = 4, SqlFieldName = DeptCode ];
+
+/// 科室名称
+Property DeptName As %String(COLLATION = "UPPER", MAXLEN = 100) [ SqlColumnNumber = 5, SqlFieldName = DeptName ];
+
+/// 医生代码
+Property DoctorCode As %String(COLLATION = "UPPER", MAXLEN = 20) [ SqlColumnNumber = 6, SqlFieldName = DoctorCode ];
+
+/// 医生名称
+Property DoctorName As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 7, SqlFieldName = DoctorName ];
+
+/// DRG编码
+Property DRGCode As %String(COLLATION = "UPPER", MAXLEN = 10) [ SqlColumnNumber = 8, SqlFieldName = DRGCode ];
+
+/// DRG名称
+Property DRGName As %String(COLLATION = "UPPER", MAXLEN = 100) [ SqlColumnNumber = 9, SqlFieldName = DRGName ];
+
+/// 病种编码(DIP)
+Property DIPCode As %String(COLLATION = "UPPER", MAXLEN = 20) [ SqlColumnNumber = 10, SqlFieldName = DIPCode ];
+
+/// 病种名称(DIP)
+Property DIPName As %String(COLLATION = "UPPER", MAXLEN = 100) [ SqlColumnNumber = 11, SqlFieldName = DIPName ];
+
+/// 病例数
+Property CaseCount As %Integer [ SqlColumnNumber = 12, SqlFieldName = CaseCount ];
+
+/// 医疗总费用
+Property TotalFee As %Decimal(SCALE = 2) [ SqlColumnNumber = 13, SqlFieldName = TotalFee ];
+
+/// 医保结算费用
+Property InsuranceFee As %Decimal(SCALE = 2) [ SqlColumnNumber = 14, SqlFieldName = InsuranceFee ];
+
+/// DRG支付标准
+Property DRGPayStandard As %Decimal(SCALE = 2) [ SqlColumnNumber = 15, SqlFieldName = DRGPayStandard ];
+
+/// 实际医保结算
+Property ActualSettleFee As %Decimal(SCALE = 2) [ SqlColumnNumber = 16, SqlFieldName = ActualSettleFee ];
+
+/// 盈亏金额 (正数盈利，负数亏损)
+Property ProfitAmount As %Decimal(SCALE = 2) [ SqlColumnNumber = 17, SqlFieldName = ProfitAmount ];
+
+/// 盈亏比例
+Property ProfitRate As %Decimal(SCALE = 4) [ SqlColumnNumber = 18, SqlFieldName = ProfitRate ];
+
+/// 低倍率病例数 (<50%)
+Property LowRateCount As %Integer [ SqlColumnNumber = 19, SqlFieldName = LowRateCount ];
+
+/// 高倍率病例数 (>150%)
+Property HighRateCount As %Integer [ SqlColumnNumber = 20, SqlFieldName = HighRateCount ];
+
+/// 正常倍率病例数
+Property NormalRateCount As %Integer [ SqlColumnNumber = 21, SqlFieldName = NormalRateCount ];
+
+/// 平均住院天数
+Property AvgHospitalDays As %Decimal(SCALE = 2) [ SqlColumnNumber = 22, SqlFieldName = AvgHospitalDays ];
+
+/// 平均费用
+Property AvgFee As %Decimal(SCALE = 2) [ SqlColumnNumber = 23, SqlFieldName = AvgFee ];
+
+/// 医疗机构代码
+Property FixmedinsCode As %String(COLLATION = "UPPER", MAXLEN = 30) [ SqlColumnNumber = 24, SqlFieldName = FixmedinsCode ];
+
+/// 医疗机构名称
+Property FixmedinsName As %String(COLLATION = "UPPER", MAXLEN = 100) [ SqlColumnNumber = 25, SqlFieldName = FixmedinsName ];
+
+/// 创建日期
+Property CreateDate As %Date [ Required, SqlColumnNumber = 26, SqlFieldName = CreateDate ];
+
+/// 创建时间
+Property CreateTime As %Time [ Required, SqlColumnNumber = 27, SqlFieldName = CreateTime ];
+
+/// 备注
+Property Remark As %String(MAXLEN = 500) [ SqlColumnNumber = 28, SqlFieldName = Remark ];
+
+/// 索引
+Index idxDeptMonth On (Year, Month, DeptCode) [ Data = DeptName ];
+Index idxDoctorMonth On (Year, Month, DoctorCode) [ Data = DoctorName ];
+Index idxDRGMonth On (Year, Month, DRGCode) [ Data = DRGName ];
+Index idxDIPMonth On (Year, Month, DIPCode) [ Data = DIPName ];
+
+Storage Default
+{
+<Data name="BSDRGProfitAnalysisDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>Year</Value>
+</Value>
+<Value name="3">
+<Value>Month</Value>
+</Value>
+<Value name="4">
+<Value>DeptCode</Value>
+</Value>
+<Value name="5">
+<Value>DeptName</Value>
+</Value>
+<Value name="6">
+<Value>DoctorCode</Value>
+</Value>
+<Value name="7">
+<Value>DoctorName</Value>
+</Value>
+<Value name="8">
+<Value>DRGCode</Value>
+</Value>
+<Value name="9">
+<Value>DRGName</Value>
+</Value>
+<Value name="10">
+<Value>DIPCode</Value>
+</Value>
+<Value name="11">
+<Value>DIPName</Value>
+</Value>
+<Value name="12">
+<Value>CaseCount</Value>
+</Value>
+<Value name="13">
+<Value>TotalFee</Value>
+</Value>
+<Value name="14">
+<Value>InsuranceFee</Value>
+</Value>
+<Value name="15">
+<Value>DRGPayStandard</Value>
+</Value>
+<Value name="16">
+<Value>ActualSettleFee</Value>
+</Value>
+<Value name="17">
+<Value>ProfitAmount</Value>
+</Value>
+<Value name="18">
+<Value>ProfitRate</Value>
+</Value>
+<Value name="19">
+<Value>LowRateCount</Value>
+</Value>
+<Value name="20">
+<Value>HighRateCount</Value>
+</Value>
+<Value name="21">
+<Value>NormalRateCount</Value>
+</Value>
+<Value name="22">
+<Value>AvgHospitalDays</Value>
+</Value>
+<Value name="23">
+<Value>AvgFee</Value>
+</Value>
+<Value name="24">
+<Value>FixmedinsCode</Value>
+</Value>
+<Value name="25">
+<Value>FixmedinsName</Value>
+</Value>
+<Value name="26">
+<Value>CreateDate</Value>
+</Value>
+<Value name="27">
+<Value>CreateTime</Value>
+</Value>
+<Value name="28">
+<Value>Remark</Value>
+</Value>
+</Data>
+<DataLocation>^User.BSDRGProfitAnalysisD</DataLocation>
+<DefaultData>BSDRGProfitAnalysisDefaultData</DefaultData>
+<IdFunction>Increment</IdFunction>
+<IndexLocation>^User.BSDRGProfitAnalysisI</IndexLocation>
+<PhysicalStorage>LC</PhysicalStorage>
+<SQLMap name="$MASTER">
+<Data name="ActualSettleFee">
+<Node>16</Node>
+</Data>
+<Data name="AvgFee">
+<Node>23</Node>
+</Data>
+<Data name="AvgHospitalDays">
+<Node>22</Node>
+</Data>
+<Data name="CaseCount">
+<Node>12</Node>
+</Data>
+<Data name="CreateDate">
+<Node>26</Node>
+</Data>
+<Data name="CreateTime">
+<Node>27</Node>
+</Data>
+<Data name="DeptCode">
+<Node>4</Node>
+</Data>
+<Data name="DeptName">
+<Node>5</Node>
+</Data>
+<Data name="DIPCode">
+<Node>10</Node>
+</Data>
+<Data name="DIPName">
+<Node>11</Node>
+</Data>
+<Data name="DoctorCode">
+<Node>6</Node>
+</Data>
+<Data name="DoctorName">
+<Node>7</Node>
+</Data>
+<Data name="DRGCode">
+<Node>8</Node>
+</Data>
+<Data name="DRGName">
+<Node>9</Node>
+</Data>
+<Data name="DRGPayStandard">
+<Node>15</Node>
+</Data>
+<Data name="FixmedinsCode">
+<Node>24</Node>
+</Data>
+<Data name="FixmedinsName">
+<Node>25</Node>
+</Data>
+<Data name="HighRateCount">
+<Node>20</Node>
+</Data>
+<Data name="InsuranceFee">
+<Node>14</Node>
+</Data>
+<Data name="LowRateCount">
+<Node>19</Node>
+</Data>
+<Data name="Month">
+<Node>3</Node>
+</Data>
+<Data name="NormalRateCount">
+<Node>21</Node>
+</Data>
+<Data name="ProfitAmount">
+<Node>17</Node>
+</Data>
+<Data name="ProfitRate">
+<Node>18</Node>
+</Data>
+<Data name="Remark">
+<Node>28</Node>
+</Data>
+<Data name="TotalFee">
+<Node>13</Node>
+</Data>
+<Data name="Year">
+<Node>2</Node>
+</Data>
+<Global>^User.BSDRGProfitAnalysisD</Global>
+<RowIdSpec>1</RowIdSpec>
+</SQLMap>
+<StreamLocation>^User.BSDRGProfitAnalysisS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+}

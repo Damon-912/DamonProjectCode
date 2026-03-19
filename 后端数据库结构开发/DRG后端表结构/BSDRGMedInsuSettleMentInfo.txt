@@ -1,0 +1,475 @@
+Class User.BSDRGMedInsuSettleMentInfo Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = BS_DRGMedInsuSettleMentInfo ]
+{
+
+Parameter %JSONREFERENCE = "ID";
+
+/// 就诊ID 
+Property MdtrtId As %String(COLLATION = "UPPER", MAXLEN = 50) [ Required, SqlColumnNumber = 2, SqlFieldName = MdtrtId ];
+
+Index MdtrtId On MdtrtId;
+
+/// 人员编号 
+Property PsnNo As %String(COLLATION = "UPPER", MAXLEN = 50) [ Required, SqlColumnNumber = 3, SqlFieldName = PsnNo ];
+
+Index PsnNo On PsnNo;
+
+/// 结算ID 
+Property SetlId As %String(COLLATION = "UPPER", MAXLEN = 50) [ Required, SqlColumnNumber = 4, SqlFieldName = SetlId ];
+
+Index SetlId On SetlId;
+
+/// 证件号码 
+Property CertNo As %String [ SqlColumnNumber = 5, SqlFieldName = CertNo ];
+
+/// 病案号 
+Property MedcasNo As %String [ SqlColumnNumber = 6, SqlFieldName = MedcasNo ];
+
+Index MedcasNo On MedcasNo;
+
+Index SettleMentIndex On (SetlId, MdtrtId, MedcasNo) [ Unique ];
+
+/// 申报时间 
+Property DclaTime As %DateTime [ SqlColumnNumber = 7, SqlFieldName = DclaTime ];
+
+/// 姓名 
+Property PsnName As %String [ SqlColumnNumber = 8, SqlFieldName = PsnName ];
+
+/// 性别 
+Property Gend As %String [ SqlColumnNumber = 9, SqlFieldName = Gend ];
+
+/// 年龄 
+Property Age As %String [ SqlColumnNumber = 10, SqlFieldName = Age ];
+
+/// 国籍 
+Property Ntly As %String [ SqlColumnNumber = 11, SqlFieldName = Ntly ];
+
+/// 职业 
+Property Prfs As %String [ SqlColumnNumber = 12, SqlFieldName = Prfs ];
+
+/// 现住址 
+Property CurrAddr As %String [ SqlColumnNumber = 13, SqlFieldName = CurrAddr ];
+
+/// 单位名称 
+Property EmpName As %String [ SqlColumnNumber = 14, SqlFieldName = EmpName ];
+
+/// 单位地址 
+Property EmpAddr As %String [ SqlColumnNumber = 15, SqlFieldName = EmpAddr ];
+
+/// 单位电话 
+Property EmpTel As %String [ SqlColumnNumber = 16, SqlFieldName = EmpTel ];
+
+/// 邮编 
+Property PosCode As %String [ SqlColumnNumber = 17, SqlFieldName = PosCode ];
+
+/// 联系人姓名 
+Property ConerName As %String [ SqlColumnNumber = 18, SqlFieldName = ConerName ];
+
+/// 与患者关系 
+Property PatnRlts As %String [ SqlColumnNumber = 19, SqlFieldName = PatnRlts ];
+
+/// 联系人地址 
+Property ConerAddr As %String [ SqlColumnNumber = 20, SqlFieldName = ConerAddr ];
+
+/// 联系人电话 
+Property ConerTel As %String [ SqlColumnNumber = 21, SqlFieldName = ConerTel ];
+
+/// 新生儿入院类型 
+Property NwbAdmType As %String [ SqlColumnNumber = 22, SqlFieldName = NwbAdmType ];
+
+/// 新生儿出生体重 
+Property NwbBirWt As %String [ SqlColumnNumber = 23, SqlFieldName = NwbBirWt ];
+
+/// 新生儿入院体重 
+Property NwbAdmWt As %String [ SqlColumnNumber = 24, SqlFieldName = NwbAdmWt ];
+
+/// 多新生儿出生体重 
+Property MulNwbBirWt As %String [ SqlColumnNumber = 25, SqlFieldName = MulNwbBirWt ];
+
+/// 多新生儿入院体重 
+Property MulNwbAdmWt As %String [ SqlColumnNumber = 26, SqlFieldName = MulNwbAdmWt ];
+
+/// 门诊慢特病诊断科别
+Property OpspDiagCaty As %String [ SqlColumnNumber = 27, SqlFieldName = OpspDiagCaty ];
+
+/// 门诊慢特病就诊日期 
+Property OpspMdtrtDate As %DateTime [ SqlColumnNumber = 28, SqlFieldName = OpspMdtrtDate ];
+
+/// 入院途径 
+Property AdmWay As %String [ SqlColumnNumber = 29, SqlFieldName = AdmWay ];
+
+/// 治疗类别 
+Property TrtType As %String [ SqlColumnNumber = 30, SqlFieldName = TrtType ];
+
+/// 入院时间 
+Property AdmTime As %DateTime [ SqlColumnNumber = 31, SqlFieldName = AdmTime ];
+
+/// 转科科别 
+Property RefldeptDept As %String [ SqlColumnNumber = 32, SqlFieldName = RefldeptDept ];
+
+/// 出院时间 
+Property DscgTime As %DateTime [ SqlColumnNumber = 33, SqlFieldName = DscgTime ];
+
+/// 出院科别 
+Property DscgCaty As %String [ SqlColumnNumber = 34, SqlFieldName = DscgCaty ];
+
+/// 门（急）诊诊断（西医诊断） 
+Property OtpWmDise As %String [ SqlColumnNumber = 35, SqlFieldName = OtpWmDise ];
+
+/// 西医疾病代码 
+Property WmDiseCode As %String [ SqlColumnNumber = 36, SqlFieldName = WmDiseCode ];
+
+/// 门（急）诊诊断（中医诊断） 
+Property OtpTcmDise As %String [ SqlColumnNumber = 37, SqlFieldName = OtpTcmDise ];
+
+/// 中医疾病代码 
+Property TcmDiseCode As %String [ SqlColumnNumber = 38, SqlFieldName = TcmDiseCode ];
+
+/// 呼吸机使用时长 
+Property VentUsedDura As %String [ SqlColumnNumber = 39, SqlFieldName = VentUsedDura ];
+
+/// 颅脑损伤患者入院前昏迷时长 
+Property PwcryBfadmComaDura As %String [ SqlColumnNumber = 40, SqlFieldName = PwcryBfadmComaDura ];
+
+/// 颅脑损伤患者入院后昏迷时长 
+Property PwcryAfadmComaDura As %String [ SqlColumnNumber = 41, SqlFieldName = PwcryAfadmComaDura ];
+
+/// 特级护理天数 
+Property SpgaUurscareDays As %String [ SqlColumnNumber = 42, SqlFieldName = SpgaUurscareDays ];
+
+/// 一级护理天数 
+Property Lv1NurscareDays As %String [ SqlColumnNumber = 43, SqlFieldName = Lv1NurscareDays ];
+
+/// 二级护理天数 
+Property ScdnurscareDays As %String [ SqlColumnNumber = 44, SqlFieldName = ScdnurscareDays ];
+
+/// 三级护理天数 
+Property Lv3NurscareDays As %String [ SqlColumnNumber = 45, SqlFieldName = Lv3NurscareDays ];
+
+/// 离院方式 
+Property DscgWay As %String [ SqlColumnNumber = 46, SqlFieldName = DscgWay ];
+
+/// 拟接收机构名称 
+Property AcpMedinsName As %String [ SqlColumnNumber = 47, SqlFieldName = AcpMedinsName ];
+
+/// 拟接收机构代码 
+Property AcpOptinsCode As %String [ SqlColumnNumber = 48, SqlFieldName = AcpOptinsCode ];
+
+/// 票据代码 
+Property BillCode As %String [ SqlColumnNumber = 49, SqlFieldName = BillCode ];
+
+/// 票据号码 
+Property BillNo As %String [ SqlColumnNumber = 50, SqlFieldName = BillNo ];
+
+/// 业务流水号 
+Property BizSn As %String [ SqlColumnNumber = 51, SqlFieldName = BizSn ];
+
+/// 出院31天内再住院计划标志 
+Property DaysRinpFlag31 As %String [ SqlColumnNumber = 52, SqlFieldName = DaysRinpFlag31 ];
+
+/// 出院31天内再住院计划目的 
+Property DaysRinpPup31 As %String [ SqlColumnNumber = 53, SqlFieldName = DaysRinpPup31 ];
+
+/// 主诊医师代码 
+Property ChfpdrCode As %String [ SqlColumnNumber = 54, SqlFieldName = ChfpdrCode ];
+
+/// 结算开始日期 
+Property SetlBegnDate As %DateTime [ SqlColumnNumber = 55, SqlFieldName = SetlBegnDate ];
+
+/// 结算结束日期 
+Property SetlEndDate As %DateTime [ SqlColumnNumber = 56, SqlFieldName = SetlEndDate ];
+
+/// 医疗机构填报部门 
+Property MedinsFillDept As %String [ SqlColumnNumber = 57, SqlFieldName = MedinsFillDept ];
+
+/// 医疗机构填报人 
+Property MedinsFillPsn As %String [ SqlColumnNumber = 58, SqlFieldName = MedinsFillPsn ];
+
+/// 责任护士代码 
+Property RespNursCode As %String [ SqlColumnNumber = 59, SqlFieldName = RespNursCode ];
+
+/// 状态分类 
+Property StasType As %String [ SqlColumnNumber = 60, SqlFieldName = StasType ];
+
+/// 医保支付方式 
+Property HiPaymtd As %String [ SqlColumnNumber = 61, SqlFieldName = HiPaymtd ];
+
+/// 基金支付信息 
+Property PayInfo As %String(MAXLEN = 99999) [ SqlColumnNumber = 62, SqlFieldName = PayInfo ];
+
+/// 收费项目信息 
+Property ItemInfo As %String(MAXLEN = 99999) [ SqlColumnNumber = 63, SqlFieldName = ItemInfo ];
+
+/// 门诊慢特病诊断信息 
+Property OpspDiseInfo As %String(MAXLEN = 99999) [ SqlColumnNumber = 64, SqlFieldName = OpspDiseInfo ];
+
+/// 住院诊断信息 
+Property DiseInfo As %String(MAXLEN = 99999) [ SqlColumnNumber = 65, SqlFieldName = DiseInfo ];
+
+/// 手术操作信息 
+Property OprnInfo As %String(MAXLEN = 99999) [ SqlColumnNumber = 66, SqlFieldName = OprnInfo ];
+
+/// 重症监护信息 
+Property ICUInfo As %String(MAXLEN = 99999) [ SqlColumnNumber = 67, SqlFieldName = ICUInfo ];
+
+/// 输血信息 
+Property BldInfo As %String(MAXLEN = 99999) [ SqlColumnNumber = 68, SqlFieldName = BldInfo ];
+
+/// HIS返回结果
+Property HISReturn As %String(MAXLEN = 99999) [ SqlColumnNumber = 69, SqlFieldName = HISReturn ];
+
+/// 数据更新日期
+Property UpdateDate As %Date [ SqlColumnNumber = 70, SqlFieldName = UpdateDate ];
+
+/// 数据更新时间
+Property UpdateTime As %DateTime [ SqlColumnNumber = 71, SqlFieldName = UpdateTime ];
+
+/// DRG分组结果
+Property DRG As %String [ SqlColumnNumber = 72, SqlFieldName = DRG ];
+
+/// HIS就诊流水号
+Property HISAdmID As %String [ SqlColumnNumber = 73, SqlFieldName = HISAdmID ];
+
+/// 医疗机构编号
+Property FixmedinsCode As %String [ SqlColumnNumber = 74, SqlFieldName = FixmedinsCode ];
+
+Storage Default
+{
+<Data name="BSDRGMedInsuSettleMentInfoDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>MdtrtId</Value>
+</Value>
+<Value name="3">
+<Value>PsnNo</Value>
+</Value>
+<Value name="4">
+<Value>SetlId</Value>
+</Value>
+<Value name="5">
+<Value>HiNo</Value>
+</Value>
+<Value name="6">
+<Value>MedcasNo</Value>
+</Value>
+<Value name="7">
+<Value>DclaTime</Value>
+</Value>
+<Value name="8">
+<Value>Ntly</Value>
+</Value>
+<Value name="9">
+<Value>Prfs</Value>
+</Value>
+<Value name="10">
+<Value>CurrAddr</Value>
+</Value>
+<Value name="11">
+<Value>EmpName</Value>
+</Value>
+<Value name="12">
+<Value>EmpAddr</Value>
+</Value>
+<Value name="13">
+<Value>EmpTel</Value>
+</Value>
+<Value name="14">
+<Value>PosCode</Value>
+</Value>
+<Value name="15">
+<Value>ConerName</Value>
+</Value>
+<Value name="16">
+<Value>PatnRlts</Value>
+</Value>
+<Value name="17">
+<Value>ConerAddr</Value>
+</Value>
+<Value name="18">
+<Value>ConerTel</Value>
+</Value>
+<Value name="19">
+<Value>NwbAdmType</Value>
+</Value>
+<Value name="20">
+<Value>NwbBirWt</Value>
+</Value>
+<Value name="21">
+<Value>NwbAdmWt</Value>
+</Value>
+<Value name="22">
+<Value>MulNwbBirWt</Value>
+</Value>
+<Value name="23">
+<Value>MulNwbAdmWt</Value>
+</Value>
+<Value name="24">
+<Value>OpspDiagCaty</Value>
+</Value>
+<Value name="25">
+<Value>OpspMdtrtDate</Value>
+</Value>
+<Value name="26">
+<Value>AdmWay</Value>
+</Value>
+<Value name="27">
+<Value>TrtType</Value>
+</Value>
+<Value name="28">
+<Value>AdmTime</Value>
+</Value>
+<Value name="29">
+<Value>RefldeptDept</Value>
+</Value>
+<Value name="30">
+<Value>DscgTime</Value>
+</Value>
+<Value name="31">
+<Value>DscgCaty</Value>
+</Value>
+<Value name="32">
+<Value>OtpWmDise</Value>
+</Value>
+<Value name="33">
+<Value>WmDiseCode</Value>
+</Value>
+<Value name="34">
+<Value>OtpTcmDise</Value>
+</Value>
+<Value name="35">
+<Value>TcmDiseCode</Value>
+</Value>
+<Value name="36">
+<Value>VentUsedDura</Value>
+</Value>
+<Value name="37">
+<Value>PwcryBfadmComaDura</Value>
+</Value>
+<Value name="38">
+<Value>PwcryAfadmComaDura</Value>
+</Value>
+<Value name="39">
+<Value>SpgaUurscareDays</Value>
+</Value>
+<Value name="40">
+<Value>Lv1NurscareDays</Value>
+</Value>
+<Value name="41">
+<Value>ScdnurscareDays</Value>
+</Value>
+<Value name="42">
+<Value>Lv3NurscareDays</Value>
+</Value>
+<Value name="43">
+<Value>DscgWay</Value>
+</Value>
+<Value name="44">
+<Value>AcpMedinsName</Value>
+</Value>
+<Value name="45">
+<Value>AcpOptinsCode</Value>
+</Value>
+<Value name="46">
+<Value>BillCode</Value>
+</Value>
+<Value name="47">
+<Value>BillNo</Value>
+</Value>
+<Value name="48">
+<Value>BizSn</Value>
+</Value>
+<Value name="49">
+<Value>DaysRinpFlag31</Value>
+</Value>
+<Value name="50">
+<Value>DaysRinpPup31</Value>
+</Value>
+<Value name="51">
+<Value>ChfpdrCode</Value>
+</Value>
+<Value name="52">
+<Value>SetlBegnDate</Value>
+</Value>
+<Value name="53">
+<Value>SetlEndDate</Value>
+</Value>
+<Value name="54">
+<Value>MedinsFillDept</Value>
+</Value>
+<Value name="55">
+<Value>MedinsFillPsn</Value>
+</Value>
+<Value name="56">
+<Value>RespNursCode</Value>
+</Value>
+<Value name="57">
+<Value>StasType</Value>
+</Value>
+<Value name="58">
+<Value>HiPaymtd</Value>
+</Value>
+<Value name="59">
+<Value>OpspDiseInfo</Value>
+</Value>
+<Value name="60">
+<Value>DiseInfo</Value>
+</Value>
+<Value name="61">
+<Value>OprnInfo</Value>
+</Value>
+<Value name="62">
+<Value>IcuInfo</Value>
+</Value>
+<Value name="63">
+<Value>BldInfo</Value>
+</Value>
+<Value name="64">
+<Value>HISReturn</Value>
+</Value>
+<Value name="65">
+<Value>UpdateTime</Value>
+</Value>
+<Value name="66">
+<Value>DRG</Value>
+</Value>
+<Value name="67">
+<Value>HISAdmID</Value>
+</Value>
+<Value name="68">
+<Value>ICUInfo</Value>
+</Value>
+<Value name="69">
+<Value>UpdateDate</Value>
+</Value>
+<Value name="70">
+<Value>ItemInfo</Value>
+</Value>
+<Value name="71">
+<Value>CertNo</Value>
+</Value>
+<Value name="72">
+<Value>PayInfo</Value>
+</Value>
+<Value name="73">
+<Value>PsnName</Value>
+</Value>
+<Value name="74">
+<Value>Gend</Value>
+</Value>
+<Value name="75">
+<Value>Age</Value>
+</Value>
+<Value name="76">
+<Value>FixmedinsCode</Value>
+</Value>
+</Data>
+<DataLocation>^BSDRGMedIns463AD</DataLocation>
+<DefaultData>BSDRGMedInsuSettleMentInfoDefaultData</DefaultData>
+<IdLocation>^BSDRGMedIns463AD</IdLocation>
+<IndexLocation>^BSDRGMedIns463AI</IndexLocation>
+<StreamLocation>^BSDRGMedIns463AS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+
+}

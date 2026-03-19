@@ -1,0 +1,304 @@
+/// 预警记录表
+Class User.BSDRGWarningRecord Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = BS_DRGWarningRecord ]
+{
+
+Parameter %JSONREFERENCE = "ID";
+
+/// 预警流水号
+Property WarningNo As %String(COLLATION = "UPPER", MAXLEN = 30) [ Required, SqlColumnNumber = 2, SqlFieldName = WarningNo ];
+
+Index WarningNo On WarningNo [ Unique ];
+
+/// 关联规则ID 指向BS_DRGWarningRule
+Property RuleDr As BSDRGWarningRule [ SqlColumnNumber = 3, SqlFieldName = Rule_Dr ];
+
+/// 规则编码
+Property RuleCode As %String(COLLATION = "UPPER", MAXLEN = 20) [ SqlColumnNumber = 4, SqlFieldName = RuleCode ];
+
+/// 规则名称
+Property RuleName As %String(COLLATION = "UPPER", MAXLEN = 100) [ SqlColumnNumber = 5, SqlFieldName = RuleName ];
+
+/// 预警类型
+Property WarningType As %String(COLLATION = "UPPER", MAXLEN = 2) [ SqlColumnNumber = 6, SqlFieldName = WarningType ];
+
+/// 预警级别 (1:提示 2:警告 3:严重)
+Property WarningLevel As %Integer [ SqlColumnNumber = 7, SqlFieldName = WarningLevel ];
+
+/// 病案ID 指向BSDRGPatientInfo
+Property MedicalRecordDr As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 8, SqlFieldName = MedicalRecord_Dr ];
+
+/// HIS就诊ID
+Property HISAdmID As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 9, SqlFieldName = HISAdmID ];
+
+/// 患者姓名
+Property PatientName As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 10, SqlFieldName = PatientName ];
+
+/// 住院科室
+Property DeptCode As %String(COLLATION = "UPPER", MAXLEN = 20) [ SqlColumnNumber = 11, SqlFieldName = DeptCode ];
+
+Property DeptName As %String(COLLATION = "UPPER", MAXLEN = 100) [ SqlColumnNumber = 12, SqlFieldName = DeptName ];
+
+/// 责任医生
+Property DoctorCode As %String(COLLATION = "UPPER", MAXLEN = 20) [ SqlColumnNumber = 13, SqlFieldName = DoctorCode ];
+
+Property DoctorName As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 14, SqlFieldName = DoctorName ];
+
+/// 分组结果DRG
+Property DRGCode As %String(COLLATION = "UPPER", MAXLEN = 10) [ SqlColumnNumber = 15, SqlFieldName = DRGCode ];
+
+Property DRGName As %String(COLLATION = "UPPER", MAXLEN = 100) [ SqlColumnNumber = 16, SqlFieldName = DRGName ];
+
+/// 医疗总费用
+Property TotalFee As %Decimal(SCALE = 2) [ SqlColumnNumber = 17, SqlFieldName = TotalFee ];
+
+/// 医保结算费用
+Property InsuranceFee As %Decimal(SCALE = 2) [ SqlColumnNumber = 18, SqlFieldName = InsuranceFee ];
+
+/// DRG支付标准
+Property DRGPayStandard As %Decimal(SCALE = 2) [ SqlColumnNumber = 19, SqlFieldName = DRGPayStandard ];
+
+/// 超出/低于标准金额
+Property DiffAmount As %Decimal(SCALE = 2) [ SqlColumnNumber = 20, SqlFieldName = DiffAmount ];
+
+/// 超出/低于标准比例
+Property DiffRate As %Decimal(SCALE = 4) [ SqlColumnNumber = 21, SqlFieldName = DiffRate ];
+
+/// 预警信息
+Property WarningMessage As %String(MAXLEN = 500) [ SqlColumnNumber = 22, SqlFieldName = WarningMessage ];
+
+/// 预警状态 (01:待处理 02:已确认 03:已忽略 04:已申诉 05:已解决)
+Property WarningStatus As %String(COLLATION = "UPPER", MAXLEN = 2) [ Required, SqlColumnNumber = 23, SqlFieldName = WarningStatus ];
+
+/// 预警日期
+Property WarningDate As %Date [ Required, SqlColumnNumber = 24, SqlFieldName = WarningDate ];
+
+/// 预警时间
+Property WarningTime As %Time [ Required, SqlColumnNumber = 25, SqlFieldName = WarningTime ];
+
+/// 处理人
+Property ProcessUserDr As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 26, SqlFieldName = ProcessUser_Dr ];
+
+/// 处理日期
+Property ProcessDate As %Date [ SqlColumnNumber = 27, SqlFieldName = ProcessDate ];
+
+/// 处理时间
+Property ProcessTime As %Time [ SqlColumnNumber = 28, SqlFieldName = ProcessTime ];
+
+/// 处理意见
+Property ProcessRemark As %String(MAXLEN = 500) [ SqlColumnNumber = 29, SqlFieldName = ProcessRemark ];
+
+/// 医疗机构代码
+Property FixmedinsCode As %String(COLLATION = "UPPER", MAXLEN = 30) [ SqlColumnNumber = 30, SqlFieldName = FixmedinsCode ];
+
+/// 医疗机构名称
+Property FixmedinsName As %String(COLLATION = "UPPER", MAXLEN = 100) [ SqlColumnNumber = 31, SqlFieldName = FixmedinsName ];
+
+/// 备注
+Property Remark As %String(MAXLEN = 500) [ SqlColumnNumber = 32, SqlFieldName = Remark ];
+
+Storage Default
+{
+<Data name="BSDRGWarningRecordDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>WarningNo</Value>
+</Value>
+<Value name="3">
+<Value>RuleDr</Value>
+</Value>
+<Value name="4">
+<Value>RuleCode</Value>
+</Value>
+<Value name="5">
+<Value>RuleName</Value>
+</Value>
+<Value name="6">
+<Value>WarningType</Value>
+</Value>
+<Value name="7">
+<Value>WarningLevel</Value>
+</Value>
+<Value name="8">
+<Value>MedicalRecordDr</Value>
+</Value>
+<Value name="9">
+<Value>HISAdmID</Value>
+</Value>
+<Value name="10">
+<Value>PatientName</Value>
+</Value>
+<Value name="11">
+<Value>DeptCode</Value>
+</Value>
+<Value name="12">
+<Value>DeptName</Value>
+</Value>
+<Value name="13">
+<Value>DoctorCode</Value>
+</Value>
+<Value name="14">
+<Value>DoctorName</Value>
+</Value>
+<Value name="15">
+<Value>DRGCode</Value>
+</Value>
+<Value name="16">
+<Value>DRGName</Value>
+</Value>
+<Value name="17">
+<Value>TotalFee</Value>
+</Value>
+<Value name="18">
+<Value>InsuranceFee</Value>
+</Value>
+<Value name="19">
+<Value>DRGPayStandard</Value>
+</Value>
+<Value name="20">
+<Value>DiffAmount</Value>
+</Value>
+<Value name="21">
+<Value>DiffRate</Value>
+</Value>
+<Value name="22">
+<Value>WarningMessage</Value>
+</Value>
+<Value name="23">
+<Value>WarningStatus</Value>
+</Value>
+<Value name="24">
+<Value>WarningDate</Value>
+</Value>
+<Value name="25">
+<Value>WarningTime</Value>
+</Value>
+<Value name="26">
+<Value>ProcessUserDr</Value>
+</Value>
+<Value name="27">
+<Value>ProcessDate</Value>
+</Value>
+<Value name="28">
+<Value>ProcessTime</Value>
+</Value>
+<Value name="29">
+<Value>ProcessRemark</Value>
+</Value>
+<Value name="30">
+<Value>FixmedinsCode</Value>
+</Value>
+<Value name="31">
+<Value>FixmedinsName</Value>
+</Value>
+<Value name="32">
+<Value>Remark</Value>
+</Value>
+</Data>
+<DataLocation>^User.BSDRGWarningRecordD</DataLocation>
+<DefaultData>BSDRGWarningRecordDefaultData</DefaultData>
+<IdFunction>Increment</IdFunction>
+<IndexLocation>^User.BSDRGWarningRecordI</IndexLocation>
+<PhysicalStorage>LC</PhysicalStorage>
+<SQLMap name="$MASTER">
+<Data name="DeptCode">
+<Node>11</Node>
+</Data>
+<Data name="DeptName">
+<Node>12</Node>
+</Data>
+<Data name="DiffAmount">
+<Node>20</Node>
+</Data>
+<Data name="DiffRate">
+<Node>21</Node>
+</Data>
+<Data name="DoctorCode">
+<Node>13</Node>
+</Data>
+<Data name="DoctorName">
+<Node>14</Node>
+</Data>
+<Data name="DRGCode">
+<Node>15</Node>
+</Data>
+<Data name="DRGName">
+<Node>16</Node>
+</Data>
+<Data name="DRGPayStandard">
+<Node>19</Node>
+</Data>
+<Data name="FixmedinsCode">
+<Node>30</Node>
+</Data>
+<Data name="FixmedinsName">
+<Node>31</Node>
+</Data>
+<Data name="HISAdmID">
+<Node>9</Node>
+</Data>
+<Data name="InsuranceFee">
+<Node>18</Node>
+</Data>
+<Data name="MedicalRecordDr">
+<Node>8</Node>
+</Data>
+<Data name="PatientName">
+<Node>10</Node>
+</Data>
+<Data name="ProcessDate">
+<Node>27</Node>
+</Data>
+<Data name="ProcessRemark">
+<Node>29</Node>
+</Data>
+<Data name="ProcessTime">
+<Node>28</Node>
+</Data>
+<Data name="ProcessUserDr">
+<Node>26</Node>
+</Data>
+<Data name="Remark">
+<Node>32</Node>
+</Data>
+<Data name="RuleCode">
+<Node>4</Node>
+</Data>
+<Data name="RuleDr">
+<Node>3</Node>
+</Data>
+<Data name="RuleName">
+<Node>5</Node>
+</Data>
+<Data name="TotalFee">
+<Node>17</Node>
+</Data>
+<Data name="WarningDate">
+<Node>24</Node>
+</Data>
+<Data name="WarningLevel">
+<Node>7</Node>
+</Data>
+<Data name="WarningMessage">
+<Node>22</Node>
+</Data>
+<Data name="WarningNo">
+<Node>2</Node>
+</Data>
+<Data name="WarningStatus">
+<Node>23</Node>
+</Data>
+<Data name="WarningTime">
+<Node>25</Node>
+</Data>
+<Data name="WarningType">
+<Node>6</Node>
+</Data>
+<Global>^User.BSDRGWarningRecordD</Global>
+<RowIdSpec>1</RowIdSpec>
+</SQLMap>
+<StreamLocation>^User.BSDRGWarningRecordS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+}

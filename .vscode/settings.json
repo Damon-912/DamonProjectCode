@@ -1,0 +1,19 @@
+{
+    "intersystems.servers": {
+        "drg-project": {
+            "webServer": {
+                "scheme": "http",
+                "host": "111.229.137.113",
+                "port": 52773
+            },
+            "username": "_system",
+                "password": "123456",
+    "namespace": "DRG"
+        }
+    },
+    "objectscript.conn": {
+        "active": true,
+        "server": "drg-project",
+        "ns": "DRG"
+    }
+}

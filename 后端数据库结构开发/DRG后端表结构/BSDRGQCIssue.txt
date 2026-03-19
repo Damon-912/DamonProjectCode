@@ -1,0 +1,364 @@
+/// 质控问题表
+Class User.BSDRGQCIssue Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = BS_DRGQCIssue ]
+{
+
+Parameter %JSONREFERENCE = "ID";
+
+/// 问题流水号
+Property IssueNo As %String(COLLATION = "UPPER", MAXLEN = 30) [ Required, SqlColumnNumber = 2, SqlFieldName = IssueNo ];
+
+Index IssueNo On IssueNo [ Unique ];
+
+/// 问题类型 (01:完整性问题 02:合理性问题 03:编码问题 04:规范性问题)
+Property IssueType As %String(COLLATION = "UPPER", MAXLEN = 2) [ Required, SqlColumnNumber = 3, SqlFieldName = IssueType ];
+
+/// 问题分类 (0101:缺主要诊断 0102:缺手术操作 0103:诊断冲突 0104:手术与诊断不匹配等)
+Property IssueCategory As %String(COLLATION = "UPPER", MAXLEN = 10) [ SqlColumnNumber = 4, SqlFieldName = IssueCategory ];
+
+/// 问题级别 (1:提示 2:警告 3:错误)
+Property IssueLevel As %Integer [ Required, SqlColumnNumber = 5, SqlFieldName = IssueLevel ];
+
+/// 问题描述
+Property IssueDesc As %String(MAXLEN = 500) [ Required, SqlColumnNumber = 6, SqlFieldName = IssueDesc ];
+
+/// 问题详情
+Property IssueDetail As %String(MAXLEN = 2000) [ SqlColumnNumber = 7, SqlFieldName = IssueDetail ];
+
+/// 病案ID
+Property MedicalRecordDr As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 8, SqlFieldName = MedicalRecord_Dr ];
+
+/// HIS就诊ID
+Property HISAdmID As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 9, SqlFieldName = HISAdmID ];
+
+/// 患者姓名
+Property PatientName As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 10, SqlFieldName = PatientName ];
+
+/// 住院科室
+Property DeptCode As %String(COLLATION = "UPPER", MAXLEN = 20) [ SqlColumnNumber = 11, SqlFieldName = DeptCode ];
+
+Property DeptName As %String(COLLATION = "UPPER", MAXLEN = 100) [ SqlColumnNumber = 12, SqlFieldName = DeptName ];
+
+/// 责任医生
+Property DoctorCode As %String(COLLATION = "UPPER", MAXLEN = 20) [ SqlColumnNumber = 13, SqlFieldName = DoctorCode ];
+
+Property DoctorName As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 14, SqlFieldName = DoctorName ];
+
+/// 分组结果DRG
+Property DRGCode As %String(COLLATION = "UPPER", MAXLEN = 10) [ SqlColumnNumber = 15, SqlFieldName = DRGCode ];
+
+/// 涉及字段
+Property FieldName As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 16, SqlFieldName = FieldName ];
+
+/// 建议修改值
+Property SuggestValue As %String(MAXLEN = 200) [ SqlColumnNumber = 17, SqlFieldName = SuggestValue ];
+
+/// 问题状态 (01:待处理 02:已确认 03:已修正 04:已忽略 05:申诉中)
+Property IssueStatus As %String(COLLATION = "UPPER", MAXLEN = 2) [ Required, SqlColumnNumber = 18, SqlFieldName = IssueStatus ];
+
+/// 发现日期
+Property FindDate As %Date [ Required, SqlColumnNumber = 19, SqlFieldName = FindDate ];
+
+/// 发现时间
+Property FindTime As %Time [ Required, SqlColumnNumber = 20, SqlFieldName = FindTime ];
+
+/// 发现人
+Property FindUserDr As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 21, SqlFieldName = FindUser_Dr ];
+
+/// 处理人
+Property ProcessUserDr As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 22, SqlFieldName = ProcessUser_Dr ];
+
+/// 处理日期
+Property ProcessDate As %Date [ SqlColumnNumber = 23, SqlFieldName = ProcessDate ];
+
+/// 处理时间
+Property ProcessTime As %Time [ SqlColumnNumber = 24, SqlFieldName = ProcessTime ];
+
+/// 处理意见
+Property ProcessRemark As %String(MAXLEN = 500) [ SqlColumnNumber = 25, SqlFieldName = ProcessRemark ];
+
+/// 医疗机构代码
+Property FixmedinsCode As %String(COLLATION = "UPPER", MAXLEN = 30) [ SqlColumnNumber = 26, SqlFieldName = FixmedinsCode ];
+
+/// 医疗机构名称
+Property FixmedinsName As %String(COLLATION = "UPPER", MAXLEN = 100) [ SqlColumnNumber = 27, SqlFieldName = FixmedinsName ];
+
+/// 备注
+Property Remark As %String(MAXLEN = 500) [ SqlColumnNumber = 28, SqlFieldName = Remark ];
+
+/// 索引
+Index idxMedicalRecord On MedicalRecordDr;
+Index idxHISAdmID On HISAdmID;
+Index idxIssueType On IssueType;
+Index idxIssueStatus On IssueStatus;
+Index idxDeptDate On (DeptCode, FindDate);
+
+Storage Default
+{
+<Data name="BSDRGQCIssueDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>IssueNo</Value>
+</Value>
+<Value name="3">
+<Value>IssueType</Value>
+</Value>
+<Value name="4">
+<Value>IssueCategory</Value>
+</Value>
+<Value name="5">
+<Value>IssueLevel</Value>
+</Value>
+<Value name="6">
+<Value>IssueDesc</Value>
+</Value>
+<Value name="7">
+<Value>IssueDetail</Value>
+</Value>
+<Value name="8">
+<Value>MedicalRecordDr</Value>
+</Value>
+<Value name="9">
+<Value>HISAdmID</Value>
+</Value>
+<Value name="10">
+<Value>PatientName</Value>
+</Value>
+<Value name="11">
+<Value>DeptCode</Value>
+</Value>
+<Value name="12">
+<Value>DeptName</Value>
+</Value>
+<Value name="13">
+<Value>DoctorCode</Value>
+</Value>
+<Value name="14">
+<Value>DoctorName</Value>
+</Value>
+<Value name="15">
+<Value>DRGCode</Value>
+</Value>
+<Value name="16">
+<Value>FieldName</Value>
+</Value>
+<Value name="17">
+<Value>SuggestValue</Value>
+</Value>
+<Value name="18">
+<Value>IssueStatus</Value>
+</Value>
+<Value name="19">
+<Value>FindDate</Value>
+</Value>
+<Value name="20">
+<Value>FindTime</Value>
+</Value>
+<Value name="21">
+<Value>FindUserDr</Value>
+</Value>
+<Value name="22">
+<Value>ProcessUserDr</Value>
+</Value>
+<Value name="23">
+<Value>ProcessDate</Value>
+</Value>
+<Value name="24">
+<Value>ProcessTime</Value>
+</Value>
+<Value name="25">
+<Value>ProcessRemark</Value>
+</Value>
+<Value name="26">
+<Value>FixmedinsCode</Value>
+</Value>
+<Value name="27">
+<Value>FixmedinsName</Value>
+</Value>
+<Value name="28">
+<Value>Remark</Value>
+</Value>
+</Data>
+<DataLocation>^User.BSDRGQCIssueD</DataLocation>
+<DefaultData>BSDRGQCIssueDefaultData</DefaultData>
+<IdFunction>Increment</IdFunction>
+<IndexLocation>^User.BSDRGQCIssueI</IndexLocation>
+<PhysicalStorage>LC</PhysicalStorage>
+<SQLMap name="$MASTER">
+<Data name="DeptCode">
+<Node>11</Node>
+</Data>
+<Data name="DeptName">
+<Node>12</Node>
+</Data>
+<Data name="DoctorCode">
+<Node>13</Node>
+</Data>
+<Data name="DoctorName">
+<Node>14</Node>
+</Data>
+<Data name="DRGCode">
+<Node>15</Node>
+</Data>
+<Data name="FieldName">
+<Node>16</Node>
+</Data>
+<Data name="FindDate">
+<Node>19</Node>
+</Data>
+<Data name="FindTime">
+<Node>20</Node>
+</Data>
+<Data name="FindUserDr">
+<Node>21</Node>
+</Data>
+<Data name="FixmedinsCode">
+<Node>26</Node>
+</Data>
+<Data name="FixmedinsName">
+<Node>27</Node>
+</Data>
+<Data name="HISAdmID">
+<Node>9</Node>
+</Data>
+<Data name="IssueCategory">
+<Node>4</Node>
+</Data>
+<Data name="IssueDesc">
+<Node>6</Node>
+</Data>
+<Data name="IssueDetail">
+<Node>7</Node>
+</Data>
+<Data name="IssueLevel">
+<Node>5</Node>
+</Data>
+<Data name="IssueNo">
+<Node>2</Node>
+</Data>
+<Data name="IssueStatus">
+<Node>18</Node>
+</Data>
+<Data name="IssueType">
+<Node>3</Node>
+</Data>
+<Data name="MedicalRecordDr">
+<Node>8</Node>
+</Data>
+<Data name="PatientName">
+<Node>10</Node>
+</Value>
+<Value name="26">
+<Value>ProcessDate</Value>
+</Value>
+<Value name="27">
+<Value>ProcessTime</Value>
+</Value>
+<Value name="28">
+<Value>ProcessRemark</Value>
+</Value>
+<Value name="29">
+<Value>FixmedinsCode</Value>
+</Value>
+<Value name="30">
+<Value>FixmedinsName</Value>
+</Value>
+<Value name="31">
+<Value>Remark</Value>
+</Value>
+</Data>
+<DataLocation>^User.BSDRGQCIssueD</DataLocation>
+<DefaultData>BSDRGQCIssueDefaultData</DefaultData>
+<IdFunction>Increment</IdFunction>
+<IndexLocation>^User.BSDRGQCIssueI</IndexLocation>
+<PhysicalStorage>LC</PhysicalStorage>
+<SQLMap name="$MASTER">
+<Data name="ActualSettleFee">
+<Node>16</Node>
+</Data>
+<Data name="AvgFee">
+<Node>23</Node>
+</Data>
+<Data name="AvgHospitalDays">
+<Node>22</Node>
+</Data>
+<Data name="CaseCount">
+<Node>12</Node>
+</Data>
+<Data name="CreateDate">
+<Node>26</Node>
+</Data>
+<Data name="CreateTime">
+<Node>27</Node>
+</Data>
+<Data name="DeptCode">
+<Node>4</Node>
+</Data>
+<Data name="DeptName">
+<Node>5</Node>
+</Data>
+<Data name="DIPCode">
+<Node>10</Node>
+</Data>
+<Data name="DIPName">
+<Node>11</Node>
+</Data>
+<Data name="DoctorCode">
+<Node>6</Node>
+</Data>
+<Data name="DoctorName">
+<Node>7</Node>
+</Data>
+<Data name="DRGCode">
+<Node>8</Node>
+</Data>
+<Data name="DRGName">
+<Node>9</Node>
+</Data>
+<Data name="DRGPayStandard">
+<Node>15</Node>
+</Data>
+<Data name="FixmedinsCode">
+<Node>24</Node>
+</Data>
+<Data name="FixmedinsName">
+<Node>25</Node>
+</Data>
+<Data name="HighRateCount">
+<Node>20</Node>
+</Data>
+<Data name="InsuranceFee">
+<Node>14</Node>
+</Data>
+<Data name="LowRateCount">
+<Node>19</Node>
+</Data>
+<Data name="Month">
+<Node>3</Node>
+</Data>
+<Data name="NormalRateCount">
+<Node>21</Node>
+</Data>
+<Data name="ProfitAmount">
+<Node>17</Node>
+</Data>
+<Data name="ProfitRate">
+<Node>18</Node>
+</Data>
+<Data name="Remark">
+<Node>28</Node>
+</Data>
+<Data name="TotalFee">
+<Node>13</Node>
+</Data>
+<Data name="Year">
+<Node>2</Node>
+</Data>
+<Global>^User.BSDRGProfitAnalysisD</Global>
+<RowIdSpec>1</RowIdSpec>
+</SQLMap>
+<StreamLocation>^User.BSDRGProfitAnalysisS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+}

@@ -1,0 +1,77 @@
+Class User.BSDRGPatientBldInfo Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = BS_DRGPatientBldInfo ]
+{
+
+Parameter %JSONREFERENCE = "ID";
+
+/// 医保就诊ID 
+Property MdtrtId As %String(COLLATION = "UPPER", MAXLEN = 50) [ Required, SqlColumnNumber = 2, SqlFieldName = MdtrtId ];
+
+Index MdtrtId On MdtrtId;
+
+/// 就医流水号 
+Property MdtrtSn As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 3, SqlFieldName = MdtrtSn ];
+
+/// 结算ID 
+Property SetlId As %String(COLLATION = "UPPER", MAXLEN = 50) [ Required, SqlColumnNumber = 4, SqlFieldName = SetlId ];
+
+Index SetlId On SetlId;
+
+/// 输血品种 
+Property BldCat As %String [ Required, SqlColumnNumber = 5, SqlFieldName = BldCat ];
+
+Index BldCat On BldCat;
+
+Index BldInfoIndex On (MdtrtId, SetlId, BldCat);
+
+/// 输血量 
+Property BldAmt As %String [ Required, SqlColumnNumber = 6, SqlFieldName = BldAmt ];
+
+/// 输血计量单位 
+Property BldUnt As %String [ Required, SqlColumnNumber = 7, SqlFieldName = BldUnt ];
+
+/// HIS就诊流水号 
+Property HISAdmID As %String [ Required, SqlColumnNumber = 8, SqlFieldName = HISAdmID ];
+
+/// 数据更新时间
+Property UpdateTime As %DateTime [ SqlColumnNumber = 9, SqlFieldName = UpdateTime ];
+
+Storage Default
+{
+<Data name="BSDRGPatientBldInfoDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>MdtrtId</Value>
+</Value>
+<Value name="3">
+<Value>MdtrtSn</Value>
+</Value>
+<Value name="4">
+<Value>SetlId</Value>
+</Value>
+<Value name="5">
+<Value>BldCat</Value>
+</Value>
+<Value name="6">
+<Value>BldAmt</Value>
+</Value>
+<Value name="7">
+<Value>BldUnt</Value>
+</Value>
+<Value name="8">
+<Value>HISAdmID</Value>
+</Value>
+<Value name="9">
+<Value>UpdateTime</Value>
+</Value>
+</Data>
+<DataLocation>^BSDRGPatientBldInfoD</DataLocation>
+<DefaultData>BSDRGPatientBldInfoDefaultData</DefaultData>
+<IdLocation>^BSDRGPatientBldInfoD</IdLocation>
+<IndexLocation>^BSDRGPatientBldInfoI</IndexLocation>
+<StreamLocation>^BSDRGPatientBldInfoS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+
+}

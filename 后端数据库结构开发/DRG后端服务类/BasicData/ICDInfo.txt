@@ -1,0 +1,608 @@
+Import SQLUSER
+
+Class src.DRG.BasicData.ICDInfo Extends (%RegisteredObject, %XML.Adaptor) [ Not ProcedureBlock ]
+{
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 查询医保ICD编码信息
+/// Table:     	 HB_DRGBasicDataSub
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug: w ##class(src.BasicData.Dictionaries).GetDictionariesDetailedList({"params":[{"status":"","desc":"","dictID":"4"}],"pagination":[{"pageSize":20,"currentPage":1}],"code":"02020005","session":[{"userID":"2","locID":1,"groupID":"1","groupDesc":"测试角色","hospID":"2","sessionID":"009kXpy1by","hospCode":"H02","language":"CN","deviceID":"WEB:test","hostName":"WEB:test","ipv4":"192.168.0.100","ipv6":"192.168.0.100","mac":"fe80::48a:d9c7:ac9"}]}).%ToJOSN()
+ClassMethod GetMedInsuICDInfo(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try{
+		if (jsonObj.%IsDefined("pagination")'=0) {
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		set params=jsonObj.params.%Get(0)		
+		set dictID=params.dictID
+		set versionNo=params.versionNo //ICD-9;ICD-10
+		set code=params.code
+		set desc=params.desc
+		set status=params.status
+		set provinceID=params.provinceID
+		set cityID=params.cityID
+		
+		//查询ICD编码类型不能为空
+		if versionNo=""
+		{
+			set resultObj.errorCode="01040015"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040015")   
+			quit			
+		}
+		//省级代码不能为空
+		if provinceID=""
+		{
+			set resultObj.errorCode="01000007"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000007")   
+			quit			
+		}
+		//市级代码不能为空
+		if cityID=""
+		{
+			set resultObj.errorCode="01000008"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000008")   
+			quit			
+		}				
+		
+		set sql=" SELECT b.ID,b.HBDictionaries_Dr as dictID,"
+		       _" b.Code,b.Descripts,b.identification,b.StopDate as stopDate, "	
+		       _" Province_Dr as provinceID,a.StartDate as startDate,"
+		       _" Province_Dr->Descripts as provinceDesc,"
+		       _" City_Dr as cityID,City_Dr->Descripts as cityDesc "	
+               _" FROM HB_DRGBasicData a, HB_DRGBasicDataSub b "
+               _" Where a.ID=b.HBDictionaries_Dr "
+               _" and a.Province_Dr= '"_provinceID_"'"
+               _" and a.City_Dr= '"_cityID_"'"
+               _" and a.InsuCode= '"_versionNo_"'"
+			
+		if dictID='""
+		{
+			set sql=sql_" and b.HBDictionaries_Dr= "_dictID
+		}
+		if code'=""
+		{
+			set sql=sql_" and b.Code like '%"_code_"%'" 
+		}				
+		if desc'=""
+		{
+			set sql=sql_" and b.Descripts like '%"_desc_"%'" 
+		}	
+		set sqlObj=##class(%SQL.Statement).%New(1)
+		set sc=sqlObj.%Prepare(sql)
+		set result=sqlObj.%Execute()
+		while result.%Next(sc)	
+		{
+			set id=result.%Get("ID")
+			set dictID=result.%Get("dictID")
+			set code=result.%Get("Code")
+			set desc=result.%Get("Descripts")
+			set identification=result.%Get("identification")
+			set startDate=result.%Get("startDate")
+			set stopDate=result.%Get("stopDate")
+			
+			set provinceID=result.%Get("provinceID")
+			set provinceDesc=result.%Get("provinceDesc")
+			set cityID=result.%Get("cityID")
+			set cityDesc=result.%Get("cityDesc")
+						
+			set dataObj={}
+			set dataObj.id=id
+			set dataObj.dictID=dictID
+			set dataObj.code=code
+			set dataObj.desc=desc
+			set dataObj.startDate=startDate
+			set dataObj.stopDate=stopDate			
+			set dataObj.provinceID=provinceID
+			set dataObj.provinceDesc=provinceDesc
+			set dataObj.cityID=cityID
+			set dataObj.cityDesc=cityDesc			
+			set dataObj.identification=identification
+			
+			if startDate'=""{
+				set startDate=$zdh(startDate,3)
+			}
+			if stopDate'=""{
+				set stopDate=$zdh(stopDate,3)
+			}			
+			
+			set iStatus=##class(src.DRG.Interface).IsRecordActive(startDate,stopDate)
+							
+			if (iStatus)
+			{
+		    	set statusDesc="有效"
+		     	set statusFlag="Y"				
+			}
+			else
+			{
+		    	set statusDesc="无效"
+		     	set statusFlag="N"				
+			}
+															
+			if status="Y"
+			{
+				continue:statusFlag="N"
+			}
+			elseif status="N"
+			{
+			    continue:statusFlag="Y"	
+			}			
+			
+			set dataObj.statusDesc=statusDesc
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count
+				
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询医保ICD编码信息出现问题:w ##class("_$ClassName()_")GetMedInsuICDInfo("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+
+	}
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 新增/修改 ICD编码映射表
+/// Table:     	 HB_DRGICDVersionMapping  
+/// Input:       
+/// Output:      
+/// Return:      
+/// Others: 
+/// Debug：w ##class(MedInsu.services.MapRelation).Update([{"ID":"","HospitalID":"66","InterfaceID":"CD02","Code":"32c47d39-da6e-11eb-b658-0050568f9c84","Chapter":"20","ChapterRange":"V01-Y98","ChapterName":"疾病和死亡的外因","SectionRange":"Y40-Y84","SectionName":"医疗和手术的并发症","CategoryCode":"","CategoryName":"","SuborderCode":"","SuborderName":"","Diagnosticcode":"","Name":"","UseTag":"null","NationalStandardCode":"null","NationalStandardName":"null","ClinicalCode":"null","ClinicalName":"null","Note":"1","ValiadFlag":"100000000000202112301749353440637874","OnlyRecordNO":"2021-12-30 17:49:35","DataCreatTime":"2021-12-30 17:49:35","DataUpdateTime":"20211230","VersionNO":"J001_20211231000001_A","VersionName":"0","Type":"Diagnose","UseFlag":"1","XH":"10"},{"ID":"","HospitalID":"66","InterfaceID":"CD02","Code":"349c37da-da6e-11eb-b658-0050568f9c84","Chapter":"3","ChapterRange":"D50-D89","ChapterName":"血液及造血器官疾病和涉及免疫机制的某些疾患","SectionRange":"D70-D77","SectionName":"其他血液和造血器官疾病","CategoryCode":"D77*","CategoryName":"分类于他处的疾病引起的血液和造血器官的其他疾患","SuborderCode":"","SuborderName":"","Diagnosticcode":"","Name":"","UseTag":"null","NationalStandardCode":"null","NationalStandardName":"null","ClinicalCode":"null","ClinicalName":"null","Note":"1","ValiadFlag":"100000000000202112301749353440639457","OnlyRecordNO":"2021-12-30 17:49:35","DataCreatTime":"2021-12-30 17:49:35","DataUpdateTime":"20211230","VersionNO":"J001_20211231000001_A","VersionName":"0","Type":"Diagnose","UseFlag":"1","XH":"11"},{"ID":"","HospitalID":"66","InterfaceID":"CD02","Code":"349c3cde-da6e-11eb-b658-0050568f9c84","Chapter":"4","ChapterRange":"E00-E90","ChapterName":"内分泌、营养和代谢疾病","SectionRange":"E70-E90","SectionName":"代谢紊乱","CategoryCode":"E90*","CategoryName":"分类于他处的疾病引起的营养和代谢疾患","SuborderCode":"","SuborderName":"","Diagnosticcode":"","Name":"","UseTag":"null","NationalStandardCode":"null","NationalStandardName":"null","ClinicalCode":"null","ClinicalName":"null","Note":"1","ValiadFlag":"100000000000202112301749353440638545","OnlyRecordNO":"2021-12-30 17:49:35","DataCreatTime":"2021-12-30 17:49:35","DataUpdateTime":"20211230","VersionNO":"J001_20211231000001_A","VersionName":"0","Type":"Diagnose","UseFlag":"1","XH":"12"},{"ID":"","HospitalID":"66","InterfaceID":"CD02","Code":"349c4253-da6e-11eb-b658-0050568f9c84","Chapter":"6","ChapterRange":"G00-G99","ChapterName":"神经系统疾病","SectionRange":"G00-G09","SectionName":"中枢神经系统炎性疾病","CategoryCode":"G01*","CategoryName":"分类于他处的细菌性疾病引起的脑膜炎","SuborderCode":"","SuborderName":"","Diagnosticcode":"","Name":"","UseTag":"null","NationalStandardCode":"null","NationalStandardName":"null","ClinicalCode":"null","ClinicalName":"null","Note":"1","ValiadFlag":"100000000000202112301749353440640057","OnlyRecordNO":"2021-12-30 17:49:35","DataCreatTime":"2021-12-30 17:49:35","DataUpdateTime":"20211230","VersionNO":"J001_20211231000001_A","VersionName":"0","Type":"Diagnose","UseFlag":"1","XH":"13"},{"ID":"","HospitalID":"66","InterfaceID":"CD02","Code":"349c425c-da6e-11eb-b658-0050568f9c84","Chapter":"6","ChapterRange":"G00-G99","ChapterName":"神经系统疾病","SectionRange":"G00-G09","SectionName":"中枢神经系统炎性疾病","CategoryCode":"G07*","CategoryName":"分类于他处的疾病引起的颅内、椎管内脓肿和肉芽肿","SuborderCode":"","SuborderName":"","Diagnosticcode":"","Name":"","UseTag":"null","NationalStandardCode":"null","NationalStandardName":"null","ClinicalCode":"null","ClinicalName":"null","Note":"1","ValiadFlag":"100000000000202112301749353440639458","OnlyRecordNO":"2021-12-30 17:49:35","DataCreatTime":"2021-12-30 17:49:35","DataUpdateTime":"20211230","VersionNO":"J001_20211231000001_A","VersionName":"0","Type":"Diagnose","UseFlag":"1","XH":"14"}]).%ToJSON()
+ClassMethod UpdateMappingInfo(postObj) As %Library.DynamicAbstractObject
+{
+	set paramsObj={}
+	set paramsObj=postObj.params.%Get(0)
+	set session=postObj.session.%Get(0)
+	set booleanSuccess = 0
+	set resultObj={}
+	set resultObj.errorCode=0
+	set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage(resultObj.errorCode)
+        
+    set PreMsg = ""        
+	set errorMsgList=""
+
+		set (UpdateUserDr,ID,ProvinceDr,CityDr,VersionNO,Code,Descripts,ICD,ICDDesc,errorMessage)=""
+		try
+		{					
+			set UpdateUserDr=session.userID
+			set VersionNo=paramsObj.versionNo			
+			set Code=paramsObj.leftInfo.code
+			set Descripts=paramsObj.leftInfo.desc				
+			set ProvinceDr=paramsObj.leftInfo.provinceID
+			set CityDr=paramsObj.leftInfo.cityID  									
+			set ICD=paramsObj.rightInfo.code
+   		    set ICDDesc=paramsObj.rightInfo.desc	
+																							
+			set ID=paramsObj.id					
+			if ID=0 set ID=""				
+					    								        	
+        	
+	    	if ProvinceDr=""
+	    	{
+				set errorMessage = PreMsg_"省代码不能为空;"
+				set errorMsgList = errorMsgList_errorMessage
+				set booleanSuccess = booleanSuccess + 1			
+			}
+	    	if CityDr=""
+	    	{
+				set errorMessage= PreMsg_"市代码不能为空;"
+				set errorMsgList = errorMsgList_errorMessage
+				set booleanSuccess = booleanSuccess + 1				
+			}				
+	    	if VersionNo=""
+	    	{
+				set errorMessage= PreMsg_"ICD版本不能为空;"
+				set errorMsgList = errorMsgList_errorMessage
+				set booleanSuccess = booleanSuccess + 1				
+			}				
+			if (Code="")||(Descripts="")
+			{
+				set errorMessage= PreMsg_"代码["_Code_"]或描述["_Descripts_"]不能为空;"
+				set errorMsgList = errorMsgList_errorMessage
+				set booleanSuccess = booleanSuccess + 1					
+			}			
+			if (ICD="")||(ICDDesc="")
+			{
+				set errorMessage= PreMsg_"ICD["_ICD_"]或ICD描述["_ICDDesc_"]不能为空;"
+				set errorMsgList = errorMsgList_errorMessage
+				set booleanSuccess = booleanSuccess + 1					
+			}		
+			
+			set dataObj={}			
+			set dataObj.Code=Code
+			set dataObj.Descripts=Descripts				
+			set dataObj.ICD=ICD
+			set dataObj.ICDDesc=ICDDesc									
+			set dataObj.CityDr=CityDr
+			set dataObj.ProvinceDr=ProvinceDr			
+			set dataObj.VersionNo=VersionNo	
+			set dataObj.UpdateUserDr =UpdateUserDr 		
+		    set dataObj.UpdateDate=$zd($h,3)
+	    	set dataObj.UpdateTime=$zt($p($h,",",2),1)																																						     		   
+						
+			set insObj={},data=[]
+			set insObj.className="User.HBDRGICDVersionMapping"					
+			do data.%Push(dataObj)
+			set insObj.data= data			
+
+			if ID=""
+			{
+				set rtn=##class(src.util.operatetable).Insert(.insObj) 
+				set errorCode=rtn.errorCode
+				set errorMessage= PreMsg_"插入结果为"_rtn.errorMessage_";" 
+				set errorMsgList = errorMsgList_errorMessage 
+				if errorCode '= 0
+				{
+					set booleanSuccess = booleanSuccess + 1
+					set errorMsgList = errorMsgList_errorMessage  
+				}
+			}
+			else
+			{
+				set rtn=##class(src.util.operatetable).Update(.insObj) 
+				set errorCode=errorCode
+				set errorMessage=PreMsg_"更新结果为"_rtn.errorMessage_";" 
+				set errorMsgList = errorMsgList_errorMessage 
+				if errorCode '= 0
+				{
+					set booleanSuccess = booleanSuccess + 1
+					set errorMsgList = errorMsgList_errorMessage  
+				}
+		    }		    
+		}
+		catch(e)
+		{
+			set status=e.AsStatus()
+	    	set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    	set errorMessage=##class(%SYSTEM.Status).GetErrorText(status,"cn")					
+		}
+
+	if booleanSuccess > 0
+	{
+		set resultObj.errorCode = "04000007"	
+		set resultObj.errorMessage = errorMsgList		
+	}
+	else
+	{
+		set resultObj.errorCode = "0"	
+		set resultObj.errorMessage = errorMsgList
+	}
+	
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 删除ICD编码映射关系信息
+/// Table:     	 HB_DRGICDVersionMapping  
+/// Input:       
+/// Output:      
+/// Return:      
+/// Others: 
+/// Debug：w ##class(MedInsu.services.MapRelation).Delete([{"ID":"","HospitalID":"","InterfaceID":"Y","Type":"Z","NO":"E","Name":"","Description":"","PinyinSearchCode":"","UseFlag":"0","updateUserID":"xys"},{"ID":"1","HospitalID":"68","InterfaceID":"Y","Type":"Y1","NO":"E1","Name":"11","Description":"11","PinyinSearchCode":"11","UseFlag":"0","updateUserID":"xys"}]).%ToJSON()
+ClassMethod DeleteMappingInfo(postObj) As %Library.DynamicAbstractObject
+{
+ new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	try{
+		set params=jsonObj.params.%Get(0)
+		set session=jsonObj.session.%Get(0)
+		set userID=session.userID
+		if params.id="" 
+		{
+			set resultObj.errorCode="05100128"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("05100128")  ///请选择一条数据
+			quit
+		}
+		set delObj={},data=[]
+		set delObj.className="User.HBDRGICDVersionMapping"
+		set delObj.updateUserID=userID
+		set dataObj={}
+		set dataObj.ID=params.id
+		do data.%Push(dataObj)
+		set delObj.data=data
+		;b ;0
+		set rtn=##class(src.util.operatetable).Delete(.delObj) ;调用公共类方法记录修改日记
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+		set resultObj.errorCode=errorCode
+		set resultObj.errorMessage=errorMessage		
+		
+	}catch(e){
+		set status=e.AsStatus()
+		set resultObj.errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set resultObj.errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorInfo="删除ICD映射关系数据出现问题:w ##class("_$ClassName()_").DeleteDRGICDVersionMapping("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 查询ICD编码映射关系信息
+/// Table:     	 HB_DRGICDVersionMapping
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug: w ##class(src.BasicData.Dictionaries).GetDictionariesList({"params":[{"status":"","insuDesc":""}],"pagination":[{"pageSize":20,"currentPage":1}],"code":"02020002","session":[{"userID":"2","locID":1,"groupID":"1","groupDesc":"测试角色","hospID":"2","sessionID":"009kXpy1by","hospCode":"H02","language":"CN","deviceID":"WEB:test","hostName":"WEB:test","ipv4":"192.168.0.100","ipv6":"192.168.0.100","mac":"fe80::48a:d9c7:ac9"}]}).%ToJSON()
+ClassMethod QueryMappingInfo(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try
+	{
+		if (jsonObj.%IsDefined("pagination")'=0) 
+		{
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		
+		set (id,code,descripts,icd,icdDesc,provinceID,cityID,versionNo)=""
+		set params=jsonObj.params.%Get(0)
+		set id=params.id
+		set code=params.code				
+		set descripts=params.descripts
+		set icd=params.icd				
+		set icdDesc=params.icdDesc	
+		set provinceID=params.provinceID		
+		set cityID=params.cityID
+		set versionNo=params.versionNo
+		
+		//如果查询传参都为空则给出默认返回国家医保中心的映射关系数据
+		set str=id_code_descripts_icd_icdDesc_provinceID_cityID_versionNo
+		if (str="")||($ZSTRIP(str, "*W")="")
+		{
+		    set provinceID="000000",cityID="000000"	
+		}
+				
+		set sql =" SELECT ID,Code,Descripts,Province_Dr as ProvinceID,"
+		        _" Province_Dr->Descripts as ProvinceDesc,City_Dr as CityID,"
+		        _" City_Dr->Descripts as CityDesc,ICD,ICDDesc,VersionNo, "
+		        _" UpdateDate,UpdateTime,UpdateUser_Dr as UpdateUserID, "
+		        _" UpdateUser_Dr->Descripts as UpdateUserDesc,Identification,Remark"
+			    _" FROM HB_DRGICDVersionMapping where 1=1"
+			    
+		if id'=""
+		{
+			set sql=sql_" and ID = "_id 
+		} 
+		if code'=""
+		{
+			set sql=sql_" and Code = '"_code_"'" 
+		}											 			    
+		if descripts'=""
+		{
+			set sql=sql_" and Descripts like '%"_descripts_"%'" 
+		} 
+		if icd'=""
+		{
+			set sql=sql_" and ICD like '%"_icd_"%'" 
+		} 
+		if icdDesc'=""
+		{
+			set sql=sql_" and ICDDesc like '%"_icdDesc_"%'" 
+		} 		
+		if provinceID'=""
+		{
+			set sql=sql_" and Province_Dr = '"_provinceID_"'" 
+		} 		
+		if cityID'=""
+		{
+			set sql=sql_" and City_Dr = '"_cityID_"'" 
+		} 	
+		if versionNo'=""
+		{
+			set sql=sql_" and VersionNo = '"_versionNo_"'" 
+		} 									
+		  	
+		set sqlObj=##class(%SQL.Statement).%New(1)
+		set sc=sqlObj.%Prepare(sql)
+		set result=sqlObj.%Execute()
+		while result.%Next(sc)	
+		{	
+			set dataObj={}
+			set dataObj.id=result.%Get("ID")
+			set dataObj.code=result.%Get("Code")
+			set dataObj.descripts=result.%Get("Descripts")	
+		    set dataObj.icd=result.%Get("ICD")		
+		    set dataObj.icdDesc=result.%Get("ICDDesc")					
+            set dataObj.provinceID=result.%Get("ProvinceID")
+		    set dataObj.provinceDesc=result.%Get("ProvinceDesc")
+		    set dataObj.cityID=result.%Get("CityID")
+		    set dataObj.cityDesc=result.%Get("CityDesc")
+		    set dataObj.versionNo=result.%Get("VersionNo")		
+		    set dataObj.updateDate=result.%Get("UpdateDate")
+		    set dataObj.updateTime=result.%Get("UpdateTime")														
+			set dataObj.updateUserDr=result.%Get("UpdateUserID")
+			set dataObj.updateUserDesc=result.%Get("UpdateUserDesc")
+			set dataObj.identification=result.%Get("Identification")
+			set dataObj.remark=result.%Get("Remark")	
+		
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count		
+	}
+	catch(e)
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询ICD编码映射关系数据出现问题:w ##class("_$ClassName()_").BS_DRGICDVersionMapping("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 查询各地方版本ICD编码信息
+/// Table:     	 BS_DRGICDInfo
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug: w ##class(src.BasicData.Dictionaries).GetDictionariesDetailedList({"params":[{"status":"","desc":"","dictID":"4"}],"pagination":[{"pageSize":20,"currentPage":1}],"code":"02020005","session":[{"userID":"2","locID":1,"groupID":"1","groupDesc":"测试角色","hospID":"2","sessionID":"009kXpy1by","hospCode":"H02","language":"CN","deviceID":"WEB:test","hostName":"WEB:test","ipv4":"192.168.0.100","ipv6":"192.168.0.100","mac":"fe80::48a:d9c7:ac9"}]}).%ToJOSN()
+ClassMethod GetICDInfo(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try{
+		if (jsonObj.%IsDefined("pagination")'=0) {
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		set params=jsonObj.params.%Get(0)		
+		set dictID=params.dictID
+		set version=params.version //ICD-9;ICD-10
+		set code=params.code
+		set desc=params.desc
+		set status=params.status
+		set provinceID=params.provinceID
+		set cityID=params.cityID
+		
+		//查询ICD编码类型不能为空
+		if version=""
+		{
+			set resultObj.errorCode="01040015"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040015")   
+			quit			
+		}
+		//省级代码不能为空
+		if provinceID=""
+		{
+			set resultObj.errorCode="01000007"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000007")   
+			quit			
+		}
+		//市级代码不能为空
+		if cityID=""
+		{
+			set resultObj.errorCode="01000008"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000008")   
+			quit			
+		}				
+		
+		set sql=" SELECT ID,Code,Desc,StopDate,Province_Dr as ProvinceID,StartDate,Version "				       
+		       _" Province_Dr->Descripts as ProvinceDesc,City_Dr as CityID,City_Dr->Descripts as CityDesc "		       
+               _" FROM BS_DRGICDInfo Where Province_Dr= '"_provinceID_"'"     
+               _" and City_Dr= '"_cityID_"' and Version= '"_version_"'"
+			
+		if code'=""
+		{
+			set sql=sql_" and Code like '%"_code_"%'" 
+		}				
+		if desc'=""
+		{
+			set sql=sql_" and Desc like '%"_desc_"%'" 
+		}	
+		set sqlObj=##class(%SQL.Statement).%New(1)
+		set sc=sqlObj.%Prepare(sql)
+		set result=sqlObj.%Execute()
+		while result.%Next(sc)	
+		{
+			set id=result.%Get("ID")		
+			set code=result.%Get("Code")
+			set desc=result.%Get("Desc")
+			set version=result.%Get("Version")
+			set startDate=result.%Get("startDate")
+			set stopDate=result.%Get("stopDate")			
+			set provinceID=result.%Get("provinceID")
+			set provinceDesc=result.%Get("provinceDesc")
+			set cityID=result.%Get("cityID")
+			set cityDesc=result.%Get("cityDesc")
+						
+			set dataObj={}
+			set dataObj.id=id	
+			set dataObj.code=code
+			set dataObj.desc=desc
+			set dataObj.startDate=startDate
+			set dataObj.stopDate=stopDate			
+			set dataObj.provinceID=provinceID
+			set dataObj.provinceDesc=provinceDesc
+			set dataObj.cityID=cityID
+			set dataObj.cityDesc=cityDesc			
+			set dataObj.version=version
+			
+			if startDate'=""{
+				set startDate=$zdh(startDate,3)
+			}
+			if stopDate'=""{
+				set stopDate=$zdh(stopDate,3)
+			}			
+			
+			set iStatus=##class(src.DRG.Interface).IsRecordActive(startDate,stopDate)
+							
+			if (iStatus)
+			{
+		    	set statusDesc="有效"
+		     	set statusFlag="Y"				
+			}
+			else
+			{
+		    	set statusDesc="无效"
+		     	set statusFlag="N"				
+			}
+															
+			if status="Y"
+			{
+				continue:statusFlag="N"
+			}
+			elseif status="N"
+			{
+			    continue:statusFlag="Y"	
+			}			
+			
+			set dataObj.statusDesc=statusDesc
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count
+				
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询ICD编码信息出现问题:w ##class("_$ClassName()_")GetMedInsuICDInfo("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+
+	}
+	quit resultObj
+}
+
+}

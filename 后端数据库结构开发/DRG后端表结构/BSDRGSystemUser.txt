@@ -1,0 +1,194 @@
+/// 系统用户表
+Class User.BSDRGSystemUser Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = BS_DRGSystemUser ]
+{
+
+Parameter %JSONREFERENCE = "ID";
+
+/// 用户账号
+Property UserCode As %String(COLLATION = "UPPER", MAXLEN = 30) [ Required, SqlColumnNumber = 2, SqlFieldName = UserCode ];
+
+Index UserCode On UserCode [ Unique ];
+
+/// 用户姓名
+Property UserName As %String(COLLATION = "UPPER", MAXLEN = 50) [ Required, SqlColumnNumber = 3, SqlFieldName = UserName ];
+
+/// 登录密码
+Property Password As %String(COLLATION = "UPPER", MAXLEN = 100) [ Required, SqlColumnNumber = 4, SqlFieldName = Password ];
+
+/// 用户类型 (01:管理员 02:科室用户 03:医生用户)
+Property UserType As %String(COLLATION = "UPPER", MAXLEN = 2) [ SqlColumnNumber = 5, SqlFieldName = UserType ];
+
+/// 关联科室 指向科室表
+Property DeptDr As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 6, SqlFieldName = Dept_Dr ];
+
+/// 科室名称
+Property DeptName As %String(COLLATION = "UPPER", MAXLEN = 100) [ SqlColumnNumber = 7, SqlFieldName = DeptName ];
+
+/// 手机号码
+Property Mobile As %String(COLLATION = "UPPER", MAXLEN = 20) [ SqlColumnNumber = 8, SqlFieldName = Mobile ];
+
+/// 电子邮箱
+Property Email As %String(COLLATION = "UPPER", MAXLEN = 100) [ SqlColumnNumber = 9, SqlFieldName = Email ];
+
+/// 是否启用
+Property IsActive As %String(DISPLAYLIST = ",Yes,No", TRUNCATE = 1, VALUELIST = ",Y,N") [ Required, SqlColumnNumber = 10, SqlFieldName = IsActive ];
+
+/// 最后登录日期
+Property LastLoginDate As %Date [ SqlColumnNumber = 11, SqlFieldName = LastLoginDate ];
+
+/// 最后登录时间
+Property LastLoginTime As %Time [ SqlColumnNumber = 12, SqlFieldName = LastLoginTime ];
+
+/// 最后登录IP
+Property LastLoginIP As %String(COLLATION = "UPPER", MAXLEN = 30) [ SqlColumnNumber = 13, SqlFieldName = LastLoginIP ];
+
+/// 排序号
+Property SeqNo As %Integer [ SqlColumnNumber = 14, SqlFieldName = SeqNo ];
+
+/// 创建日期
+Property CreateDate As %Date [ Required, SqlColumnNumber = 15, SqlFieldName = CreateDate ];
+
+/// 创建时间
+Property CreateTime As %Time [ Required, SqlColumnNumber = 16, SqlFieldName = CreateTime ];
+
+/// 创建人
+Property CreateUserDr As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 17, SqlFieldName = CreateUser_Dr ];
+
+/// 备注
+Property Remark As %String(MAXLEN = 500) [ SqlColumnNumber = 18, SqlFieldName = Remark ];
+
+/// 医疗机构代码
+Property FixmedinsCode As %String(COLLATION = "UPPER", MAXLEN = 30) [ SqlColumnNumber = 19, SqlFieldName = FixmedinsCode ];
+
+/// 索引
+Index idxDept On DeptDr;
+Index idxUserType On UserType;
+
+Storage Default
+{
+<Data name="BSDRGSystemUserDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>UserCode</Value>
+</Value>
+<Value name="3">
+<Value>UserName</Value>
+</Value>
+<Value name="4">
+<Value>Password</Value>
+</Value>
+<Value name="5">
+<Value>UserType</Value>
+</Value>
+<Value name="6">
+<Value>DeptDr</Value>
+</Value>
+<Value name="7">
+<Value>DeptName</Value>
+</Value>
+<Value name="8">
+<Value>Mobile</Value>
+</Value>
+<Value name="9">
+<Value>Email</Value>
+</Value>
+<Value name="10">
+<Value>IsActive</Value>
+</Value>
+<Value name="11">
+<Value>LastLoginDate</Value>
+</Value>
+<Value name="12">
+<Value>LastLoginTime</Value>
+</Value>
+<Value name="13">
+<Value>LastLoginIP</Value>
+</Value>
+<Value name="14">
+<Value>SeqNo</Value>
+</Value>
+<Value name="15">
+<Value>CreateDate</Value>
+</Value>
+<Value name="16">
+<Value>CreateTime</Value>
+</Value>
+<Value name="17">
+<Value>CreateUserDr</Value>
+</Value>
+<Value name="18">
+<Value>Remark</Value>
+</Value>
+<Value name="19">
+<Value>FixmedinsCode</Value>
+</Value>
+</Data>
+<DataLocation>^User.BSDRGSystemUserD</DataLocation>
+<DefaultData>BSDRGSystemUserDefaultData</DefaultData>
+<IdFunction>Increment</IdFunction>
+<IndexLocation>^User.BSDRGSystemUserI</IndexLocation>
+<PhysicalStorage>LC</PhysicalStorage>
+<SQLMap name="$MASTER">
+<Data name="CreateDate">
+<Node>15</Node>
+</Data>
+<Data name="CreateTime">
+<Node>16</Node>
+</Data>
+<Data name="CreateUserDr">
+<Node>17</Node>
+</Data>
+<Data name="DeptDr">
+<Node>6</Node>
+</Data>
+<Data name="DeptName">
+<Node>7</Node>
+</Data>
+<Data name="Email">
+<Node>9</Node>
+</Data>
+<Data name="FixmedinsCode">
+<Node>19</Node>
+</Data>
+<Data name="IsActive">
+<Node>10</Node>
+</Data>
+<Data name="LastLoginDate">
+<Node>11</Node>
+</Data>
+<Data name="LastLoginIP">
+<Node>13</Node>
+</Data>
+<Data name="LastLoginTime">
+<Node>12</Node>
+</Data>
+<Data name="Mobile">
+<Node>8</Node>
+</Data>
+<Data name="Password">
+<Node>4</Node>
+</Data>
+<Data name="Remark">
+<Node>18</Node>
+</Data>
+<Data name="SeqNo">
+<Node>14</Node>
+</Data>
+<Data name="UserCode">
+<Node>2</Node>
+</Data>
+<Data name="UserName">
+<Node>3</Node>
+</Data>
+<Data name="UserType">
+<Node>5</Node>
+</Data>
+<Global>^User.BSDRGSystemUserD</Global>
+<RowIdSpec>1</RowIdSpec>
+</SQLMap>
+<StreamLocation>^User.BSDRGSystemUserS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+}

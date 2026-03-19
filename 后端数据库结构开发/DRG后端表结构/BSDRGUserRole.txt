@@ -1,0 +1,76 @@
+/// 用户角色关联表
+Class User.BSDRGUserRole Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = BS_DRGUserRole ]
+{
+
+Parameter %JSONREFERENCE = "ID";
+
+/// 用户ID 指向BS_DRGSystemUser
+Property UserDr As User.BSDRGSystemUser [ Required, SqlColumnNumber = 2, SqlFieldName = User_Dr ];
+
+/// 角色ID 指向BS_DRGSystemRole
+Property RoleDr As User.BSDRGSystemRole [ Required, SqlColumnNumber = 3, SqlFieldName = Role_Dr ];
+
+/// 创建日期
+Property CreateDate As %Date [ Required, SqlColumnNumber = 4, SqlFieldName = CreateDate ];
+
+/// 创建时间
+Property CreateTime As %Time [ Required, SqlColumnNumber = 5, SqlFieldName = CreateTime ];
+
+/// 创建人
+Property CreateUserDr As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 6, SqlFieldName = CreateUser_Dr ];
+
+/// 索引
+Index idxUser On UserDr;
+Index idxRole On RoleDr;
+Index idxUserRole On (UserDr, RoleDr) [ Unique ];
+
+Storage Default
+{
+<Data name="BSDRGUserRoleDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>UserDr</Value>
+</Value>
+<Value name="3">
+<Value>RoleDr</Value>
+</Value>
+<Value name="4">
+<Value>CreateDate</Value>
+</Value>
+<Value name="5">
+<Value>CreateTime</Value>
+</Value>
+<Value name="6">
+<Value>CreateUserDr</Value>
+</Value>
+</Data>
+<DataLocation>^User.BSDRGUserRoleD</DataLocation>
+<DefaultData>BSDRGUserRoleDefaultData</DefaultData>
+<IdFunction>Increment</IdFunction>
+<IndexLocation>^User.BSDRGUserRoleI</IndexLocation>
+<PhysicalStorage>LC</PhysicalStorage>
+<SQLMap name="$MASTER">
+<Data name="CreateDate">
+<Node>4</Node>
+</Data>
+<Data name="CreateTime">
+<Node>5</Node>
+</Data>
+<Data name="CreateUserDr">
+<Node>6</Node>
+</Data>
+<Data name="RoleDr">
+<Node>3</Node>
+</Data>
+<Data name="UserDr">
+<Node>2</Node>
+</Data>
+<Global>^User.BSDRGUserRoleD</Global>
+<RowIdSpec>1</RowIdSpec>
+</SQLMap>
+<StreamLocation>^User.BSDRGUserRoleS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+}

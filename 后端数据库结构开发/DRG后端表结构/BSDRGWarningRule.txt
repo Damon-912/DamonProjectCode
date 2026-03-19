@@ -1,0 +1,199 @@
+/// 预警规则表
+Class User.BSDRGWarningRule Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = BS_DRGWarningRule ]
+{
+
+Parameter %JSONREFERENCE = "ID";
+
+/// 规则编码
+Property RuleCode As %String(COLLATION = "UPPER", MAXLEN = 20) [ Required, SqlColumnNumber = 2, SqlFieldName = RuleCode ];
+
+Index RuleCode On RuleCode [ Unique ];
+
+/// 规则名称
+Property RuleName As %String(COLLATION = "UPPER", MAXLEN = 100) [ Required, SqlColumnNumber = 3, SqlFieldName = RuleName ];
+
+/// 规则描述
+Property RuleDesc As %String(MAXLEN = 500) [ SqlColumnNumber = 4, SqlFieldName = RuleDesc ];
+
+/// 规则类型 (01:费用超支 02:低倍率 03:高倍率 04:编码异常 05:分解住院)
+Property RuleType As %String(COLLATION = "UPPER", MAXLEN = 2) [ Required, SqlColumnNumber = 5, SqlFieldName = RuleType ];
+
+/// 阈值类型 (01:固定值 02:百分比 03:动态计算)
+Property ThresholdType As %String(COLLATION = "UPPER", MAXLEN = 2) [ SqlColumnNumber = 6, SqlFieldName = ThresholdType ];
+
+/// 阈值
+Property ThresholdValue As %Decimal(SCALE = 2) [ SqlColumnNumber = 7, SqlFieldName = ThresholdValue ];
+
+/// 关联MDC
+Property MDCCode As %String(COLLATION = "UPPER", MAXLEN = 10) [ SqlColumnNumber = 8, SqlFieldName = MDCCode ];
+
+/// 关联ADRG
+Property ADRGCode As %String(COLLATION = "UPPER", MAXLEN = 10) [ SqlColumnNumber = 9, SqlFieldName = ADRGCode ];
+
+/// 关联DRG
+Property DRGCode As %String(COLLATION = "UPPER", MAXLEN = 10) [ SqlColumnNumber = 10, SqlFieldName = DRGCode ];
+
+/// 预警级别 (1:提示 2:警告 3:严重)
+Property WarningLevel As %Integer [ SqlColumnNumber = 11, SqlFieldName = WarningLevel ];
+
+/// 是否启用
+Property IsActive As %String(DISPLAYLIST = ",Yes,No", TRUNCATE = 1, VALUELIST = ",Y,N") [ Required, SqlColumnNumber = 12, SqlFieldName = IsActive ];
+
+/// 排序号
+Property SeqNo As %Integer [ SqlColumnNumber = 13, SqlFieldName = SeqNo ];
+
+/// 创建日期
+Property CreateDate As %Date [ Required, SqlColumnNumber = 14, SqlFieldName = CreateDate ];
+
+/// 创建时间
+Property CreateTime As %Time [ Required, SqlColumnNumber = 15, SqlFieldName = CreateTime ];
+
+/// 创建人
+Property CreateUserDr As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 16, SqlFieldName = CreateUser_Dr ];
+
+/// 更新日期
+Property UpdateDate As %Date [ SqlColumnNumber = 17, SqlFieldName = UpdateDate ];
+
+/// 更新时间
+Property UpdateTime As %Time [ SqlColumnNumber = 18, SqlFieldName = UpdateTime ];
+
+/// 更新人
+Property UpdateUserDr As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 19, SqlFieldName = UpdateUser_Dr ];
+
+/// 备注
+Property Remark As %String(MAXLEN = 500) [ SqlColumnNumber = 20, SqlFieldName = Remark ];
+
+Storage Default
+{
+<Data name="BSDRGWarningRuleDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>RuleCode</Value>
+</Value>
+<Value name="3">
+<Value>RuleName</Value>
+</Value>
+<Value name="4">
+<Value>RuleDesc</Value>
+</Value>
+<Value name="5">
+<Value>RuleType</Value>
+</Value>
+<Value name="6">
+<Value>ThresholdType</Value>
+</Value>
+<Value name="7">
+<Value>ThresholdValue</Value>
+</Value>
+<Value name="8">
+<Value>MDCCode</Value>
+</Value>
+<Value name="9">
+<Value>ADRGCode</Value>
+</Value>
+<Value name="10">
+<Value>DRGCode</Value>
+</Value>
+<Value name="11">
+<Value>WarningLevel</Value>
+</Value>
+<Value name="12">
+<Value>IsActive</Value>
+</Value>
+<Value name="13">
+<Value>SeqNo</Value>
+</Value>
+<Value name="14">
+<Value>CreateDate</Value>
+</Value>
+<Value name="15">
+<Value>CreateTime</Value>
+</Value>
+<Value name="16">
+<Value>CreateUserDr</Value>
+</Value>
+<Value name="17">
+<Value>UpdateDate</Value>
+</Value>
+<Value name="18">
+<Value>UpdateTime</Value>
+</Value>
+<Value name="19">
+<Value>UpdateUserDr</Value>
+</Value>
+<Value name="20">
+<Value>Remark</Value>
+</Value>
+</Data>
+<DataLocation>^User.BSDRGWarningRuleD</DataLocation>
+<DefaultData>BSDRGWarningRuleDefaultData</DefaultData>
+<IdFunction>Increment</IdFunction>
+<IndexLocation>^User.BSDRGWarningRuleI</IndexLocation>
+<PhysicalStorage>LC</PhysicalStorage>
+<SQLMap name="$MASTER">
+<Data name="ADRGCode">
+<Node>9</Node>
+</Data>
+<Data name="CreateDate">
+<Node>14</Node>
+</Data>
+<Data name="CreateTime">
+<Node>15</Node>
+</Data>
+<Data name="CreateUserDr">
+<Node>16</Node>
+</Data>
+<Data name="DRGCode">
+<Node>10</Node>
+</Data>
+<Data name="IsActive">
+<Node>12</Node>
+</Data>
+<Data name="MDCCode">
+<Node>8</Node>
+</Data>
+<Data name="Remark">
+<Node>20</Node>
+</Data>
+<Data name="RuleCode">
+<Node>2</Node>
+</Data>
+<Data name="RuleDesc">
+<Node>4</Node>
+</Data>
+<Data name="RuleName">
+<Node>3</Node>
+</Data>
+<Data name="RuleType">
+<Node>5</Node>
+</Data>
+<Data name="SeqNo">
+<Node>13</Node>
+</Data>
+<Data name="ThresholdType">
+<Node>6</Node>
+</Data>
+<Data name="ThresholdValue">
+<Node>7</Node>
+</Data>
+<Data name="UpdateDate">
+<Node>17</Node>
+</Data>
+<Data name="UpdateTime">
+<Node>18</Node>
+</Data>
+<Data name="UpdateUserDr">
+<Node>19</Node>
+</Data>
+<Data name="WarningLevel">
+<Node>11</Node>
+</Data>
+<Global>^User.BSDRGWarningRuleD</Global>
+<RowIdSpec>1</RowIdSpec>
+</SQLMap>
+<StreamLocation>^User.BSDRGWarningRuleS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+}

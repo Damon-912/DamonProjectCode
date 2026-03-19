@@ -1,0 +1,97 @@
+Class User.BSDRGGroupRecord Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = HB_DRGDRGGroupRecord ]
+{
+
+Parameter %JSONREFERENCE = "ID";
+
+/// DRG
+Property DRG As %String [ SqlColumnNumber = 2, SqlFieldName = DRG ];
+
+/// DRG指向HB_DRGCoreAlgorithmData
+Property DRGDr As HBDRGCoreAlgorithmData [ SqlColumnNumber = 3, SqlFieldName = DRG_Dr ];
+
+/// 省 指向CB_Province
+Property ProvinceDr As CBProvince [ Required, SqlColumnNumber = 4, SqlFieldName = Province_Dr ];
+
+Index Province On ProvinceDr;
+
+/// 市 指向CB_City
+Property CityDr As CBCity [ Required, SqlColumnNumber = 5, SqlFieldName = City_Dr ];
+
+Index City On CityDr;
+
+/// 创建日期 系统自动产生
+Property CreateDate As %Date [ Required, SqlColumnNumber = 6, SqlFieldName = CreateDate ];
+
+/// 创建时间 系统自动产生
+Property CreateTime As %Time [ Required, SqlColumnNumber = 7, SqlFieldName = CreateTime ];
+
+/// 创建人员ID 指向HB_User表
+Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 8, SqlFieldName = CreateUser_Dr ];
+
+/// 医疗机构代码
+Property FixmedinsCode As %String [ SqlColumnNumber = 9, SqlFieldName = FixmedinsCode ];
+
+/// 医疗机构名称
+Property FixmedinsName As %String [ SqlColumnNumber = 10, SqlFieldName = FixmedinsName ];
+
+/// 标识码-分类
+Property Identification As %String [ SqlColumnNumber = 11, SqlFieldName = Identification ];
+
+/// 备注
+Property Remark As %String(MAXLEN = 99999) [ SqlColumnNumber = 12, SqlFieldName = Remark ];
+
+/// HIS就诊ID
+Property HISAdmID As %String [ SqlColumnNumber = 13, SqlFieldName = HISAdmID ];
+
+Storage Default
+{
+<Data name="BSDRGGroupRecordDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>DRG</Value>
+</Value>
+<Value name="3">
+<Value>ProvinceDr</Value>
+</Value>
+<Value name="4">
+<Value>CityDr</Value>
+</Value>
+<Value name="5">
+<Value>CreateDate</Value>
+</Value>
+<Value name="6">
+<Value>CreateTime</Value>
+</Value>
+<Value name="7">
+<Value>CreateUserDr</Value>
+</Value>
+<Value name="8">
+<Value>FixmedinsCode</Value>
+</Value>
+<Value name="9">
+<Value>Identification</Value>
+</Value>
+<Value name="10">
+<Value>Remark</Value>
+</Value>
+<Value name="11">
+<Value>HISAdmID</Value>
+</Value>
+<Value name="12">
+<Value>DRGDr</Value>
+</Value>
+<Value name="13">
+<Value>FixmedinsName</Value>
+</Value>
+</Data>
+<DataLocation>^User.BSDRGGroupRecordD</DataLocation>
+<DefaultData>BSDRGGroupRecordDefaultData</DefaultData>
+<IdLocation>^User.BSDRGGroupRecordD</IdLocation>
+<IndexLocation>^User.BSDRGGroupRecordI</IndexLocation>
+<StreamLocation>^User.BSDRGGroupRecordS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+
+}

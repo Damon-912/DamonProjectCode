@@ -1,0 +1,123 @@
+Class src.DRG.Interface Extends (%RegisteredObject, %XML.Adaptor) [ Not ProcedureBlock ]
+{
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 从HIS平台获取病案首页信息更新病案首页表
+/// Code: 02010028
+ClassMethod GetMedicalRecordFromHIS(postObj) As %Library.DynamicObject
+{
+	new (postObj)
+	quit ##class(src.DRG.MedicalRecord).GetMedicalRecordFromHIS(postObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 保存病案首页信息
+/// Code: 02010026
+ClassMethod SaveMedInsuMedicalRecord(postObj) As %Library.DynamicObject
+{
+	new (postObj)
+	quit ##class(src.DRG.MedicalRecord).SaveMedInsuMedicalRecord(postObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 查询病案首页信息表
+/// Table: BS_DRGMedInsuMedicalRecord
+/// Code: 02010027
+ClassMethod QueryMedicalRecord(postObj) As %Library.DynamicObject
+{
+	new (postObj)
+	quit ##class(src.DRG.MedicalRecord).QueryMedicalRecord(postObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 从HIS平台获取结算清单信息更新DRG结算清单表
+/// Code: 02010029
+ClassMethod GetSettlementInfoFromHIS(postObj) As %Library.DynamicObject
+{
+	new (postObj)
+	quit ##class(src.DRG.MedicalRecord).GetSettlementInfoFromHIS(postObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 保存结算清单信息
+/// Table: BS_DRGMedInsuSettleMentInfo
+/// Code: 02010030		
+ClassMethod SaveMedInsuSettleMentInfo(postObj) As %Library.DynamicObject
+{
+	new (postObj)
+	quit ##class(src.DRG.MedicalRecord).SaveMedInsuSettleMentInfo(postObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 查询结算清单信息表
+/// Table: BS_DRGMedInsuSettleMentInfo
+/// Code: 02010031		
+ClassMethod QuerySettleMentInfo(postObj) As %Library.DynamicObject
+{
+	new (postObj)
+	quit ##class(src.DRG.MedicalRecord).QuerySettleMentInfo(postObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 保存DRG分组记录
+/// Table: BS_DRGGroupRecord
+/// Code: 02010035		
+ClassMethod SaveDRGGroupRecord(postObj) As %Library.DynamicObject
+{
+	new (postObj)
+	quit ##class(src.DRG.GroupDevice).SaveDRGGroupRecord(postObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 查询DRG分组记录表
+/// Table: BS_DRGGroupRecord
+/// Code: 02010036		
+ClassMethod QueryDRGGroupRecord(postObj) As %Library.DynamicObject
+{
+	new (postObj)
+	quit ##class(src.DRG.GroupDevice).QueryDRGGroupRecord(postObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 分组器
+/// code: 02010001		 
+/// Input:{"params":[{"":""}]}
+/// Debug
+ClassMethod Device(jsonObj) As %Library.DynamicObject
+{
+	new (postObj)
+	quit ##class(src.DRG.GroupDevice).Device(postObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 按病案首页信息进行DRG分组
+/// Code:		
+ClassMethod DRGGroup(postObj) As %Library.DynamicObject
+{
+	new (postObj)
+	quit ##class(src.DRG.GroupDevice).GetDRGGroup(postObj)
+}
+
+/// 通用方法根据起始和截至时间判断有效/失效
+ClassMethod IsRecordActive(startDate As %Date, stopDate As %Date) As %Boolean
+{
+    Set currentDate = +$Horolog
+    
+    // 处理空值：startDate为空视为最小日期，stopDate为空视为最大日期
+    Set effectiveStart = $Select(startDate="":0, 1:startDate)  // 0 = 1840-12-31
+    Set effectiveEnd = $Select(stopDate="":99999, 1:stopDate)  // 99999 = 未来日期
+        
+    Quit (effectiveStart <= currentDate) && (effectiveEnd >= currentDate)
+}
+
+}

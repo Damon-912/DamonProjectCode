@@ -1,0 +1,109 @@
+Class User.BSDRGPatientICUInfo Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = BS_DRGPatientICUInfo ]
+{
+
+Parameter %JSONREFERENCE = "ID";
+
+/// 医保就诊ID 
+Property MdtrtId As %String(COLLATION = "UPPER", MAXLEN = 50) [ Required, SqlColumnNumber = 2, SqlFieldName = MdtrtId ];
+
+Index MdtrtId On MdtrtId;
+
+/// 就医流水号 
+Property MdtrtSn As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 3, SqlFieldName = MdtrtSn ];
+
+Index MdtrtSn On MdtrtSn;
+
+/// 住院病案首页流水号 
+Property IptMedcasHmpgSn As %String [ Required, SqlColumnNumber = 4, SqlFieldName = IptMedcasHmpgSn ];
+
+/// 重症监护室代码 
+Property ICUCodeId As %String [ SqlColumnNumber = 5, SqlFieldName = ICUCodeId ];
+
+/// 进入监护室时间 
+Property InpoolICUTime As %String [ SqlColumnNumber = 6, SqlFieldName = InpoolICUTime ];
+
+/// 退出监护室时间 
+Property OutICUTime As %String [ SqlColumnNumber = 7, SqlFieldName = OutICUTime ];
+
+/// 医疗机构组织机构代码 
+Property MedinsOrgCode As %String [ SqlColumnNumber = 8, SqlFieldName = MedinsOrgCode ];
+
+/// 护理等级代码 
+Property NurscareLvCode As %String [ SqlColumnNumber = 9, SqlFieldName = NurscareLvCode ];
+
+/// 护理等级名称 
+Property NurscareLvName As %String [ SqlColumnNumber = 10, SqlFieldName = NurscareLvName ];
+
+/// 护理天数 
+Property NurscareDays As %String [ SqlColumnNumber = 11, SqlFieldName = NurscareDays ];
+
+/// 重返重症监护室标志 
+Property BackICU As %String [ SqlColumnNumber = 12, SqlFieldName = BackICU ];
+
+/// 有效标志 
+Property ValiFlag As %String [ SqlColumnNumber = 13, SqlFieldName = ValiFlag ];
+
+/// HIS就诊流水号 
+Property HISAdmID As %String [ SqlColumnNumber = 14, SqlFieldName = HISAdmID ];
+
+/// 数据更新时间
+Property UpdateTime As %DateTime [ SqlColumnNumber = 15, SqlFieldName = UpdateTime ];
+
+Storage Default
+{
+<Data name="BSDRGPatientICUInfoDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>MdtrtId</Value>
+</Value>
+<Value name="3">
+<Value>MdtrtSn</Value>
+</Value>
+<Value name="4">
+<Value>IptMedcasHmpgSn</Value>
+</Value>
+<Value name="5">
+<Value>ICUCodeId</Value>
+</Value>
+<Value name="6">
+<Value>InpoolICUTime</Value>
+</Value>
+<Value name="7">
+<Value>OutICUTime</Value>
+</Value>
+<Value name="8">
+<Value>MedinsOrgCode</Value>
+</Value>
+<Value name="9">
+<Value>NurscareLvCode</Value>
+</Value>
+<Value name="10">
+<Value>NurscareLvName</Value>
+</Value>
+<Value name="11">
+<Value>NurscareDays</Value>
+</Value>
+<Value name="12">
+<Value>BackICU</Value>
+</Value>
+<Value name="13">
+<Value>ValiFlag</Value>
+</Value>
+<Value name="14">
+<Value>HISAdmID</Value>
+</Value>
+<Value name="15">
+<Value>UpdateTime</Value>
+</Value>
+</Data>
+<DataLocation>^BSDRGPatientICUInfoD</DataLocation>
+<DefaultData>BSDRGPatientICUInfoDefaultData</DefaultData>
+<IdLocation>^BSDRGPatientICUInfoD</IdLocation>
+<IndexLocation>^BSDRGPatientICUInfoI</IndexLocation>
+<StreamLocation>^BSDRGPatientICUInfoS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+
+}

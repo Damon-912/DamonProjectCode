@@ -1,0 +1,34 @@
+schema: spec-driven
+
+# Project context
+context: |
+  ## 技术栈
+  - 后端: InterSystems IRIS/Cache ObjectScript 2019+
+  - 数据库: InterSystems IRIS 内置数据库 (对象存储为主，关系查询为辅)
+  - 前端: React 18+ + Ant Design 5+
+  
+  ## 项目领域
+  - DRG (Diagnosis-Related Groups) 按病组付费分组系统
+  - DIP (Diagnosis-Intervention Packet) 按病种分值付费系统
+  - 医保控费预警系统
+  - 医院信息系统(HIS)扩展模块
+  
+  ## 设计要求
+  - 支持自定义分组规则配置
+  - 支持DRG和DIP两种医保付费模式
+  - 与现有HIS系统保持一致的架构风格
+  - 符合国家医保局相关规范标准
+
+# Per-artifact rules
+rules:
+  proposal:
+    - 包含完整的功能模块划分
+    - 明确各模块的职责边界
+    - 说明模块间的数据流转关系
+  design:
+    - 每个功能模块单独输出文档
+    - 文档存放在 系统设计 目录
+    - 包含数据库表结构、接口设计、业务流程
+  tasks:
+    - 按功能模块拆分任务
+    - 每个任务包含前后端实现要点
