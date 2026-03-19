@@ -1,0 +1,8 @@
+name: interface-mapping-management
+description: 接口映射管理 - 为CB_MapInterface表创建前端维护菜单及接口调用功能
+status: planned
+created: 2026-03-19
+artifacts:
+  - proposal.md
+  - design.md
+  - tasks.md
