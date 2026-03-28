@@ -405,8 +405,7 @@ ClassMethod RecalculateProfit(postObj As %Library.DynamicObject) As %Library.Dyn
     
     set result.errorCode = "0"
     set result.errorMessage = ""
-    set result.result = ##class(%Library.DynamicObject).%New()
-    do result.result.%Set("recalculatedCount", count)
+    set result.result = {"recalculatedCount": count}
     
     quit result
 }

@@ -730,13 +730,205 @@ ClassMethod UserLogin(postObj As %Library.DynamicObject) As %Library.DynamicObje
 ClassMethod UserLogout(postObj As %Library.DynamicObject) As %Library.DynamicObject
 {
     new (postObj)
-    
+
     set result = ##class(%Library.DynamicObject).%New()
-    
+
     set result.errorCode = "0"
     set result.errorMessage = ""
     set result.result = {}
-    
+
+    quit result
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-03-19
+/// Description: 删除接口服务
+/// Code: 02010412
+ClassMethod DeleteInterfaceService(postObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+    new (postObj)
+
+    set result = ##class(%Library.DynamicObject).%New()
+    set params = postObj.params
+
+    set interfaceId = $lg(params,1)
+
+    if (interfaceId = "") {
+        set result.errorCode = "1001"
+        set result.errorMessage = "接口ID不能为空"
+        quit result
+    }
+
+    // 检查是否存在
+    if '##class(User.CBMapInterface).%ExistsId(interfaceId) {
+        set result.errorCode = "2001"
+        set result.errorMessage = "接口不存在"
+        quit result
+    }
+
+    // 删除
+    set sc = ##class(User.CBMapInterface).%DeleteId(interfaceId)
+    if ($$$ISOK(sc)) {
+        set result.errorCode = "0"
+        set result.errorMessage = ""
+    } else {
+        set result.errorCode = "3001"
+        set result.errorMessage = "删除失败"
+    }
+
+    quit result
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-03-19
+/// Description: 测试接口调用
+/// Code: 02010413
+ClassMethod TestInterfaceCall(postObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+    new (postObj)
+
+    set result = ##class(%Library.DynamicObject).%New()
+    set params = postObj.params
+    set session = postObj.session
+
+    set interfaceId = $lg(params,1)
+    set testParams = $lg(params,2)  // JSON格式的测试参数
+
+    if (interfaceId = "") {
+        set result.errorCode = "1001"
+        set result.errorMessage = "接口ID不能为空"
+        quit result
+    }
+
+    // 获取接口信息
+    set interfaceObj = ##class(User.CBMapInterface).%OpenId(interfaceId)
+    if (interfaceObj = "") {
+        set result.errorCode = "2001"
+        set result.errorMessage = "接口不存在"
+        quit result
+    }
+
+    set className = interfaceObj.ClassName
+    set methodName = interfaceObj.MethodName
+
+    // 记录日志
+    set logObj = ##class(User.CBMapInterfaceLog).%New()
+    set logObj.InterfaceDr = interfaceId
+    set logObj.CallDate = +$h
+    set logObj.CallTime = $p($h,",",2)
+    set logObj.CallUserDr = $lg(session,1)
+    set logObj.CallParams = testParams
+    set logObj.CallType = "TEST"
+
+    // 调用接口
+    set startTime = $p($h,",",2)
+    try {
+        // 构建调用字符串
+        set callStr = "##class("_className_")."_methodName_"(postObj)"
+        set responseObj = @callStr
+
+        set endTime = $p($h,",",2)
+        set duration = endTime - startTime
+
+        // 记录成功日志
+        set logObj.ResponseData = responseObj.%ToJSON()
+        set logObj.CallStatus = "SUCCESS"
+        set logObj.ResponseTime = duration
+
+        set result.errorCode = "0"
+        set result.errorMessage = ""
+        set result.result = responseObj
+    } catch (e) {
+        // 记录失败日志
+        set logObj.CallStatus = "FAIL"
+        set logObj.ErrorMessage = e.Name
+
+        set result.errorCode = "3001"
+        set result.errorMessage = "接口调用失败: " _ e.Name
+    }
+
+    do logObj.%Save()
+    quit result
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-03-19
+/// Description: 查询接口日志
+/// Code: 02010414
+ClassMethod QueryInterfaceLogs(postObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+    new (postObj)
+
+    set result = ##class(%Library.DynamicObject).%New()
+    set params = postObj.params
+
+    set interfaceId = $lg(params,1)
+    set callType = $lg(params,2)
+    set callStatus = $lg(params,3)
+    set startDate = $lg(params,4)
+    set endDate = $lg(params,5)
+    set page = $lg(params,6)
+    set limit = $lg(params,7)
+
+    if (page = "") set page = 1
+    if (limit = "") set limit = 20
+
+    set dataList = ##class(%Library.DynamicArray).%New()
+
+    set sql = "SELECT l.ID, l.Interface_Dr, i.Code as InterfaceCode, i.Descripts as InterfaceName, "_ 
+              "l.CallDate, l.CallTime, l.CallUserDr, l.CallType, l.CallParams, "_ 
+              "l.ResponseData, l.CallStatus, l.ResponseTime, l.ErrorMessage "_ 
+              "FROM CB_MapInterfaceLog l "_ 
+              "LEFT JOIN CB_MapInterface i ON l.Interface_Dr = i.ID WHERE 1=1"
+
+    if (interfaceId '= "") {
+        set sql = sql _ " AND l.Interface_Dr = '" _ interfaceId _ "'"
+    }
+    if (callType '= "") {
+        set sql = sql _ " AND l.CallType = '" _ callType _ "'"
+    }
+    if (callStatus '= "") {
+        set sql = sql _ " AND l.CallStatus = '" _ callStatus _ "'"
+    }
+    if (startDate '= "") {
+        set sql = sql _ " AND l.CallDate >= '" _ startDate _ "'"
+    }
+    if (endDate '= "") {
+        set sql = sql _ " AND l.CallDate <= '" _ endDate _ "'"
+    }
+
+    set sql = sql _ " ORDER BY l.CallDate DESC, l.CallTime DESC"
+
+    set rs = ##class(%ResultSet).%New()
+    set rs.Query = sql
+    do rs.Execute()
+
+    set count = 0
+    while (rs.Next()) {
+        set count = count + 1
+        if ((count > ((page - 1) * limit)) && (count <= (page * limit))) {
+            set item = ##class(%Library.DynamicObject).%New()
+            set item.id = rs.Data("ID")
+            set item.interfaceDr = rs.Data("Interface_Dr")
+            set item.interfaceCode = rs.Data("InterfaceCode")
+            set item.interfaceName = rs.Data("InterfaceName")
+            set item.callDate = $zd(rs.Data("CallDate"), 3)
+            set item.callTime = $zt(rs.Data("CallTime"))
+            set item.callUserDr = rs.Data("CallUserDr")
+            set item.callType = rs.Data("CallType")
+            set item.callParams = rs.Data("CallParams")
+            set item.responseData = rs.Data("ResponseData")
+            set item.callStatus = rs.Data("CallStatus")
+            set item.responseTime = rs.Data("ResponseTime")
+            set item.errorMessage = rs.Data("ErrorMessage")
+            do dataList.%Push(item)
+        }
+    }
+
+    set result.errorCode = "0"
+    set result.errorMessage = ""
+    set result.result = dataList
+
     quit result
 }
 

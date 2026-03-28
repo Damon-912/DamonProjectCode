@@ -1,0 +1,343 @@
+Import SQLUSER
+
+Class src.DRG.BasicData.CoreAlgorithm Extends (%RegisteredObject, %XML.Adaptor) [ Not ProcedureBlock ]
+{
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 保存DRG核心算法配置
+/// Table:     	 HB_DRGCoreAlgorithmData
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug:
+ClassMethod UpdateDRGCoreAlgorithm(postObj) As %Library.DynamicObject
+{
+	new (postObj)
+	set resultObj={}
+	set resultObj.errorCode="0"
+	set resultObj.errorMessage="保存成功"
+	set resultObj.result={}
+	try{
+		set params=postObj.params.%Get(0)
+		set session=postObj.session.%Get(0)
+		set hospID=session.hospID
+		set userID=session.userID
+		
+		set dictID=params.id
+		set drg=params.drg			
+		set drgDesc=params.drgDesc
+		set points=params.points //基准点数	
+		set dgdov=params.dgdov   //病组差异系数
+		set payStandard=params.payStandard   //支付标准
+        set insuType=params.insuType //险种类型
+        set mdtrtArea=params.mdtrtArea //就医地区划代码        
+        set medinsLv=params.medinsLv //医疗机构等级
+		set fixmedinsCode=params.fixmedinsCode //医疗机构代码
+		set fixmedinsName=params.fixmedinsName //医疗机构名称
+
+		set provinceID=params.provinceDr //省
+		set cityID=params.cityID         //市
+		set startDate=params.startDate
+		set stopDate=params.stopDate
+		
+		set identification=params.identification
+		set remark=params.remark
+		
+		if (startDate'="")&&(stopDate'="")
+		{
+			set startDate=$zdh(startDate,3)
+			set stopDate=$zdh(stopDate,3)
+			
+			if (startDate>stopDate)
+			{
+			    set resultObj.errorCode="01040014"
+			    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040014")   
+			    quit	
+			}
+		}						
+
+        set criteria=$TRANSLATE(points_dgdov_payStandard_insuType_mdtrtArea_medinsLv_fixmedinsCode," ","")
+        set criteria=$REPLACE(criteria,"NULL","")
+
+		if (criteria="")
+		{
+			set resultObj.errorCode="-1"
+			set resultObj.errorMessage="基准点数\病组差异系数\支付标准\险种类型\就医地区划代码\医疗机构等级\医疗机构代码,参数不能为空！"
+			quit
+		}
+		
+		if (fixmedinsCode="")
+		{
+			set resultObj.errorCode="01040016"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040016")
+			quit
+		}		
+																					
+		if (provinceID="")
+		{
+			set resultObj.errorCode="01000007"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000007")
+			quit
+		}
+		
+		if (cityID="")
+		{
+			set resultObj.errorCode="01000008"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000008")
+			quit
+		}
+		
+		set data=[]
+		set dataObj={}
+		set dataObj.ID=dictID
+		set dataObj.DRG=drg
+		set dataObj.DRGDESC=drgDesc	
+		set dataObj.Points=points
+		set dataObj.DGDOV=dgdov
+		set dataObj.payStandard=payStandard
+		set dataObj.InsuType=insuType
+		set dataObj.MdtrtArea=mdtrtArea
+		set dataObj.MedinsLv=medinsLv																					
+		set dataObj.ProvinceDr=provinceID
+		set dataObj.CityDr=cityID		
+		set dataObj.StartDate=startDate
+		set dataObj.StopDate=stopDate		
+		set dataObj.CreateUserDr=userID
+		set dataObj.CreateDate=$zd($h,3)
+		set dataObj.CreateTime=$zt($p($h,",",2),1)
+		set dataObj.FixmedinsCode=fixmedinsCode
+		set dataObj.fixmedinsName=fixmedinsName
+		set dataObj.Identification=identification
+		set dataObj.Remark=remark		
+				
+		set insObj={}
+		set insObj.className="User.HBDRGCoreAlgorithmData"
+		set insObj.updateUserID=userID	
+		set rtn=""
+		do data.%Push(dataObj)
+		set insObj.data=data
+		if dictID=""{
+			set rtn=##class(src.util.operatetable).Insert(.insObj)
+		}else{
+			set rtn=##class(src.util.operatetable).Update(.insObj)
+		}
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+	    if errorCode'=0{
+		    set resultObj.errorCode=errorCode
+	    	set resultObj.errorMessage=errorMessage
+	   	}
+	}
+	catch(e)
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="保存核心算法配置数据出现问题:w ##class("_$ClassName()_").UpdateDRGCoreAlgorithm("_postObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+ 	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 查询DRG核心算法配置
+/// Table:     	 HB_DRGCoreAlgorithmData
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug: 
+ClassMethod GetDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try
+	{
+		if (jsonObj.%IsDefined("pagination")'=0) 
+		{
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		
+		set params=jsonObj.params.%Get(0)
+		set DRG=params.drg		
+		set fixmedinsName=params.fixmedinsName
+		set fixmedinsCode=params.fixmedinsCode
+		set cityID=params.cityID
+		set provinceID=params.provinceID
+		
+		set status=params.status
+
+		set sql =" SELECT ID,DRG,DRGDESC,Points,PipValue,DGDOV,PayStandard,InsuType,MdtrtArea,MedinsLv,"
+		        _" Province_Dr as ProvinceID,Province_Dr->Descripts as ProvinceDesc,"
+		        _" City_Dr as CityID,City_Dr->Descripts as CityDesc,StartDate,StopDate," 
+			    _" FixmedinsCode,FixmedinsName,Identification,Remark,CreateUserDr,CreateDate,CreateTime "
+			    _" FROM HB_DRGCoreAlgorithmData where 1=1"
+		
+		if DRG'=""
+		{
+			set sql=sql_" and DRG like '%"_DRG_"%'" 
+		}					   
+		if fixmedinsName'=""
+		{
+			set sql=sql_" and FixmedinsName like '%"_fixmedinsName_"%'" 
+		}		
+		if fixmedinsCode'=""
+		{
+			set sql=sql_" and FixmedinsCode = "_fixmedinsCode 
+		}		
+		if cityID'=""
+		{
+			set sql=sql_" and City_Dr = "_cityID 
+		}
+		if provinceID'=""
+		{
+			set sql=sql_" and Province_Dr = "_provinceID 
+		}									
+
+		set sqlObj=##class(%SQL.Statement).%New(1)
+		set sc=sqlObj.%Prepare(sql)
+		set result=sqlObj.%Execute()
+		while result.%Next(sc)	
+		{
+			set startDate=result.%Get("startDate")
+			set stopDate=result.%Get("StopDate")
+			set dataObj={}
+			set dataObj.id=result.%Get("ID")
+			set dataObj.drg=result.%Get("DRG")
+            set dataObj.drgDesc=result.%Get("DRGDESC")
+            
+		    set dataObj.points=result.%Get("Points")
+		    set dataObj.pipValue=result.%Get("PipValue")		
+		    set dataObj.dgdov=result.%Get("DGDOV")
+		    set dataObj.payStandard=result.%Get("PayStandard")	
+		    
+		    set dataObj.insuType=result.%Get("InsuType")
+		    set dataObj.mdtrtArea=result.%Get("MdtrtArea")
+		    set dataObj.medinsLv=result.%Get("MedinsLv")
+		    		
+			set dataObj.provinceID=result.%Get("ProvinceID")
+			set dataObj.provinceDesc=result.%Get("ProvinceDesc")
+			set dataObj.cityID=result.%Get("CityID")
+			set dataObj.cityDesc=result.%Get("CityDesc")
+			set dataObj.startDate=startDate
+			set dataObj.stopDate=stopDate			
+		    set dataObj.fixmedinsCode=result.%Get("FixmedinsCode")
+		    set dataObj.fixmedinsName=result.%Get("FixmedinsName")
+		    set dataObj.identification=result.%Get("Identification")
+		    set dataObj.remark=result.%Get("Remark")				
+	
+			if startDate'=""{
+				set startDate=$zdh(startDate,3)
+			}
+			if stopDate'=""{
+				set stopDate=$zdh(stopDate,3)
+			}			
+			
+			set iStatus=..IsRecordActive(startDate,stopDate)
+							
+			if (iStatus){
+		    	set statusDesc="有效"
+		     	set statusFlag="Y"				
+			}
+			else{
+		    	set statusDesc="无效"
+		     	set statusFlag="N"				
+			}
+															
+			if status="Y"{
+				continue:statusFlag="N"
+			}
+			elseif status="N"{
+			    continue:statusFlag="Y"	
+			}			
+			
+			set dataObj.statusDesc=statusDesc
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count		
+	}
+	catch(e)
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询核心算法配置数据出现问题:w ##class("_$ClassName()_").GetDRGCoreAlgorithm("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 删除DRG核心算法配置
+/// Table:     	 HB_DRGCoreAlgorithmData
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug:
+ClassMethod DeleteDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
+{
+    new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	try{
+		set params=jsonObj.params.%Get(0)
+		set session=jsonObj.session.%Get(0)
+		set userID=session.userID
+		if params.id="" 
+		{
+			set resultObj.errorCode="05100128"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("05100128")  ///请选择一条数据
+			quit
+		}
+		set delObj={},data=[]
+		set delObj.className="User.HBDRGCoreAlgorithmData"
+		set delObj.updateUserID=userID
+		set dataObj={}
+		set dataObj.ID=params.id
+		do data.%Push(dataObj)
+		set delObj.data=data
+		;b ;0
+		set rtn=##class(src.util.operatetable).Delete(.delObj) ;调用公共类方法记录修改日记
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+		set resultObj.errorCode=errorCode
+		set resultObj.errorMessage=errorMessage		
+		
+	}catch(e){
+		set status=e.AsStatus()
+		set resultObj.errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set resultObj.errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorInfo="删除核心算法配置数据出现问题:w ##class("_$ClassName()_").DeleteDRGCoreAlgorithm("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+}
+
+/// 通用方法根据起始和截至时间判断有效/失效
+ClassMethod IsRecordActive(startDate As %Date, stopDate As %Date) As %Boolean
+{
+    Set currentDate = +$Horolog
+    
+    // 处理空值：startDate为空视为最小日期，stopDate为空视为最大日期
+    Set effectiveStart = $Select(startDate="":0, 1:startDate)  // 0 = 1840-12-31
+    Set effectiveEnd = $Select(stopDate="":99999, 1:stopDate)  // 99999 = 未来日期
+        
+    Quit (effectiveStart <= currentDate) && (effectiveEnd >= currentDate)
+}
+
+}

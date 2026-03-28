@@ -1,0 +1,1982 @@
+Import SQLUSER
+
+Class src.DRG.MedicalRecord Extends (%RegisteredObject, %XML.Adaptor) [ Not ProcedureBlock ]
+{
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 从HIS获取电子病历-HIS从EMR平台获取,其它平台不能从EMR直接获取
+/// code:		 
+/// Input:{"params":[{"admID":"3047034"}]}
+/// Debug：w ##class(src.INSU.BaseLineVersion.EMRInfo).GetEMRInfo4401({"code":"09030028","params":[{"admID":(admID)}]})
+ClassMethod GetMedicalRecordFromHIS(jsonObj) As %Library.DynamicObject
+{
+    new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":""}
+	try
+	{
+		set session=jsonObj.session.%Get(0)
+		set hospID=session.hospID
+		set params=jsonObj.params.%Get(0)
+		//set hospCode=session.hospCode
+		set admID=params.admID
+		
+		///获取HIS数据
+		set postObj={"params":(jsonObj.params),"code":"09030028","session":(jsonObj.session)}
+		set ret=##class(src.External.Service).HisService(postObj,hospID)	
+		set ret=##class(%Library.DynamicObject).%FromJSON(ret)
+		
+		if ret.errorCode'=0
+		{
+			set resultObj.errorCode=ret.errorCode
+			set resultObj.errorMessage=ret.errorMessage
+			quit
+		}
+	
+		if ret.result.%Size()=0
+		{
+			set resultObj.errorCode=-1
+			set resultObj.errorMessage="未查询到有效病案信息"
+			quit
+		}
+		else //将获取到的医保病案首页信息保存到BS_DRGMedInsuMedicalRecord
+		{
+			set postObj={}			
+			set postObj=ret.result
+			set postObj.admID=admID
+            set iret=..SaveMedInsuMedicalRecord(postObj)						
+		}
+		
+		set resultObj.result=ret.result
+	}
+	catch(e)
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		b ;;  errorMessage
+		set errorInfo="获取医保病案信息错误:w ##class("_$ClassName()_").GetMedicalRecordFromEMR("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		//set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_errorInfo
+	    set resultObj.errorMessage=errorMessage_postObj.%ToJSON()
+	}
+	
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 查询病案首页信息表
+/// Table: BS_DRGMedInsuMedicalRecord
+/// code:		 
+/// Input:{"params":[{"admID":"3047034"}]}
+/// Debug：w ##class(src.INSU.BaseLineVersion.EMRInfo).GetEMRInfo4401({"code":"09030028","params":[{"admID":(admID)}]})
+ClassMethod QueryMedicalRecord(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try
+	{
+		if (jsonObj.%IsDefined("pagination")'=0) 
+		{
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		
+		//查询条件
+		set params=jsonObj.params.%Get(0)
+		set MdtrtId=params.mdtrtId //医保就诊ID
+		set PsnNo=params.psnNo //医保个人编号
+		set IptNo=params.iptNo //住院号
+		set MedcasNo=params.medcasNo //病案号
+		set PsnName=params.psnName //姓名
+		set CertNo=params.certno //证件号码
+		set AdmID=params.admID //HIS就诊号
+		
+		set AdmCheck=params.admCheck //查询时间类型-In入院时间；Out出院时间				
+		set StartDate=params.startDate //查询开始时间-出院日期
+		set EndDate=params.endDate //查询结束时间-出院日期		
+		
+		set sql =" SELECT ID,MdtrtId,MdtrtSn,PsnNo,PatnIptCnt,IptOtpNo,MedcasNo,PsnName,"
+		        _" Gend,Brdy,Ntly,NtlyName,NwbBirWt,NwbAdmWt,Birplc,Napl,NatyName,Naty,"
+		        _" CertNo,Prfs,MrgStas,CurrAddrPoscode,CurrAddr,PsnTel,ResdAddrProv,"
+		        _" ResdAddrCity,ResdAddrCoty,ResdAddrSubd,ResdAddrVil,ResdAddrHousnum, "
+		        _" ResdAddrPoscode,ResdAddr,EmprTel,EmprPoscode,EmprAddr,ConerTel,ConerName,"
+		        _" ConerAddr,ConerRltsCode,AdmWayName,AdmWayCode,TrtTypeName,TrtType,AdmCaty, "
+			    _" AdmWard,AdmDate,DscgDate,DscgCaty,RefldeptCatyName,DscgWard,IptDays,DrugDicmFlag, "
+			    _" DicmDrugName,DieAutpFlag,AboCode,AboName,RhCode,RhName,DieFlag,DeptdrtName,ChfdrName, "
+			    _" AtddrName,ChfpdrName,IptDrName,RespNursName,TrainDrName,IntnDrName,CodrName, "
+			    _" QltctrlDrName,QltctrlNursName,MedcasQltName,MedcasQltCode,QltctrlDate,DscgWayName, "
+			    _" DscgWay,AcpMedinsCode,AcpMedinsName,Dscg31daysRinpFlag,Dscg31daysRinpPup,DamgIntxExtRea, "
+			    _" DamgIntxExtReaDisecode,BrnDamgBfadmComaDura,BrnDamgAfadmComaDura,VentUsedDura, "
+			    _" CnfmDate,PatnDiseDiagCrsp,PatnDiseDiagCrspCode,IptPatnDiagInscp,IptPatnDiagInscpCode, "
+			    _" DscgTrtRslt,DscgTrtRsltCode,MedinsOrgcode,Age,Aise,PoteIntnDrName,Hbsag,HcvAb, "
+			    _" RescCnt,RescSuccCnt,HospDiseFsttime,HifPayWayName,HifPayWayCode,MedFeePaymtdName, "
+			    _" MedfeePaymtdCode,SelfpayAmt,MedfeeSumamt,OrdnMedServfee,OrdnTrtOprtFee,NursFee, "
+			    _" ComMedServOthFee,PalgDiagFee,LabDiagFee,RdhyDiagFee,ClncDiseFee,NsrgtrtItemFee, "
+			    _" ClncPhysTrtFee,RgtrtTrtFee,AnstFee,RgtrtFee,RhabFee,TcmTrtFee,WmFee,AbtlMednFee, "
+			    _" TcmpatFee,TcmherbFee,BloFee,AlbuFee,GlonFee,ClotfacFee,CykiFee,ExamDspoMatlFee, "
+			    _" TrtDspoMatlFee,OprnDspoMatlFee,OthFee,valiFlag,FixmedinsCode,DiseInfo,OprnInfo, "
+			    _" ICUInfo,HISReturn,UpdateTime,DRG,HISAdmID "
+			    _" FROM BS_DRGMedInsuMedicalRecord where 1=1"
+			    
+		if MdtrtId'=""
+		{
+			set sql=sql_" and MdtrtId = '"_MdtrtId_"'" 
+		}	
+		if PsnNo'=""
+		{
+			set sql=sql_" and PsnNo = '"_PsnNo_"'" 
+		}	
+		if IptNo'=""
+		{
+			set sql=sql_" and IptNo = '"_IptNo_"'" 
+		}			
+		if MedcasNo'=""
+		{
+			set sql=sql_" and MedcasNo = '"_MedcasNo_"'" 
+		}
+		if PsnName'=""
+		{
+			set sql=sql_" and PsnName = '"_PsnName_"'" 
+		}
+		if CertNo'=""
+		{
+			set sql=sql_" and CertNo = '"_CertNo_"'" 
+		}
+		if AdmID'=""
+		{
+			set sql=sql_" and HISAdmID = '"_admID_"'" 
+		}		
+		
+		if (AdmCheck="In")
+		{
+		    if StartDate'=""
+		    {
+			    set sql=sql_" and AdmDate > '"_StartDate_"'" 
+		    }
+		    if EndDate'=""
+		    {
+			    set sql=sql_" and AdmDate <= '"_EndDate_"'" 
+		    }			
+		}
+		else
+		{
+		    if StartDate'=""
+		    {
+			    set sql=sql_" and DscgDate > '"_StartDate_"'" 
+		    }
+		    if EndDate'=""
+		    {
+			    set sql=sql_" and DscgDate <= '"_EndDate_"'" 
+		    }			
+		}																
+
+		set sqlObj=##class(%SQL.Statement).%New(1)
+		set sc=sqlObj.%Prepare(sql)
+		set result=sqlObj.%Execute()
+		while result.%Next(sc)	
+		{
+			set dataObj={}
+			set dataObj.mdtrtId=result.%Get("MdtrtId")
+			set MdtrtId = result.%Get("MdtrtId")
+			set dataObj.mdtrtSn=result.%Get("MdtrtSn")
+			set dataObj.psnNo=result.%Get("PsnNo")
+			set psnNo = result.%Get("PsnNo")
+			set dataObj.patnIptCnt=result.%Get("PatnIptCnt")
+			set dataObj.iptOtpNo=result.%Get("IptOtpNo")
+			set dataObj.medcasNo=result.%Get("MedcasNo")
+			set MedcasNo=result.%Get("MedcasNo")
+			set dataObj.psnName=result.%Get("PsnName")
+			set dataObj.gend=result.%Get("Gend")
+			set dataObj.brdy=result.%Get("Brdy")
+			set dataObj.ntly=result.%Get("Ntly")
+			set dataObj.ntlyName=result.%Get("NtlyName")
+			set dataObj.nwbBirWt= result.%Get("NwbBirWt")_""
+			set dataObj.nwbAdmWt=result.%Get("NwbAdmWt")_""
+			set dataObj.birplc=result.%Get("Birplc")_""
+			set dataObj.napl=result.%Get("Napl")
+			set dataObj.natyName=result.%Get("NatyName")
+			set dataObj.naty=result.%Get("Naty")
+			set dataObj.certno=result.%Get("CertNo")
+			set dataObj.prfs=result.%Get("Prfs")
+			set dataObj.mrgStas=result.%Get("MrgStas")
+			set dataObj.currAddrPoscode=result.%Get("CurrAddrPoscode")
+			set dataObj.currAddr=result.%Get("CurrAddr")
+			set dataObj.psnTel=result.%Get("PsnTel")
+			set dataObj.resdAddrProv=result.%Get("ResdAddrProv")
+			set dataObj.resdAddrCity=result.%Get("ResdAddrCity")
+			set dataObj.resdAddrCoty=result.%Get("ResdAddrCoty")
+			set dataObj.resdAddrSubd=result.%Get("ResdAddrSubd")
+			set dataObj.resdAddrVil=result.%Get("ResdAddrVil")
+			set dataObj.resdAddrHousnum=result.%Get("ResdAddrHousnum")
+			set dataObj.resdAddrPoscode=result.%Get("ResdAddrPoscode")
+			set dataObj.resdAddr=result.%Get("ResdAddr")
+			set dataObj.emprTel=result.%Get("EmprTel")
+			set dataObj.emprPoscode=result.%Get("EmprPoscode")
+			set dataObj.emprAddr=result.%Get("EmprAddr")
+			set dataObj.conerTel=result.%Get("ConerTel")
+			set dataObj.conerName=result.%Get("ConerName")
+			set dataObj.conerAddr=result.%Get("ConerAddr")
+			set dataObj.conerRltsCode=result.%Get("ConerRltsCode")
+			set dataObj.admWayName=result.%Get("AdmWayName")
+			set dataObj.admWayCode=result.%Get("AdmWayCode")
+			set dataObj.trtTypeName=result.%Get("TrtTypeName")
+			set dataObj.trtType=result.%Get("TrtType")
+			set dataObj.admCaty=result.%Get("AdmCaty")
+			set dataObj.admWard=result.%Get("AdmWard")
+			set dataObj.admDate=result.%Get("AdmDate")
+			set dataObj.dscgDate=result.%Get("DscgDate")
+			set dataObj.dscgCaty=result.%Get("DscgCaty")
+			set dataObj.refldeptCatyName=result.%Get("RefldeptCatyName")
+			set dataObj.dscgWard=result.%Get("DscgWard")
+			set dataObj.iptDays=result.%Get("IptDays")
+			set dataObj.drugDicmFlag=result.%Get("DrugDicmFlag")
+			set dataObj.dicmDrugName=result.%Get("DicmDrugName")
+			set dataObj.dieAutpFlag=result.%Get("DieAutpFlag")
+			set dataObj.aboCode=result.%Get("AboCode")
+			set dataObj.aboName=result.%Get("AboName")
+			set dataObj.rhCode=result.%Get("RhCode")
+			set dataObj.rhName=result.%Get("RhName")
+			set dataObj.dieFlag=result.%Get("DieFlag")
+			set dataObj.deptdrtName=result.%Get("DeptdrtName")
+			set dataObj.chfdrName=result.%Get("ChfdrName")
+			set dataObj.atddrName=result.%Get("AtddrName")
+			set dataObj.chfpdrName=result.%Get("ChfpdrName")
+			set dataObj.iptDrName=result.%Get("IptDrName")
+			set dataObj.respNursName=result.%Get("RespNursName")
+			set dataObj.trainDrName=result.%Get("TrainDrName")
+			set dataObj.intnDrName=result.%Get("IntnDrName")
+			set dataObj.codrName=result.%Get("CodrName")
+			set dataObj.qltctrlDrName=result.%Get("QltctrlDrName")
+			set dataObj.qltctrlNursName=result.%Get("QltctrlNursName")
+			set dataObj.medcasQltName=result.%Get("MedcasQltName")
+			set dataObj.medcasQltCode=result.%Get("MedcasQltCode")
+			set dataObj.qltctrlDate=result.%Get("QltctrlDate")
+			set dataObj.dscgWayName=result.%Get("DscgWayName")
+			set dataObj.dscgWay=result.%Get("DscgWay")
+			set dataObj.acpMedinsCode=result.%Get("AcpMedinsCode")
+			set dataObj.acpMedinsName=result.%Get("AcpMedinsName")
+			set dataObj.dscg31daysRinpFlag=result.%Get("Dscg31daysRinpFlag")
+			set dataObj.dscg31daysRinpPup=result.%Get("Dscg31daysRinpPup")
+			set dataObj.damgIntxExtRea=result.%Get("DamgIntxExtRea")
+			set dataObj.damgIntxExtReaDisecode=result.%Get("DamgIntxExtReaDisecode")
+			set dataObj.brnDamgBfadmComaDura=result.%Get("BrnDamgBfadmComaDura")
+			set dataObj.brnDamgAfadmComaDura=result.%Get("BrnDamgAfadmComaDura")
+			set dataObj.ventUsedDura=result.%Get("VentUsedDura")
+			set dataObj.cnfmDate=result.%Get("CnfmDate")
+			set dataObj.patnDiseDiagCrsp=result.%Get("PatnDiseDiagCrsp")
+			set dataObj.patnDiseDiagCrspCode=result.%Get("PatnDiseDiagCrspCode")
+			set dataObj.iptPatnDiagInscp=result.%Get("IptPatnDiagInscp")
+			set dataObj.iptPatnDiagInscpCode=result.%Get("IptPatnDiagInscpCode")
+			set dataObj.dscgTrtRslt=result.%Get("DscgTrtRslt")
+			set dataObj.dscgTrtRsltCode=result.%Get("DscgTrtRsltCode")
+			set dataObj.medinsOrgcode=result.%Get("MedinsOrgcode")
+			set dataObj.age=result.%Get("Age")
+			set dataObj.aise=result.%Get("Aise")
+			set dataObj.poteIntnDrName=result.%Get("PoteIntnDrName")
+			set dataObj.hbsag=result.%Get("Hbsag")
+			set dataObj.hcvAb=result.%Get("HcvAb")
+			set dataObj.rescCnt=result.%Get("RescCnt")
+			set dataObj.rescSuccCnt=result.%Get("RescSuccCnt")
+			set dataObj.hospDiseFsttime=result.%Get("HospDiseFsttime")
+			set dataObj.hifPayWayName=result.%Get("HifPayWayName")
+			set dataObj.hifPayWayCode=result.%Get("HifPayWayCode")
+			set dataObj.medFeePaymtdName=result.%Get("MedFeePaymtdName")
+			set dataObj.medfeePaymtdCode=result.%Get("MedfeePaymtdCode")
+			set dataObj.selfpayAmt=result.%Get("SelfpayAmt")
+			set dataObj.medfeeSumamt=result.%Get("MedfeeSumamt")
+			set dataObj.ordnMedServfee=result.%Get("OrdnMedServfee")
+			set dataObj.ordnTrtOprtFee=result.%Get("OrdnTrtOprtFee")	
+			set dataObj.nursFee=result.%Get("NursFee")
+			set dataObj.comMedServOthFee=result.%Get("ComMedServOthFee")
+			set dataObj.palgDiagFee=result.%Get("PalgDiagFee")
+			set dataObj.labDiagFee=result.%Get("LabDiagFee")
+			set dataObj.rdhyDiagFee=result.%Get("RdhyDiagFee")
+			set dataObj.clncDiseFee=result.%Get("ClncDiseFee")
+			set dataObj.nsrgtrtItemFee=result.%Get("NsrgtrtItemFee")
+			set dataObj.clncPhysTrtFee=result.%Get("ClncPhysTrtFee")
+			set dataObj.rgtrtTrtFee=result.%Get("RgtrtTrtFee")
+			set dataObj.anstFee=result.%Get("AnstFee")
+			set dataObj.rgtrtFee=result.%Get("RgtrtFee")
+			set dataObj.rhabFee=result.%Get("RhabFee")
+			set dataObj.tcmTrtFee=result.%Get("TcmTrtFee")
+			set dataObj.wmFee=result.%Get("WmFee")
+			set dataObj.abtlMednFee=result.%Get("AbtlMednFee")	
+			set dataObj.tcmpatFee=result.%Get("TcmpatFee")
+			set dataObj.tcmherbFee=result.%Get("TcmherbFee")
+			set dataObj.bloFee=result.%Get("BloFee")
+			set dataObj.albuFee=result.%Get("AlbuFee")
+			set dataObj.glonFee=result.%Get("GlonFee")
+			set dataObj.clotfacFee=result.%Get("ClotfacFee")
+			set dataObj.cykiFee=result.%Get("CykiFee")
+			set dataObj.examDspoMatlFee=result.%Get("ExamDspoMatlFee")
+			set dataObj.trtDspoMatlFee=result.%Get("TrtDspoMatlFee")
+			set dataObj.oprnDspoMatlFee=result.%Get("OprnDspoMatlFee")
+			set dataObj.othFee=result.%Get("OthFee")
+			set dataObj.valiFlag=result.%Get("valiFlag")
+			set dataObj.fixmedinsCode=result.%Get("FixmedinsCode")
+			set dataObj.updateTime=result.%Get("UpdateTime")
+			set dataObj.drg=result.%Get("DRG")
+			set dataObj.hisAdmID=result.%Get("HISAdmID")
+			
+			set HisRtnObj={}
+			set HisRtnString=result.%Get("HISReturn")
+			set HisRtnObj=##class(%DynamicAbstractObject).%FromJSON(HisRtnString)			
+
+			//疾病诊断信息   
+			if (result.%Get("DiseInfo") '="")
+			{
+			    set dataObj.diseInfo=##class(%DynamicAbstractObject).%FromJSON(result.%Get("DiseInfo"))
+			}
+			else
+			{
+			    set dataObj.diseInfo=""	
+			}
+			//手术及操作信息    
+			if (result.%Get("OprnInfo") '="")
+			{
+			    set dataObj.oprnInfo=##class(%DynamicAbstractObject).%FromJSON(result.%Get("OprnInfo"))
+			}
+			else
+			{
+			    set dataObj.oprnInfo=""	
+			}
+			//重症监护信息    
+			if (result.%Get("ICUInfo") '="")
+			{
+			    set dataObj.icuInfo=##class(%DynamicAbstractObject).%FromJSON(result.%Get("ICUInfo"))
+			}
+			else
+			{
+			    set dataObj.icuInfo=""	
+			}
+			
+			//返回完整的病案首页字符串
+			//set dataObj.hisReturn=##class(%DynamicAbstractObject).%FromJSON(HisRtnString)										
+																											
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}				
+		
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count		
+	}
+	catch(e)
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询医保病案首页表数据出现问题:w ##class("_$ClassName()_").QueryMedicalRecord("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+}
+
+/// CreatDate:   2026-01-01
+/// Description: 保存病案首页信息表
+/// Table:     	 BS_DRGMedInsuMedicalRecord
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug:
+ClassMethod SaveMedInsuMedicalRecord(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set resultObj={}
+	set resultObj.errorCode="0"
+	set resultObj.errorMessage="保存成功"
+	set resultObj.result={}
+	set perMsg=""
+	try
+	{
+		set data=[]
+		set dataObj={}
+		//set params=jsonObj.params.%Get(0)
+		//set paramsObj=params.result
+		set paramsObj=jsonObj.params.%Get(0)			
+			
+		set admID=paramsObj.admID
+		set mdtrtId=paramsObj.baseinfo."mdtrt_id"
+		set psnNo=paramsObj.baseinfo."psn_no"
+		
+		set Adm=paramsObj.baseinfo."adm_date" //入院时间
+		set Dscg=paramsObj.baseinfo."dscg_date" //出院时间		
+		set AdmDate = $E(Adm,1,4)_"-"_$E(Adm,5,6)_"-"_$E(Adm,7,8)_" 00:00:00"
+		set DscgDate = $E(Dscg,1,4)_"-"_$E(Dscg,5,6)_"-"_$E(Dscg,7,8)_" 00:00:00"			
+			
+		//查询表判断记录是否存在
+		set dictID=""
+		&sql(select ID into :dictID from BS_DRGMedInsuMedicalRecord 
+		     where HISAdmID=:admID and MdtrtId=:mdtrtId and psnNo=:psnNo)		
+		if (SQLCODE=0)
+		{
+		    set dataObj.ID= dictID	
+		}
+		else
+		{
+			set dataObj.ID=""
+		}			
+										
+		set dataObj.HISAdmID=paramsObj.admID
+		//baseinfo患者基本信息
+		set dataObj.MdtrtSn=paramsObj.baseinfo."mdtrt_sn"
+		set dataObj.MdtrtId=paramsObj.baseinfo."mdtrt_id"					
+        set dataObj.PsnNo=paramsObj.baseinfo."psn_no"
+		set dataObj.PatnIptCnt=paramsObj.baseinfo."patn_ipt_cnt" 
+		set dataObj.IptOtpNo=paramsObj.baseinfo."ipt_otp_no"
+		set dataObj.MedcasNo=paramsObj.baseinfo."medcasno"
+		set dataObj.PsnName=paramsObj.baseinfo."psn_name"		
+		set dataObj.Gend=paramsObj.baseinfo."gend"
+		set dataObj.Brdy=paramsObj.baseinfo."brdy"		
+		set dataObj.Ntly=paramsObj.baseinfo."ntly"
+		set dataObj.NtlyName=paramsObj.baseinfo."ntly_name"												
+		set dataObj.NwbBirWt=paramsObj.baseinfo."nwb_bir_wt"
+		set dataObj.NwbAdmWt=paramsObj.baseinfo."nwb_adm_wt"		
+		set dataObj.Birplc=paramsObj.baseinfo."birplc"
+		set dataObj.Napl=paramsObj.baseinfo."napl"		
+		set dataObj.NatyName=paramsObj.baseinfo."naty_name"
+		set dataObj.Naty=paramsObj.baseinfo."naty"
+		set dataObj.CertNo=paramsObj.baseinfo."certno"					
+        set dataObj.Prfs=paramsObj.baseinfo."prfs"
+		//set dataObj.MrgName=paramsObj.baseinfo."mrg_name"
+		set dataObj.MrgStas=paramsObj.baseinfo."mrg_stas"		
+		set dataObj.CurrAddrPoscode=paramsObj.baseinfo."curr_addr_poscode"
+		set dataObj.CurrAddr=paramsObj.baseinfo."curr_addr"		
+		set dataObj.PsnTel=paramsObj.baseinfo."psn_tel"
+		set dataObj.ResdAddrProv=paramsObj.baseinfo."resd_addr_prov"		
+		set dataObj.ResdAddrCity=paramsObj.baseinfo."resd_addr_city"
+		set dataObj.ResdAddrCoty=paramsObj.baseinfo."resd_addr_coty"												
+		set dataObj.ResdAddrSubd=paramsObj.baseinfo."resd_addr_subd"
+		set dataObj.ResdAddrVil=paramsObj.baseinfo."resd_addr_vil"		
+		set dataObj.ResdAddrHousnum=paramsObj.baseinfo."resd_addr_housnum"
+		set dataObj.ResdAddrPoscode=paramsObj.baseinfo."resd_addr_poscode"		
+		set dataObj.ResdAddr=paramsObj.baseinfo."resd_addr"
+		set dataObj.EmprTel=paramsObj.baseinfo."empr_tel"
+		set dataObj.EmprPoscode=paramsObj.baseinfo."empr_poscode"					
+        set dataObj.EmprAddr=paramsObj.baseinfo."empr_addr"
+		set dataObj.ConerTel=paramsObj.baseinfo."coner_tel"
+		set dataObj.ConerName=paramsObj.baseinfo."coner_name"
+		set dataObj.ConerAddr=paramsObj.baseinfo."coner_addr"
+		set dataObj.ConerRltsCode=paramsObj.baseinfo."coner_rlts_code"		
+		set dataObj.AdmWayName=paramsObj.baseinfo."adm_way_name"
+		set dataObj.AdmWayCode=paramsObj.baseinfo."adm_way_code"		
+		set dataObj.TrtType=paramsObj.baseinfo."trt_type"
+		set dataObj.TrtTypeName=paramsObj.baseinfo."trt_type_name"												
+		set dataObj.AdmCaty=paramsObj.baseinfo."adm_caty"
+		set dataObj.AdmWard=paramsObj.baseinfo."adm_ward"		
+		set dataObj.AdmDate= AdmDate //入院时间
+		set dataObj.DscgDate= DscgDate //出院时间	
+		set dataObj.DscgCaty=paramsObj.baseinfo."dscg_caty"
+		set dataObj.RefldeptCatyName=paramsObj.baseinfo."refldept_caty_name"
+		set dataObj.DscgWard=paramsObj.baseinfo."dscg_ward"					
+        set dataObj.IptDays=paramsObj.baseinfo."ipt_days"
+		set dataObj.DrugDicmFlag=paramsObj.baseinfo."drug_dicm_flag"
+		set dataObj.DicmDrugName=paramsObj.baseinfo."dicm_drug_name"
+		set dataObj.DieAutpFlag=paramsObj.baseinfo."die_autp_flag"
+		set dataObj.AboCode=paramsObj.baseinfo."abo_code"		
+		set dataObj.AboName=paramsObj.baseinfo."abo_name"
+		set dataObj.RhCode=paramsObj.baseinfo."rh_code"		
+		set dataObj.RhName=paramsObj.baseinfo."rh_name"
+		set dataObj.DieFlag=paramsObj.baseinfo."die_flag"												
+		set dataObj.DeptdrtName=paramsObj.baseinfo."deptdrt_name"
+		set dataObj.ChfdrName=paramsObj.baseinfo."chfdr_Name"		
+		set dataObj.AtddrName=paramsObj.baseinfo."atddr_name"
+		set dataObj.ChfpdrName=paramsObj.baseinfo."chfpdr_name"		
+		set dataObj.IptDrName=paramsObj.baseinfo."ipt_dr_name"
+		set dataObj.RespNursName=paramsObj.baseinfo."resp_nurs_name"
+		set dataObj.TrainDrName=paramsObj.baseinfo."train_dr_name"					
+        set dataObj.IntnDrName=paramsObj.baseinfo."intn_dr_name"
+		set dataObj.CodrName=paramsObj.baseinfo."codr_name"
+		set dataObj.QltctrlDrName=paramsObj.baseinfo."qltctrl_dr_name"
+		set dataObj.QltctrlNursName=paramsObj.baseinfo."qltctrl_nurs_name"
+		set dataObj.MedcasQltName=paramsObj.baseinfo."medcas_qlt_name"		
+		set dataObj.MedcasQltCode=paramsObj.baseinfo."medcas_qlt_code"
+		set dataObj.QltctrlDate=paramsObj.baseinfo."medcas_qlt_date"		
+		set dataObj.DscgWayName=paramsObj.baseinfo."dscg_way_name"
+		set dataObj.DscgWay=paramsObj.baseinfo."dscg_way"												
+		set dataObj.AcpMedinsCode=paramsObj.baseinfo."acp_medins_code"
+		set dataObj.AcpMedinsName=paramsObj.baseinfo."acp_medins_name"		
+		set dataObj.Dscg31daysRinpFlag=paramsObj.baseinfo."dscg_31days_rinp_flag"
+		set dataObj.Dscg31daysRinpPup=paramsObj.baseinfo."dscg_31days_rinp_pup"		
+		set dataObj.DamgIntxExtRea=paramsObj.baseinfo."damg_intx_ext_rea"						
+		set dataObj.DamgIntxExtReaDisecode=paramsObj.baseinfo."damg_intx_ext_rea_disecode"
+		set dataObj.BrnDamgBfadmComaDura=paramsObj.baseinfo."brn_damg_bfadm_coma_dura"					
+        set dataObj.BrnDamgAfadmComaDura=paramsObj.baseinfo."brn_damg_afadm_coma_dura"
+		set dataObj.VentUsedDura=paramsObj.baseinfo."vent_used_time"
+		set dataObj.CnfmDate=paramsObj.baseinfo."cnfm_date"
+		set dataObj.PatnDiseDiagCrsp=paramsObj.baseinfo."patn_dise_diag_crsp"
+		set dataObj.PatnDiseDiagCrspCode=paramsObj.baseinfo."patn_dise_diag_crsp_code"		
+		set dataObj.IptPatnDiagInscp=paramsObj.baseinfo."ipt_patn_diag_inscp"
+		set dataObj.IptPatnDiagInscpCode=paramsObj.baseinfo."ipt_patn_diag_inscp_code"		
+		set dataObj.DscgTrtRslt=paramsObj.baseinfo."dscg_trt_rslt"
+		set dataObj.DscgTrtRsltCode=paramsObj.baseinfo."dscg_trt_rslt_code"												
+		set dataObj.MedinsOrgcode=paramsObj.baseinfo."medins_orgcode"
+		set dataObj.Age=paramsObj.baseinfo."age"		
+		set dataObj.Aise=paramsObj.baseinfo."aise"
+		set dataObj.PoteIntnDrName=paramsObj.baseinfo."pote_intn_dr_name"		
+		set dataObj.Hbsag=paramsObj.baseinfo."hbsag"
+		set dataObj.HcvAb=paramsObj.baseinfo."hcv-ab"
+		set dataObj.HivAb=paramsObj.baseinfo."hiv-ab"					
+        set dataObj.RescCnt=paramsObj.baseinfo."resc_cnt"        
+		set dataObj.RescSuccCnt=paramsObj.baseinfo."resc_succ_cnt"
+		set dataObj.HospDiseFsttime=paramsObj.baseinfo."hosp_dise_fsttime"
+		set dataObj.HifPayWayName=paramsObj.baseinfo."hif_pay_way_name"
+		set dataObj.HifPayWayCode=paramsObj.baseinfo."hif_pay_way_code"		
+		set dataObj.MedFeePaymtdName=paramsObj.baseinfo."·med_fee_paymtd_name"
+		set dataObj.MedfeePaymtdCode=paramsObj.baseinfo."medfee_paymtd_code"		
+		set dataObj.SelfpayAmt=paramsObj.baseinfo."selfpay_amt"
+		set dataObj.MedfeeSumamt=paramsObj.baseinfo."medfee_sumamt"												
+		set dataObj.OrdnMedServfee=paramsObj.baseinfo."ordn_med_servfee"
+		set dataObj.OrdnTrtOprtFee=paramsObj.baseinfo."ordn_trt_oprt_fee"		
+		set dataObj.NursFee=paramsObj.baseinfo."nurs_fee"
+		set dataObj.ComMedServOthFee=paramsObj.baseinfo."com_med_serv_oth_fee"		
+		set dataObj.PalgDiagFee=paramsObj.baseinfo."palg_diag_fee"
+		set dataObj.LabDiagFee=paramsObj.baseinfo."lab_diag_fee"
+		set dataObj.RdhyDiagFee=paramsObj.baseinfo."rdhy_diag_fee"					
+        set dataObj.ClncDiseFee=paramsObj.baseinfo."clnc_dise_fee"
+		set dataObj.NsrgtrtItemFee=paramsObj.baseinfo."nsrgtrt_item_fee"
+		set dataObj.ClncPhysTrtFee=paramsObj.baseinfo."clnc_phys_trt_fee"
+		set dataObj.RgtrtTrtFee=paramsObj.baseinfo."rgtrt_trt_fee"
+		set dataObj.AnstFee=paramsObj.baseinfo."anst_fee"		
+		set dataObj.RgtrtFee=paramsObj.baseinfo."rgtrt_fee"
+		set dataObj.RhabFee=paramsObj.baseinfo."rhab_fee"		
+		set dataObj.TcmTrtFee=paramsObj.baseinfo."tcm_trt_fee"
+		set dataObj.WmFee=paramsObj.baseinfo."wm_fee"			
+		set dataObj.AbtlMednFee=paramsObj.baseinfo."abtl_medn_fee"													
+		set dataObj.TcmpatFee=paramsObj.baseinfo."tcmpat_fee"
+		set dataObj.TcmherbFee=paramsObj.baseinfo."tcmherb_fee"		
+		set dataObj.BloFee=paramsObj.baseinfo."blo_fee"
+		set dataObj.AlbuFee=paramsObj.baseinfo."albu_fee"		
+		set dataObj.GlonFee=paramsObj.baseinfo."glon_fee"
+		set dataObj.ClotfacFee=paramsObj.baseinfo."clotfac_fee"
+		set dataObj.CykiFee=paramsObj.baseinfo."cyki_fee"					
+        set dataObj.ExamDspoMatlFee=paramsObj.baseinfo."exam_dspo_matl_fee"
+		set dataObj.TrtDspoMatlFee=paramsObj.baseinfo."trt_dspo_matl_fee"
+		set dataObj.OprnDspoMatlFee=paramsObj.baseinfo."oprn_dspo_matl_fee"
+		set dataObj.OthFee=paramsObj.baseinfo."oth_fee"
+		set dataObj.valiFlag=paramsObj.baseinfo."vali_flag"		
+		set dataObj.FixmedinsCode=paramsObj.baseinfo."fixmedins_code"
+		set dataObj.MzcmDiagnose=paramsObj.baseinfo."mzcm_diagnose"		
+		set dataObj.CmDiagnoseCode=paramsObj.baseinfo."cm_diagnose_code"		
+		set dataObj.UpdateTime=$zd($h,3)_" "_$zt($p($h,",",2),1)			
+		set dataObj.UpdateDate=$zd($h,3)
+		set dataObj.HISReturn=paramsObj.%ToJSON()		
+	
+	    //diseinfo.疾病诊断信息
+	    if (paramsObj.diseinfo '="")
+	    {		    
+		    set dataObj.DiseInfo=paramsObj.diseinfo.%ToJSON()
+		    
+		    //保存患者疾病诊断信息表
+	    	set diseInfoObj={}
+	    	set diseInfoObj.diseinfo=paramsObj.diseinfo
+		    set diseInfoObj.admID=admID
+		    set diseInfoObj.mdtrtId=mdtrtId
+	    	set iResDise=..SaveDRGPatientDiagnosis(diseInfoObj)
+	    	if (iResDise.errorCode '=0)
+		    {
+			    set perMsg=perMsg_"保存患者疾病诊断信息异常："_iResDise.errorMessage
+		        set resultObj.errorCode=-1
+	    	    set resultObj.errorMessage=perMsg			
+		    	quit 
+		    }		    		    
+		}	
+		//oprninfo.手术及操作信息
+		if (paramsObj.oprninfo '="")
+		{
+		    set dataObj.OprnInfo=paramsObj.oprninfo.%ToJSON()
+		    
+	    	//保存患者手术及操作信息表
+		    set oprnInfoObj={}
+		    set oprnInfoObj.oprninfo=paramsObj.oprninfo
+		    set oprnInfoObj.admID=admID
+	    	set oprnInfoObj.mdtrtId=mdtrtId
+	    	set iResOprn=..SaveDRGPatientOperation(oprnInfoObj)
+	    	if (iResOprn.errorCode '=0)
+		    {
+			    set perMsg=perMsg_"保存患者手术及操作信息异常："_iResOprn.errorMessage
+		        set resultObj.errorCode=-2
+	    	    set resultObj.errorMessage=perMsg
+			    quit
+		    }		    	
+		}
+		//icuinfo.重症监护信息
+		if (paramsObj.icuinfo '="")
+		{
+		    set dataObj.ICUInfo=paramsObj.icuinfo.%ToJSON()	
+		    
+	    	//保存患者重症监护信息表
+	    	set icuInfoObj={}	
+	     	set icuInfoObj.icuinfo=	paramsObj.icuinfo
+		    set icuInfoObj.admID=admID
+		    set icuInfoObj.mdtrtId=mdtrtId			
+		    set iResIcu=..SaveDRGPatientICUInfo(icuInfoObj)
+	    	if (iResIcu.errorCode '=0)
+	    	{
+		    	set perMsg=perMsg_"保存患者重症监护信息异常："_iResIcu.errorMessage
+		        set resultObj.errorCode=-3
+	        	set resultObj.errorMessage=perMsg			
+			    quit 		
+		    }		    	
+		}
+	   																						
+		set insObj={}
+		set insObj.className="User.BSDRGMedInsuMedicalRecord"
+		//set insObj.updateUserID=userID	
+		set rtn=""
+		do data.%Push(dataObj)
+		set insObj.data=data										
+						
+        if (dictID'="")
+		{
+			set rtn=##class(src.util.operatetable).Update(.insObj)
+		}
+		else
+		{
+			set rtn=##class(src.util.operatetable).Insert(.insObj)
+		}		
+		
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+	    if errorCode'=0
+	    {
+		    set resultObj.errorCode=errorCode
+	    	set resultObj.errorMessage=errorMessage
+	   	}
+	}
+	catch(e)
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="保存病案首页信息数据出现问题:w ##class("_$ClassName()_").SaveMedInsuMedicalRecord("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	
+ 	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 保存患者疾病诊断信息
+/// Table:     	 BS_DRGPatientDiagnosis
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug:
+ClassMethod SaveDRGPatientDiagnosis(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set booleanSuccess = 0
+	set resultObj={}
+	set resultObj.errorCode=0
+	set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage(resultObj.errorCode)
+		
+	set detailArray= []
+	set detailArray = jsonObj.diseinfo
+	set admID=jsonObj.admID
+	set mdtrtId=jsonObj.mdtrtId
+	set iter = detailArray.%GetIterator()		
+	
+	while iter.%GetNext(.key , .value ) 
+	{
+		set itemObj = {}
+		set detailObj= detailArray.%Get(key)		
+		set IptPatnDisediagTypeCode=detailObj."ipt_patn_disediag_type_code"
+		set DiagCode=detailObj."diag_code"
+		
+		set sqlDiagCode="'"_DiagCode_"'"
+		set errorMsgList="", booleanSuccess=0  		                       							
+						
+		SET stmt = ##class(%SQL.Statement).%New()      
+        SET sql = " SELECT ID FROM BS_DRGPatientDiagnosis WHERE HISAdmID=? "
+                _ " AND MdtrtId=? AND DiagCode=? AND IptPatnDisediagTypeCode=? "        
+        SET status = stmt.%Prepare(sql)
+        IF $$$ISERR(status)
+        {
+            DO $System.Status.DisplayError(status)
+            QUIT
+        }	                
+        SET rset = stmt.%Execute(admID, mdtrtId,DiagCode,IptPatnDisediagTypeCode)   
+        WHILE rset.%Next() 
+        { 	      
+            set itemObj.ID=rset.ID       											
+		    set itemObj.MdtrtId = mdtrtId		
+		    set itemObj.MdtrtSn = detailObj."mdtrt_sn"
+		    set itemObj.IptMedcasHmpgSn = detailObj."ipt_medcas_hmpg_sn"
+		    set itemObj.PalgNo = detailObj."palg_no"
+		    set itemObj.IptPatnDisediagTypeCode = detailObj."ipt_patn_disediag_type_code"		
+		    set itemObj.DisediagType = detailObj."disediag_type"
+		    set itemObj.MaindiagFlag = detailObj."maindiag_flag"
+		    set itemObj.DiagCode = detailObj."diag_code"		
+		    set itemObj.DiagName = detailObj."diag_name"
+		    set itemObj.InhospDiagCode = detailObj."inhosp_diag_code"
+		    set itemObj.InhospDiagName = detailObj."inhosp_diag_name"		
+		    set itemObj.AdmDiseCondName = detailObj."adm_dise_cond_name"
+		    set itemObj.AdmDiseCondCode = detailObj."adm_dise_cond_code"
+		    set itemObj.AdmCond = detailObj."adm_cond"
+		    set itemObj.AdmCondCode = detailObj."adm_cond_code"	
+		    set itemObj.HighDiagEvid = detailObj."high_dise_evid"
+		    set itemObj.BkupDeg = detailObj."bkup_deg"
+		    set itemObj.BkupDegCode = detailObj."bkup_deg_code"
+		    set itemObj.ValiFlag = detailObj."vali_flag"	
+		    set itemObj.HISAdmID = admID
+		    set itemObj.UpdateTime=$zd($h,3)_" "_$zt($p($h,",",2),1)
+						
+		    set insObj={},data=[]
+		    set insObj.className="User.BSDRGPatientDiagnosis"
+		    do data.%Push(itemObj)
+		    set insObj.data= data			
+					
+		    if (itemObj.ID'="")
+		    {			
+		        set rtn=##class(src.util.operatetable).Update(.insObj) 	
+		    }
+		    else
+		    {
+		    	set rtn=##class(src.util.operatetable).Insert(.insObj) 			
+	    	}				
+		
+		    set resultObj.errorCode= rtn.errorCode
+		    set resultObj.errorMessage= errorMsgList_"更新结果为"_rtn.errorMessage
+		
+		    if resultObj.errorCode '= 0 
+	        {
+		       set booleanSuccess = booleanSuccess + 1 
+		       set errorMsgList = errorMsgList_resultObj.errorMessage 
+	        }       
+        }              	                								
+	}
+	
+	if booleanSuccess > 0
+	{
+		set resultObj.errorCode = "-1"	
+		set resultObj.errorMessage = errorMsgList
+	}
+	else
+	{
+		set resultObj.errorCode = "0"	
+		set resultObj.errorMessage = ""
+	}
+	
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 保存患者手术及操作信息
+/// Table:     	 BS_DRGPatientOperation
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug:
+ClassMethod SaveDRGPatientOperation(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set booleanSuccess = 0
+	set resultObj={}
+	set resultObj.errorCode=0
+	set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage(resultObj.errorCode)
+		
+	set detailArray= []		
+	set detailArray = jsonObj.oprninfo		
+	set mdtrtId=jsonObj.mdtrtId
+	set admID=jsonObj.admID
+	
+	set iter = detailArray.%GetIterator()			
+	while iter.%GetNext(.key , .value ) 
+	{
+		set itemObj = {}
+		set detailObj= detailArray.%Get(key)		
+		set OprnOprtSn=detailObj."oprn_oprt_sn"
+		set OprnOprtCode=detailObj."oprn_oprt_code"
+		
+		set sqlOprnOprtCode="'"_OprnOprtCode_"'"
+		set errorMsgList="", booleanSuccess=0  		
+
+		SET stmt = ##class(%SQL.Statement).%New()
+        SET sql = " SELECT ID FROM BS_DRGPatientOperation WHERE HISAdmID=? "
+                _ " AND MdtrtId=? AND OprnOprtCode=? AND OprnOprtSn=? "        
+        SET status = stmt.%Prepare(sql)
+        IF $$$ISERR(status)
+        {
+            DO $System.Status.DisplayError(status)
+            QUIT
+        }	                
+        SET rset = stmt.%Execute(admID, mdtrtId,OprnOprtCode,OprnOprtSn)   
+        WHILE rset.%Next() 
+        { 	      
+            set itemObj.ID=rset.ID       											
+		    set itemObj.MdtrtId = mdtrtId		
+		    set itemObj.MdtrtSn = detailObj."mdtrt_sn"
+		    set itemObj.IptMedcasHmpgSn = detailObj."ipt_medcas_hmpg_sn"		
+		    set itemObj.OprnOprtDate = detailObj."oprn_oprt_date"
+		    set itemObj.OprnOprtName = detailObj."oprn_oprt_name"
+		    set itemObj.OprnOprtCode = detailObj."oprn_oprt_code"
+		    set itemObj.OprnOprtSn = detailObj."oprn_oprt_sn"
+		    set itemObj.OprnLvCode = detailObj."oprn_lv_code"
+		    set itemObj.OprnLvName = detailObj."oprn_lv_name"
+		    set itemObj.OperName = detailObj."oper_name"
+		    set itemObj.Asit1Name = detailObj."asit_1_name"		
+		    set itemObj.AsitName2 = detailObj."asit_name2"
+		    set itemObj.SincHealLv = detailObj."sinc_heal_lv"
+	    	set itemObj.SincHealLvCode = detailObj."sinc_heal_lv_code"
+		    set itemObj.AnstMtdName = detailObj."anst_mtd_name"	
+		    set itemObj.AnstMtdCode = detailObj."anst_mtd_code"
+		    set itemObj.AnstDrName = detailObj."anst_dr_name"
+		    set itemObj.OprnOperPart = detailObj."oprn_oper_part"
+		    set itemObj.OprnOperPartCode = detailObj."oprn_oper_part_code"		
+		    set itemObj.OprnConTime = detailObj."oprn_con_time"
+		    set itemObj.AnstLvName = detailObj."anst_lv_name"
+		    set itemObj.AnstLvCode = detailObj."anst_lv_code"
+		    set itemObj.OprnPatnType = detailObj."oprn_patn_type"
+		    set itemObj.OprnPatnTypeCode = detailObj."oprn_patn_type_code"
+		    set itemObj.MainOprnFlag = detailObj."main_oprn_flag"
+		    set itemObj.AnstAsaLvCode = detailObj."anst_asa_lv_code"
+		    set itemObj.AnstAsaLvName = detailObj."anst_asa_lv_name"		
+		    set itemObj.AnstMednCode = detailObj."anst_medn_code"
+		    set itemObj.AnstMednName = detailObj."anst_medn_name"
+		    set itemObj.AnstMednDos = detailObj."anst_medn_dos"
+		    set itemObj.Unt = detailObj."unt"	
+		    set itemObj.AnstBegnTime = detailObj."anst_begntime"
+		    set itemObj.AnstEndTime = detailObj."anst_endtime"
+		    set itemObj.AnstCopnCode = detailObj."anst_copn_code"
+		    set itemObj.AnstCopnName = detailObj."anst_copn_name"		
+		    set itemObj.AnstCopnDscr = detailObj."anst_copn_dscr"	
+		    set itemObj.PacuBegnTime = detailObj."pacu_begntime"
+		    set itemObj.PacuEndTime = detailObj."pacu_endtime"
+		    set itemObj.CancOprnFlag = detailObj."canc_oprn_flag"
+	    	set itemObj.ValiFlag = detailObj."vali_flag"						
+	    	set itemObj.HISAdmID = admID
+	    	set itemObj.UpdateTime=$zd($h,3)_" "_$zt($p($h,",",2),1)
+						
+		    set insObj={},data=[]
+		    set insObj.className="User.BSDRGPatientOperation"
+		    do data.%Push(itemObj)
+		    set insObj.data= data			
+					
+		    if (itemObj.ID'="")
+		    {			
+		        set rtn=##class(src.util.operatetable).Update(.insObj) 	
+		    }
+		    else
+		    {
+		    	set rtn=##class(src.util.operatetable).Insert(.insObj) 			
+	    	}				
+		
+		    set resultObj.errorCode= rtn.errorCode
+		    set resultObj.errorMessage= errorMsgList_"更新结果为"_rtn.errorMessage
+		
+		    if resultObj.errorCode '= 0 
+	        {
+		       set booleanSuccess = booleanSuccess + 1 
+		       set errorMsgList = errorMsgList_resultObj.errorMessage 
+	        }       
+        }              	                								
+	}
+	
+	if booleanSuccess > 0
+	{
+		set resultObj.errorCode = "-1"	
+		set resultObj.errorMessage = errorMsgList
+	}
+	else
+	{
+		set resultObj.errorCode = "0"	
+		set resultObj.errorMessage = ""
+	}
+	
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 保存患者重症监护信息
+/// Table:     	 BS_DRGPatientICUInfo
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug:
+ClassMethod SaveDRGPatientICUInfo(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set booleanSuccess = 0
+	set resultObj={}
+	set resultObj.errorCode=0
+	set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage(resultObj.errorCode)
+		
+	set detailArray= []
+	set detailArray = jsonObj.icuinfo
+	set admID=jsonObj.admID
+	set mdtrtId=jsonObj.mdtrtId
+	set iter = detailArray.%GetIterator()		
+	
+	while iter.%GetNext(.key , .value ) 
+	{
+		set itemObj = {}
+		set detailObj= detailArray.%Get(key)		
+		set MedinsOrgCode=detailObj."medins_orgcode"
+		set ICUCodeId=detailObj."ICUCodeId"
+		
+		set errorMsgList="", booleanSuccess=0  		                       							
+						
+		SET stmt = ##class(%SQL.Statement).%New()      
+        SET sql = " SELECT ID FROM BS_DRGPatientICUInfo WHERE HISAdmID=? "
+                _ " AND MdtrtId=? AND ICUCodeId=? AND MedinsOrgCode=? "        
+        SET status = stmt.%Prepare(sql)
+        IF $$$ISERR(status)
+        {
+            DO $System.Status.DisplayError(status)
+            QUIT
+        }	                
+        SET rset = stmt.%Execute(admID, mdtrtId,ICUCodeId,MedinsOrgCode)   
+        WHILE rset.%Next() 
+        { 	      
+            set itemObj.ID=rset.ID       											
+	    	set itemObj.MdtrtId = mdtrtId		
+	    	set itemObj.MdtrtSn = detailObj."mdtrt_sn"
+		    set itemObj.IptMedcasHmpgSn = detailObj."ipt_medcas_hmpg_sn"
+	    	set itemObj.ICUCodeId = detailObj."icu_codeid"
+		    set itemObj.InpoolICUTime = detailObj."inpool_icu_time"
+		    set itemObj.OutICUTime = detailObj."out_icu_time"
+		    set itemObj.MedinsOrgCode = detailObj."medins_orgcode"
+		    set itemObj.NurscareLvCode = detailObj."nurscare_lv_code"
+		    set itemObj.NurscareLvName = detailObj."nurscare_lv_name"
+		    set itemObj.NurscareDays = detailObj."nurscare_days"
+		    set itemObj.BackICU = detailObj."back_icu"		
+	    	set itemObj.ValiFlag = detailObj."vali_flag"	
+		    set itemObj.HISAdmID = admID
+		    set itemObj.UpdateTime=$zd($h,3)_" "_$zt($p($h,",",2),1)		    
+						
+		    set insObj={},data=[]
+		    set insObj.className="User.BSDRGPatientICUInfo"
+		    do data.%Push(itemObj)
+		    set insObj.data= data			
+					
+		    if (itemObj.ID'="")
+		    {			
+		        set rtn=##class(src.util.operatetable).Update(.insObj) 	
+		    }
+		    else
+		    {
+		    	set rtn=##class(src.util.operatetable).Insert(.insObj) 			
+	    	}				
+		
+		    set resultObj.errorCode= rtn.errorCode
+		    set resultObj.errorMessage= errorMsgList_"更新结果为"_rtn.errorMessage
+		
+		    if resultObj.errorCode '= 0 
+	        {
+		       set booleanSuccess = booleanSuccess + 1 
+		       set errorMsgList = errorMsgList_resultObj.errorMessage 
+	        }       
+        }              	                								
+	}
+	
+	if booleanSuccess > 0
+	{
+		set resultObj.errorCode = "-1"	
+		set resultObj.errorMessage = errorMsgList
+	}
+	else
+	{
+		set resultObj.errorCode = "0"	
+		set resultObj.errorMessage = ""
+	}
+	
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 保存患者门诊慢特病信息
+/// Table:     	 BS_DRGPatientOpspDiseInfo
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug:
+ClassMethod SaveDRGPatientOpspDiseInfo(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set booleanSuccess = 0
+	set resultObj={}
+	set resultObj.errorCode=0
+	set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage(resultObj.errorCode)
+		
+	set detailArray= []
+	set detailArray = jsonObj.opspdiseinfo
+	set admID=jsonObj.admID
+	set mdtrtId=jsonObj.mdtrtId
+	set setlId=jsonObj.setlId
+	set iter = detailArray.%GetIterator()		
+	
+	while iter.%GetNext(.key , .value ) 
+	{
+		set itemObj = {}
+		set detailObj= detailArray.%Get(key)		
+		set DiagCode=detailObj."diag_code"
+		set MainiagFlag=detailObj."maindiag_flag"
+		
+		set errorMsgList="", booleanSuccess=0  		                       							
+						
+		SET stmt = ##class(%SQL.Statement).%New()      
+        SET sql = " SELECT ID FROM BS_DRGPatientOpspDiseInfo WHERE HISAdmID=? "
+                _ " AND MdtrtId=? AND SetlId=? AND DiagCode=? and MainiagFlag=? "        
+        SET status = stmt.%Prepare(sql)
+        IF $$$ISERR(status)
+        {
+            DO $System.Status.DisplayError(status)
+            QUIT
+        }	                
+        SET rset = stmt.%Execute(admID, mdtrtId,setlId,DiagCode,MainiagFlag)   
+        WHILE rset.%Next() 
+        { 	      
+            set itemObj.ID=rset.ID       											
+	    	set itemObj.MdtrtId = mdtrtId		
+	    	set itemObj.MdtrtSn = mdtrtId	    	
+		    set itemObj.SeltId = setlId		    
+	    	set itemObj.OprnOprtName = detailObj."oprn_oprt_name"
+		    set itemObj.OprnOprtCode = detailObj."oprn_oprt_code"
+		    set itemObj.DiagType = detailObj."diag_type"
+		    set itemObj.DiagCode = detailObj."diag_code"
+		    set itemObj.DiagName = detailObj."diag_name"
+		    set itemObj.AdmCondType = detailObj."adm_cond_type"
+		    set itemObj.MaindiagFlag = detailObj."maindiag_flag"
+	
+		    set itemObj.HISAdmID = admID
+		    set itemObj.UpdateTime=$zd($h,3)_" "_$zt($p($h,",",2),1)		    
+						
+		    set insObj={},data=[]
+		    set insObj.className="User.BSDRGPatientOpspDiseInfo"
+		    do data.%Push(itemObj)
+		    set insObj.data= data			
+					
+		    if (itemObj.ID'="")
+		    {			
+		        set rtn=##class(src.util.operatetable).Update(.insObj) 	
+		    }
+		    else
+		    {
+		    	set rtn=##class(src.util.operatetable).Insert(.insObj) 			
+	    	}				
+		
+		    set resultObj.errorCode= rtn.errorCode
+		    set resultObj.errorMessage= errorMsgList_"更新结果为"_rtn.errorMessage
+		
+		    if resultObj.errorCode '= 0 
+	        {
+		       set booleanSuccess = booleanSuccess + 1 
+		       set errorMsgList = errorMsgList_resultObj.errorMessage 
+	        }       
+        }              	                								
+	}
+	
+	if booleanSuccess > 0
+	{
+		set resultObj.errorCode = "-1"	
+		set resultObj.errorMessage = errorMsgList
+	}
+	else
+	{
+		set resultObj.errorCode = "0"	
+		set resultObj.errorMessage = ""
+	}
+	
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 保存患者基金支付信息
+/// Table:     	 BS_DRGPatientPayInfo
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug:
+ClassMethod SaveDRGPatientPayInfo(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set booleanSuccess = 0
+	set resultObj={}
+	set resultObj.errorCode=0
+	set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage(resultObj.errorCode)
+		
+	set detailArray= []
+	set detailArray = jsonObj.payinfo
+	set admID=jsonObj.admID
+	set mdtrtId=jsonObj.mdtrtId
+	set setlId=jsonObj.setlId
+	set iter = detailArray.%GetIterator()		
+	
+	while iter.%GetNext(.key , .value ) 
+	{
+		set itemObj = {}
+		set detailObj= detailArray.%Get(key)		
+		set FundPayType=detailObj."fund_pay_type"		
+		
+		set errorMsgList="", booleanSuccess=0  		                       							
+						
+		SET stmt = ##class(%SQL.Statement).%New()      
+        SET sql = " SELECT ID FROM BS_DRGPatientPayInfo WHERE HISAdmID=? "
+                _ " AND MdtrtId=? AND SetlId=? And FundPayType=? "        
+        SET status = stmt.%Prepare(sql)
+        IF $$$ISERR(status)
+        {
+            DO $System.Status.DisplayError(status)
+            QUIT
+        }	                
+        SET rset = stmt.%Execute(admID, mdtrtId,setlId,FundPayType)   
+        WHILE rset.%Next() 
+        { 	      
+            set itemObj.ID=rset.ID       											
+	    	set itemObj.MdtrtId = mdtrtId		
+	    	set itemObj.MdtrtSn = mdtrtId
+		    set itemObj.SetlId = setlId
+	    	set itemObj.FundPayType = detailObj."fund_pay_type"
+		    set itemObj.fundPayAmt = detailObj."fund_payamt"
+		    	
+		    set itemObj.HISAdmID = admID
+		    set itemObj.UpdateTime=$zd($h,3)_" "_$zt($p($h,",",2),1)		    
+						
+		    set insObj={},data=[]
+		    set insObj.className="User.BSDRGPatientPayInfo"
+		    do data.%Push(itemObj)
+		    set insObj.data= data			
+					
+		    if (itemObj.ID'="")
+		    {			
+		        set rtn=##class(src.util.operatetable).Update(.insObj) 	
+		    }
+		    else
+		    {
+		    	set rtn=##class(src.util.operatetable).Insert(.insObj) 			
+	    	}				
+		
+		    set resultObj.errorCode= rtn.errorCode
+		    set resultObj.errorMessage= errorMsgList_"更新结果为"_rtn.errorMessage
+		
+		    if resultObj.errorCode '= 0 
+	        {
+		       set booleanSuccess = booleanSuccess + 1 
+		       set errorMsgList = errorMsgList_resultObj.errorMessage 
+	        }       
+        }              	                								
+	}
+	
+	if booleanSuccess > 0
+	{
+		set resultObj.errorCode = "-1"	
+		set resultObj.errorMessage = errorMsgList
+	}
+	else
+	{
+		set resultObj.errorCode = "0"	
+		set resultObj.errorMessage = ""
+	}
+	
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 保存患者输血信息
+/// Table:     	 BS_DRGPatientBldInfo
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug:
+ClassMethod SaveDRGPatientBldInfo(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set booleanSuccess = 0
+	set resultObj={}
+	set resultObj.errorCode=0
+	set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage(resultObj.errorCode)
+		
+	set detailArray= []
+	set detailArray = jsonObj.bldinfo
+	set admID=jsonObj.admID
+	set mdtrtId=jsonObj.mdtrtId
+	set setlId=jsonObj.setlId
+	set iter = detailArray.%GetIterator()		
+	
+	while iter.%GetNext(.key , .value ) 
+	{
+		set itemObj = {}
+		set detailObj= detailArray.%Get(key)		
+		set BldCat=detailObj."bld_cat"		
+		
+		set errorMsgList="", booleanSuccess=0  		                       													
+		SET stmt = ##class(%SQL.Statement).%New()      
+        SET sql = " SELECT ID FROM BS_DRGPatientBldInfo WHERE HISAdmID=? "
+                _ " AND MdtrtId=? AND SeltId=? AND BldCat=? "        
+        SET status = stmt.%Prepare(sql)
+        IF $$$ISERR(status)
+        {
+            DO $System.Status.DisplayError(status)
+            QUIT
+        }	                
+        SET rset = stmt.%Execute(admID, mdtrtId,setlId,BldCat)   
+        WHILE rset.%Next() 
+        { 	      
+            set itemObj.ID=rset.ID       											
+	    	set itemObj.MdtrtId = mdtrtId		
+	    	set itemObj.MdtrtSn = mdtrtId
+		    set itemObj.SetlId = setlId
+		    
+	    	set itemObj.BldCat = detailObj."bld_cat"
+		    set itemObj.BldAmt = detailObj."bld_amt"
+		    set itemObj.BldUnt = detailObj."bld_unt"
+		    		  
+		    set itemObj.HISAdmID = admID
+		    set itemObj.UpdateTime=$zd($h,3)_" "_$zt($p($h,",",2),1)		    
+						
+		    set insObj={},data=[]
+		    set insObj.className="User.BSDRGPatientBldInfo"
+		    do data.%Push(itemObj)
+		    set insObj.data= data			
+					
+		    if (itemObj.ID'="")
+		    {			
+		        set rtn=##class(src.util.operatetable).Update(.insObj) 	
+		    }
+		    else
+		    {
+		    	set rtn=##class(src.util.operatetable).Insert(.insObj) 			
+	    	}				
+		
+		    set resultObj.errorCode= rtn.errorCode
+		    set resultObj.errorMessage= errorMsgList_"更新结果为"_rtn.errorMessage
+		
+		    if resultObj.errorCode '= 0 
+	        {
+		       set booleanSuccess = booleanSuccess + 1 
+		       set errorMsgList = errorMsgList_resultObj.errorMessage 
+	        }       
+        }              	                								
+	}
+	
+	if booleanSuccess > 0
+	{
+		set resultObj.errorCode = "-1"	
+		set resultObj.errorMessage = errorMsgList
+	}
+	else
+	{
+		set resultObj.errorCode = "0"	
+		set resultObj.errorMessage = ""
+	}
+	
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 保存患者收费项目信息
+/// Table:     	 BS_DRGPatientItemInfo
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug:
+ClassMethod SaveDRGPatientItemInfo(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set booleanSuccess = 0
+	set resultObj={}
+	set resultObj.errorCode=0
+	set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage(resultObj.errorCode)
+		
+	set detailArray= []
+	set detailArray = jsonObj.iteminfo
+	set admID=jsonObj.admID
+	set mdtrtId=jsonObj.mdtrtId
+	set setlId=jsonObj.setlId
+	set iter = detailArray.%GetIterator()		
+	
+	while iter.%GetNext(.key , .value ) 
+	{
+		set itemObj = {}
+		set detailObj= detailArray.%Get(key)		
+		set MedChrgitm=detailObj."med_chrgitm"		
+		
+		set errorMsgList="", booleanSuccess=0  		                       							
+						
+		SET stmt = ##class(%SQL.Statement).%New()      
+        SET sql = " SELECT ID FROM BS_DRGPatientItemInfo WHERE HISAdmID=? "
+                _ " AND MdtrtId=? AND SetlId=? AND MedChrgitm=? "        
+        SET status = stmt.%Prepare(sql)
+        IF $$$ISERR(status)
+        {
+            DO $System.Status.DisplayError(status)
+            QUIT
+        }	                
+        SET rset = stmt.%Execute(admID, mdtrtId,setlId,MedChrgitm)   
+        WHILE rset.%Next() 
+        { 	      
+            set itemObj.ID=rset.ID       											
+	    	set itemObj.MdtrtId = mdtrtId		
+	    	set itemObj.MdtrtSn = mdtrtId
+		    set itemObj.SetlId = setlId
+		    
+	    	set itemObj.MedChrgitm = detailObj."med_chrgitm"
+		    set itemObj.Amt = detailObj."amt"
+		    set itemObj.ClaaSumfee = detailObj."claa_sumfee"
+		    set itemObj.ClabAmt = detailObj."clab_amt"
+		    set itemObj.FulamtOwnpayAmt = detailObj."fulamt_ownpay_amt"
+		    set itemObj.OthAmt = detailObj."oth_amt"
+		    set itemObj.NurscareDays = detailObj."nurscare_days"
+		    set itemObj.BackICU = detailObj."back_icu"		
+	    	set itemObj.ValiFlag = detailObj."vali_flag"	
+		    set itemObj.HISAdmID = admID
+		    set itemObj.UpdateTime=$zd($h,3)_" "_$zt($p($h,",",2),1)		    
+						
+		    set insObj={},data=[]
+		    set insObj.className="User.BSDRGPatientItemInfo"
+		    do data.%Push(itemObj)
+		    set insObj.data= data			
+					
+		    if (itemObj.ID'="")
+		    {			
+		        set rtn=##class(src.util.operatetable).Update(.insObj) 	
+		    }
+		    else
+		    {
+		    	set rtn=##class(src.util.operatetable).Insert(.insObj) 			
+	    	}				
+		
+		    set resultObj.errorCode= rtn.errorCode
+		    set resultObj.errorMessage= errorMsgList_"更新结果为"_rtn.errorMessage
+		
+		    if resultObj.errorCode '= 0 
+	        {
+		       set booleanSuccess = booleanSuccess + 1 
+		       set errorMsgList = errorMsgList_resultObj.errorMessage 
+	        }       
+        }              	                								
+	}
+	
+	if booleanSuccess > 0
+	{
+		set resultObj.errorCode = "-1"	
+		set resultObj.errorMessage = errorMsgList
+	}
+	else
+	{
+		set resultObj.errorCode = "0"	
+		set resultObj.errorMessage = ""
+	}
+	
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 从HIS获取结算清单信息
+/// code:		 
+/// Input:{"code":"09030042","params":[{"admID":"5017565","funNo":"4101A","insuAdmNo":"202601031015358471682200000000"}
+/// Debug：w ##class(src.DRG.MedicalRecord).GetSettleMentInfoFromHIS({"code":"09030042","params":[{"admID":"5017565","funNo":"4101A","insuAdmNo":"202601031015358471682200000000"}]})
+ClassMethod GetSettlementInfoFromHIS(jsonObj) As %Library.DynamicObject
+{
+    new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":""}
+	try
+	{
+		set session=jsonObj.session.%Get(0)
+		set hospID=session.hospID
+		set params=jsonObj.params.%Get(0)
+		//set hospCode=session.hospCode
+		set admID=params.admID
+		set funNo=params.funNo
+		set insuAdmNo=params.insuAdmNo		
+		
+		///获取HIS数据
+		set postObj={"params":(jsonObj.params),"code":"09030042","session":(jsonObj.session)}
+		set ret=##class(src.External.Service).HisService(postObj,hospID)	
+		set ret=##class(%Library.DynamicObject).%FromJSON(ret)
+		
+		if ret.errorCode'=0
+		{
+			set resultObj.errorCode=ret.errorCode
+			set resultObj.errorMessage=ret.errorMessage
+			quit
+		}
+	
+		if ret.result.%Size()=0
+		{
+			set resultObj.errorCode=-1
+			set resultObj.errorMessage="未查询到有效结算清单信息"
+			quit
+		}
+		else //将获取到的结算清单信息保存到BS_DRGMedInsuSettleMentInfo
+		{
+			set postObj={}			
+			set postObj=ret.result
+			set postObj.admID=admID
+            set iret=..SaveMedInsuSettleMentInfo(postObj)						
+		}
+		
+		set resultObj.result=ret.result
+	}
+	catch(e)
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		b ;;  errorMessage
+		set errorInfo="获取结算清单信息错误:w ##class("_$ClassName()_").GetSettlementInfoFromHIS("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		//set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_errorInfo
+	    set resultObj.errorMessage=errorMessage_postObj.%ToJSON()
+	}
+	
+	quit resultObj
+}
+
+/// CreatDate:   2026-01-01
+/// Description: 保存结算清单信息表
+/// Table:     	 BS_DRGMedInsuSettleMentInfo
+/// Input:        
+/// Output:      
+/// Return:  	 	 
+/// Debug:
+ClassMethod SaveMedInsuSettleMentInfo(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set resultObj={}
+	set resultObj.errorCode="0"
+	set resultObj.errorMessage="保存成功"
+	set resultObj.result={}
+	set perMsg=""
+	try
+	{
+		set data=[]
+		set dataObj={}
+		//set params=jsonObj.params.%Get(0)
+		//set paramsObj=params.result
+		set paramsObj=jsonObj.params.%Get(0)			
+		
+		//set paramsObj=##class(%DynamicAbstractObject).%FromJSON(jsonString)
+			
+		set admID=paramsObj.admID
+		set mdtrtId=paramsObj.setlinfo."mdtrt_id"
+		set psnNo=paramsObj.setlinfo."psn_no"
+		set setlId=paramsObj.setlinfo."setl_id"
+		set medcasNo=paramsObj.setlinfo."medcasno"
+		
+		set PsnName=paramsObj.setlinfo."psn_name"
+		set CertNo=paramsObj.setlinfo."certno"
+		set Gend=paramsObj.setlinfo."gend"
+		set Age=paramsObj.setlinfo.age		
+		
+		//查询表判断记录是否存在
+		set dictID=""
+		&sql(select ID into :dictID from BS_DRGMedInsuSettleMentInfo 
+		     where HISAdmID=:admID and MdtrtId=:mdtrtId and psnNo=:psnNo 
+		     And SetlId=:setlId)		
+		if (SQLCODE=0)
+		{
+		    set dataObj.ID= dictID	
+		}
+		else
+		{
+			set dataObj.ID=""
+		}	
+				
+		//患者基本信息返回空，从病案信息中获取
+		if (PsnName ="")
+		{		    
+		    &sql(select PsnName,CertNo,Gend,Age into :PsnName,:CertNo,:Gend,:Age 
+		         from BS_DRGMedInsuMedicalRecord 
+		         where HISAdmID=:admID and MedcasNo=:medcasNo and psnNo=:psnNo)		
+	    	if (SQLCODE=0)
+		    {
+		        set dataObj.PsnName= PsnName
+		        set dataObj.CertNo= CertNo	
+		        set dataObj.Gend= Gend	
+		        set dataObj.Age= Age	
+		    }	
+		}
+		else
+		{
+		    set dataObj.PsnName= PsnName
+		    set dataObj.CertNo= CertNo	
+		    set dataObj.Gend= Gend	
+		    set dataObj.Age= Age	
+		}		
+										
+		set dataObj.HISAdmID=paramsObj.admID
+		//setlinfo患者基本信息
+		set dataObj.PsnNo=paramsObj.setlinfo."psn_no"
+		set dataObj.MdtrtSn=paramsObj.setlinfo."mdtrt_sn"
+		set dataObj.MdtrtId=paramsObj.setlinfo."mdtrt_id"					
+        set dataObj.SetlId=paramsObj.setlinfo."setl_id"
+        set dataObj.FixmedinsCode=paramsObj.setlinfo."fixmedins_code"
+        set dataObj.FixmedinsName=paramsObj.setlinfo."fixmedins_name"        
+		set dataObj.HiSetlLv=paramsObj.setlinfo."hi_setl_lv"		 		
+		set dataObj.MedcasNo=paramsObj.setlinfo."medcasno"
+		set dataObj.DclaTime=paramsObj.setlinfo."dcla_time"				
+		set dataObj.Ntly=paramsObj.setlinfo."ntly"
+		set dataObj.Prfs=paramsObj.setlinfo."prfs"
+		set dataObj.CurrAddr=paramsObj.setlinfo."curr_addr"
+		set dataObj.EmpName=paramsObj.setlinfo."emp_name"
+		set dataObj.EmprAddr=paramsObj.setlinfo."empr_addr"
+		set dataObj.EmprTel=paramsObj.setlinfo."empr_tel"
+		set dataObj.PosCode=paramsObj.setlinfo."poscode"					
+        set dataObj.ConerName=paramsObj.setlinfo."coner_name"
+        set dataObj.PatnRlts=paramsObj.setlinfo."patn_rlts"
+        set dataObj.ConerAddr=paramsObj.setlinfo."coner_addr"
+        set dataObj.ConerTel=paramsObj.setlinfo."coner_tel"
+		set dataObj.NwbBirWt=paramsObj.setlinfo."nwb_bir_wt"
+		set dataObj.NwbAdmWt=paramsObj.setlinfo."nwb_adm_wt"
+		set dataObj.MulNwbBirWt=paramsObj.setlinfo."mul_nwb_bir_wt"
+		set dataObj.MulNwbAdmWt=paramsObj.setlinfo."mul_nwb_adm_wt"       
+        set dataObj.OpspDiagCaty=paramsObj.setlinfo."opsp_diag_caty"	
+        set dataObj.IptMedType=paramsObj.setlinfo."ipt_med_type"
+        set dataObj.AdmWay=paramsObj.setlinfo."adm_way"				
+		set dataObj.TrtType=paramsObj.setlinfo."trt_type"																		
+		set dataObj.AdmTime=paramsObj.setlinfo."adm_time"		
+		set dataObj.RefldeptDept=paramsObj.setlinfo."refldept_dept"	
+		set dataObj.DscgTime=paramsObj.setlinfo."dscg_time"	
+		set dataObj.AdmCaty=paramsObj.setlinfo."adm_caty"
+		set dataObj.DscgCaty=paramsObj.setlinfo."dscg_caty"
+		set dataObj.AdmDeptCodg=paramsObj.setlinfo."adm_dept_codg"
+		set dataObj.AdmDeptName=paramsObj.setlinfo."adm_dept_name"
+		set dataObj.DscgDeptCodg=paramsObj.setlinfo."dscg_dept_codg"
+		set dataObj.DscgDeptName=paramsObj.setlinfo."dscg_dept_name"
+		set dataObj.OtpWmDise=paramsObj.setlinfo."otp_wm_dise"
+		set dataObj.WmDiseCode=paramsObj.setlinfo."wm_dise_code"
+		set dataObj.OtpTcmDise=paramsObj.setlinfo."otp_tcm_dise"
+		set dataObj.tcmDiseCode=paramsObj.setlinfo."tcm_dise_code"							
+		set dataObj.otptcmdise=paramsObj.setlinfo."otptcmdise"
+		set dataObj.tcmdisecode=paramsObj.setlinfo."tcmdisecode"		
+		set dataObj.VentUsedDura=paramsObj.setlinfo."vent_used_dura"
+		set dataObj.PwcryBfadmComaDura=paramsObj.setlinfo."pwcry_bfadm_coma_dura"												
+		set dataObj.PwcryAfadmComaDura=paramsObj.setlinfo."pwcry_afadm_coma_dura"
+		set dataObj.SpgaNurscareDays=paramsObj.setlinfo."spga_nurscare_days"		
+		set dataObj.Lv1NurscareDays=paramsObj.setlinfo."lv1_nurscare_days"
+		set dataObj.ScdNurscareDays=paramsObj.setlinfo."scd_nurscare_days"		
+		set dataObj.Lv3NurscareDays=paramsObj.setlinfo."lv3_nurscare_days"								
+		set dataObj.DscgWay=paramsObj.setlinfo."dscg_way"		
+		set dataObj.AcpMedinsName=paramsObj.setlinfo."acp_medins_name"
+		set dataObj.AcpOptinsCode=paramsObj.setlinfo."acp_optins_code"		
+		set dataObj.BillCode=paramsObj.setlinfo."bill_code"
+		set dataObj.BillNo=paramsObj.setlinfo."bill_no"														
+		set dataObj.BizSn=paramsObj.setlinfo."biz_sn"		
+		set dataObj.DaysRinpFlag31=paramsObj.setlinfo."days_rinp_flag_31"					
+		set dataObj.DaysRinpPup31=paramsObj.setlinfo."days_rinp_pup_31"
+		set dataObj.ChfpdrCode=paramsObj.setlinfo."chfpdr_code"					
+        set dataObj.ChfpdrName=paramsObj.setlinfo."chfpdr_name"
+		set dataObj.SetlBegnDate=paramsObj.setlinfo."setl_begn_date"
+		set dataObj.SetlEndDate=paramsObj.setlinfo."setl_end_date"
+		set dataObj.MedinsFillDept=paramsObj.setlinfo."medins_fill_dept"
+		set dataObj.MedinsFillPsn=paramsObj.setlinfo."medins_fill_psn"		
+		set dataObj.RespNursCode=paramsObj.setlinfo."resp_nurs_code"
+		set dataObj.StasType=paramsObj.setlinfo."stas_type"		
+		set dataObj.HiPaymtd=paramsObj.setlinfo."hi_paymtd"			
+		set dataObj.UpdateTime=$zd($h,3)_" "_$zt($p($h,",",2),1)			
+		set dataObj.UpdateDate=$zd($h,3)
+		set dataObj.HISReturn=paramsObj.%ToJSON()		
+		
+		//opspdiseinfo.门诊慢特病诊断信息
+		if (paramsObj.opspdiseinfo '="")
+		{		    
+		    set dataObj.OpspDiseInfo=paramsObj.opspdiseinfo.%ToJSON()
+		    
+		    //保存门诊慢特病诊断信息
+		    set opspDiseInfoObj={}
+		    set opspDiseInfoObj.opspdiseinfo=paramsObj.opspdiseinfo
+		    set opspDiseInfoObj.admID=admID
+		    set opspDiseInfoObj.mdtrtId=mdtrtId
+		    set opspDiseInfoObj.setlId=setlId
+		    set iResOpsp=..SaveDRGPatientOpspDiseInfo(opspDiseInfoObj)
+		    if (iResOpsp.errorCode '=0)
+		    {
+			    set perMsg=perMsg_"保存患者门诊慢特病诊断信息异常："_iResOpsp.errorMessage
+		        set resultObj.errorCode=-1
+	    	    set resultObj.errorMessage=perMsg			
+			    quit 
+		    }		    	
+		}
+        //diseinfo.住院诊断信息
+        if (paramsObj.diseinfo '="")
+        {		    
+		    set dataObj.DiseInfo=paramsObj.diseinfo.%ToJSON()	        
+	    }		
+		//oprninfo.手术操作信息
+		if (paramsObj.oprninfo '="")
+		{		    
+		    set dataObj.OprnInfo=paramsObj.oprninfo.%ToJSON()			
+	    }		
+		//payinfo.基金支付信息-4101
+		if (paramsObj.payinfo '="")	
+		{		    
+		    set dataObj.PayInfo=paramsObj.payinfo.%ToJSON()	
+		    
+		    //保存基金支付信息
+	    	set payInfoObj={}
+	    	set payInfoObj.payinfo=paramsObj.payinfo
+	    	set payInfoObj.admID=admID
+		    set payInfoObj.mdtrtId=mdtrtId
+		    set payInfoObj.setlId=setlId
+	    	set iResPay=..SaveDRGPatientPayInfo(payInfoObj)
+		    if (iResPay.errorCode '=0)
+		    {
+			    set perMsg=perMsg_"保存患者基金支付信息异常："_iResPay.errorMessage
+		        set resultObj.errorCode=-2
+	    	    set resultObj.errorMessage=perMsg
+			    quit
+	        }		    
+		}			
+        //iteminfo.收费项目信息-4101
+        if (paramsObj.iteminfo '="")	
+        {		    
+		    set dataObj.ItemInfo=paramsObj.iteminfo.%ToJSON()
+		    
+	    	//保存收费项目信息
+		    set itemInfoObj={}	
+		    set itemInfoObj.iteminfo=paramsObj.iteminfo
+		    set itemInfoObj.admID=admID
+		    set itemInfoObj.mdtrtId=mdtrtId
+		    set itemInfoObj.setlId=setlId
+		    set iResItem=..SaveDRGPatientItemInfo(itemInfoObj)
+	     	if (iResItem.errorCode '=0)
+	    	{
+		     	set perMsg=perMsg_"保存患者收费项目信息异常："_iResItem.errorMessage
+		        set resultObj.errorCode=-3
+	        	set resultObj.errorMessage=perMsg
+		    	quit
+	     	}		    	        
+	    }		
+		//icuinfo.重症监护信息
+		if (paramsObj.icuinfo '="")
+		{
+		    set dataObj.ICUInfo=paramsObj.icuinfo.%ToJSON()		
+		}		
+		//bldinfo.输血信息
+		if (paramsObj.bldinfo '="")
+		{
+		    set dataObj.BldInfo=paramsObj.bldinfo.%ToJSON()	
+		    
+		    //保存输血信息
+		    set bldInfoObj={}	
+		    set bldInfoObj.bldinfo=	paramsObj.bldinfo
+	    	set bldInfoObj.admID=admID
+	    	set bldInfoObj.mdtrtId=mdtrtId	
+	    	set bldInfoObj.setlId=setlId		
+	    	set iResBld=..SaveDRGPatientBldInfo(bldInfoObj)
+	    	if (iResBld.errorCode '=0)
+	    	{
+		    	set perMsg=perMsg_"保存患者输血信息异常："_iResBld.errorMessage
+		        set resultObj.errorCode=-4
+	        	set resultObj.errorMessage=perMsg			
+		    	quit 		
+	    	}		    
+		}
+																																
+		set insObj={}
+		set insObj.className="User.BSDRGMedInsuSettleMentInfo"
+		//set insObj.updateUserID=userID	
+		set rtn=""
+		do data.%Push(dataObj)
+		set insObj.data=data										
+						
+        if (dictID'="")
+		{
+			set rtn=##class(src.util.operatetable).Update(.insObj)
+		}
+		else
+		{
+			set rtn=##class(src.util.operatetable).Insert(.insObj)
+		}		
+		
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+	    if errorCode'=0
+	    {
+		    set resultObj.errorCode=errorCode
+	    	set resultObj.errorMessage=errorMessage
+	   	}
+	}
+	catch(e)
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="保存医保结算清单信息数据出现问题:w ##class("_$ClassName()_").SaveMedInsuSettleMentInfo("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	
+ 	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 查询结算清单信息表
+/// Table: BS_DRGMedInsuMedicalRecord
+/// code:		 
+/// Input:{"params":[{"admID":"3047034"}]}
+/// Debug：w ##class(src.INSU.BaseLineVersion.EMRInfo).GetEMRInfo4401({"code":"09030028","params":[{"admID":(admID)}]})
+ClassMethod QuerySettleMentInfo(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try
+	{
+		if (jsonObj.%IsDefined("pagination")'=0) 
+		{
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		
+		//查询条件
+		set params=jsonObj.params.%Get(0)
+		set MdtrtId=params.mdtrtId //医保就诊ID
+		set PsnNo=params.psnNo //医保个人编号
+		set SetlId=params.setlId //医保结算ID
+		set MedcasNo=params.medcasNo //病案号
+		//set PsnName=params.psnName //姓名
+		//set CertNo=params.certno //证件号码
+		set AdmID=params.admID //HIS就诊号
+		
+		set AdmCheck=params.admCheck //查询时间类型-In入院时间；Out出院时间				
+		set StartDate=params.startDate //查询开始时间-出院日期
+		set EndDate=params.endDate //查询结束时间-出院日期		
+		
+		set sql =" SELECT ID,MdtrtId,PsnNo,SetlId,CertNo,MedcasNo,DclaTime,Ntly, "
+		        _" Prfs,CurrAddr,EmpName,EmpAddr,EmpTel,PosCode,ConerName,PatnRlts, "
+			    _" ConerAddr,ConerTel,NwbAdmType,NwbBirWt,NwbAdmWt,MulNwbBirWt, "
+			    _" MulNwbAdmWt,OpspDiagCaty,OpspMdtrtDate,AdmWay,TrtType,AdmTime, "
+			    _" RefldeptDept,DscgTime,DscgCaty,OtpWmDise,WmDiseCode,OtpTcmDise, "
+			    _" TcmDiseCode,VentUsedDura,PwcryBfadmComaDura,PwcryAfadmComaDura, "
+			    _" SpgaUurscareDays,Lv1NurscareDays,ScdnurscareDays,Lv3NurscareDays, "
+			    _" DscgWay,AcpMedinsName,AcpOptinsCode,BillCode,BillNo,BizSn,DaysRinpFlag31, "
+			    _" DaysRinpPup31,ChfpdrCode,SetlBegnDate,SetlEndDate,MedinsFillDept, "
+			    _" MedinsFillPsn,RespNursCode,StasType,HiPaymtd,ItemInfo,OpspDiseInfo,PayInfo, "
+			    _" DiseInfo,OprnInfo,ICUInfo,BldInfo,HISReturn,UpdateDate,UpdateTime, "
+			    _" DRG,HISAdmID,FixmedinsCode "
+			    _" FROM BS_DRGMedInsuSettleMentInfo where 1=1"
+			    
+		if MdtrtId'=""
+		{
+			set sql=sql_" and MdtrtId = '"_MdtrtId_"'" 
+		}	
+		if PsnNo'=""
+		{
+			set sql=sql_" and PsnNo = '"_PsnNo_"'" 
+		}	
+		if SetlId'=""
+		{
+			set sql=sql_" and SetlId = '"_SetlId_"'" 
+		}			
+		if MedcasNo'=""
+		{
+			set sql=sql_" and MedcasNo = '"_MedcasNo_"'" 
+		}
+		if AdmID'=""
+		{
+			set sql=sql_" and HISAdmID = '"_AdmID_"'" 
+		}		
+		
+		if (AdmCheck="In")
+		{
+		    if StartDate'=""
+		    {
+			    set sql=sql_" and AdmTime > '"_StartDate_"'" 
+		    }
+		    if EndDate'=""
+		    {
+			    set sql=sql_" and AdmTime <= '"_EndDate_"'" 
+		    }			
+		}
+		else
+		{
+		    if StartDate'=""
+		    {
+			    set sql=sql_" and DscgTime > '"_StartDate_"'" 
+		    }
+		    if EndDate'=""
+		    {
+			    set sql=sql_" and DscgTime <= '"_EndDate_"'" 
+		    }			
+		}																
+
+		set sqlObj=##class(%SQL.Statement).%New(1)
+		set sc=sqlObj.%Prepare(sql)
+		set result=sqlObj.%Execute()
+		while result.%Next(sc)	
+		{
+			set dataObj={}
+			set dataObj.mdtrtId=result.%Get("MdtrtId")
+			set MdtrtId = result.%Get("MdtrtId")			
+			set dataObj.psnNo=result.%Get("PsnNo")
+			set psnNo = result.%Get("PsnNo")
+			set dataObj.setlId=result.%Get("SetlId")
+			set dataObj.certNo=result.%Get("CertNo")
+			set dataObj.medcasNo=result.%Get("MedcasNo")
+			set MedcasNo=result.%Get("MedcasNo")
+			set dataObj.dclaTime=result.%Get("DclaTime")
+			set dataObj.ntly=result.%Get("Ntly")
+			set dataObj.prfs=result.%Get("Prfs")
+			set dataObj.currAddr=result.%Get("CurrAddr")
+			set dataObj.empName=result.%Get("EmpName")
+			set dataObj.empAddr= result.%Get("EmpAddr")
+			set dataObj.empTel=result.%Get("EmpTel")
+			set dataObj.posCode=result.%Get("PosCode")
+			set dataObj.conerName=result.%Get("ConerName")
+			set dataObj.patnRlts=result.%Get("PatnRlts")
+			set dataObj.conerAddr=result.%Get("ConerAddr")
+			set dataObj.conerTel=result.%Get("ConerTel")
+			set dataObj.nwbAdmType=result.%Get("NwbAdmType")
+			set dataObj.nwbBirWt=result.%Get("NwbBirWt")
+			set dataObj.nwbAdmWt=result.%Get("NwbAdmWt")
+			set dataObj.mulNwbBirWt=result.%Get("MulNwbBirWt")
+			set dataObj.mulNwbAdmWt=result.%Get("MulNwbAdmWt")
+			set dataObj.opspDiagCaty=result.%Get("OpspDiagCaty")
+			set dataObj.opspMdtrtDate=result.%Get("OpspMdtrtDate")
+			set dataObj.admWay=result.%Get("AdmWay")
+			set dataObj.trtType=result.%Get("TrtType")
+			set dataObj.admTime=result.%Get("AdmTime")
+			set dataObj.refldeptDept=result.%Get("RefldeptDept")
+			set dataObj.dscgTime=result.%Get("DscgTime")
+			set dataObj.dscgCaty=result.%Get("DscgCaty")
+			set dataObj.otpWmDise=result.%Get("OtpWmDise")
+			set dataObj.wmDiseCode=result.%Get("WmDiseCode")
+			set dataObj.otpTcmDise=result.%Get("OtpTcmDise")
+			set dataObj.tcmDiseCode=result.%Get("TcmDiseCode")
+			set dataObj.ventUsedDura=result.%Get("VentUsedDura")
+			set dataObj.pwcryBfadmComaDura=result.%Get("PwcryBfadmComaDura")
+			set dataObj.pwcryAfadmComaDura=result.%Get("PwcryAfadmComaDura")
+			set dataObj.spgaUurscareDays=result.%Get("SpgaUurscareDays")
+			set dataObj.lv1NurscareDays=result.%Get("Lv1NurscareDays")
+			set dataObj.scdnurscareDays=result.%Get("ScdnurscareDays")
+			set dataObj.lv3NurscareDays=result.%Get("Lv3NurscareDays")
+			set dataObj.dscgWay=result.%Get("DscgWay")
+			set dataObj.acpMedinsName=result.%Get("AcpMedinsName")
+			set dataObj.acpOptinsCode=result.%Get("AcpOptinsCode")
+			set dataObj.billCode=result.%Get("BillCode")
+			set dataObj.billNo=result.%Get("BillNo")
+			set dataObj.bizSn=result.%Get("BizSn")
+			set dataObj.daysRinpFlag31=result.%Get("DaysRinpFlag31")
+			set dataObj.daysRinpPup31=result.%Get("DaysRinpPup31")
+			set dataObj.chfpdrCode=result.%Get("ChfpdrCode")
+			set dataObj.setlBegnDate=result.%Get("SetlBegnDate")
+			set dataObj.setlEndDate=result.%Get("SetlEndDate")
+			set dataObj.medinsFillDept=result.%Get("MedinsFillDept")
+			set dataObj.medinsFillPsn=result.%Get("MedinsFillPsn")
+			set dataObj.respNursCode=result.%Get("RespNursCode")
+			set dataObj.stasType=result.%Get("StasType")
+			set dataObj.hiPaymtd=result.%Get("HiPaymtd")
+			
+			//收费项目信息	
+			if (result.%Get("ItemInfo") '="")
+			{
+			    set dataObj.itemInfo=##class(%DynamicAbstractObject).%FromJSON(result.%Get("ItemInfo"))
+			}
+			else
+			{
+			    set dataObj.itemInfo=""	
+			}
+			//门诊慢特病信息    
+			if (result.%Get("OpspDiseInfo") '="")
+			{
+			    set dataObj.opspDiseInfo=##class(%DynamicAbstractObject).%FromJSON(result.%Get("OpspDiseInfo"))
+			}
+			else
+			{
+			    set dataObj.opspDiseInfo=""	
+			}
+			//支付信息   
+			if (result.%Get("PayInfo") '="")
+			{
+			    set dataObj.payInfo=##class(%DynamicAbstractObject).%FromJSON(result.%Get("PayInfo"))
+			}
+			else
+			{
+			    set dataObj.payInfo=""	
+			}
+			//疾病诊断信息   
+			if (result.%Get("DiseInfo") '="")
+			{
+			    set dataObj.diseInfo=##class(%DynamicAbstractObject).%FromJSON(result.%Get("DiseInfo"))
+			}
+			else
+			{
+			    set dataObj.diseInfo=""	
+			}
+			//手术及操作信息    
+			if (result.%Get("OprnInfo") '="")
+			{
+			    set dataObj.oprnInfo=##class(%DynamicAbstractObject).%FromJSON(result.%Get("OprnInfo"))
+			}
+			else
+			{
+			    set dataObj.oprnInfo=""	
+			}
+			//重症监护信息    
+			if (result.%Get("ICUInfo") '="")
+			{
+			    set dataObj.icuInfo=##class(%DynamicAbstractObject).%FromJSON(result.%Get("ICUInfo"))
+			}
+			else
+			{
+			    set dataObj.icuInfo=""	
+			}
+			//输血信息   
+			if (result.%Get("BldInfo") '="")
+			{
+			    set dataObj.bldInfo=##class(%DynamicAbstractObject).%FromJSON(result.%Get("BldInfo"))
+			}
+			else
+			{
+			    set dataObj.bldInfo=""	
+			}			    			    			    			    			    			    
+						
+			set dataObj.updateDate=result.%Get("UpdateDate")
+			set dataObj.updateTime=result.%Get("UpdateTime")
+			set dataObj.drg=result.%Get("DRG")
+			set dataObj.hisAdmID=result.%Get("HISAdmID")
+			set dataObj.fixmedinsCode=result.%Get("FixmedinsCode")
+			
+			set HisRtnObj={}
+			set HisRtnString=result.%Get("HISReturn")
+			set HisRtnObj=##class(%DynamicAbstractObject).%FromJSON(HisRtnString)									
+			
+			//返回完整的病案首页字符串
+			//set dataObj.hisReturn=##class(%DynamicAbstractObject).%FromJSON(HisRtnString)										
+																											
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}				
+		
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count		
+	}
+	catch(e)
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询结算信息表数据出现问题:w ##class("_$ClassName()_").QuerySettleMentInfo("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+}
+
+}
