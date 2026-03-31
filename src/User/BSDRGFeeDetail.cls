@@ -1,0 +1,311 @@
+Class User.BSDRGFeeDetail Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = BS_DRGFeeDetail ]
+{
+
+Parameter %JSONREFERENCE = "ID";
+
+/// 医院ID 指向CB_Hospital
+Property HospitalDr As CBHospital [ Required, SqlColumnNumber = 2, SqlFieldName = Hospital_Dr ];
+
+Index Hosp On HospitalDr;
+
+/// 病人ID 指向患者信息表
+Property AdmID As %Integer [ Required, SqlColumnNumber = 3, SqlFieldName = AdmID ];
+
+Index Adm On AdmID;
+
+/// 登记Dr 指向登记表
+Property RegisterDr As %Integer [ SqlColumnNumber = 4, SqlFieldName = RegDr ];
+
+Index Register On RegisterDr;
+
+/// 费用明细流水号
+Property SerialNO As %String [ Required, SqlColumnNumber = 5, SqlFieldName = SerialNO ];
+
+Index SerialNO On SerialNO;
+
+/// 原费用流水号
+Property OriginalSerialNO As %String [ SqlColumnNumber = 6, SqlFieldName = OriginalSerialNO ];
+
+Index OriginalSerialNO On OriginalSerialNO;
+
+/// 就诊ID
+Property MdtrtID As %String [ Required, SqlColumnNumber = 7, SqlFieldName = MdtrtID ];
+
+Index Mdtrt On MdtrtID;
+
+/// 医嘱号
+Property DoctorOrderNO As %String [ SqlColumnNumber = 8, SqlFieldName = DoctorOrderNO ];
+
+Index DoctorOrder On DoctorOrderNO;
+
+/// 人员编号
+Property PersonnelNO As %String [ SqlColumnNumber = 9, SqlFieldName = PersonnelNO ];
+
+/// 医疗类别
+Property MedicalType As %String [ SqlColumnNumber = 10, SqlFieldName = MedicalType ];
+
+/// 费用发生时间
+Property FeeOccurTime As %DateTime [ SqlColumnNumber = 11, SqlFieldName = FeeOccurTime ];
+
+Index HospitalFeeOccur On (HospitalDr, FeeOccurTime);
+
+/// 医疗目录编码
+Property MedInsuNO As %String [ SqlColumnNumber = 12, SqlFieldName = MedInsuNO ];
+
+Index MedInsuNO On MedInsuNO;
+
+/// 医药机构目录编码
+Property HISCode As %String [ SqlColumnNumber = 13, SqlFieldName = HISCode ];
+
+Index HISCode On HISCode;
+
+/// 明细项目费用总额
+Property Sumamt As %Currency [ SqlColumnNumber = 14, SqlFieldName = Sumamt ];
+
+/// 数量
+Property Count As %Currency [ SqlColumnNumber = 15, SqlFieldName = Count ];
+
+/// 单价
+Property Price As %Currency [ SqlColumnNumber = 16, SqlFieldName = Price ];
+
+/// 定价上限金额
+Property UpLimitAmount As %Currency [ SqlColumnNumber = 17, SqlFieldName = UpLimitAmount ];
+
+/// 自付比例
+Property SelfPayProp As %Currency [ SqlColumnNumber = 18, SqlFieldName = SelfPayProp ];
+
+/// 全自费金额
+Property FullOwnPayAmount As %Currency [ SqlColumnNumber = 19, SqlFieldName = FullOwnPayAmount ];
+
+/// 超限价金额
+Property OverLimitAmount As %Currency [ SqlColumnNumber = 20, SqlFieldName = OverLimitAmount ];
+
+/// 先行自付金额
+Property PreSelfPayAmount As %Currency [ SqlColumnNumber = 21, SqlFieldName = PreSelfPayAmount ];
+
+/// 符合政策范围金额
+Property InScopeAmount As %Currency [ SqlColumnNumber = 22, SqlFieldName = InScopeAmount ];
+
+/// 收费项目等级
+Property ChargeItemLevel As %String [ SqlColumnNumber = 23, SqlFieldName = ChargeItemLevel ];
+
+/// 医疗收费项目类别
+Property MedicalChargeItemType As %String [ SqlColumnNumber = 24, SqlFieldName = MedicalChargeItemType ];
+
+/// 开单科室编码
+Property BillingDepartmentCode As %String [ SqlColumnNumber = 25, SqlFieldName = BillingDepartmentCode ];
+
+/// 开单科室名称
+Property BillingDepartmentName As %String [ SqlColumnNumber = 26, SqlFieldName = BillingDepartmentName ];
+
+/// 开单医生编码
+Property BillingDoctorNO As %String [ SqlColumnNumber = 27, SqlFieldName = BillingDoctorNO ];
+
+/// 开单医师姓名
+Property BillingDoctorName As %String [ SqlColumnNumber = 28, SqlFieldName = BillingDoctorName ];
+
+/// 受单科室编码
+Property AcceptDepartmentCode As %String [ SqlColumnNumber = 29, SqlFieldName = AcceptDepartmentCode ];
+
+/// 受单科室名称
+Property AcceptDepartmentName As %String [ SqlColumnNumber = 30, SqlFieldName = AcceptDepartmentName ];
+
+/// 受单医生编码
+Property AcceptDoctorCode As %String [ SqlColumnNumber = 31, SqlFieldName = AcceptDoctorCode ];
+
+/// 受单医生姓名
+Property AcceptDoctorName As %String [ SqlColumnNumber = 32, SqlFieldName = AcceptDoctorName ];
+
+/// 医院审批标志
+Property HospitalApprovalFlag As %String [ SqlColumnNumber = 33, SqlFieldName = HospitalApprovalFlag ];
+
+/// 中药使用方式
+Property ChineseMedicineUsingway As %String [ SqlColumnNumber = 34, SqlFieldName = ChineseMedicineUsingway ];
+
+/// 外检标志
+Property ExternalInspectionFlag As %String [ SqlColumnNumber = 35, SqlFieldName = ExternalInspectionFlag ];
+
+/// 外检医院编码
+Property ExternalInspectionHospCode As %String [ SqlColumnNumber = 36, SqlFieldName = ExternalInspectionHospCode ];
+
+/// 出院带药标志
+Property DischargeTakeDrugFlag As %String [ SqlColumnNumber = 37, SqlFieldName = DischargeTakeDrugFlag ];
+
+/// 生育费用标志
+Property MaternityFlag As %String [ SqlColumnNumber = 38, SqlFieldName = MaternityFlag ];
+
+/// 限制使用标志
+Property LimitUsedFlag As %String [ SqlColumnNumber = 39, SqlFieldName = LimitUsedFlag ];
+
+/// 备注
+Property Memo As %String(MAXLEN = 300) [ SqlColumnNumber = 40, SqlFieldName = Memo ];
+
+/// 组套编号
+Property ComponentNO As %String [ SqlColumnNumber = 41, SqlFieldName = ComponentNO ];
+
+/// 字段扩展
+Property ExtendContent As %String [ SqlColumnNumber = 42, SqlFieldName = ExtendContent ];
+
+/// 账单ID 
+Property BillID As %Integer [ SqlColumnNumber = 43, SqlFieldName = BillID ];
+
+Index BillID On BillID;
+
+Index RecordIndex On (MdtrtID, BillID, SerialNO);
+
+/// 有效标志 0 无效  1 有效
+Property ValidFlag As %Integer [ InitialExpression = 1, SqlColumnNumber = 44, SqlFieldName = ValidFlag ];
+
+/// 付款记录ID 
+Property RecordID As %Integer [ SqlColumnNumber = 45, SqlFieldName = RecordID ];
+
+Index Record On RecordID;
+
+Storage Default
+{
+<Data name="BSDRGFeeDetailDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>HospitalDr</Value>
+</Value>
+<Value name="3">
+<Value>AdmID</Value>
+</Value>
+<Value name="4">
+<Value>RegisterDr</Value>
+</Value>
+<Value name="5">
+<Value>SerialNO</Value>
+</Value>
+<Value name="6">
+<Value>OriginalSerialNO</Value>
+</Value>
+<Value name="7">
+<Value>MdtrtID</Value>
+</Value>
+<Value name="8">
+<Value>DoctorOrderNO</Value>
+</Value>
+<Value name="9">
+<Value>PersonnelNO</Value>
+</Value>
+<Value name="10">
+<Value>MedicalType</Value>
+</Value>
+<Value name="11">
+<Value>FeeOccurTime</Value>
+</Value>
+<Value name="12">
+<Value>MedInsuNO</Value>
+</Value>
+<Value name="13">
+<Value>HISCode</Value>
+</Value>
+<Value name="14">
+<Value>Sumamt</Value>
+</Value>
+<Value name="15">
+<Value>Count</Value>
+</Value>
+<Value name="16">
+<Value>Price</Value>
+</Value>
+<Value name="17">
+<Value>UpLimitAmount</Value>
+</Value>
+<Value name="18">
+<Value>SelfPayProp</Value>
+</Value>
+<Value name="19">
+<Value>FullOwnPayAmount</Value>
+</Value>
+<Value name="20">
+<Value>OverLimitAmount</Value>
+</Value>
+<Value name="21">
+<Value>PreSelfPayAmount</Value>
+</Value>
+<Value name="22">
+<Value>InScopeAmount</Value>
+</Value>
+<Value name="23">
+<Value>ChargeItemLevel</Value>
+</Value>
+<Value name="24">
+<Value>MedicalChargeItemType</Value>
+</Value>
+<Value name="25">
+<Value>BillingDepartmentCode</Value>
+</Value>
+<Value name="26">
+<Value>BillingDepartmentName</Value>
+</Value>
+<Value name="27">
+<Value>BillingDoctorNO</Value>
+</Value>
+<Value name="28">
+<Value>BillingDoctorName</Value>
+</Value>
+<Value name="29">
+<Value>AcceptDepartmentCode</Value>
+</Value>
+<Value name="30">
+<Value>AcceptDepartmentName</Value>
+</Value>
+<Value name="31">
+<Value>AcceptDoctorCode</Value>
+</Value>
+<Value name="32">
+<Value>AcceptDoctorName</Value>
+</Value>
+<Value name="33">
+<Value>HospitalApprovalFlag</Value>
+</Value>
+<Value name="34">
+<Value>ChineseMedicineUsingway</Value>
+</Value>
+<Value name="35">
+<Value>ExternalInspectionFlag</Value>
+</Value>
+<Value name="36">
+<Value>ExternalInspectionHospCode</Value>
+</Value>
+<Value name="37">
+<Value>DischargeTakeDrugFlag</Value>
+</Value>
+<Value name="38">
+<Value>MaternityFlag</Value>
+</Value>
+<Value name="39">
+<Value>LimitUsedFlag</Value>
+</Value>
+<Value name="40">
+<Value>Memo</Value>
+</Value>
+<Value name="41">
+<Value>ComponentNO</Value>
+</Value>
+<Value name="42">
+<Value>ExtendContent</Value>
+</Value>
+<Value name="43">
+<Value>BillID</Value>
+</Value>
+<Value name="44">
+<Value>ValidFlag</Value>
+</Value>
+<Value name="45">
+<Value>RecordID</Value>
+</Value>
+</Data>
+<DataLocation>^BSDRGFeeDetailD</DataLocation>
+<DefaultData>BSDRGFeeDetailDefaultData</DefaultData>
+<IdLocation>^BSDRGFeeDetailD</IdLocation>
+<IndexLocation>^BSDRGFeeDetailI</IndexLocation>
+<StreamLocation>^BSDRGFeeDetailS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+
+}

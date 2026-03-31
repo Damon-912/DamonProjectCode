@@ -94,8 +94,8 @@ ClassMethod QueryDRGGroupRecord(postObj) As %Library.DynamicObject
 /// Debug
 ClassMethod Device(jsonObj) As %Library.DynamicObject
 {
-	new (postObj)
-	quit ##class(src.DRG.GroupDevice).Device(postObj)
+	new (jsonObj)
+	quit ##class(src.DRG.GroupDevice).Device(jsonObj)
 }
 
 /// Creator:     CM

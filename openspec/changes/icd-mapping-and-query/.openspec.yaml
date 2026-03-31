@@ -1,0 +1,8 @@
+change: icd-mapping-and-query
+title: ICD编码映射与ICD编码查询
+status: proposed
+created: 2026-03-20
+artifacts:
+  - proposal.md
+  - design.md
+  - tasks.md

@@ -143,6 +143,36 @@ ClassMethod GetICDInfo(jsonObj) As %Library.DynamicObject
 
 /// Creator:     CM
 /// CreatDate:   2026-01-01
+/// Description: ICD编码导入预览（校验数据并返回预览结果）
+/// 02010038
+ClassMethod PreviewImportICD(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.ICDInfo).PreviewImportICD(jsonObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 确认导入ICD编码信息
+/// 02010039
+ClassMethod ConfirmImportICD(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.ICDInfo).ConfirmImportICD(jsonObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 下载ICD编码导入模板
+/// 02010040
+ClassMethod DownloadImportTemplate(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.ICDInfo).DownloadImportTemplate(jsonObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
 /// Description: 保存医保ICD编码映射关系
 /// 02010023
 ClassMethod UpdateICDMappingInfo(jsonObj) As %Library.DynamicObject
@@ -154,7 +184,7 @@ ClassMethod UpdateICDMappingInfo(jsonObj) As %Library.DynamicObject
 /// Creator:     CM
 /// CreatDate:   2026-01-01
 /// Description: 删除医保ICD编码映射关系
-/// 02010023
+/// 02010024
 ClassMethod DeleteICDMappingInfo(jsonObj) As %Library.DynamicAbstractObject
 {
 	Quit ##class(src.DRG.BasicData.ICDInfo).DeleteMappingInfo(jsonObj)
@@ -163,7 +193,7 @@ ClassMethod DeleteICDMappingInfo(jsonObj) As %Library.DynamicAbstractObject
 /// Creator:     CM
 /// CreatDate:   2026-01-01
 /// Description: 查询医保ICD编码映射关系
-/// 02010023
+/// 02010025
 ClassMethod GetICDMappingInfo(jsonObj) As %Library.DynamicAbstractObject
 {
 	Quit ##class(src.DRG.BasicData.ICDInfo).QueryMappingInfo(jsonObj)

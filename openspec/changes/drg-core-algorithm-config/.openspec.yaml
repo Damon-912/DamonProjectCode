@@ -1,0 +1,8 @@
+change: drg-core-algorithm-config
+title: DRG核心算法配置维护
+status: proposed
+created: 2026-03-20
+artifacts:
+  - proposal.md
+  - design.md
+  - tasks.md

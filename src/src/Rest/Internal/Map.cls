@@ -13,11 +13,32 @@ Parameter UseSession As Integer = 0;
 XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 {
 <Routes>
+<Route Url="/sysInternalString/:input" Method="GET" Call="getStringParams"/>
 <Route Url="/sysInternalMutiple" Method="POST" Call="postMutipleParams" />
-<Route Url="/sysInternalMutiple/:input" Method="GET" Call="postMutipleParams" />
 <Route Url="/sysInternalMutipleEncrypt" Method="POST" Call="postMutipleParamsEncrypt" />
 <Route Url="/sysInternalMutipleSign" Method="POST" Call="postMutipleParamsSign" />
+<Route Url="/fileUpload" Method="POST" Call="uploadFile" />
 </Routes>
+}
+
+ClassMethod getStringParams(input As %String = "") As %Status
+{
+	#Dim e as %Exception.AbstractException
+	#Dim status as %Status
+	Try {
+		If $Data(%response) Set %response.ContentType="application/json"
+		If $Data(%response) Set %response.CharSet="UTF-8"
+		set str=""
+		set outputobj={}
+		set outputobj.errorCode="0"
+		set outputobj.errorMessage="收到了"_input
+		;do outputobj.%ToJSON()
+		write outputobj.%ToJSON()
+	} Catch (e) {
+		Set status=e.AsStatus()
+		Do ..ErrorHandler(status)
+    }    
+    Quit $$$OK
 }
 
 ClassMethod postMutipleParams() As %Status
@@ -77,6 +98,24 @@ ClassMethod postMutipleParamsSign() As %Status
 		Do ..ErrorHandler(status)
     }
     Quit $$$OK
+}
+
+ClassMethod uploadFile()
+{
+	#Dim e as %Exception.AbstractException
+    #Dim sc as %Status
+    #Dim %response As %CSP.Response
+    Try {
+		If $Data(%response) Set %response.ContentType="application/json"
+		If $Data(%response) Set %response.CharSet="UTF-8"
+		Set request = %request
+    	Set rtn = ##class(src.Rest.Internal.Interface).UploadFile(request)
+   		write rtn.%ToJSON()
+    } Catch (e) {
+		Set status=e.AsStatus()
+		Do ..ErrorHandler(status)
+    }
+	Quit $$$OK
 }
 
 ClassMethod CheckLisence()

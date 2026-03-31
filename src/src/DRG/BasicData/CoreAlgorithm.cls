@@ -20,15 +20,16 @@ ClassMethod UpdateDRGCoreAlgorithm(postObj) As %Library.DynamicObject
 	set resultObj.result={}
 	try{
 		set params=postObj.params.%Get(0)
-		set session=postObj.session.%Get(0)
-		set hospID=session.hospID
-		set userID=session.userID
+		//set session=postObj.session.%Get(0)
+		//set hospID=session.hospID
+		//set userID=session.userID
 		
 		set dictID=params.id
 		set drg=params.drg			
 		set drgDesc=params.drgDesc
 		set points=params.points //基准点数	
 		set dgdov=params.dgdov   //病组差异系数
+		set pipValue=params.pipValue
 		set payStandard=params.payStandard   //支付标准
         set insuType=params.insuType //险种类型
         set mdtrtArea=params.mdtrtArea //就医地区划代码        
@@ -95,7 +96,8 @@ ClassMethod UpdateDRGCoreAlgorithm(postObj) As %Library.DynamicObject
 		set dataObj.DRGDESC=drgDesc	
 		set dataObj.Points=points
 		set dataObj.DGDOV=dgdov
-		set dataObj.payStandard=payStandard
+		set dataObj.PipValue=pipValue
+		set dataObj.PayStandard=payStandard
 		set dataObj.InsuType=insuType
 		set dataObj.MdtrtArea=mdtrtArea
 		set dataObj.MedinsLv=medinsLv																					
@@ -103,17 +105,17 @@ ClassMethod UpdateDRGCoreAlgorithm(postObj) As %Library.DynamicObject
 		set dataObj.CityDr=cityID		
 		set dataObj.StartDate=startDate
 		set dataObj.StopDate=stopDate		
-		set dataObj.CreateUserDr=userID
+		set dataObj.CreateUserDr= "158" //userID
 		set dataObj.CreateDate=$zd($h,3)
 		set dataObj.CreateTime=$zt($p($h,",",2),1)
 		set dataObj.FixmedinsCode=fixmedinsCode
-		set dataObj.fixmedinsName=fixmedinsName
+		set dataObj.FixmedinsName=fixmedinsName
 		set dataObj.Identification=identification
 		set dataObj.Remark=remark		
 				
 		set insObj={}
 		set insObj.className="User.HBDRGCoreAlgorithmData"
-		set insObj.updateUserID=userID	
+		set insObj.updateUserID= "0" //userID	
 		set rtn=""
 		do data.%Push(dataObj)
 		set insObj.data=data
@@ -170,13 +172,14 @@ ClassMethod GetDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
 		set fixmedinsCode=params.fixmedinsCode
 		set cityID=params.cityID
 		set provinceID=params.provinceID
+		set insuType=params.insuType
 		
 		set status=params.status
 
 		set sql =" SELECT ID,DRG,DRGDESC,Points,PipValue,DGDOV,PayStandard,InsuType,MdtrtArea,MedinsLv,"
 		        _" Province_Dr as ProvinceID,Province_Dr->Descripts as ProvinceDesc,"
 		        _" City_Dr as CityID,City_Dr->Descripts as CityDesc,StartDate,StopDate," 
-			    _" FixmedinsCode,FixmedinsName,Identification,Remark,CreateUserDr,CreateDate,CreateTime "
+			    _" FixmedinsCode,FixmedinsName,Identification,Remark,CreateDate,CreateTime "
 			    _" FROM HB_DRGCoreAlgorithmData where 1=1"
 		
 		if DRG'=""
@@ -198,7 +201,11 @@ ClassMethod GetDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
 		if provinceID'=""
 		{
 			set sql=sql_" and Province_Dr = "_provinceID 
-		}									
+		}	
+		if insuType'=""
+		{
+			set sql=sql_" and insuType = "_insuType 
+		}										
 
 		set sqlObj=##class(%SQL.Statement).%New(1)
 		set sc=sqlObj.%Prepare(sql)

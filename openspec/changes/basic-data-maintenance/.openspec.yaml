@@ -1,0 +1,8 @@
+name: basic-data-maintenance
+description: DRG基础数据维护 - 实现HB_DRGBasicData和HB_DRGBasicDataSub表的CRUD功能，包含6个接口服务(02010010-02010015)和前端维护页面
+status: planned
+created: 2026-03-20
+artifacts:
+  - proposal.md
+  - design.md
+  - tasks.md

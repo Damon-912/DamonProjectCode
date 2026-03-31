@@ -1,121 +1,546 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from 'react';
+import { Layout, Menu, Card, Row, Col, Statistic, Table, Tag, Progress, List, Avatar, Typography } from 'antd';
+import {
+  DashboardOutlined,
+  PartitionOutlined,
+  MedicineBoxOutlined,
+  AlertOutlined,
+  DollarOutlined,
+  FileTextOutlined,
+  DatabaseOutlined,
+  SettingOutlined,
+  UserOutlined,
+  MenuOutlined,
+  WarningOutlined,
+  SafetyOutlined,
+  SearchOutlined,
+  TableOutlined,
+  AppstoreOutlined,
+  CodeOutlined,
+  ExperimentOutlined,
+  CalculatorOutlined
+} from '@ant-design/icons';
+import type { MenuProps } from 'antd';
+import './App.css';
+import DRGCustomQuery from './pages/DRG/CustomQuery';
+import ICDMapping from './pages/BasicData/ICDMapping';
+import ICDQuery from './pages/BasicData/ICDQuery';
+import ADRGRuleMaintenance from './pages/BasicData/ADRGRuleMaintenance';
+import CoreAlgorithmConfig from './pages/BasicData/CoreAlgorithmConfig';
+import BasicDataMaintenance from './pages/BasicData/BasicDataMaintenance';
+import DIPDisease from './pages/BasicData/DIPDisease';
+import TableDataMaintenance from './pages/BasicData/TableDataMaintenance';
+
+// DRG pages
+import DRGWorkbench from './pages/DRG/Workbench';
+import DRGResults from './pages/DRG/Results';
+
+// DIP pages
+import DIPWorkbench from './pages/DIP/Workbench';
+import DIPDiseaseQuery from './pages/DIP/DiseaseQuery';
+import DIPVarianceAnalysis from './pages/DIP/VarianceAnalysis';
+
+// Warning pages
+import WarningCenter from './pages/Warning/Center';
+import WarningRules from './pages/Warning/Rules';
+import WarningRecords from './pages/Warning/Records';
+
+// Profit pages
+import ProfitDept from './pages/Profit/Dept';
+import ProfitDoctor from './pages/Profit/Doctor';
+import ProfitDisease from './pages/Profit/Disease';
+import ProfitCostStructure from './pages/Profit/CostStructure';
+
+// System pages
+import SystemUsers from './pages/System/Users';
+import SystemRoles from './pages/System/Roles';
+import SystemMenus from './pages/System/Menus';
+import SystemInterfaces from './pages/System/Interfaces';
+import SystemInterfaceLogs from './pages/System/InterfaceLogs';
+import SystemHospitals from './pages/System/Hospitals';
+
+// HIS Data pages
+import HISMedicalRecords from './pages/HIS/MedicalRecords';
+import HISSettlement from './pages/HIS/Settlement';
+import HISDataSync from './pages/HIS/DataSync';
+
+const { Header, Sider, Content } = Layout;
+const { Title, Text } = Typography;
+
+// 菜单key到标题的映射
+const menuTitleMap: Record<string, string> = {
+  'dashboard': '监控仪表盘',
+  'drg-workbench': 'DRG分组工作台',
+  'drg-custom-query': '自定义DRG分组查询',
+  'drg-results': '分组结果查询',
+  'drg-batch': '批量分组任务',
+  'dip-workbench': 'DIP分组工作台',
+  'dip-values': '病种分值查询',
+  'dip-analysis': '分值偏差分析',
+  'warning-monitor': '预警监控中心',
+  'warning-rules': '预警规则配置',
+  'warning-records': '预警处理记录',
+  'profit-dept': '科室盈亏报表',
+  'profit-doctor': '医生盈亏分析',
+  'profit-disease': '病种盈亏统计',
+  'profit-structure': '费用结构分析',
+  'qc-center': '质控检查中心',
+  'qc-issues': '质控问题列表',
+  'qc-stats': '质控统计报表',
+  'data-records': '病案数据查询',
+  'data-settlement': '结算清单管理',
+  'data-sync': '数据同步监控',
+  'basic-data-dict': 'DRG基础数据维护',
+  'basic-data-table': '基础表数据维护',
+  'basic-data-icd-mapping': 'ICD编码映射',
+  'basic-data-icd-query': 'ICD编码查询',
+  'basic-data-adrg-rules': 'ADRG分组规则维护',
+  'basic-data-core-algorithm': 'DRG核心算法配置维护',
+  'basic-data-dip': 'DIP付费病种库',
+  'system-user': '用户管理',
+  'system-role': '角色权限',
+  'system-menu': '菜单配置',
+  'system-hospital': '医疗机构管理',
+  'system-api': '接口服务配置',
+  'system-logs': '接口日志',
+};
+
+const menuItems: MenuProps['items'] = [
+  {
+    key: 'dashboard',
+    icon: <DashboardOutlined />,
+    label: '监控仪表盘',
+  },
+  {
+    key: 'drg',
+    icon: <PartitionOutlined />,
+    label: 'DRG业务',
+    children: [
+      { key: 'drg-workbench', label: '分组工作台' },
+      { key: 'drg-custom-query', label: 'DRG分组器' },
+      { key: 'drg-results', label: '分组结果查询' },
+      { key: 'drg-batch', label: '批量分组任务' },
+    ],
+  },
+  {
+    key: 'dip',
+    icon: <MedicineBoxOutlined />,
+    label: 'DIP业务',
+    children: [
+      { key: 'dip-workbench', label: 'DIP分组工作台' },
+      { key: 'dip-values', label: '病种分值查询' },
+      { key: 'dip-analysis', label: '分值偏差分析' },
+    ],
+  },
+  {
+    key: 'warning',
+    icon: <AlertOutlined />,
+    label: '费用预警',
+    children: [
+      { key: 'warning-monitor', label: '预警监控中心' },
+      { key: 'warning-rules', label: '预警规则配置' },
+      { key: 'warning-records', label: '预警处理记录' },
+    ],
+  },
+  {
+    key: 'profit',
+    icon: <DollarOutlined />,
+    label: '盈亏分析',
+    children: [
+      { key: 'profit-dept', label: '科室盈亏报表' },
+      { key: 'profit-doctor', label: '医生盈亏分析' },
+      { key: 'profit-disease', label: '病种盈亏统计' },
+      { key: 'profit-structure', label: '费用结构分析' },
+    ],
+  },
+  {
+    key: 'qc',
+    icon: <FileTextOutlined />,
+    label: '病案质控',
+    children: [
+      { key: 'qc-center', label: '质控检查中心' },
+      { key: 'qc-issues', label: '质控问题列表' },
+      { key: 'qc-stats', label: '质控统计报表' },
+    ],
+  },
+  {
+    key: 'data',
+    icon: <DatabaseOutlined />,
+    label: 'HIS数据',
+    children: [
+      { key: 'data-records', label: '病案数据查询' },
+      { key: 'data-settlement', label: '结算清单管理' },
+      { key: 'data-sync', label: '数据同步监控' },
+    ],
+  },
+  {
+    key: 'basic-data',
+    icon: <TableOutlined />,
+    label: '数据管理',
+    children: [
+      { key: 'basic-data-dict', label: '基础数据维护' },
+      { key: 'basic-data-icd-mapping', label: 'ICD编码映射' },
+      { key: 'basic-data-icd-query', label: 'ICD编码查询' },
+      { key: 'basic-data-adrg-rules', label: 'ADRG分组规则' },
+      { key: 'basic-data-core-algorithm', label: 'DRG核心算法配置' },
+      { key: 'basic-data-dip', label: 'DIP付费病种库' },
+    ],
+  },
+  {
+    key: 'system',
+    icon: <SafetyOutlined />,
+    label: '系统管理',
+    children: [
+      { key: 'system-user', label: '用户管理' },
+      { key: 'system-role', label: '角色权限' },
+      { key: 'system-menu', label: '菜单配置' },
+      { key: 'system-hospital', label: '医疗机构管理' },
+      { key: 'system-api', label: '接口服务配置' },
+      { key: 'system-logs', label: '接口日志' },
+    ],
+  },
+];
+
+const dashboardData = [
+  { title: '本月出院病历', value: 1248, suffix: '份', color: '#1890ff' },
+  { title: '已分组病历', value: 1186, suffix: '份', color: '#52c41a' },
+  { title: '未分组病历', value: 62, suffix: '份', color: '#faad14' },
+  { title: '分组成功率', value: 95.0, suffix: '%', color: '#722ed1' },
+];
+
+const drgStats = [
+  { rank: 1, drg: 'ES23', name: '呼吸系统肿瘤', count: 86, rate: 6.9 },
+  { rank: 2, drg: 'FB23', name: '心脏介入治疗', count: 72, rate: 5.8 },
+  { rank: 3, drg: 'IC13', name: '关节置换', count: 65, rate: 5.2 },
+  { rank: 4, drg: 'GC13', name: '消化系统其他手术', count: 58, rate: 4.6 },
+  { rank: 5, drg: 'BR23', name: '神经系统肿瘤', count: 52, rate: 4.2 },
+];
+
+const warningData = [
+  { level: 'high', title: '超费用预警', count: 23, desc: '费用超出DRG支付标准' },
+  { level: 'medium', title: '低风险死亡', count: 5, desc: 'DRG低风险组发生死亡' },
+  { level: 'low', title: '再入院预警', count: 18, desc: '7天内非计划再入院' },
+];
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [collapsed, setCollapsed] = useState(false);
+  const [currentMenu, setCurrentMenu] = useState('dashboard');
+
+  const columns = [
+    { title: '排名', dataIndex: 'rank', key: 'rank', width: 60 },
+    { title: 'DRG编码', dataIndex: 'drg', key: 'drg', width: 80 },
+    { title: 'DRG名称', dataIndex: 'name', key: 'name' },
+    { title: '病例数', dataIndex: 'count', key: 'count', width: 80 },
+    { 
+      title: '占比', 
+      dataIndex: 'rate', 
+      key: 'rate', 
+      width: 120,
+      render: (rate: number) => <Progress percent={rate} size="small" /> 
+    },
+  ];
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <Layout style={{ minHeight: '100vh', display: 'flex', flexDirection: 'row' }}>
+      <Sider
+        width={280}
+        style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        theme="dark"
+      >
+        <div style={{
+          height: 64,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          padding: collapsed ? 0 : '0 12px'
+        }}>
+          <MedicineBoxOutlined style={{ fontSize: 24, color: '#1890ff', marginRight: collapsed ? 0 : 8 }} />
+          {!collapsed && (
+            <span style={{
+              color: '#fff',
+              fontSize: 14,
+              fontWeight: 600,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
+              DRG/DIP医保控费预警系统
+            </span>
+          )}
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
+        <Menu
+          theme="dark"
+          defaultSelectedKeys={['dashboard']}
+          mode="inline"
+          items={menuItems}
+          onClick={({key}) => setCurrentMenu(key)}
+          style={{ flex: 1, borderRight: 0 }}
+        />
+        <div style={{
+          padding: '16px',
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+          textAlign: collapsed ? 'center' : 'left',
+          color: 'rgba(255,255,255,0.65)',
+          fontSize: 12
+        }}>
+          {!collapsed ? (
+            <>
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 8, height: 8, background: '#52c41a', borderRadius: '50%' }}></div>
+                  <span>系统运行正常</span>
+                </div>
+              </div>
+              <div style={{ opacity: 0.7 }}>版本: v1.0.0</div>
+            </>
+          ) : (
+            <div style={{ width: 8, height: 8, background: '#52c41a', borderRadius: '50%', margin: '0 auto' }}></div>
+          )}
         </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      </Sider>
+      <Layout style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <Header style={{ 
+          background: '#fff', 
+          padding: '0 16px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          borderBottom: '1px solid #f0f0f0',
+          flexShrink: 0
+        }}>
+          <Title level={4} style={{ margin: 0 }}>{menuTitleMap[currentMenu] || '监控仪表盘'}</Title>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
+            <Text>管理员</Text>
+          </div>
+        </Header>
+        <Content style={{ 
+          margin: 0, 
+          padding: 0, 
+          background: '#f5f5f5', 
+          flex: 1, 
+          display: 'flex', 
+          flexDirection: 'column',
+          overflow: 'hidden',
+          width: '100%',
+          boxSizing: 'border-box'
+        }}>
+          {currentMenu === 'dashboard' && (
+            <div style={{ padding: 16, width: '100%', height: '100%' }}>
+              {/* 统计卡片 */}
+              <Row gutter={[16, 16]} style={{ marginBottom: 24, width: '100%' }}>
+                {dashboardData.map((item, index) => (
+                  <Col xs={24} sm={12} md={6} key={index}>
+                    <Card style={{ width: '100%' }}>
+                      <Statistic
+                        title={item.title}
+                        value={item.value}
+                        suffix={item.suffix}
+                        valueStyle={{ color: item.color }}
+                      />
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+              
+              {/* 图表区域 */}
+              <Row gutter={[16, 16]} style={{ width: '100%' }}>
+                <Col xs={24} lg={16}>
+                  <Card title="DRG分组病历TOP5" extra={<a href="#">更多</a>} style={{ width: '100%' }}>
+                    <Table 
+                      dataSource={drgStats} 
+                      columns={columns} 
+                      pagination={false}
+                      rowKey="rank"
+                      size="small"
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} lg={8}>
+                  <Card title="费用预警" style={{ width: '100%' }}>
+                    <List
+                      itemLayout="horizontal"
+                      dataSource={warningData}
+                      renderItem={(item) => (
+                        <List.Item>
+                          <List.Item.Meta
+                            avatar={<Avatar icon={<WarningOutlined />} style={{ 
+                              backgroundColor: item.level === 'high' ? '#ff4d4f' : item.level === 'medium' ? '#faad14' : '#1890ff'
+                            }} />}
+                            title={item.title}
+                            description={item.desc}
+                          />
+                          <Tag color={item.level === 'high' ? 'red' : item.level === 'medium' ? 'orange' : 'blue'}>
+                            {item.count}条
+                          </Tag>
+                        </List.Item>
+                      )}
+                    />
+                  </Card>
+                </Col>
+              </Row>
+            </div>
+          )}
+          
+          {currentMenu === 'drg-custom-query' && (
+            <DRGCustomQuery />
+          )}
 
-      <div className="ticks"></div>
+          {currentMenu === 'drg-workbench' && (
+            <DRGWorkbench />
+          )}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          {currentMenu === 'drg-results' && (
+            <DRGResults />
+          )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+          {currentMenu === 'drg-batch' && (
+            <Card><div style={{ textAlign: 'center', padding: 60 }}><Text>批量分组任务开发中...</Text></div></Card>
+          )}
+
+          {currentMenu === 'dip-workbench' && (
+            <DIPWorkbench />
+          )}
+
+          {currentMenu === 'dip-values' && (
+            <DIPDiseaseQuery />
+          )}
+
+          {currentMenu === 'dip-analysis' && (
+            <DIPVarianceAnalysis />
+          )}
+
+          {currentMenu === 'warning-monitor' && (
+            <WarningCenter />
+          )}
+
+          {currentMenu === 'warning-rules' && (
+            <WarningRules />
+          )}
+
+          {currentMenu === 'warning-records' && (
+            <WarningRecords />
+          )}
+
+          {currentMenu === 'profit-dept' && (
+            <ProfitDept />
+          )}
+
+          {currentMenu === 'profit-doctor' && (
+            <ProfitDoctor />
+          )}
+
+          {currentMenu === 'profit-disease' && (
+            <ProfitDisease />
+          )}
+
+          {currentMenu === 'profit-structure' && (
+            <ProfitCostStructure />
+          )}
+
+          {currentMenu === 'qc-center' && (
+            <WarningCenter />
+          )}
+
+          {currentMenu === 'qc-issues' && (
+            <WarningCenter />
+          )}
+
+          {currentMenu === 'qc-stats' && (
+            <WarningCenter />
+          )}
+
+          {currentMenu === 'data-records' && (
+            <HISMedicalRecords />
+          )}
+
+          {currentMenu === 'data-settlement' && (
+            <HISSettlement />
+          )}
+
+          {currentMenu === 'data-sync' && (
+            <HISDataSync />
+          )}
+
+          {currentMenu === 'basic-data-icd-mapping' && (
+            <ICDMapping />
+          )}
+
+          {currentMenu === 'basic-data-icd-query' && (
+            <ICDQuery />
+          )}
+
+          {currentMenu === 'basic-data-adrg-rules' && (
+            <ADRGRuleMaintenance />
+          )}
+
+          {currentMenu === 'basic-data-core-algorithm' && (
+            <CoreAlgorithmConfig />
+          )}
+
+          {currentMenu === 'basic-data-dict' && (
+            <BasicDataMaintenance />
+          )}
+
+          {currentMenu === 'basic-data-table' && (
+            <TableDataMaintenance />
+          )}
+
+          {currentMenu === 'basic-data-dip' && (
+            <DIPDisease />
+          )}
+
+          {currentMenu === 'system-user' && (
+            <SystemUsers />
+          )}
+
+          {currentMenu === 'system-role' && (
+            <SystemRoles />
+          )}
+
+          {currentMenu === 'system-menu' && (
+            <SystemMenus />
+          )}
+
+          {currentMenu === 'system-hospital' && (
+            <SystemHospitals />
+          )}
+
+          {currentMenu === 'system-api' && (
+            <SystemInterfaces />
+          )}
+
+          {currentMenu === 'system-logs' && (
+            <SystemInterfaceLogs />
+          )}
+
+          {currentMenu !== 'dashboard' && currentMenu !== 'drg-custom-query' && currentMenu !== 'drg-workbench' && currentMenu !== 'drg-results' && currentMenu !== 'drg-batch'
+            && currentMenu !== 'dip-workbench' && currentMenu !== 'dip-values' && currentMenu !== 'dip-analysis'
+            && currentMenu !== 'warning-monitor' && currentMenu !== 'warning-rules' && currentMenu !== 'warning-records'
+            && currentMenu !== 'profit-dept' && currentMenu !== 'profit-doctor' && currentMenu !== 'profit-disease' && currentMenu !== 'profit-structure'
+            && currentMenu !== 'qc-center' && currentMenu !== 'qc-issues' && currentMenu !== 'qc-stats'
+            && currentMenu !== 'data-records' && currentMenu !== 'data-settlement' && currentMenu !== 'data-sync'
+            && currentMenu !== 'basic-data-icd-mapping' && currentMenu !== 'basic-data-icd-query'
+            && currentMenu !== 'basic-data-adrg-rules' && currentMenu !== 'basic-data-core-algorithm'
+            && currentMenu !== 'basic-data-dict' && currentMenu !== 'basic-data-table' && currentMenu !== 'basic-data-dip'
+            && currentMenu !== 'system-user' && currentMenu !== 'system-role'
+            && currentMenu !== 'system-menu' && currentMenu !== 'system-hospital' && currentMenu !== 'system-api' && currentMenu !== 'system-logs' && (
+            <Card>
+              <div style={{ textAlign: 'center', padding: 60, color: '#999' }}>
+                <MenuOutlined style={{ fontSize: 48, marginBottom: 16 }} />
+                <Title level={4}>功能开发中...</Title>
+                <Text>当前模块：{currentMenu}</Text>
+              </div>
+            </Card>
+          )}
+        </Content>
+      </Layout>
+    </Layout>
+  );
 }
 
-export default App
+export default App;

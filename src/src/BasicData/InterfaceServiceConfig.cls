@@ -187,6 +187,7 @@ ClassMethod SaveInterfaceServiceConfig(jsonObj) As %Library.DynamicObject
 		set dataObj.TokenOverTime=params.tokenOverTime
 		set dataObj.RWServiceTypeDr=params.rwServiceTypeID
 		do dataArr.%Push(dataObj)
+		
 		;b	;12121
 		set operateObj={}
 		set operateObj.updateUserID=session.userID

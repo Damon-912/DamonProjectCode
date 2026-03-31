@@ -1,0 +1,10 @@
+:8090
+
+root * C:\inetpub\wwwroot\DRG
+file_server
+try_files {path} /index.html
+
+handle /iris-api/* {
+    rewrite * /csp/drg/sysInternalMutiple/{path.strip_prefix /iris-api}
+    reverse_proxy 111.229.137.113:52773
+}

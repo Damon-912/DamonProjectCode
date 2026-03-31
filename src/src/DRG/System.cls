@@ -1,3 +1,5 @@
+Import SQLUSER
+
 /// 系统管理服务类
 /// 提供用户管理、角色管理、菜单管理、接口配置等功能
 /// 
@@ -14,8 +16,8 @@ ClassMethod QuerySystemUsers(postObj As %Library.DynamicObject) As %Library.Dyna
     new (postObj)
     
     set result = ##class(%Library.DynamicObject).%New()
-    set params = postObj.params
-    set session = postObj.session
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
     
     // 获取参数
     set userCode = $lg(params,1)
@@ -92,8 +94,8 @@ ClassMethod SaveSystemUser(postObj As %Library.DynamicObject) As %Library.Dynami
     new (postObj)
     
     set result = ##class(%Library.DynamicObject).%New()
-    set params = postObj.params
-    set session = postObj.session
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
     
     // 获取参数
     set userId = $lg(params,1)
@@ -181,8 +183,8 @@ ClassMethod QuerySystemMenus(postObj As %Library.DynamicObject) As %Library.Dyna
     new (postObj)
     
     set result = ##class(%Library.DynamicObject).%New()
-    set params = postObj.params
-    set session = postObj.session
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
     
     // 获取参数
     set menuCode = $lg(params,1)
@@ -253,8 +255,8 @@ ClassMethod GetUserMenus(postObj As %Library.DynamicObject) As %Library.DynamicO
     new (postObj)
     
     set result = ##class(%Library.DynamicObject).%New()
-    set params = postObj.params
-    set session = postObj.session
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
     
     set userId = $lg(session,1)
     
@@ -315,143 +317,181 @@ ClassMethod GetUserMenus(postObj As %Library.DynamicObject) As %Library.DynamicO
 /// CreatDate:   2026-03-19
 /// Description: 查询接口服务列表
 /// Code: 02010404
-ClassMethod QueryInterfaceServices(postObj As %Library.DynamicObject) As %Library.DynamicObject
+ClassMethod QueryInterfaceServices(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 {
-    new (postObj)
-    
-    set result = ##class(%Library.DynamicObject).%New()
-    set params = postObj.params
-    set session = postObj.session
-    
-    // 获取参数
-    set code = $lg(params,1)
-    set descriptions = $lg(params,2)
-    set className = $lg(params,3)
-    set serviceType = $lg(params,4)
-    set page = $lg(params,5)
-    set limit = $lg(params,6)
-    
-    if (page = "") set page = 1
-    if (limit = "") set limit = 20
-    
-    set dataList = ##class(%Library.DynamicArray).%New()
-    
-    set sql = "SELECT ID, Code, Descripts, ClassName, MethodName, "_ 
-              "ServiceType, StartDate, StopDate, IsActive "_ 
-              "FROM CB_MapInterface WHERE 1=1"
-    
-    if (code '= "") {
-        set sql = sql _ " AND Code LIKE '%" _ code _ "%'"
-    }
-    if (descriptions '= "") {
-        set sql = sql _ " AND Descripts LIKE '%" _ descriptions _ "%'"
-    }
-    if (className '= "") {
-        set sql = sql _ " AND ClassName LIKE '%" _ className _ "%'"
-    }
-    if (serviceType '= "") {
-        set sql = sql _ " AND ServiceType = '" _ serviceType _ "'"
-    }
-    
-    set sql = sql _ " ORDER BY Code"
-    
-    set rs = ##class(%ResultSet).%New()
-    set rs.Query = sql
-    do rs.Execute()
-    
-    set count = 0
-    while (rs.Next()) {
-        set count = count + 1
-        if ((count > ((page - 1) * limit)) && (count <= (page * limit))) {
-            set item = ##class(%Library.DynamicObject).%New()
-            set item.id = rs.Data("ID")
-            set item.code = rs.Data("Code")
-            set item.descripts = rs.Data("Descripts")
-            set item.className = rs.Data("ClassName")
-            set item.methodName = rs.Data("MethodName")
-            set item.serviceType = rs.Data("ServiceType")
-            set item.startDate = $zd(rs.Data("StartDate"), 3)
-            set item.isActive = rs.Data("IsActive")
-            do dataList.%Push(item)
-        }
-    }
-    
-    set result.errorCode = "0"
-    set result.errorMessage = ""
-    set result.result = dataList
-    
-    quit result
+ 	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try{
+		if (jsonObj.%IsDefined("pagination")'=0) {
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		set params=jsonObj.params.%Get(0)		
+		set compareCode=params.code
+		set compareDescripts=params.descripts
+		set compareClassName=params.className
+		set compareMethodName=params.methodName
+		set status=params.status
+		set tStatement = ##class(%SQL.Statement).%New(1)  
+		set sql="SELECT ProductCat_Dr->Descripts AS productCatDesc,ProductModule_Dr -> Descripts AS productModuleDesc,RWServiceType_Dr -> Descripts AS rwServiceTypeDesc,* FROM CB_MapInterface"		
+		
+		set sql=sql_" WHERE 1=1"
+		set:(compareCode'="") sql=sql_" and Code LIKE '%"_compareCode_"%'"
+		set:(compareDescripts'="") sql=sql_" AND Descripts LIKE '%"_compareDescripts_"%'"
+		set:(compareClassName'="") sql=sql_" AND ClassName LIKE '%"_compareClassName_"%'"
+		set:(compareMethodName'="") sql=sql_" AND MethodName LIKE '%"_compareMethodName_"%'"
+		if (status'="") {
+			set:status="1" sql=sql_" AND StartDate <"_(+$h+1)_" and (StopDate is NULL or StopDate >"_+$h_")"
+			set:status="0" sql=sql_" AND StartDate >"_(+$h)_" and (StopDate is NULL or StopDate <"_+$h_")"
+		}
+		b	;111
+		set sc=tStatement.%Prepare(sql)
+		set result=tStatement.%Execute()		
+		while result.%Next(.sc){
+			set dataObj={}
+			set dataObj.key=result.%Get("ID")
+			set dataObj.id=result.%Get("ID")
+			set dataObj.code=result.%Get("Code")
+			set dataObj.descripts=result.%Get("Descripts")
+			set dataObj.className=result.%Get("ClassName")
+			set dataObj.methodName=result.%Get("MethodName")
+			set dataObj.startDate=result.%Get("StartDate")			
+			set dataObj.stopDate=result.%Get("StopDate")
+			set dataObj.serviceType=result.%Get("ServiceType")
+			set dataObj.productCatID=result.%Get("ProductCat_Dr")
+			set dataObj.productCatDesc=result.%Get("productCatDesc")
+			set dataObj.productModuleID=result.%Get("ProductModule_Dr")
+			set dataObj.productModuleDesc=result.%Get("productModuleDesc")
+			set dataObj.seqNo=result.%Get("SeqNo")
+			set dataObj.sessionFlag=result.%Get("SessionFlag")
+			set dataObj.tokenFlag=result.%Get("TokenFlag")			
+			set dataObj.tokenOverTime=result.%Get("TokenOverTime")
+			set dataObj.rwServiceTypeID=result.%Get("RWServiceType_Dr")
+			set dataObj.rwServiceTypeDesc=result.%Get("rwServiceTypeDesc")
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count		
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="获取接口服务配置出错:w ##class("_$ClassName()_").GetInterfaceServiceConfig("_jsonObj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")	
+	}
+	quit resultObj
 }
 
 /// Creator:     系统
 /// CreatDate:   2026-03-19
 /// Description: 保存接口服务
-/// Code: 02010405
+/// Code: 01010016
 ClassMethod SaveInterfaceService(postObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	try{
+		set params=jsonObj.params.%Get(0)
+		set session=jsonObj.session.%Get(0)
+		set dataObj={},dataArr=[]
+		set dataObj.ID=params.id
+		set dataObj.Key=params.key
+		set dataObj.Code=params.code
+		set dataObj.Descripts=params.descripts
+		set dataObj.ClassName=params.className
+		set dataObj.MethodName=params.methodName
+		set dataObj.StartDate=params.startDate		
+		set dataObj.StopDate=params.stopDate
+		set dataObj.ServiceType=params.serviceType
+		set dataObj.ProductCatDr=params.productCatID
+		set dataObj.ProductModuleDr=params.productModuleID		
+		set dataObj.SeqNo=params.seqNo
+		set dataObj.ServiceIP=params.serviceIP
+		set dataObj.SessionFlag=params.sessionFlag
+		set dataObj.TokenFlag=params.tokenFlag		
+		set dataObj.TokenOverTime=params.tokenOverTime
+		set dataObj.RWServiceTypeDr=params.rwServiceTypeID
+		do dataArr.%Push(dataObj)
+		;b	;12121
+		set operateObj={}
+		set operateObj.updateUserID=session.userID
+		set operateObj.className="User.CBMapInterface"			
+		set operateObj.data=dataArr		
+		if params.id=""{
+			set rtn=##class(src.util.operatetable).Insert(.operateObj) ;调用公共类方法记录修改日记
+		}else{				
+			set rtn=##class(src.util.operatetable).Update(.operateObj) ;调用公共类方法记录修改日记
+		}
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+		if errorCode'="0"{
+			set resultObj.errorCode=errorCode
+			set resultObj.errorMessage=errorMessage
+			quit
+		}
+		
+	}catch(e){
+		set status=e.AsStatus()
+		set resultObj.errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set resultObj.errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	}
+	quit resultObj
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-03-19
+/// Description: 查询接口服务配置下拉数据
+/// Code: 01010018
+/// 产品分类列表传空，产品模块列表传空
+/// 服务类型列表：查询(S)、新增(A)、修改(U)、删除(D)
+ClassMethod QueryInterfaceDropdownData(postObj As %Library.DynamicObject) As %Library.DynamicObject
 {
     new (postObj)
     
     set result = ##class(%Library.DynamicObject).%New()
-    set params = postObj.params
-    set session = postObj.session
+    set resultObj = ##class(%Library.DynamicObject).%New()
     
-    // 获取参数
-    set interfaceId = $lg(params,1)
-    set code = $lg(params,2)
-    set descriptions = $lg(params,3)
-    set className = $lg(params,4)
-    set methodName = $lg(params,5)
-    set serviceType = $lg(params,6)
-    set seqNo = $lg(params,7)
-    set isActive = $lg(params,8)
-    set sessionFlag = $lg(params,9)
-    set tokenFlag = $lg(params,10)
+    // 产品分类列表 - 传空
+    set productCats = ##class(%Library.DynamicArray).%New()
     
-    // 验证必填参数
-    if (code = "") {
-        set result.errorCode = "1001"
-        set result.errorMessage = "接口代码不能为空"
-        quit result
-    }
-    if (className = "") {
-        set result.errorCode = "1001"
-        set result.errorMessage = "类名不能为空"
-        quit result
-    }
-    if (methodName = "") {
-        set result.errorCode = "1001"
-        set result.errorMessage = "方法名不能为空"
-        quit result
-    }
+    // 产品模块列表 - 传空  
+    set productModules = ##class(%Library.DynamicArray).%New()
     
-    // 保存数据
-    if (interfaceId = "") {
-        // 新增
-        set obj = ##class(User.CBMapInterface).%New()
-    } else {
-        // 修改
-        set obj = ##class(User.CBMapInterface).%OpenId(interfaceId)
-    }
+    // 服务类型列表
+    set serviceTypes = ##class(%Library.DynamicArray).%New()
     
-    set obj.Code = code
-    set obj.Descripts = descriptions
-    set obj.ClassName = className
-    set obj.MethodName = methodName
-    set obj.ServiceType = serviceType
-    set obj.SeqNo = seqNo
-    set obj.SessionFlag = sessionFlag
-    set obj.TokenFlag = tokenFlag
-    set obj.IsActive = isActive
+    set item1 = ##class(%Library.DynamicObject).%New()
+    set item1.code = "S"
+    set item1.name = "查询(S)"
+    do serviceTypes.%Push(item1)
     
-    set sc = obj.%Save()
-    if ($$$ISOK(sc)) {
-        set result.errorCode = "0"
-        set result.errorMessage = ""
-        set result.result = {"id": (obj.%Id())}
-    } else {
-        set result.errorCode = "3001"
-        set result.errorMessage = "保存失败"
-    }
+    set item2 = ##class(%Library.DynamicObject).%New()
+    set item2.code = "A"
+    set item2.name = "新增(A)"
+    do serviceTypes.%Push(item2)
+    
+    set item3 = ##class(%Library.DynamicObject).%New()
+    set item3.code = "U"
+    set item3.name = "修改(U)"
+    do serviceTypes.%Push(item3)
+    
+    set item4 = ##class(%Library.DynamicObject).%New()
+    set item4.code = "D"
+    set item4.name = "删除(D)"
+    do serviceTypes.%Push(item4)
+    
+    set resultObj.productCats = productCats
+    set resultObj.productModules = productModules
+    set resultObj.serviceTypes = serviceTypes
+    
+    set result.errorCode = "0"
+    set result.errorMessage = ""
+    set result.result = resultObj
     
     quit result
 }
@@ -465,8 +505,8 @@ ClassMethod QuerySystemRoles(postObj As %Library.DynamicObject) As %Library.Dyna
     new (postObj)
     
     set result = ##class(%Library.DynamicObject).%New()
-    set params = postObj.params
-    set session = postObj.session
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
     
     set roleCode = $lg(params,1)
     set roleName = $lg(params,2)
@@ -525,8 +565,8 @@ ClassMethod SaveSystemRole(postObj As %Library.DynamicObject) As %Library.Dynami
     new (postObj)
     
     set result = ##class(%Library.DynamicObject).%New()
-    set params = postObj.params
-    set session = postObj.session
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
     
     set roleId = $lg(params,1)
     set roleCode = $lg(params,2)
@@ -588,8 +628,8 @@ ClassMethod SaveRoleMenu(postObj As %Library.DynamicObject) As %Library.DynamicO
     new (postObj)
     
     set result = ##class(%Library.DynamicObject).%New()
-    set params = postObj.params
-    set session = postObj.session
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
     
     set roleId = $lg(params,1)
     set menuList = $lg(params,2)  // JSON数组
@@ -602,7 +642,7 @@ ClassMethod SaveRoleMenu(postObj As %Library.DynamicObject) As %Library.DynamicO
     }
     
     // 先删除该角色的所有菜单权限
-    &sql(DELETE FROM BS_DRGRoleMenu WHERE Role_Dr = :roleId)
+    &sql(DELETE FROM SQLUser.BS_DRGRoleMenu WHERE Role_Dr = :roleId)
     
     // 重新插入菜单权限
     set count = 0
@@ -635,7 +675,9 @@ ClassMethod SaveRoleMenu(postObj As %Library.DynamicObject) As %Library.DynamicO
     
     set result.errorCode = "0"
     set result.errorMessage = ""
-    set result.result = {"savedCount": count}
+    set jo={}
+    set jo.savedCount=count
+    set result.result = jo
     
     quit result
 }
@@ -649,7 +691,7 @@ ClassMethod UserLogin(postObj As %Library.DynamicObject) As %Library.DynamicObje
     new (postObj)
     
     set result = ##class(%Library.DynamicObject).%New()
-    set params = postObj.params
+    set params = postObj.params.%Get(0)
     
     set userCode = $lg(params,1)
     set password = $lg(params,2)
@@ -749,7 +791,7 @@ ClassMethod DeleteInterfaceService(postObj As %Library.DynamicObject) As %Librar
     new (postObj)
 
     set result = ##class(%Library.DynamicObject).%New()
-    set params = postObj.params
+    set params = postObj.params.%Get(0)
 
     set interfaceId = $lg(params,1)
 
@@ -788,8 +830,8 @@ ClassMethod TestInterfaceCall(postObj As %Library.DynamicObject) As %Library.Dyn
     new (postObj)
 
     set result = ##class(%Library.DynamicObject).%New()
-    set params = postObj.params
-    set session = postObj.session
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
 
     set interfaceId = $lg(params,1)
     set testParams = $lg(params,2)  // JSON格式的测试参数
@@ -860,7 +902,7 @@ ClassMethod QueryInterfaceLogs(postObj As %Library.DynamicObject) As %Library.Dy
     new (postObj)
 
     set result = ##class(%Library.DynamicObject).%New()
-    set params = postObj.params
+    set params = postObj.params.%Get(0)
 
     set interfaceId = $lg(params,1)
     set callType = $lg(params,2)

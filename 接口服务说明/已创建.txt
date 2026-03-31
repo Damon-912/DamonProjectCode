@@ -1,0 +1,785 @@
+# DRG/DIP 接口服务文档 (v2.0)
+
+本文档定义了 DRG/DIP 相关的接口服务规范，包含完整的请求参数、返回参数及示例。
+
+---
+
+## 2.1 保存DRG基础数据 [02010010]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010010" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ dictId | ID | Y | int | 为空表示新增，不为空表示更新 |
+| ∟ insuCode | 代码 | Y | string | |
+| ∟ insuDesc | 名称 | Y | string | |
+| ∟ provinceId | 省级代码 | Y | string | 取CB_Province：000000 国家医疗保障局 |
+| ∟ cityId | 市级代码 | Y | string | 取CB_City：000000 国家医疗保障局 |
+| ∟ areaId | 县级代码 | N | string | 取CB_Area：000000 国家医疗保障局 |
+| ∟ startDate | 开始日期 | Y | date | yyyy-mm-dd |
+| ∟ stopDate | 结束日期 | N | date | yyyy-mm-dd |
+| ∟ identification | 标识 | N | string | |
+| ∟ remark | 备注 | N | string | |
+| **session** | session校验 | Y | array\<object\> | |
+| ∟ userId | 用户ID | Y | string | |
+| ∟ userCode | HIS账号 | Y | string | |
+| ∟ userName | 用户姓名 | Y | string | |
+| ∟ locId | 所属科室ID | Y | string | |
+| ∟ locDesc | 科室名称 | Y | string | |
+| ∟ groupId | 角色分组 | Y | string | |
+| ∟ groupDesc | 角色名称 | Y | string | |
+| ∟ hospId | 医院ID | Y | string | |
+| ∟ hospCode | 医院代码 | Y | string | |
+| ∟ hospDesc | 医院名称 | Y | string | |
+| ∟ langId | 语言 | N | int | |
+| ∟ langDesc | 语言名称 | N | string | |
+| ∟ changeFlag | 切换标志 | N | string | |
+| ∟ changeDesc | 切换说明 | N | string | |
+| ∟ path | 路径 | N | string | |
+| ∟ sessionId | sessionID | Y | string | |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+
+---
+
+## 2.2 查询DRG基础数据 [02010011]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010011" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ insuDesc | 名称 | N | string | |
+| ∟ status | 状态 | N | string | Y:有效 ；N:失效 |
+| **pagination** | 分页节点 | Y | array\<object\> | |
+| ∟ pageSize | 页大小 | Y | int | |
+| ∟ currentPage | 当前页 | Y | int | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+| **result** | 出参节点 | Y | array\<object\> | |
+| ∟ totalCount | 总记录数 | Y | int | |
+| ∟ **data** | 数据列表 | Y | array\<object\> | |
+| ∟∟ dictId | 平台字典ID | Y | string | 指向 BSDRGBasicData |
+| ∟∟ insuCode | 代码 | Y | string | |
+| ∟∟ insuDesc | 名称 | Y | string | |
+| ∟∟ provinceId | 省级代码 | Y | string | |
+| ∟∟ provinceDesc | 省级名称 | Y | string | |
+| ∟∟ cityId | 市级代码 | Y | string | |
+| ∟∟ cityDesc | 市级名称 | Y | string | |
+| ∟∟ areaId | 县级代码 | N | string | |
+| ∟∟ areaDesc | 县级名称 | N | string | |
+| ∟∟ identification | 标识码 | N | string | |
+| ∟∟ remark | 备注 | N | string | |
+| ∟∟ startDate | 开始日期 | Y | date | |
+| ∟∟ stopDate | 失效日期 | Y | date | |
+
+---
+
+## 2.3 删除DRG基础数据 [02010012]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010012" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ dictId | ID | Y | int | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+
+---
+
+## 2.4 保存DRG基础数据明细 [02010013]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010013" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ id | ID | Y | string | 为空表示新增数据，不为空表示更新数据 |
+| ∟ dictId | 主表ID | Y | string | BS_DRGBasicData表ID |
+| ∟ code | 代码 | Y | string | |
+| ∟ desc | 名称 | Y | string | |
+| ∟ identification | 标识码 | N | string | |
+| ∟ startDate | 开始日期 | Y | date | yyyy-mm-dd |
+| ∟ stopDate | 结束日期 | N | date | yyyy-mm-dd |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+
+---
+
+## 2.5 查询DRG基础数据明细 [02010014]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010014" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ dictId | 主表ID | Y | string | |
+| ∟ desc | 名称 | N | string | |
+| ∟ status | 状态 | N | string | Y:有效 ；N:失效 |
+| **pagination** | 分页节点 | Y | array\<object\> | |
+| ∟ pageSize | 页大小 | Y | int | |
+| ∟ currentPage | 当前页 | Y | int | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+| **result** | 出参节点 | Y | array\<object\> | |
+| ∟ totalCount | 总记录数 | Y | int | |
+| ∟ **data** | 数据列表 | Y | array\<object\> | |
+| ∟∟ id | ID | Y | int | |
+| ∟∟ dictId | 主表ID | Y | int | BS_DRGBasicData表的ID |
+| ∟∟ code | 代码 | Y | string | |
+| ∟∟ desc | 名称 | Y | string | |
+| ∟∟ identification | 标识码 | N | string | |
+| ∟∟ startDate | 开始日期 | Y | date | |
+| ∟∟ stopDate | 失效日期 | Y | date | |
+
+---
+
+## 2.6 删除DRG基础数据明细 [02010015]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010015" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ id | ID | Y | int | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+
+---
+
+## 2.7 保存(ADRG)核心疾病诊断相关分组规则列表 [02010016]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010016" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ id | ID | Y | int | 为空表示新增 不为空表示更新 |
+| ∟ adrg | 核心分组代码 | Y | string | |
+| ∟ adrgDesc | 核心分组名称 | Y | string | |
+| ∟ principalDiagnosis | 主要诊断 | N | string | 主要诊断与主要手术或操作不能都为空 |
+| ∟ principalDiagnosisName | 主要诊断名称 | N | string | |
+| ∟ secondaryDiagnosis | 其它诊断 | N | string | |
+| ∟ secondaryDiagnosisName | 其它诊断名称 | N | string | |
+| ∟ thirdlyDiagnosis | 第三诊断 | N | string | |
+| ∟ thirdlyDiagnosisName | 第三诊断名称 | N | string | |
+| ∟ majorProcedure | 主要手术或操作 | N | string | 主要诊断与主要手术或操作不能都为空 |
+| ∟ majorProcedureName | 主要手术或操作名称 | N | string | |
+| ∟ secondaryProcedure | 其他手术或操作 | N | string | |
+| ∟ secondaryProcedureName | 其他手术或操作名称 | N | string | |
+| ∟ thirdlyProcedure | 第三手术或操作 | N | string | |
+| ∟ thirdlyProcedureName | 第三手术或操作名称 | N | string | |
+| ∟ unionFlag | 联合规则标志 | Y | string | 联合分组规则标志0否1是；默认0 |
+| ∟ selectionCriteria | 入组条件 | N | string | |
+| ∟ provinceId | 省级代码 | Y | string | 取CB_Province：000000 国家医疗保障局 |
+| ∟ cityId | 市级代码 | Y | string | 取CB_City：000000 国家医疗保障局 |
+| ∟ startDate | 开始日期 | Y | date | yyyy-mm-dd |
+| ∟ stopDate | 结束日期 | N | date | yyyy-mm-dd |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+
+---
+
+## 2.8 查询(ADRG)核心疾病诊断相关分组规则列表 [02010017]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010017" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ adrgDesc | 核心分组名称 | N | string | |
+| ∟ status | 状态 | N | string | Y:有效 ；N:失效 |
+| **pagination** | 分页节点 | Y | array\<object\> | |
+| ∟ pageSize | 页大小 | Y | int | |
+| ∟ currentPage | 当前页 | Y | int | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+| **result** | 出参节点 | Y | array\<object\> | |
+| ∟ totalCount | 总记录数 | Y | int | |
+| ∟ **data** | 数据列表 | Y | array\<object\> | |
+| ∟∟ id | ID | Y | string | |
+| ∟∟ adrg | 核心分组代码 | Y | string | |
+| ∟∟ adrgDesc | 核心分组名称 | Y | string | |
+| ∟∟ principalDiagnosis | 主要诊断 | N | string | |
+| ∟∟ principalDiagnosisName | 主要诊断名称 | N | string | |
+| ∟∟ secondaryDiagnosis | 其它诊断 | N | string | |
+| ∟∟ secondaryDiagnosisName | 其它诊断名称 | N | string | |
+| ∟∟ majorProcedure | 主要手术或操作 | N | string | |
+| ∟∟ majorProcedureName | 主要手术或操作名称 | N | string | |
+| ∟∟ secondaryProcedure | 其他手术或操作 | N | string | |
+| ∟∟ secondaryProcedureName | 其他手术或操作名称 | N | string | |
+| ∟∟ selectionCriteria | 入组条件 | N | string | |
+| ∟∟ provinceId | 省级代码 | Y | string | |
+| ∟∟ provinceDesc | 省级名称 | Y | string | |
+| ∟∟ cityId | 市级代码 | Y | string | |
+| ∟∟ cityDesc | 市级名称 | Y | string | |
+| ∟∟ startDate | 开始日期 | Y | date | |
+| ∟∟ stopDate | 失效日期 | Y | date | |
+
+---
+
+## 2.9 删除(ADRG)核心疾病诊断相关分组规则列表 [02010018]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010018" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ id | ID | Y | int | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+
+---
+
+## 2.10 保存按病种分值(DIP)付费病种库(2.0版)核心病种 [02010019]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010019" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ id | ID | Y | int | 为空表示新增 不为空表示更新 |
+| ∟ num | 编号 | Y | int | |
+| ∟ principalDiagnosis | 主要诊断 | N | string | 主要诊断与主要手术或操作不能都为空 |
+| ∟ principalDiagnosisName | 主要诊断名称 | N | string | |
+| ∟ majorProcedure | 主要手术或操作 | N | string | 主要诊断与主要手术或操作不能都为空 |
+| ∟ majorProcedureName | 主要手术或操作名称 | N | string | |
+| ∟ secondaryProcedure | 其他手术或操作 | N | string | |
+| ∟ secondaryProcedureName | 其他手术或操作名称 | N | string | |
+| ∟ provinceId | 省级代码 | Y | string | 取CB_Province：000000 国家医疗保障局 |
+| ∟ cityId | 市级代码 | Y | string | 取CB_City：000000 国家医疗保障局 |
+| ∟ startDate | 开始日期 | Y | date | yyyy-mm-dd |
+| ∟ stopDate | 结束日期 | N | date | yyyy-mm-dd |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+
+---
+
+## 2.11 查询按病种分值(DIP)付费病种库(2.0版)核心病种 [02010020]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010020" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ majorProcedureName | 主要手术及操作名称 | N | string | |
+| ∟ principalDiagnosisName | 主要诊断名称 | N | string | |
+| ∟ status | 状态 | N | string | Y:有效 ；N:失效 |
+| **pagination** | 分页节点 | Y | array\<object\> | |
+| ∟ pageSize | 页大小 | Y | int | |
+| ∟ currentPage | 当前页 | Y | int | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+| **result** | 出参节点 | Y | array\<object\> | |
+| ∟ totalCount | 总记录数 | Y | int | |
+| ∟ **data** | 数据列表 | Y | array\<object\> | |
+| ∟∟ id | ID | Y | string | |
+| ∟∟ principalDiagnosis | 主要诊断 | N | string | |
+| ∟∟ principalDiagnosisName | 主要诊断名称 | N | string | |
+| ∟∟ majorProcedure | 主要手术或操作 | N | string | |
+| ∟∟ majorProcedureName | 主要手术或操作名称 | N | string | |
+| ∟∟ secondaryProcedure | 其他手术或操作 | N | string | |
+| ∟∟ secondaryProcedureName | 其他手术或操作名称 | N | string | |
+| ∟∟ provinceId | 省级代码 | Y | string | |
+| ∟∟ provinceDesc | 省级名称 | Y | string | |
+| ∟∟ cityId | 市级代码 | Y | string | |
+| ∟∟ cityDesc | 市级名称 | Y | string | |
+| ∟∟ startDate | 开始日期 | Y | date | |
+| ∟∟ stopDate | 失效日期 | Y | date | |
+| ∟∟ createDate | 创建日期 | Y | date | |
+| ∟∟ createTime | 创建时间 | Y | datetime | |
+| ∟∟ createUserDr | 创建人员ID | Y | string | |
+
+---
+
+## 2.12 删除按病种分值(DIP)付费病种库(2.0版)核心病种 [02010021]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010021" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ id | ID | Y | int | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+
+---
+
+## 2.13 医保ICD编码查询 [02010022]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010022" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ dictId | 主表ID | N | string | |
+| ∟ code | 代码 | N | string | |
+| ∟ desc | 名称 | N | string | |
+| ∟ provinceId | 省级代码 | Y | string | 取CB_Province：000000 国家医疗保障局 |
+| ∟ cityId | 市级代码 | Y | string | 取CB_City：000000 国家医疗保障局 |
+| ∟ versionNo | 版本 | Y | string | ICD-9;ICD-10 |
+| ∟ status | 状态 | N | string | Y:有效 ；N:失效 |
+| **pagination** | 分页节点 | Y | array\<object\> | |
+| ∟ pageSize | 页大小 | Y | int | |
+| ∟ currentPage | 当前页 | Y | int | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+| **result** | 出参节点 | Y | array\<object\> | |
+| ∟ totalCount | 总记录数 | Y | int | |
+| ∟ **data** | 数据列表 | Y | array\<object\> | |
+| ∟∟ id | ID | Y | int | |
+| ∟∟ dictId | 主表ID | Y | int | BS_DRGBasicData表的ID |
+| ∟∟ code | 代码 | Y | string | |
+| ∟∟ desc | 名称 | Y | string | |
+| ∟∟ provinceId | 省级代码 | Y | string | |
+| ∟∟ provinceDesc | 省级名称 | Y | string | |
+| ∟∟ cityId | 市级代码 | Y | string | |
+| ∟∟ cityDesc | 市级名称 | Y | string | |
+| ∟∟ identification | 标识码 | N | string | |
+| ∟∟ startDate | 开始日期 | Y | date | |
+| ∟∟ stopDate | 失效日期 | Y | date | |
+
+---
+
+## 2.14 ICD编码查询-各省市地方版本 [02010037]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010037" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ code | 代码 | N | string | |
+| ∟ desc | 名称 | N | string | |
+| ∟ provinceId | 省级代码 | Y | string | 取CB_Province：000000 国家医疗保障局 |
+| ∟ cityId | 市级代码 | Y | string | 取CB_City：000000 国家医疗保障局 |
+| ∟ version | 版本 | Y | string | ICD-9;ICD-10 |
+| ∟ status | 状态 | N | string | Y:有效 ；N:失效 |
+| **pagination** | 分页节点 | Y | array\<object\> | |
+| ∟ pageSize | 页大小 | Y | int | |
+| ∟ currentPage | 当前页 | Y | int | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+| **result** | 出参节点 | Y | array\<object\> | |
+| ∟ totalCount | 总记录数 | Y | int | |
+| ∟ **data** | 数据列表 | Y | array\<object\> | |
+| ∟∟ id | ID | Y | int | |
+| ∟∟ code | 代码 | Y | string | |
+| ∟∟ desc | 名称 | Y | string | |
+| ∟∟ provinceId | 省级代码 | Y | string | |
+| ∟∟ provinceDesc | 省级名称 | Y | string | |
+| ∟∟ cityId | 市级代码 | Y | string | |
+| ∟∟ cityDesc | 市级名称 | Y | string | |
+| ∟∟ version | 版本 | N | string | |
+| ∟∟ startDate | 开始日期 | Y | date | |
+| ∟∟ stopDate | 失效日期 | Y | date | |
+
+---
+
+## 2.15 保存ICD编码映射关系 [02010023]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010023" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ id | ID | Y | int | 为空表示新增，不为空表示更新 |
+| ∟ code | 代码 | N | string | 新增时必填 |
+| ∟ descripts | 名称 | N | string | 新增时必填 |
+| ∟ icd | 医保ICD编码 | N | string | 新增时必填 |
+| ∟ icdDesc | 医保ICD名称 | N | string | 新增时必填 |
+| ∟ versionNo | 版本 | N | string | ICD-9;ICD-10，新增时必填 |
+| ∟ provinceId | 省级代码 | N | string | 新增时必填 |
+| ∟ cityId | 市级代码 | N | string | 新增时必填 |
+| ∟ updateUserId | 操作人 | Y | string | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+
+---
+
+## 2.16 删除ICD编码映射关系 [02010024]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010024" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ id | ID | Y | int | |
+| ∟ code | 代码 | N | string | |
+| ∟ icd | 医保ICD编码 | N | string | |
+| ∟ provinceId | 省级代码 | Y | string | |
+| ∟ cityId | 市级代码 | Y | string | |
+| ∟ versionNo | 版本 | N | string | ICD-9;ICD-10 |
+| ∟ updateUserId | 操作人 | Y | string | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+
+---
+
+## 2.17 查询ICD编码映射关系 [02010025]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010025" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ id | ID | N | int | |
+| ∟ code | 代码 | N | string | |
+| ∟ descripts | 名称 | N | string | |
+| ∟ icd | 医保ICD编码 | N | string | |
+| ∟ icdDesc | 医保ICD名称 | N | string | |
+| ∟ versionNo | 版本 | N | string | ICD-9;ICD-10 |
+| ∟ provinceId | 省级代码 | N | string | |
+| ∟ cityId | 市级代码 | N | string | |
+| **pagination** | 分页节点 | Y | array\<object\> | |
+| ∟ pageSize | 页大小 | Y | int | |
+| ∟ currentPage | 当前页 | Y | int | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+| **result** | 出参节点 | Y | array\<object\> | |
+| ∟ totalCount | 总记录数 | Y | int | |
+| ∟ **data** | 数据列表 | Y | array\<object\> | |
+| ∟∟ id | ID | Y | int | |
+| ∟∟ code | 代码 | Y | string | |
+| ∟∟ descripts | 名称 | Y | string | |
+| ∟∟ icd | 医保ICD编码 | Y | string | |
+| ∟∟ icdDesc | 医保ICD名称 | Y | string | |
+| ∟∟ provinceId | 省级代码 | Y | string | |
+| ∟∟ provinceDesc | 省级名称 | Y | string | |
+| ∟∟ cityId | 市级代码 | Y | string | |
+| ∟∟ cityDesc | 市级名称 | Y | string | |
+| ∟∟ versionNO | 版本 | Y | string | |
+| ∟∟ updateDate | 操作日期 | Y | date | |
+| ∟∟ updateTime | 操作时间 | Y | datetime | |
+| ∟∟ updateUserDr | 操作人 | Y | string | |
+| ∟∟ identification | 标识码 | N | string | |
+| ∟∟ remark | 备注 | N | string | |
+
+---
+
+## 2.18 获取病案首页信息（从HIS平台获取-前端不用） [02010028]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010028" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ admId | HIS就诊ID | Y | int | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+---
+
+## 2.19 保存病案首页信息（前端不用） [02010026]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010026" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ admId | HIS就诊ID | Y | int | |
+| ∟ baseinfo | 患者基本信息 | Y | json | 字段参考 2.18 节的返回结构 |
+| ∟ diseinfo | 疾病诊断信息 | Y | array | 字段参考 2.18 节的返回结构 |
+| ∟ oprninfo | 手术及操作信息 | Y | array | 字段参考 2.18 节的返回结构 |
+| ∟ icuinfo | 重症监护信息 | Y | array | 字段参考 2.18 节的返回结构 |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+
+---
+
+## 2.20 查询病案首页信息表 [02010027]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010027" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ admId | HIS就诊ID | N | int | |
+| ∟ mdtrtId | 就诊ID | N | string | |
+| ∟ psnNo | 人员编号 | N | string | |
+| ∟ iptNo | 住院号 | N | string | |
+| ∟ medcasNo | 病案号 | N | string | |
+| ∟ psnName | 人员姓名 | N | string | |
+| ∟ certno | 证件号码 | N | string | |
+| ∟ admCheck | 查询时间类型 | Y | string | In-按入院时间； Out-按出院时间 |
+| ∟ startDate | 开始时间 | Y | date | yyyy-mm-dd |
+| ∟ endDate | 截止时间 | Y | date | yyyy-mm-dd |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+---
+
+## 2.21 获取结算清单信息（从HIS平台获取-前端不用） [02010029]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010029" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ admId | HIS就诊ID | Y | int | |
+| ∟ funNo | 医保交易代码 | Y | string | 4101;4101A |
+| ∟ insuAdmNo | 医保登记流水号 | Y | string | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+---
+
+## 2.22 保存结算清单信息（前端不用） [02010030]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010030" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ admId | HIS就诊ID | Y | int | |
+| ∟ setlinfo | 结算信息 | Y | json | 字段参考 2.21 节的返回结构 |
+| ∟ opspdiseinfo | 门诊慢特病信息 | Y | array | |
+| ∟ diseinfo | 疾病诊断信息 | Y | array | 字段参考 2.21 节的返回结构 |
+| ∟ oprninfo | 手术及操作信息 | Y | array | 字段参考 2.21 节的返回结构 |
+| ∟ icuinfo | 重症监护信息 | Y | array | |
+| ∟ bldinfo | 输血信息 | Y | array | |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+
+---
+
+## 2.23 查询结算清单信息表 [02010031]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010031" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ admId | HIS就诊ID | N | int | |
+| ∟ mdtrtId | 就诊ID | N | string | |
+| ∟ psnNo | 人员编号 | N | string | |
+| ∟ psnName | 人员姓名 | N | string | |
+| ∟ certNo | 证件号码 | N | string | |
+| ∟ setlId | 医保结算ID | N | string | |
+| ∟ medcasNo | 病案号 | N | string | |
+| ∟ admCheck | 查询时间类型 | Y | string | In-按入院时间； Out-按出院时间 |
+| ∟ startDate | 开始时间 | Y | datetime | Yyyy-mm-dd hh:mm:ss |
+| ∟ endDate | 截止时间 | Y | datetime | Yyyy-mm-dd hh:mm:ss |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+---
+
+## 2.24 获取HIS就诊信息 [待定接口]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 待定 |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ startDate | 开始时间 | Y | date | |
+| ∟ stopDate | 结束时间 | Y | date | |
+| ∟ admType | 就诊类型 | Y | string | 1门诊；2住院；传空默认住院 |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |
+| **result** | 出参节点 | Y | array\<object\> | |
+| ∟ admId | his就诊号 | Y | string | |
+| ∟ insuAdmNo | 医保就诊流水号 | N | string | 自费为空；医保必传 |
+| ∟ admDateTime | 就诊时间 | Y | string | 门诊传就诊时间；住院传入院时间 |
+| ∟ patName | 姓名 | Y | string | |
+| ∟ gend | 性别 | N | string | |
+| ∟ age | 年龄 | N | string | |
+| ∟ certNo | 证件号码 | N | string | 默认传身份证号；没有身份证号传空 |
+| ∟ admDeptCode | 就诊科室代码 | N | string | |
+| ∟ admDeptName | 就诊科室名称 | N | string | |
+| ∟ diagType | 诊断类型 | N | string | ADD 入院 OPD 门诊 DIS 出院 |
+| ∟ mainDiagCode | 疾病主诊断代码 | N | string | |
+| ∟ mainDiagName | 疾病主诊断名称 | N | string | |
+| ∟ secDiagCode | 次要诊断代码 | N | string | |
+| ∟ secDiagName | 次要诊断名称 | N | string | |
+| ∟ mainOprnOprtCode | 主要手术及操作代码 | N | string | |
+| ∟ mainOprnOprtName | 主要手术及操作名称 | N | string | |
+| ∟ secOprnOprtCode | 次要手术及操作代码 | N | string | |
+| ∟ secOprnOprtName | 次要手术及操作名称 | N | string | |
+
+---
+
+## 2.30 DRG分组器 [02010001]
+
+### 请求参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| **code** | 接口代码 | Y | string | 固定值 "02010001" |
+| **params** | 入参节点 | Y | array\<object\> | |
+| ∟ mainDiagnosisCode | 主诊断代码 | Y | string | |
+| ∟ mainDiagnosisName | 主诊断名称 | Y | string | |
+| ∟ **diseInfo** | 疾病诊断信息 | Y | array\<object\> | 没有其它诊断的情况下，存主诊断信息 |
+| ∟∟ mainFlag | 主诊断标志 | Y | string | 1是0否 |
+| ∟∟ diagSn | 序号 | Y | string | |
+| ∟∟ diagCode | 疾病诊断代码 | Y | string | |
+| ∟∟ diagName | 疾病诊断名称 | Y | string | |
+| ∟ mainOperationCode | 主要手术或操作代码 | N | string | |
+| ∟ mainOperationName | 主要手术或操作名称 | N | string | |
+| ∟ **oprnInfo** | 手术或操作信息 | N | array\<object\> | 没有其它手术或操作的情况保留空节点 |
+| ∟∟ mainFlag | 主要手术或操作标志 | N | string | 1是0否 |
+| ∟∟ oprnSn | 序号 | N | string | |
+| ∟∟ oprnCode | 手术或操作代码 | N | string | |
+| ∟∟ oprnName | 手术或操作名称 | N | string | |
+| ∟ sex | 性别 | Y | string | |
+| ∟ age | 年龄 | Y | string | |
+| ∟ ageGroupDays | 年龄天数 | Y | string | |
+| ∟ newbornFlag | 新生儿标志 | Y | String | 1是0否；默认0 |
+| ∟ respiratorTime | 有创呼吸机时长 | Y | String | |
+| ∟ ecmoFlag | ECMO标志 | Y | String | 1是0否；默认0 |
+| ∟ transplantFlag | 器官移植标志 | Y | String | 1是0否；默认0 |
+| ∟ marrowTransplantFlag | 骨髓移植标志 | Y | String | 1是0否；默认0 |
+| ∟ hivFlag | HIV标志 | Y | String | 1是0否；默认0 |
+| ∟ traumaLevel | 多发创伤等级 | Y | String | |
+| ∟ department | 科室 | Y | String | |
+| ∟ hospitalDays | 住院天数 | Y | String | 默认1 |
+| ∟ totalCost | 花费 | Y | String | |
+| ∟ dischargeType | 离院方式 | Y | string | 1医嘱离院 2医嘱转院 3医嘱转社区卫生服务机构/乡镇卫生院 4非医嘱离院 5死亡 9其他 |
+| **session** | session校验 | Y | array\<object\> | 结构与 2.1 节相同 |
+
+### 返回参数
+
+| 字段名 | 字段说明 | 是否必填 | 类型 | 备注 |
+| :--- | :--- | :--- | :--- | :--- |
+| errorCode | 错误代码 | Y | string | 0-成功；其他-失败 |
+| errorMessage | 错误描述 | Y | string | |

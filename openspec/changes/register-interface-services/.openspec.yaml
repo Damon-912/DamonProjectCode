@@ -1,0 +1,8 @@
+change: register-interface-services
+title: 注册新生成的接口服务到CB_MapInterface表
+status: proposed
+created: 2026-03-20
+artifacts:
+  - proposal.md
+  - design.md
+  - tasks.md

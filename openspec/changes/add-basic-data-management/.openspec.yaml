@@ -1,0 +1,8 @@
+name: add-basic-data-management
+description: 新增基础数据管理模块 - 在导航栏中增加基础数据管理功能模块，包含DRG基础数据维护、ICD编码映射、ICD编码查询、ADRG分组规则维护，并将接口映射管理菜单移入此模块
+status: planned
+created: 2026-03-20
+artifacts:
+  - proposal.md
+  - design.md
+  - tasks.md

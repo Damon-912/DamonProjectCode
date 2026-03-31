@@ -77,7 +77,7 @@ ClassMethod SaveDRGBasicData(postObj) As %Library.DynamicObject
 		set dataObj.InsuDesc=insuDesc
 		set dataObj.ProvinceDr=provinceID
 		set dataObj.CityDr=cityID
-		set dataObj.AreaDr=areaID
+		//set dataObj.AreaDr=areaID
 		set dataObj.StartDate=startDate
 		set dataObj.StopDate=stopDate
 		set dataObj.CreateUserDr=userID
@@ -426,9 +426,19 @@ ClassMethod GetDRGBasicDataSub(jsonObj) As %Library.DynamicObject
 		set dictID=params.dictID
 		set desc=params.desc
 		set status=params.status
+		set insuCode=params.insuCode
 
-		set sql=" SELECT ID,HBDictionaries_Dr as dictID,Code,Descripts,StartDate,StopDate,"
-		       _" identification FROM HB_DRGBasicDataSub where HBDictionaries_Dr="_dictID
+		set sql =" SELECT ID,HBDictionaries_Dr as dictID,Code,Descripts,StartDate,StopDate,"
+		        _" identification FROM HB_DRGBasicDataSub "
+		        						
+		if (insuCode '= "")
+		{
+		    set sql = sql_" where HBDictionaries_Dr->InsuCode="_insuCode	
+		}
+		else
+		{
+		    set sql = sql_" where HBDictionaries_Dr="_dictID	
+		}
 				
 		if desc'=""
 		{

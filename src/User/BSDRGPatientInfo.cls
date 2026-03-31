@@ -1,0 +1,222 @@
+Import SQLUSER
+
+Class User.BSDRGPatientInfo Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = BS_DRGPatientInfo ]
+{
+
+/// (患者当前参保信息表)患者本次就诊用到的参保信息
+/// 医院编号
+Property HospitalDr As CBHospital [ Required, SqlColumnNumber = 2, SqlFieldName = Hospital_Dr ];
+
+Index Hospital On HospitalDr;
+
+/// 接口编号  指向接口表
+Property InterfaceDr As %String [ SqlColumnNumber = 3, SqlFieldName = Interface_Dr ];
+
+Index Interface On InterfaceDr;
+
+/// 患者医院ID 
+Property AdmID As %String [ Required, SqlColumnNumber = 4, SqlFieldName = AdmID ];
+
+Index AdmID On AdmID;
+
+Index PatCurIndex On (HospitalDr, InterfaceDr, AdmID, MdtrtID) [ Unique ];
+
+/// 患者姓名
+Property PatientName As %String [ Required, SqlColumnNumber = 5, SqlFieldName = PatientName ];
+
+/// 患者医保编号
+Property PersonalNO As %String [ Required, SqlColumnNumber = 6, SqlFieldName = PersonalNO ];
+
+/// 医保登记号
+Property MdtrtID As %String [ Required, SqlColumnNumber = 7, SqlFieldName = MdtrtID ];
+
+Index MdtrtID On MdtrtID;
+
+/// 医保凭证类型
+Property PsnCertType As %String [ SqlColumnNumber = 8, SqlFieldName = PsnCertType ];
+
+/// 医保凭证编码
+Property PsnCertNO As %String [ SqlColumnNumber = 9, SqlFieldName = PsnCertNO ];
+
+Index PsnCertNO On PsnCertNO;
+
+Index HospPsnCertNO On (HospitalDr, PsnCertNO);
+
+/// 性别
+Property Gend As %String [ SqlColumnNumber = 10, SqlFieldName = Gend ];
+
+/// 民族
+Property Naty As %String [ SqlColumnNumber = 11, SqlFieldName = Naty ];
+
+/// 出生日期
+Property Brdy As %Date [ SqlColumnNumber = 12, SqlFieldName = Brdy ];
+
+/// 年龄
+Property Age As %String [ SqlColumnNumber = 13, SqlFieldName = Age ];
+
+/// 余额
+Property Balc As %Currency [ SqlColumnNumber = 14, SqlFieldName = Balc ];
+
+/// 险种类型
+Property Insutype As %String [ Required, SqlColumnNumber = 15, SqlFieldName = Insutype ];
+
+/// 人员类别
+Property PsnType As %String [ SqlColumnNumber = 16, SqlFieldName = PsnType ];
+
+/// 人员参保状态
+Property PsnInsuStas As %String [ SqlColumnNumber = 17, SqlFieldName = PsnInsuStas ];
+
+/// 人员参保日期
+Property PsnInsuDate As %Date [ SqlColumnNumber = 18, SqlFieldName = PsnInsuDate ];
+
+/// 暂停参保日期
+Property PausInsuDate As %Date [ SqlColumnNumber = 19, SqlFieldName = PausInsuDate ];
+
+/// 公务员标志
+Property Cvlservflag As %String [ SqlColumnNumber = 20, SqlFieldName = Cvlservflag ];
+
+/// 人员参保区划
+Property insuplcAdmdvs As %String [ SqlColumnNumber = 21, SqlFieldName = insuplcAdmdvs ];
+
+/// 单位名称
+Property EmpName As %String(MAXLEN = 300) [ SqlColumnNumber = 22, SqlFieldName = EmpName ];
+
+/// 人员身份类别
+Property PsnIdettype As %String [ SqlColumnNumber = 23, SqlFieldName = PsnIdettype ];
+
+/// 人员类别等级
+Property PsnTypeLv As %String [ SqlColumnNumber = 24, SqlFieldName = PsnTypeLv ];
+
+/// 人员身份开始时间
+Property IdetBegntime As %Date [ SqlColumnNumber = 25, SqlFieldName = IdetBegntime ];
+
+/// 人员身份结束时间
+Property IdetEndtime As %Date [ SqlColumnNumber = 26, SqlFieldName = IdetEndtime ];
+
+/// 扩展字段1 Extended Field 1
+Property ExtField1 As %String(MAXLEN = 99999999999, TRUNCATE = 0) [ SqlColumnNumber = 27, SqlFieldName = ExtField1 ];
+
+/// 扩展字段2 Extended Field 2
+Property ExtField2 As %String [ SqlColumnNumber = 28, SqlFieldName = ExtField2 ];
+
+/// 扩展字段3 Extended Field 3
+Property ExtField3 As %String [ SqlColumnNumber = 29, SqlFieldName = ExtField3 ];
+
+/// 扩展字段4 Extended Field 4
+Property ExtField4 As %String [ SqlColumnNumber = 30, SqlFieldName = ExtField4 ];
+
+/// 扩展字段 基线版医保接口扩展字段
+Property ExpContent As %String(MAXLEN = 500) [ SqlColumnNumber = 31, SqlFieldName = ExpContent ];
+
+/// 数据更新时间
+Property UpdateTime As %DateTime [ SqlColumnNumber = 32, SqlFieldName = UpdateTime ];
+
+Storage Default
+{
+<Data name="BSDRGPatientInfoDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>HospitalDr</Value>
+</Value>
+<Value name="3">
+<Value>InterfaceDr</Value>
+</Value>
+<Value name="4">
+<Value>AdmID</Value>
+</Value>
+<Value name="5">
+<Value>PatientName</Value>
+</Value>
+<Value name="6">
+<Value>PersonalNO</Value>
+</Value>
+<Value name="7">
+<Value>MdtrtID</Value>
+</Value>
+<Value name="8">
+<Value>PsnCertType</Value>
+</Value>
+<Value name="9">
+<Value>PsnCertNO</Value>
+</Value>
+<Value name="10">
+<Value>Gend</Value>
+</Value>
+<Value name="11">
+<Value>Naty</Value>
+</Value>
+<Value name="12">
+<Value>Brdy</Value>
+</Value>
+<Value name="13">
+<Value>Age</Value>
+</Value>
+<Value name="14">
+<Value>Balc</Value>
+</Value>
+<Value name="15">
+<Value>Insutype</Value>
+</Value>
+<Value name="16">
+<Value>PsnType</Value>
+</Value>
+<Value name="17">
+<Value>PsnInsuStas</Value>
+</Value>
+<Value name="18">
+<Value>PsnInsuDate</Value>
+</Value>
+<Value name="19">
+<Value>PausInsuDate</Value>
+</Value>
+<Value name="20">
+<Value>Cvlservflag</Value>
+</Value>
+<Value name="21">
+<Value>insuplcAdmdvs</Value>
+</Value>
+<Value name="22">
+<Value>EmpName</Value>
+</Value>
+<Value name="23">
+<Value>PsnIdettype</Value>
+</Value>
+<Value name="24">
+<Value>PsnTypeLv</Value>
+</Value>
+<Value name="25">
+<Value>IdetBegntime</Value>
+</Value>
+<Value name="26">
+<Value>IdetEndtime</Value>
+</Value>
+<Value name="27">
+<Value>ExtField1</Value>
+</Value>
+<Value name="28">
+<Value>ExtField2</Value>
+</Value>
+<Value name="29">
+<Value>ExtField3</Value>
+</Value>
+<Value name="30">
+<Value>ExtField4</Value>
+</Value>
+<Value name="31">
+<Value>ExpContent</Value>
+</Value>
+<Value name="32">
+<Value>UpdateTime</Value>
+</Value>
+</Data>
+<DataLocation>^BSDRGPatientInfoD</DataLocation>
+<DefaultData>BSDRGPatientInfoDefaultData</DefaultData>
+<IdLocation>^BSDRGPatientInfoD</IdLocation>
+<IndexLocation>^BSDRGPatientInfoI</IndexLocation>
+<StreamLocation>^BSDRGPatientInfoS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+
+}

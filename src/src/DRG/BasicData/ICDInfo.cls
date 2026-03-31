@@ -16,8 +16,10 @@ ClassMethod GetMedInsuICDInfo(jsonObj) As %Library.DynamicObject
 	new (jsonObj)
 	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
 	set pageSize="",currentPage=1,count=0,dataArr=[]
-	try{
-		if (jsonObj.%IsDefined("pagination")'=0) {
+	try
+	{
+		if (jsonObj.%IsDefined("pagination")'=0) 
+		{
 			set pagationObj=jsonObj.pagination.%Get(0)
 			set pageSize=pagationObj.pageSize
 			set currentPage=pagationObj.currentPage
@@ -30,6 +32,12 @@ ClassMethod GetMedInsuICDInfo(jsonObj) As %Library.DynamicObject
 		set status=params.status
 		set provinceID=params.provinceID
 		set cityID=params.cityID
+		
+		if (provinceID="")||(cityID="")
+		{
+			set provinceID="36"
+			set cityID="371"
+		}
 		
 		//查询ICD编码类型不能为空
 		if versionNo=""
@@ -53,7 +61,7 @@ ClassMethod GetMedInsuICDInfo(jsonObj) As %Library.DynamicObject
 			quit			
 		}				
 		
-		set sql=" SELECT b.ID,b.HBDictionaries_Dr as dictID,"
+		set sql=" SELECT Top 200 b.ID,b.HBDictionaries_Dr as dictID,"
 		       _" b.Code,b.Descripts,b.identification,b.StopDate as stopDate, "	
 		       _" Province_Dr as provinceID,a.StartDate as startDate,"
 		       _" Province_Dr->Descripts as provinceDesc,"
@@ -170,7 +178,7 @@ ClassMethod UpdateMappingInfo(postObj) As %Library.DynamicAbstractObject
 {
 	set paramsObj={}
 	set paramsObj=postObj.params.%Get(0)
-	set session=postObj.session.%Get(0)
+	//set session=postObj.session.%Get(0)
 	set booleanSuccess = 0
 	set resultObj={}
 	set resultObj.errorCode=0
@@ -182,14 +190,14 @@ ClassMethod UpdateMappingInfo(postObj) As %Library.DynamicAbstractObject
 		set (UpdateUserDr,ID,ProvinceDr,CityDr,VersionNO,Code,Descripts,ICD,ICDDesc,errorMessage)=""
 		try
 		{					
-			set UpdateUserDr=session.userID
+			set UpdateUserDr=paramsObj.updateUserID
 			set VersionNo=paramsObj.versionNo			
-			set Code=paramsObj.leftInfo.code
-			set Descripts=paramsObj.leftInfo.desc				
-			set ProvinceDr=paramsObj.leftInfo.provinceID
-			set CityDr=paramsObj.leftInfo.cityID  									
-			set ICD=paramsObj.rightInfo.code
-   		    set ICDDesc=paramsObj.rightInfo.desc	
+			set Code=paramsObj.code
+			set Descripts=paramsObj.descripts				
+			set ProvinceDr=paramsObj.provinceID
+			set CityDr=paramsObj.cityID  									
+			set ICD=paramsObj.icd
+   		    set ICDDesc=paramsObj.icdDesc	
 																							
 			set ID=paramsObj.id					
 			if ID=0 set ID=""				
@@ -237,7 +245,7 @@ ClassMethod UpdateMappingInfo(postObj) As %Library.DynamicAbstractObject
 			set dataObj.UpdateUserDr =UpdateUserDr 		
 		    set dataObj.UpdateDate=$zd($h,3)
 	    	set dataObj.UpdateTime=$zt($p($h,",",2),1)																																						     		   
-						
+
 			set insObj={},data=[]
 			set insObj.className="User.HBDRGICDVersionMapping"					
 			do data.%Push(dataObj)
@@ -487,7 +495,7 @@ ClassMethod GetICDInfo(jsonObj) As %Library.DynamicObject
 		set dictID=params.dictID
 		set version=params.version //ICD-9;ICD-10
 		set code=params.code
-		set desc=params.desc
+		set descripts=params.descripts
 		set status=params.status
 		set provinceID=params.provinceID
 		set cityID=params.cityID
@@ -514,7 +522,7 @@ ClassMethod GetICDInfo(jsonObj) As %Library.DynamicObject
 			quit			
 		}				
 		
-		set sql=" SELECT ID,Code,Desc,StopDate,Province_Dr as ProvinceID,StartDate,Version "				       
+		set sql=" SELECT ID,Code,Descripts,StopDate,Province_Dr as ProvinceID,StartDate,Version, "				       
 		       _" Province_Dr->Descripts as ProvinceDesc,City_Dr as CityID,City_Dr->Descripts as CityDesc "		       
                _" FROM BS_DRGICDInfo Where Province_Dr= '"_provinceID_"'"     
                _" and City_Dr= '"_cityID_"' and Version= '"_version_"'"
@@ -523,9 +531,9 @@ ClassMethod GetICDInfo(jsonObj) As %Library.DynamicObject
 		{
 			set sql=sql_" and Code like '%"_code_"%'" 
 		}				
-		if desc'=""
+		if descripts'=""
 		{
-			set sql=sql_" and Desc like '%"_desc_"%'" 
+			set sql=sql_" and Descripts like '%"_descripts_"%'" 
 		}	
 		set sqlObj=##class(%SQL.Statement).%New(1)
 		set sc=sqlObj.%Prepare(sql)
@@ -534,7 +542,7 @@ ClassMethod GetICDInfo(jsonObj) As %Library.DynamicObject
 		{
 			set id=result.%Get("ID")		
 			set code=result.%Get("Code")
-			set desc=result.%Get("Desc")
+			set descripts=result.%Get("Descripts")
 			set version=result.%Get("Version")
 			set startDate=result.%Get("startDate")
 			set stopDate=result.%Get("stopDate")			
@@ -546,7 +554,7 @@ ClassMethod GetICDInfo(jsonObj) As %Library.DynamicObject
 			set dataObj={}
 			set dataObj.id=id	
 			set dataObj.code=code
-			set dataObj.desc=desc
+			set dataObj.descripts=descripts
 			set dataObj.startDate=startDate
 			set dataObj.stopDate=stopDate			
 			set dataObj.provinceID=provinceID
@@ -602,6 +610,543 @@ ClassMethod GetICDInfo(jsonObj) As %Library.DynamicObject
 		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
 
 	}
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-03-27
+/// Description: 下载ICD编码导入模板
+/// Output:      CSV格式模板内容（Base64编码）
+/// Return:      接口响应对象
+/// Debug:       w ##class(src.DRG.BasicData.ICDInfo).DownloadImportTemplate({}).%ToJSON()
+ClassMethod DownloadImportTemplate(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+    new (jsonObj)
+    set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+    
+    try {
+        // 生成CSV内容 - 先使用纯ASCII字符测试
+        set csvContent = "ICDCode,ICDDesc,Version,Remark"_$c(13,10)
+        set csvContent = csvContent_"A01.001,Typhoid,ICD-10,National"_$c(13,10)
+        set csvContent = csvContent_"A01.002,Paratyphoid,ICD-10,Standard"_$c(13,10)
+        
+        // Base64编码 - 使用%SYSTEM.Encryption.Base64Encode
+        set base64Data = ##class(%SYSTEM.Encryption).Base64Encode(csvContent)
+        
+        set resultObj.result.fileName = "ICD编码导入模板.csv"
+        set resultObj.result.fileData = base64Data
+        set resultObj.result.contentType = "text/csv"
+        
+    } catch e {
+        set status = e.AsStatus()
+        set resultObj.errorCode = "04000007"
+        set resultObj.errorMessage = "下载模板失败: "_$system.Status.GetErrorText(status)
+    }
+    
+    quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-03-27
+/// Description: ICD编码导入预览（校验数据并返回预览结果）
+/// Table:       BS_DRGICDInfo (User.BSDRGICDInfo)
+/// Input:       provinceID, cityID, fileData(Base64)
+/// Output:      预览结果（含重复数据标记）
+/// Return:      接口响应对象
+/// Debug:       w ##class(src.DRG.BasicData.ICDInfo).PreviewImportICD({}).%ToJSON()
+ClassMethod PreviewImportICD(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{"totalCount":0,"validCount":0,"invalidCount":0,"duplicateCount":0,"previewList":[]}}
+	
+	set totalCount=0,validCount=0,invalidCount=0,duplicateCount=0
+	set previewList=[]
+	
+	try 
+	{
+		set params=jsonObj.params.%Get(0)
+		set provinceID=params.provinceID
+		set cityID=params.cityID
+		set fileData=params.fileData
+		
+		// 参数校验
+		if provinceID="" {
+			set resultObj.errorCode="01000007"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000007")
+			quit
+		}
+		if cityID="" {
+			set resultObj.errorCode="01000008"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000008")
+			quit
+		}
+		if fileData="" {
+			set resultObj.errorCode="02010001"
+			set resultObj.errorMessage="导入文件不能为空"
+			quit
+		}
+		
+		// Base64解码 - 尝试多种方法
+		set csvContent = ""
+		
+		// 方法1: 使用$zcvt函数
+		try {
+			set csvContent = $zcvt(fileData, "I", "BASE64")
+		} catch e1 {
+			// 不输出调试信息，避免Web响应冲突
+		}
+		
+		// 如果方法1失败，尝试方法2: 使用%SYSTEM.Encryption.Base64Decode并尝试多种编码
+		if csvContent="" {
+			try {
+				set binaryData = ##class(%SYSTEM.Encryption).Base64Decode(fileData)
+				
+				// 尝试不同的编码方式
+				// 1. 先尝试UTF-8
+				set csvContent = $zcvt(binaryData, "I", "UTF8")
+				
+				// 2. 如果包含问号，尝试GB18030（中文标准编码）
+				if csvContent["?" {
+					set csvContent = $zcvt(binaryData, "I", "GB18030")
+				}
+				
+				// 3. 如果仍然有问题，直接使用二进制数据
+				if csvContent["?" {
+					set csvContent = binaryData
+				}
+			} catch e2 {
+				// 不输出调试信息，避免Web响应冲突
+			}
+		}
+		
+		// 如果仍然失败，尝试方法3: 使用%SYSTEM.Encryption.Base64Decode但不转换
+		if csvContent="" {
+			try {
+				set binaryData = ##class(%SYSTEM.Encryption).Base64Decode(fileData)
+				set csvContent = binaryData
+			} catch e3 {
+				// 不输出调试信息，避免Web响应冲突
+			}
+		}
+		
+		if csvContent="" 
+		{
+			set resultObj.errorCode="02010003"
+			set resultObj.errorMessage="文件解码失败，请提供有效的CSV文件"
+			quit
+		}
+		
+		// 检查解码后的内容
+		if csvContent="" 
+		{
+			set resultObj.errorCode="02010004"
+			set resultObj.errorMessage="文件内容为空或解码失败"
+			quit
+		}
+		
+		// 解析CSV内容（增强版，支持中文字符和换行符处理）
+		set lineNum=0
+		set ptr=1
+		set csvContent=$replace(csvContent,$c(13,10),$c(10))  // 统一换行符
+		set csvContent=$replace(csvContent,$c(13),$c(10))    // 处理MAC格式换行符
+		
+		for 
+		{
+			set line=$piece(csvContent,$c(10),ptr)
+			quit:line=""
+			set ptr=ptr+1
+			set lineNum=lineNum+1
+			continue:lineNum=1  // 跳过表头
+			continue:line=""
+			
+			set totalCount=totalCount+1
+			set rowNum=lineNum-1  // 数据行号（不含表头）
+			
+			// 解析CSV列 - 使用安全的解析方法
+			set errorMsg=""
+			try 
+			{
+				set code=$piece(line,",",1)
+			} 
+			catch codeError 
+			{
+				set code=""
+				set errorMsg="字段解析错误: " _ codeError.Name
+			}
+			
+			try 
+			{
+				set desc=$piece(line,",",2)
+			} 
+			catch descError 
+			{
+				set desc=""
+				set:'$data(errorMsg) errorMsg="字段解析错误: " _ descError.Name
+			}
+			
+			try 
+			{
+				set version=$piece(line,",",3)
+			} 
+			catch versionError 
+			{
+				set version=""
+				set:'$data(errorMsg) errorMsg="字段解析错误: " _ versionError.Name
+			}										
+			
+			set previewObj={}
+			set previewObj.rowNum=rowNum
+			set previewObj.code=code
+			set previewObj.desc=desc
+			set previewObj.version=version
+			set previewObj.provinceID=provinceID
+			set previewObj.cityID=cityID
+			set previewObj.remark=""
+			set previewObj.errorMsg=errorMsg
+			
+			// 数据校验
+			if (errorMsg '="")
+			{
+				// 字段解析错误
+				set invalidCount=invalidCount+1
+				set previewObj.errorMsg=errorMsg
+				set previewObj.status="invalid"
+				set previewObj.statusDesc="解析错误"
+			} 		
+			elseif code="" 
+			{
+				set previewObj.status="invalid"
+				set previewObj.statusDesc="错误"
+				set previewObj.errorMsg="ICD代码不能为空"
+				set invalidCount=invalidCount+1
+				do previewList.%Push(previewObj)
+				continue
+			}
+
+			if desc="" 
+			{
+				set previewObj.status="invalid"
+				set previewObj.statusDesc="错误"
+				set previewObj.errorMsg="ICD描述不能为空"
+				set invalidCount=invalidCount+1
+				do previewList.%Push(previewObj)
+				continue
+			}
+			
+			if version="" 
+			{
+				set previewObj.status="invalid"
+				set previewObj.statusDesc="错误"
+				set previewObj.errorMsg="版本不能为空"
+				set invalidCount=invalidCount+1
+				do previewList.%Push(previewObj)
+				continue
+			}
+			
+			// 检查是否已存在
+			set existingID=""
+			&sql(SELECT ID INTO :existingID FROM SQLUser.BS_DRGICDInfo 
+			     WHERE Code=:code AND Province_Dr=:provinceID AND City_Dr=:cityID and Version=:version)
+			
+			if existingID'="" 
+			{
+				set previewObj.status="duplicate"
+				set previewObj.statusDesc="重复"
+				set previewObj.errorMsg="该ICD代码已存在，导入将执行更新操作"
+				set duplicateCount=duplicateCount+1
+			} 
+			else 
+			{
+				set previewObj.status="valid"
+				set previewObj.statusDesc="正常"
+				set validCount=validCount+1
+			}
+			
+			do previewList.%Push(previewObj)
+				
+		    set resultObj.result.totalCount=totalCount
+		    set resultObj.result.validCount=validCount
+		    set resultObj.result.invalidCount=invalidCount
+		    set resultObj.result.duplicateCount=duplicateCount
+	    	set resultObj.result.previewList=previewList
+		}
+	} 
+	catch(e) 
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage="预览失败："_errorMessage
+	}
+	
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-03-27
+/// Description: 确认导入ICD编码信息
+/// Table:       BS_DRGICDInfo (User.BSDRGICDInfo)
+/// Input:       provinceID, cityID, fileData(Base64)
+/// Output:      详细导入结果报告
+/// Return:      接口响应对象
+/// Debug:       w ##class(src.DRG.BasicData.ICDInfo).ConfirmImportICD({}).%ToJSON()
+ClassMethod ConfirmImportICD(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{"totalCount":0,"successCount":0,"failCount":0,"duplicateCount":0,"newCount":0,"failList":[]}}
+	
+	set (totalCount,successCount,failCount,duplicateCount,newCount)=0
+	set failList=[]
+	
+	try {
+		set params=jsonObj.params.%Get(0)
+		
+		// 检查必需参数
+		if '$isobject(params) {
+			set resultObj.errorCode="02010001"
+			set resultObj.errorMessage="参数错误：缺少params参数"
+			quit
+		}
+		
+		set fileData=params.fileData
+		set fileName=params.fileName
+		
+		// 设置默认值或从params获取
+		set provinceID=params.provinceID
+		set cityID=params.cityID
+		
+		if (provinceID="")||(cityID="")
+		{
+			set resultObj.errorCode="-1"
+			set resultObj.errorMessage="接口入参省、市代码不能为空！"
+			quit	
+		}
+		
+		// 创建用户ID（如果没有session参数，使用默认值）
+		set createUserDr=""
+		if $isobject(jsonObj.session) 
+		{
+			set session=jsonObj.session.%Get(0)
+			set:session'="" createUserDr=session.userID
+		}
+		set:createUserDr="" createUserDr="158"  // 默认值
+		
+		// Base64解码 - 尝试多种方法（与PreviewImportICD保持一致）
+		set csvContent = ""
+		
+		// 方法1: 使用$zcvt函数
+		try {
+			set csvContent = $zcvt(fileData, "I", "BASE64")
+		} catch e1 {
+			// 不输出调试信息，避免Web响应冲突
+		}
+		
+		// 如果方法1失败，尝试方法2: 使用%SYSTEM.Encryption.Base64Decode并尝试多种编码
+		if csvContent="" {
+			try {
+				set binaryData = ##class(%SYSTEM.Encryption).Base64Decode(fileData)
+				
+				// 尝试不同的编码方式
+				// 1. 先尝试UTF-8
+				set csvContent = $zcvt(binaryData, "I", "UTF8")
+				
+				// 2. 如果包含问号，尝试GB18030（中文标准编码）
+				if csvContent["?" {
+					try {
+						set csvContent = $zcvt(binaryData, "I", "GB18030")
+					} catch gbError {
+						// 如果GB18030失败，尝试其他编码或直接使用二进制数据
+						set csvContent = binaryData
+					}
+				}
+				
+				// 3. 如果仍然有问题，直接使用二进制数据
+				if csvContent["?" {
+					set csvContent = binaryData
+				}
+			} catch e2 {
+				// 不输出调试信息，避免Web响应冲突
+			}
+		}
+		
+		if csvContent="" {
+			set resultObj.errorCode="02010003"
+			set resultObj.errorMessage="文件解码失败，请提供有效的CSV文件"
+			quit
+		}
+		
+		// 解析CSV并执行导入
+		set lineNum=0
+		set ptr=1
+		for 
+		{
+			set line=$piece(csvContent,$c(10),ptr)
+			quit:line=""
+			set ptr=ptr+1
+			set lineNum=lineNum+1
+			continue:lineNum=1  // 跳过表头
+			
+			set line=$replace(line,$c(13),"")
+			continue:line=""
+			
+			set totalCount=totalCount+1
+			set rowNum=lineNum-1
+			
+			// 解析CSV列 - 使用安全的解析方法
+			set errorMsg=""
+			try 
+			{
+				set code=$piece(line,",",1)
+			} 
+			catch codeError 
+			{
+				set code=""
+				set errorMsg="字段解析错误: " _ codeError.Name
+			}
+			
+			try 
+			{
+				set desc=$piece(line,",",2)
+			} 
+			catch descError 
+			{
+				set desc=""
+				set:'$data(errorMsg) errorMsg="字段解析错误: " _ descError.Name
+			}
+			
+			try 
+			{
+				set version=$piece(line,",",3)
+			} 
+			catch versionError 
+			{
+				set version=""
+				set:'$data(errorMsg) errorMsg="字段解析错误: " _ versionError.Name
+			}
+			
+			try 
+			{
+				set remark=$piece(line,",",4)
+			} 
+			catch remarkError 
+			{
+				set remark=""
+				set:'$data(errorMsg) errorMsg="字段解析错误: " _ remarkError.Name
+			}
+			
+			// 跳过校验失败的行
+	
+			if (errorMsg '="")
+			{
+				// 字段解析错误
+				set failCount=failCount+1
+				set failObj={}
+				set failObj.rowNum=rowNum
+				set failObj.code=code
+				set failObj.desc=desc
+				set failObj.version=version
+				set failObj.errorMsg=errorMsg
+				do failList.%Push(failObj)
+				continue
+			} 			
+			elseif (code="")||(desc="")||(version="")
+		    {
+				set failCount=failCount+1
+				set failObj={}
+				set failObj.rowNum=rowNum
+				set failObj.code=code
+				set failObj.desc=desc
+				set failObj.version=version
+				
+				// 更详细的错误信息
+				set errorDetail="必填字段为空: "
+				if code="" set errorDetail=errorDetail_"code "
+				if desc="" set errorDetail=errorDetail_"desc "
+				if version="" set errorDetail=errorDetail_"version "
+				set failObj.errorMsg=errorDetail
+				
+				do failList.%Push(failObj)
+				continue
+			}
+												
+			// 检查是否已存在
+			set existingID=""
+			&sql(SELECT ID INTO :existingID FROM BS_DRGICDInfo 
+			     WHERE Code=:code AND Province_Dr=:provinceID AND City_Dr=:cityID And Version=:version)
+			
+			// 构建数据对象
+			set dataObj={}
+			set dataObj.Code=code
+			set dataObj.Descripts=desc
+			set dataObj.Version=version
+			set dataObj.ProvinceDr=provinceID
+			set dataObj.CityDr=cityID
+			set dataObj.StartDate=$zd($h,3)
+			set dataObj.StopDate=""
+			set dataObj.CreateDate=$zd($h,3)
+			set dataObj.CreateTime=$zt($p($h,",",2),1)
+			set dataObj.CreateUserDr=createUserDr
+			set dataObj.Remark=remark
+			
+			set insObj={},data=[]
+			set insObj.className="User.BSDRGICDInfo"
+			do data.%Push(dataObj)
+			set insObj.data=data
+			
+			set operationType=""
+			if existingID'="" 
+			{
+				// 更新
+				set dataObj.ID=existingID
+				set rtn=##class(src.util.operatetable).Update(.insObj)
+				set operationType="更新"
+				set duplicateCount=duplicateCount+1
+			} 
+			else 
+			{
+				// 新增
+				set rtn=##class(src.util.operatetable).Insert(.insObj)
+				set operationType="新增"
+				set newCount=newCount+1
+			}
+			
+			if rtn.errorCode'=0 
+			{
+				set failCount=failCount+1
+				set failObj={}
+				set failObj.rowNum=rowNum
+				set failObj.code=code
+				set failObj.errorMsg=rtn.errorMessage
+				do failList.%Push(failObj)
+			} 
+			else 
+			{
+				set successCount=successCount+1
+			}
+		}
+		
+		set resultObj.result.totalCount=totalCount
+		set resultObj.result.successCount=successCount
+		set resultObj.result.failCount=failCount
+		set resultObj.result.duplicateCount=duplicateCount
+		set resultObj.result.newCount=newCount
+		set resultObj.result.failList=failList
+		
+		if failCount>0 
+		{
+			set resultObj.errorCode="02010002"
+			set resultObj.errorMessage="导入完成，部分数据导入失败，请查看失败列表"
+		}
+		
+	} catch(e) {
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="导入ICD编码信息出现问题:w ##class("_$ClassName()_").ConfirmImportICD("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	
 	quit resultObj
 }
 

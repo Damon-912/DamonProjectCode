@@ -1,0 +1,101 @@
+/// ICD编码信息表--保存各地方各版本ICD编码信息
+Class User.BSDRGICDInfo Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = BS_DRGICDInfo ]
+{
+
+Parameter %JSONREFERENCE = "ID";
+
+/// 代码 非空
+Property Code As %String(COLLATION = "UPPER", TRUNCATE = 1) [ Required, SqlColumnNumber = 2, SqlFieldName = Code ];
+
+Index Code On Code;
+
+/// 描述 非空
+Property Descripts As %String(COLLATION = "UPPER", TRUNCATE = 1) [ Required, SqlColumnNumber = 3, SqlFieldName = Descripts ];
+
+/// 版本 ICD-9/ICD-10
+Property Version As %String(MAXLEN = 99999) [ SqlColumnNumber = 4, SqlFieldName = Version ];
+
+/// 省 指向CB_Province
+Property ProvinceDr As CBProvince [ Required, SqlColumnNumber = 5, SqlFieldName = Province_Dr ];
+
+/// 市 指向CB_City
+Property CityDr As CBCity [ Required, SqlColumnNumber = 6, SqlFieldName = City_Dr ];
+
+Index DataIndex On (Code, ProvinceDr, CityDr);
+
+/// 生效日期 真正开始使用日期
+Property StartDate As %Date [ SqlColumnNumber = 7, SqlFieldName = StartDate ];
+
+/// 失效日期 此日期开始不能用,不填说明一直可用,如果不可用需要看此日期
+Property StopDate As %Date [ SqlColumnNumber = 8, SqlFieldName = StopDate ];
+
+/// 创建日期 系统自动产生
+Property CreateDate As %Date [ Required, SqlColumnNumber = 9, SqlFieldName = CreateDate ];
+
+/// 创建时间 系统自动产生
+Property CreateTime As %Time [ Required, SqlColumnNumber = 10, SqlFieldName = CreateTime ];
+
+/// 创建人员ID 指向HB_User表
+Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 11, SqlFieldName = CreateUser_Dr ];
+
+/// 备注
+Property Remark As %String(MAXLEN = 99999) [ SqlColumnNumber = 12, SqlFieldName = Remark ];
+
+Storage Default
+{
+<Data name="BSDRGICDInfoDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>Code</Value>
+</Value>
+<Value name="3">
+<Value>Descripts</Value>
+</Value>
+<Value name="4">
+<Value>Identification</Value>
+</Value>
+<Value name="5">
+<Value>ProvinceDr</Value>
+</Value>
+<Value name="6">
+<Value>CityDr</Value>
+</Value>
+<Value name="7">
+<Value>StartDate</Value>
+</Value>
+<Value name="8">
+<Value>StopDate</Value>
+</Value>
+<Value name="9">
+<Value>CreateDate</Value>
+</Value>
+<Value name="10">
+<Value>CreateTime</Value>
+</Value>
+<Value name="11">
+<Value>CreateUserDr</Value>
+</Value>
+<Value name="12">
+<Value>Remark</Value>
+</Value>
+<Value name="13">
+<Value>Version</Value>
+</Value>
+<Value name="14">
+<Value>Desc</Value>
+</Value>
+<Value name="15">
+<Value>Name</Value>
+</Value>
+</Data>
+<DataLocation>^User.BSDRGICDInfoD</DataLocation>
+<DefaultData>BSDRGICDInfoDefaultData</DefaultData>
+<IdLocation>^User.BSDRGICDInfoD</IdLocation>
+<IndexLocation>^User.BSDRGICDInfoI</IndexLocation>
+<StreamLocation>^User.BSDRGICDInfoS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+
+}

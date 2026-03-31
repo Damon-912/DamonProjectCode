@@ -1,0 +1,237 @@
+/* 文本溢出点点点显示 */
+.common-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 超出两行 ... 展示 */
+.common-two-lines-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* 超出三行 ... 展示 */
+.common-three-lines-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* 查询界面 - 查询条件栏 */
+.common-query-header {
+  padding: 12px;
+
+  .ant-form .ant-form-item {
+    margin-bottom: 0;
+
+    .ant-picker.ant-picker-range {
+      width: 238px;
+    }
+
+    .ant-input,
+    .ant-select-selector {
+      width: 132px;
+    }
+  }
+}
+
+.common-query-input {
+  width: 150px;
+  margin-right: 12px;
+}
+
+/* 分割线 */
+.common-query-split-line {
+  width: 100%;
+  height: 6px;
+  background: #f5f5f5;
+}
+
+.common-card-left-split-line {
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  position: absolute;
+  background: #f5f5f5;
+}
+
+.common-card-right-split-line {
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  position: absolute;
+  background: #f5f5f5;
+}
+
+// card左侧绿色竖杠
+.common-card-title-vertical-line {
+  position: relative;
+  padding-left: 12px;
+}
+
+.common-card-title-vertical-line div:nth-child(1) {
+  width: 5px;
+  height: 16px;
+  background: var(--main-bg);
+  position: absolute;
+  left: 0;
+  top: 3px;
+}
+
+.common-card-title-img,
+.common-card-title-icon {
+  display: flex;
+  align-items: center;
+}
+
+.common-card-title-img img {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+}
+
+.common-card-title-icon .anticon {
+  font-size: 16px;
+  margin-right: 6px;
+  color: var(--main-bg);
+  cursor: text;
+}
+
+/* table列表行高 */
+.common-table-body-height .ant-table>.ant-table-container>.ant-table-body {
+  height: 1000px !important;
+  overflow: scroll !important;
+}
+
+/* div阴影 */
+.common-bottom-shadow {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+}
+
+// table行选中样式
+.common-table-select-bg,
+.common-table-select-bg>td {
+  background-color: var(--select-rows-bg) !important;
+}
+
+// 操作按钮颜色
+.common-record-span {
+  color: var(--main-bg);
+  cursor: pointer;
+}
+
+.common-record-delete-span {
+  color: red;
+  cursor: pointer;
+}
+
+// 动态组件
+.common-dynamic-component {
+  .common-query-header {
+    padding-left: 0;
+  }
+
+  .common-dynamic-component-form {
+    height: 100%;
+
+    .ant-form-item-label,
+    .ant-form-item-control {
+      line-height: 32px;
+    }
+
+    .ant-form-item {
+      height: 32px;
+      margin-bottom: 14px;
+    }
+  }
+
+  .common-dynamic-component-form-margin-bottom0 {
+    .ant-form-item {
+      margin-bottom: 0;
+    }
+  }
+
+  .common-dynamic-component-form-margin-bottom4 {
+    .ant-form-item {
+      margin-bottom: 4px;
+    }
+  }
+
+  .common-dynamic-component-form-margin-bottom6 {
+    .ant-form-item {
+      margin-bottom: 6px;
+    }
+  }
+
+  .common-dynamic-component-form-margin-bottom8 {
+    .ant-form-item {
+      margin-bottom: 8px;
+    }
+  }
+}
+
+// 自定义数字输入框
+.common-custom-input-number::-webkit-outer-spin-button,
+.common-custom-input-number::-webkit-inner-spin-button,
+.common-custom-input-number input::-webkit-outer-spin-button,
+.common-custom-input-number input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+}
+
+.common-custom-input-number[type="number"],
+.common-custom-input-number input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.common-note {
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.common-no-drop {
+  color: #999;
+  cursor: no-drop;
+}
+
+.common-pointer {
+  color: #333;
+  cursor: pointer;
+}
+
+// 表单特殊必填
+.common-custom-required-style {
+  position: relative;
+
+  &:after {
+    display: inline-block;
+    margin-left: 6px;
+    content: '*';
+    line-height: 1;
+    font-size: 14px;
+    color: #f5222d;
+    position: absolute;
+    top: 6px;
+    left: -5px;
+  }
+}
+
+// 主题色
+.theme-color {
+  color: var(--main-bg);
+}
+
+.danger-color {
+  color: red;
+}

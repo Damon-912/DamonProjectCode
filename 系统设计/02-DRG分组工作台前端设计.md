@@ -91,16 +91,62 @@ interface MedicalRecordResponse {
 // api/grouping.ts
 
 // Code: 02010001 Device/DRGGroup
-export const performDRGGroup = (admId: string, medcasNo: string) => {
+// 统一入参格式：DiseInfo 和 OprnInfo 为对象数组
+export const performDRGGroup = (params: DRGGroupParams) => {
   return request({
     code: '02010001',
     params: [{
-      admID: admId,
-      medcasNo: medcasNo,
-      groupType: 'DRG'
+      MainDiagnosisCode: params.MainDiagnosisCode,
+      DiseInfo: params.DiseInfo,  // 诊断信息数组 [{MainFlag, DiagSn, DiagCode, DiagName}, ...]
+      MainOperationCode: params.MainOperationCode,
+      OprnInfo: params.OprnInfo,  // 手术信息数组 [{MainFlag, OprnSn, OprnCode, OprnName}, ...]
+      Sex: params.Sex,
+      Age: params.Age,
+      AgeGroupDays: params.AgeGroupDays,
+      NewbornFlag: params.NewbornFlag,
+      RespiratorTime: params.RespiratorTime,
+      ECMOFlag: params.ECMOFlag,
+      TransplantFlag: params.TransplantFlag,
+      MarrowTransplantFlag: params.MarrowTransplantFlag,
+      HIVFlag: params.HIVFlag,
+      TraumaLevel: params.TraumaLevel,
+      Department: params.Department,
+      HospitalDays: params.HospitalDays,
+      TotalCost: params.TotalCost
     }]
   });
 };
+
+// 类型定义
+interface DRGGroupParams {
+  MainDiagnosisCode: string;
+  DiseInfo?: Array<{
+    MainFlag: number;
+    DiagSn: number;
+    DiagCode: string;
+    DiagName?: string;
+  }>;
+  MainOperationCode?: string;
+  OprnInfo?: Array<{
+    MainFlag: string;
+    OprnSn: number;
+    OprnCode: string;
+    OprnName?: string;
+  }>;
+  Sex?: string;
+  Age?: number;
+  AgeGroupDays?: number;
+  NewbornFlag?: string;
+  RespiratorTime?: number;
+  ECMOFlag?: string;
+  TransplantFlag?: string;
+  MarrowTransplantFlag?: string;
+  HIVFlag?: string;
+  TraumaLevel?: number;
+  Department?: string;
+  HospitalDays?: number;
+  TotalCost?: number;
+}
 
 // Code: 02010035 SaveDRGGroupRecord
 export const saveGroupRecord = (data: GroupRecordData) => {

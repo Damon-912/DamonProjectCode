@@ -1,0 +1,54 @@
+/// 提示信息表
+Class User.CBMessage Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = CB_Message ]
+{
+
+Parameter %JSONREFERENCE = "ID";
+
+/// 代码 
+Property Code As %String(COLLATION = "UPPER", MAXLEN = 20, TRUNCATE = 1) [ Required, SqlColumnNumber = 2, SqlFieldName = Code ];
+
+Index Code On Code [ Unique ];
+
+/// 中文描述 
+Property Descripts As %String(COLLATION = "UPPER", MAXLEN = 300, TRUNCATE = 1) [ Required, SqlColumnNumber = 3, SqlFieldName = Descripts ];
+
+/// 英文描述 
+Property ENDesc As %String(COLLATION = "UPPER", MAXLEN = 300, TRUNCATE = 1) [ Required, SqlColumnNumber = 4, SqlFieldName = ENDesc ];
+
+/// 创建日期 系统自动产生
+Property CreateDate As %Date [ Required, SqlColumnNumber = 5, SqlFieldName = CreateDate ];
+
+/// 创建人员ID 与用户表
+Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 6, SqlFieldName = CreateUser_Dr ];
+
+Storage Default
+{
+<Data name="CBMessageDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>Code</Value>
+</Value>
+<Value name="3">
+<Value>Descripts</Value>
+</Value>
+<Value name="4">
+<Value>ENDesc</Value>
+</Value>
+<Value name="5">
+<Value>CreateDate</Value>
+</Value>
+<Value name="6">
+<Value>CreateUserDr</Value>
+</Value>
+</Data>
+<DataLocation>^CBMessageD</DataLocation>
+<DefaultData>CBMessageDefaultData</DefaultData>
+<IdLocation>^CBMessageD</IdLocation>
+<IndexLocation>^CBMessageI</IndexLocation>
+<StreamLocation>^CBMessageS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+
+}

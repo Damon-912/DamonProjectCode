@@ -311,26 +311,95 @@ DRG（疾病诊断相关分组）是医保支付方式改革的重要方向。�
 
 ### 4.2 接口详情
 
-#### 02010001 DRG分组器 (Device)
+#### 02010001 DRG分组器 (Device) - 统一接口
+
+> **重要说明**：所有DRG分组功能统一调用此接口，包括：
+> - 病案分组（病历分组）
+> - 结算清单分组
+> - 自定义分组查询
+
 - **功能**：执行DRG分组（主入口方法）
 - **服务类**：src.DRG.Interface
 - **调用类**：src.DRG.GroupDevice.Device()
-- **参数**：
-  - mainDiagnosisCode: 主诊断编码
-  - DiseInfo: 疾病诊断数组（其他诊断）
-  - mainOperationCode: 主手术编码
-  - OprnInfo: 手术操作数组
-  - Sex: 性别
-  - Age: 年龄
-  - AgeGroupDays: 新生儿出生天数
-  - NewbornFlag: 新生儿标志
-  - RespiratorTime: 有创呼吸机时长
-  - ECMOFlag: ECMO标志
-  - TransplantFlag: 器官移植标志
-  - MarrowTransplantFlag: 骨髓移植标志
-  - HIVFlag: HIV标志
-  - TraumaLevel: 多发创伤等级
-- **返回**：MDC/ADRG/DRG分组结果
+- **接口Code**：02010001
+
+**统一入参规范**：
+
+| 参数名 | 类型 | 必填 | 说明 |
+|--------|------|------|------|
+| MainDiagnosisCode | String | **是** | 主诊断ICD-10编码 |
+| DiseInfo | Array | 否 | 诊断信息数组，对象格式：[{MainFlag, DiagSn, DiagCode, DiagName}, ...] |
+| MainOperationCode | String | 否 | 主手术ICD-9-CM-3编码 |
+| OprnInfo | Array | 否 | 手术信息数组，对象格式：[{MainFlag, OprnSn, OprnCode, OprnName}, ...] |
+| Sex | String | 否 | 性别：1=男, 2=女 |
+| Age | Integer | 否 | 年龄（岁） |
+| AgeGroupDays | Integer | 否 | 新生儿出生天数（0-28） |
+| NewbornFlag | String | 否 | 新生儿标志：1=是, 0=否 |
+| RespiratorTime | Integer | 否 | 呼吸机时长（≥96h入MDCA） |
+| ECMOFlag | String | 否 | ECMO标志：1=是, 0=否 |
+| TransplantFlag | String | 否 | 器官移植标志：1=是, 0=否 |
+| MarrowTransplantFlag | String | 否 | 骨髓移植标志：1=是, 0=否 |
+| HIVFlag | String | 否 | HIV标志：1=是, 0=否 |
+| TraumaLevel | Integer | 否 | 多发创伤等级（≥2入MDCZ） |
+| Department | String | 否 | 科室 |
+| HospitalDays | Integer | 否 | 住院天数 |
+| TotalCost | Number | 否 | 总费用 |
+
+**先期分组规则**：
+
+| 参数条件 | 先期分组 | 说明 |
+|----------|----------|------|
+| TransplantFlag=1 | MDCA | 器官移植病例 |
+| MarrowTransplantFlag=1 | MDCA | 骨髓移植病例 |
+| ECMOFlag=1 | MDCA | ECMO治疗病例 |
+| RespiratorTime ≥ 96 | MDCA | 呼吸机≥96小时 |
+| AgeGroupDays 1-28 | MDCP | 新生儿疾病 |
+| HIVFlag=1 | MDCY | HIV感染病例 |
+| TraumaLevel ≥ 2 | MDCZ | 多发严重创伤 |
+
+**返回结果**：MDC/ADRG/DRG分组结果
+
+**前端调用示例**：
+```typescript
+// 统一封装在 frontend/src/api/drgGrouping.ts
+import { drgGroup, convertMedicalRecordToParams, convertSettlementToParams } from '@/api/drgGrouping';
+
+// 1. 病案分组
+const medicalRecord = await queryMedicalRecord({ admissionNo: '12345' });
+const params = convertMedicalRecordToParams(medicalRecord);
+const result = await drgGroup(params);
+
+// 2. 结算清单分组
+const settlement = await querySettlementInfo({ admissionNo: '12345' });
+const params = convertSettlementToParams(settlement);
+const result = await drgGroup(params);
+
+// 3. 自定义分组（使用正确的入参格式）
+const result = await drgGroup({
+  MainDiagnosisCode: 'I21.0',
+  DiseInfo: [
+    { MainFlag: 1, DiagSn: 1, DiagCode: 'I21.0', DiagName: '急性心肌梗死' },
+    { MainFlag: 0, DiagSn: 2, DiagCode: 'I10', DiagName: '高血压' }
+  ],
+  MainOperationCode: '51.23',
+  OprnInfo: [
+    { MainFlag: '1', OprnSn: 1, OprnCode: '51.23', OprnName: '冠状动脉造影术' }
+  ],
+  Sex: '1',
+  Age: 45,
+  AgeGroupDays: 0,
+  NewbornFlag: '0',
+  RespiratorTime: 0,
+  ECMOFlag: '0',
+  TransplantFlag: '0',
+  MarrowTransplantFlag: '0',
+  HIVFlag: '0',
+  TraumaLevel: 0,
+  Department: '心内科',
+  HospitalDays: 10,
+  TotalCost: 24680.0
+});
+```
 
 #### 分组流程（后端实现）
 ```

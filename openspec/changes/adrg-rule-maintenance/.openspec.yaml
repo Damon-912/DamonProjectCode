@@ -1,0 +1,8 @@
+change: adrg-rule-maintenance
+title: ADRG分组规则维护
+status: proposed
+created: 2026-03-20
+artifacts:
+  - proposal.md
+  - design.md
+  - tasks.md

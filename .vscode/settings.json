@@ -13,7 +13,7 @@
     },
     "objectscript.conn": {
         "active": true,
-        "server": "drg-project",
+        "server": "drg-clound-service",
         "ns": "DRG"
     }
 }

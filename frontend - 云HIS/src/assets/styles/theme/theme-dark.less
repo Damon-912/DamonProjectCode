@@ -1,0 +1,29 @@
+/* 自定义 antd 暗黑模式样式 */
+@dark-main-bg-color: #141414;
+@dark-bg-color: #1f1f1f;
+@dark-border-color: #414243;
+@dark-text-color: #d9d9d9;
+@dark-shadow-color: 5px 5px 15px rgb(255 255 255 / 20%);
+@dark-scrollbar-bg-color: #686868;
+
+/* 需要自定义覆盖的样式 */
+body {
+	background-color: @dark-main-bg-color !important;
+
+	// guide
+	#driver-highlighted-element-stage {
+		background-color: #525457 !important;
+	}
+}
+
+.site-layout .site-layout-background,
+.common-view .breadcrumb,
+.common-view .ant-layout-content,
+#permission .alert,
+.common-view .ant-layout-sider,
+.tabBarDetails,
+.headBox,
+.tabsList-box {
+	background: #1f1f1f !important;
+	color: #fff !important;
+}

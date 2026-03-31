@@ -235,7 +235,7 @@ ClassMethod GetInterfaceServiceConfig(jsonObj) As %Library.DynamicObject
 		}
 		set params=jsonObj.params.%Get(0)		
 		set compareCode=params.code
-		set compareDescripts=params.describe
+		set compareDescripts=params.descripts
 		set compareClassName=params.className
 		set compareMethodName=params.methodName
 		set status=params.status

@@ -1,0 +1,295 @@
+// 列维护表单数据
+const colFormData = [{
+    dataIndex: 'CardTitle1',
+    title: '基础信息配置',
+    typeCode: 'CardTitle'
+}, {
+    dataIndex: 'seqNo',
+    title: '序号',
+    typeCode: 'NumberInput'
+}, {
+    dataIndex: 'code',
+    title: '代码',
+    typeCode: 'Input',
+    required: 'Y'
+}, {
+    dataIndex: 'descripts',
+    title: '描述',
+    typeCode: 'Input',
+    required: 'Y'
+}, {
+    dataIndex: 'type',
+    title: '读写类型',
+    typeCode: 'Select',
+    required: 'Y',
+    disabled: 'Y',
+    className: 'typeList',
+    default: 'index-0'
+}, {
+    dataIndex: 'width',
+    title: '列宽',
+    typeCode: 'Input',
+    defaultValue: 100
+}, {
+    dataIndex: 'enDesc',
+    title: '英文描述',
+    typeCode: 'Input'
+}, {
+    dataIndex: 'doubt',
+    title: '字段描述',
+    typeCode: 'Input',
+    doubt: '补充说明该字段的含义，指引用户正确填写该字段'
+}, {
+    dataIndex: 'CardTitle2',
+    title: '数据规则配置',
+    typeCode: 'CardTitle'
+}, {
+    dataIndex: 'linkMethod',
+    title: '关联方法',
+    typeCode: 'Input'
+}, {
+    dataIndex: 'linkService',
+    title: '关联服务',
+    typeCode: 'Input'
+}, {
+    dataIndex: 'params',
+    title: '参数',
+    typeCode: 'TextArea',
+    doubt: '其他不固定的参数可维护在这[栗子：flag:Y&hidden:N]'
+}, {
+    dataIndex: 'CardTitle3',
+    title: '显示方式配置',
+    typeCode: 'CardTitle'
+}, {
+    dataIndex: 'align',
+    title: '对齐方式',
+    typeCode: 'Select',
+    defaultValue: 'center',
+    className: 'alignList',
+}, {
+    dataIndex: 'fixed',
+    title: '固定显示',
+    typeCode: 'Select',
+    className: 'fixedList',
+}, {
+    dataIndex: 'CardTitle4',
+    title: '操作配置',
+    typeCode: 'CardTitle'
+}, {
+    dataIndex: 'fieldTypeID',
+    title: '字段类型',
+    typeCode: 'Select',
+    doubt: '如需展示操作框则维护对应的字段类型',
+    className: 'fieldTypeList',
+}, {
+    dataIndex: 'CardTitle5',
+    title: '其他信息配置',
+    typeCode: 'CardTitle'
+}, {
+    dataIndex: 'display',
+    title: '显示',
+    typeCode: 'Switch',
+    defaultValue: 'Y'
+}, {
+    dataIndex: 'print',
+    title: '打印',
+    typeCode: 'Switch',
+    defaultValue: 'Y'
+}, {
+    dataIndex: 'export',
+    title: '导出',
+    typeCode: 'Switch',
+    defaultValue: 'Y'
+}, {
+    dataIndex: 'visible',
+    title: '是否显示标题',
+    typeCode: 'Switch'
+}];
+
+// 表单字段数据
+const fieldFormData = [{
+    dataIndex: 'CardTitle1',
+    title: '基础信息配置',
+    typeCode: 'CardTitle'
+}, {
+    title: '序号',
+    dataIndex: 'seqNo',
+    typeCode: 'Input',
+}, {
+    dataIndex: 'code',
+    title: '字段标识(Code)',
+    typeCode: 'Input',
+    disabled: 'Y',
+    required: 'Y',
+    doubt: '表单保存时对应传给后台的字段（dataIndex）',
+}, {
+    dataIndex: 'descripts',
+    title: '字段名称',
+    typeCode: 'Input',
+    // disabled: 'Y',
+    required: 'Y',
+    doubt: '表单对应的描述'
+}, {
+    dataIndex: 'doubt',
+    title: '字段描述',
+    typeCode: 'Input',
+    doubt: '补充说明该字段的含义，指引用户正确填写该字段'
+}, {
+    dataIndex: 'placeholder',
+    title: '提示信息',
+    typeCode: 'Input',
+    doubt: '操作框对应的placeholder'
+}, {
+    dataIndex: 'CardTitle2',
+    title: '数据绑定',
+    typeCode: 'CardTitle'
+}, {
+    dataIndex: 'customDataID',
+    title: '数据集',
+    typeCode: 'Select',
+    className: 'customDataSet',
+    doubt: '针对于选择框绑定的数据源',
+    disabled: 'Y'
+}, {
+    dataIndex: 'customDataStr',
+    title: '自定义数据集',
+    typeCode: 'TextArea',
+    doubt: '如果同时维护了数据集和自定义数据集，优先展示数据集关联的数据',
+    placeholder: 'key:value形式，可维护多个数据，多个用 & 拼接 [栗:   all:全部&Y:生效&N:失效]',
+    disabled: 'Y'
+}, {
+    dataIndex: 'className',
+    title: '关联类',
+    typeCode: 'Input',
+    doubt: '可维护成下拉框数据对应初始化接口的字段名；或下拉列表/远程搜索对应的接口代码；或维护成disabledDate，可以控制日期选择范围'
+}, {
+    dataIndex: 'methodName',
+    title: '关联方法',
+    typeCode: 'Input',
+    doubt: '可维护下拉列表请求接口对应的别名字段及远程搜索后台对应接收的ID字段；当className=disabledDate时可对应维护成 <，<=，>，>='
+}, {
+    dataIndex: 'linkValueID',
+    title: '关联取值',
+    typeCode: 'Select',
+    mode: 'multiple',
+    detailItem: [],
+    doubt: '下一个下拉框需要根据当前选择的值获取数据（比如选择省去获取市的数据）'
+}, {
+    dataIndex: 'linkCode',
+    title: '取值接口代码',
+    typeCode: 'Input',
+    doubt: '关联取值对应的接口代码/为远程搜索时需维护成数据查询接口后台接收字段（入：desc）'
+}, {
+    dataIndex: 'CardTitle3',
+    title: '位置大小配置',
+    typeCode: 'CardTitle'
+}, {
+    dataIndex: 'col',
+    title: '占位',
+    typeCode: 'Input',
+    defaultValue: 12,
+    doubt: '一行24份，独占一行则维护24，一行两个则维护12，以此类推'
+}, {
+    dataIndex: 'labelCol',
+    title: 'labelCol',
+    typeCode: 'Input',
+    defaultValue: 8,
+    doubt: 'label对应的份数（共24份）'
+}, {
+    dataIndex: 'wrapperCol',
+    title: 'wrapperCol',
+    typeCode: 'Input',
+    defaultValue: 16,
+    doubt: '操作框对应的份数（共24份）小技巧分享：希望买个formItem存在间隙的话wrapperCol可以少占一份'
+}, {
+    dataIndex: 'CardTitle4',
+    title: '数据规则配置',
+    typeCode: 'CardTitle'
+}, {
+    dataIndex: 'callback',
+    title: '回调方法',
+    typeCode: 'Input'
+}, {
+    dataIndex: 'default',
+    title: '默认值',
+    typeCode: 'Input',
+    doubt: '日期组件可以维护1/2/3，默认第前几天(0是当前)，Switch可以维护Y/N'
+}, {
+    dataIndex: 'params',
+    title: '参数',
+    typeCode: 'TextArea',
+    doubt: '其他不固定的参数可维护在这[栗子：flag:Y&hidden:N]'
+}, {
+    dataIndex: 'CardTitle5',
+    title: '其他配置',
+    typeCode: 'CardTitle'
+}, {
+    dataIndex: 'required',
+    title: '是否必填',
+    typeCode: 'Switch'
+}, {
+    dataIndex: 'disabled',
+    title: '是否只读',
+    typeCode: 'Switch'
+}, {
+    dataIndex: 'display',
+    title: '是否显示',
+    typeCode: 'Switch',
+    defaultValue: 'Y'
+}];
+
+const addNewFieldFormData = [{
+    dataIndex: 'CardTitle1',
+    title: '基础信息配置',
+    typeCode: 'CardTitle'
+}, {
+    dataIndex: 'code',
+    title: '字段标识(Code)',
+    typeCode: 'Input',
+    required: 'Y',
+    doubt: '字段唯一标识，用于对接接口数据'
+}, {
+    dataIndex: 'descripts',
+    title: '字段名称',
+    typeCode: 'Input',
+    required: 'Y'
+}, {
+    dataIndex: 'fieldClassID',
+    title: '字段分类',
+    typeCode: 'Select',
+    className: 'fieldClass',
+    doubt: '设置当前字段所属分类',
+    required: 'Y',
+    default: '2'
+}, {
+    dataIndex: 'CardTitle2',
+    title: '数据绑定',
+    typeCode: 'CardTitle'
+}, {
+    dataIndex: 'customDataID',
+    title: '数据集',
+    typeCode: 'Select',
+    className: 'customDataSet',
+    doubt: '针对于选择框绑定的数据源'
+}, {
+    dataIndex: 'customDataStr',
+    title: '自定义数据集',
+    typeCode: 'TextArea',
+    placeholder: 'key:value形式，可维护多个数据，多个用 & 拼接 [栗:   all:全部&Y:生效&N:失效]',
+    doubt: '如果同时维护了数据集和自定义数据集，优先展示数据集关联的数据',
+}, {
+    dataIndex: 'enDesc2',
+    title: '高级信息配置',
+    typeCode: 'CardTitle'
+}, {
+    dataIndex: 'doubt',
+    title: '字段描述',
+    typeCode: 'Input',
+    doubt: '补充说明该字段的含义，指引用户正确填写该字段'
+}];
+
+export {
+    colFormData,
+    fieldFormData,
+    addNewFieldFormData
+};

@@ -1,0 +1,91 @@
+Class User.BSDRGPatientOpspDiseInfo Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = BS_DRGPatientOpspDiseInfo ]
+{
+
+Parameter %JSONREFERENCE = "ID";
+
+/// 医保就诊ID 
+Property MdtrtId As %String(COLLATION = "UPPER", MAXLEN = 50) [ Required, SqlColumnNumber = 2, SqlFieldName = MdtrtId ];
+
+Index MdtrtId On MdtrtId;
+
+/// 就医流水号 
+Property MdtrtSn As %String(COLLATION = "UPPER", MAXLEN = 50) [ SqlColumnNumber = 3, SqlFieldName = MdtrtSn ];
+
+/// 结算ID 
+Property SetlId As %String(COLLATION = "UPPER", MAXLEN = 50) [ Required, SqlColumnNumber = 4, SqlFieldName = SetlId ];
+
+Index SetlId On SetlId;
+
+/// 主诊断标志 
+Property MaindiagFlag As %String [ Required, SqlColumnNumber = 5, SqlFieldName = MaindiagFlag ];
+
+Index MaindiagFlag On MaindiagFlag;
+
+/// 诊断代码 
+Property DiagCode As %String [ Required, SqlColumnNumber = 6, SqlFieldName = DiagCode ];
+
+Index DiagCode On DiagCode;
+
+Index OpspDiseInfoIndex On (MdtrtId, SetlId, MaindiagFlag, DiagCode);
+
+/// 诊断名称 
+Property DiagName As %String [ Required, SqlColumnNumber = 7, SqlFieldName = DiagName ];
+
+/// 手术操作代码 
+Property OprnOprtCode As %String [ SqlColumnNumber = 8, SqlFieldName = OprnOprtCode ];
+
+/// 手术操作名称 
+Property OprnOprtName As %String [ SqlColumnNumber = 9, SqlFieldName = OprnOprtName ];
+
+/// HIS就诊流水号 
+Property HISAdmID As %String [ Required, SqlColumnNumber = 10, SqlFieldName = HISAdmID ];
+
+/// 数据更新时间
+Property UpdateTime As %DateTime [ SqlColumnNumber = 11, SqlFieldName = UpdateTime ];
+
+Storage Default
+{
+<Data name="BSDRGPatientOpspDiseInfoDefaultData">
+<Value name="1">
+<Value>%%CLASSNAME</Value>
+</Value>
+<Value name="2">
+<Value>MdtrtId</Value>
+</Value>
+<Value name="3">
+<Value>MdtrtSn</Value>
+</Value>
+<Value name="4">
+<Value>SetlId</Value>
+</Value>
+<Value name="5">
+<Value>MaindiagFlag</Value>
+</Value>
+<Value name="6">
+<Value>DiagCode</Value>
+</Value>
+<Value name="7">
+<Value>DiagName</Value>
+</Value>
+<Value name="8">
+<Value>OprnOprtCode</Value>
+</Value>
+<Value name="9">
+<Value>OprnOprtName</Value>
+</Value>
+<Value name="10">
+<Value>HISAdmID</Value>
+</Value>
+<Value name="11">
+<Value>UpdateTime</Value>
+</Value>
+</Data>
+<DataLocation>^BSDRGPatientOpspDiseInfoD</DataLocation>
+<DefaultData>BSDRGPatientOpspDiseInfoDefaultData</DefaultData>
+<IdLocation>^BSDRGPatientOpspDiseInfoD</IdLocation>
+<IndexLocation>^BSDRGPatientOpspDiseInfoI</IndexLocation>
+<StreamLocation>^BSDRGPatientOpspDiseInfoS</StreamLocation>
+<Type>%Storage.Persistent</Type>
+}
+
+}
