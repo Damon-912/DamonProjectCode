@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Layout, Menu, Card, Row, Col, Statistic, Table, Tag, Progress, List, Avatar, Typography } from 'antd';
+import { Layout, Menu, Card, Row, Col, Statistic, Table, Tag, Progress, List, Avatar, Typography, Tabs } from 'antd';
 import {
   DashboardOutlined,
   PartitionOutlined,
@@ -18,9 +18,11 @@ import {
   AppstoreOutlined,
   CodeOutlined,
   ExperimentOutlined,
-  CalculatorOutlined
+  CalculatorOutlined,
+  CloseOutlined,
+  HomeOutlined
 } from '@ant-design/icons';
-import type { MenuProps } from 'antd';
+import type { MenuProps, TabsProps } from 'antd';
 import './App.css';
 import DRGCustomQuery from './pages/DRG/CustomQuery';
 import ICDMapping from './pages/BasicData/ICDMapping';
@@ -222,11 +224,192 @@ const warningData = [
   { level: 'low', title: '再入院预警', count: 18, desc: '7天内非计划再入院' },
 ];
 
+// 标签页类型定义
+interface TabItem {
+  key: string;
+  label: string;
+  closable: boolean;
+}
+
 function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [currentMenu, setCurrentMenu] = useState('dashboard');
+  // 已打开的标签页列表
+  const [openTabs, setOpenTabs] = useState<TabItem[]>([
+    { key: 'dashboard', label: '监控仪表盘', closable: false }
+  ]);
 
-  const columns = [
+  // 处理菜单点击 - 打开新标签或切换到已有标签
+  const handleMenuClick = (key: string) => {
+    const title = menuTitleMap[key] || key;
+    // 检查标签是否已存在
+    const existingTab = openTabs.find(tab => tab.key === key);
+    if (existingTab) {
+      setCurrentMenu(key);
+    } else {
+      // 新增标签页
+      setOpenTabs([...openTabs, { key, label: title, closable: key !== 'dashboard' }]);
+      setCurrentMenu(key);
+    }
+  };
+
+  // 关闭标签页
+  const handleCloseTab = (key: string) => {
+    if (key === 'dashboard') return; // 不允许关闭首页
+    const newTabs = openTabs.filter(tab => tab.key !== key);
+    setOpenTabs(newTabs);
+    // 如果关闭的是当前标签，切换到最后一个标签
+    if (currentMenu === key) {
+      const newCurrent = newTabs.length > 0 ? newTabs[newTabs.length - 1].key : 'dashboard';
+      setCurrentMenu(newCurrent);
+    }
+  };
+
+  // 标签页切换
+  const handleTabChange = (key: string) => {
+    setCurrentMenu(key);
+  };
+
+  // 根据菜单key渲染对应的组件
+  const renderContent = (key: string) => {
+    switch (key) {
+      case 'dashboard':
+        return (
+          <div style={{ padding: 16, width: '100%', height: '100%' }}>
+            {/* 统计卡片 */}
+            <Row gutter={[16, 16]} style={{ marginBottom: 24, width: '100%' }}>
+              {dashboardData.map((item, index) => (
+                <Col xs={24} sm={12} md={6} key={index}>
+                  <Card style={{ width: '100%' }}>
+                    <Statistic
+                      title={item.title}
+                      value={item.value}
+                      suffix={item.suffix}
+                      valueStyle={{ color: item.color }}
+                    />
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+            
+            {/* 图表区域 */}
+            <Row gutter={[16, 16]} style={{ width: '100%' }}>
+              <Col xs={24} lg={16}>
+                <Card title="DRG分组病历TOP5" extra={<a href="#">更多</a>} style={{ width: '100%' }}>
+                  <Table 
+                    dataSource={drgStats} 
+                    columns={columns} 
+                    pagination={false}
+                    rowKey="rank"
+                    size="small"
+                  />
+                </Card>
+              </Col>
+              <Col xs={24} lg={8}>
+                <Card title="费用预警" style={{ width: '100%' }}>
+                  <List
+                    itemLayout="horizontal"
+                    dataSource={warningData}
+                    renderItem={(item) => (
+                      <List.Item>
+                        <List.Item.Meta
+                          avatar={<Avatar icon={<WarningOutlined />} style={{ 
+                            backgroundColor: item.level === 'high' ? '#ff4d4f' : item.level === 'medium' ? '#faad14' : '#1890ff'
+                          }} />}
+                          title={item.title}
+                          description={item.desc}
+                        />
+                        <Tag color={item.level === 'high' ? 'red' : item.level === 'medium' ? 'orange' : 'blue'}>
+                          {item.count}条
+                        </Tag>
+                      </List.Item>
+                    )}
+                  />
+                </Card>
+              </Col>
+            </Row>
+          </div>
+        );
+      case 'drg-custom-query':
+        return <DRGCustomQuery />;
+      case 'drg-workbench':
+        return <DRGWorkbench />;
+      case 'drg-results':
+        return <DRGResults />;
+      case 'drg-batch':
+        return <Card><div style={{ textAlign: 'center', padding: 60 }}><Text>批量分组任务开发中...</Text></div></Card>;
+      case 'dip-workbench':
+        return <DIPWorkbench />;
+      case 'dip-values':
+        return <DIPDiseaseQuery />;
+      case 'dip-analysis':
+        return <DIPVarianceAnalysis />;
+      case 'warning-monitor':
+        return <WarningCenter />;
+      case 'warning-rules':
+        return <WarningRules />;
+      case 'warning-records':
+        return <WarningRecords />;
+      case 'profit-dept':
+        return <ProfitDept />;
+      case 'profit-doctor':
+        return <ProfitDoctor />;
+      case 'profit-disease':
+        return <ProfitDisease />;
+      case 'profit-structure':
+        return <ProfitCostStructure />;
+      case 'qc-center':
+        return <WarningCenter />;
+      case 'qc-issues':
+        return <WarningCenter />;
+      case 'qc-stats':
+        return <WarningCenter />;
+      case 'data-records':
+        return <HISMedicalRecords />;
+      case 'data-settlement':
+        return <HISSettlement />;
+      case 'data-sync':
+        return <HISDataSync />;
+      case 'basic-data-icd-mapping':
+        return <ICDMapping />;
+      case 'basic-data-icd-query':
+        return <ICDQuery />;
+      case 'basic-data-adrg-rules':
+        return <ADRGRuleMaintenance />;
+      case 'basic-data-core-algorithm':
+        return <CoreAlgorithmConfig />;
+      case 'basic-data-dict':
+        return <BasicDataMaintenance />;
+      case 'basic-data-table':
+        return <TableDataMaintenance />;
+      case 'basic-data-dip':
+        return <DIPDisease />;
+      case 'system-user':
+        return <SystemUsers />;
+      case 'system-role':
+        return <SystemRoles />;
+      case 'system-menu':
+        return <SystemMenus />;
+      case 'system-hospital':
+        return <SystemHospitals />;
+      case 'system-api':
+        return <SystemInterfaces />;
+      case 'system-logs':
+        return <SystemInterfaceLogs />;
+      default:
+        return (
+          <Card>
+            <div style={{ textAlign: 'center', padding: 60, color: '#999' }}>
+              <MenuOutlined style={{ fontSize: 48, marginBottom: 16 }} />
+              <Title level={4}>功能开发中...</Title>
+              <Text>当前模块：{key}</Text>
+            </div>
+          </Card>
+        );
+    }
+  };
+
+    const columns = [
     { title: '排名', dataIndex: 'rank', key: 'rank', width: 60 },
     { title: 'DRG编码', dataIndex: 'drg', key: 'drg', width: 80 },
     { title: 'DRG名称', dataIndex: 'name', key: 'name' },
@@ -239,6 +422,28 @@ function App() {
       render: (rate: number) => <Progress percent={rate} size="small" /> 
     },
   ];
+
+  // 标签页配置
+  const tabItems: TabsProps['items'] = openTabs.map(tab => ({
+    key: tab.key,
+    label: (
+      <span>
+        {tab.key === 'dashboard' && <HomeOutlined style={{ marginRight: 6 }} />}
+        {tab.label}
+        {tab.closable && (
+          <CloseOutlined
+            style={{ marginLeft: 8, fontSize: 10, verticalAlign: 'middle' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCloseTab(tab.key);
+            }}
+          />
+        )}
+      </span>
+    ),
+    closable: tab.closable,
+    children: renderContent(tab.key)
+  }));
 
   return (
     <Layout style={{ minHeight: '100vh', display: 'flex', flexDirection: 'row' }}>
@@ -275,9 +480,10 @@ function App() {
         <Menu
           theme="dark"
           defaultSelectedKeys={['dashboard']}
+          selectedKeys={[currentMenu]}
           mode="inline"
           items={menuItems}
-          onClick={({key}) => setCurrentMenu(key)}
+          onClick={({key}) => handleMenuClick(key)}
           style={{ flex: 1, borderRight: 0 }}
         />
         <div style={{
@@ -329,214 +535,16 @@ function App() {
           width: '100%',
           boxSizing: 'border-box'
         }}>
-          {currentMenu === 'dashboard' && (
-            <div style={{ padding: 16, width: '100%', height: '100%' }}>
-              {/* 统计卡片 */}
-              <Row gutter={[16, 16]} style={{ marginBottom: 24, width: '100%' }}>
-                {dashboardData.map((item, index) => (
-                  <Col xs={24} sm={12} md={6} key={index}>
-                    <Card style={{ width: '100%' }}>
-                      <Statistic
-                        title={item.title}
-                        value={item.value}
-                        suffix={item.suffix}
-                        valueStyle={{ color: item.color }}
-                      />
-                    </Card>
-                  </Col>
-                ))}
-              </Row>
-              
-              {/* 图表区域 */}
-              <Row gutter={[16, 16]} style={{ width: '100%' }}>
-                <Col xs={24} lg={16}>
-                  <Card title="DRG分组病历TOP5" extra={<a href="#">更多</a>} style={{ width: '100%' }}>
-                    <Table 
-                      dataSource={drgStats} 
-                      columns={columns} 
-                      pagination={false}
-                      rowKey="rank"
-                      size="small"
-                    />
-                  </Card>
-                </Col>
-                <Col xs={24} lg={8}>
-                  <Card title="费用预警" style={{ width: '100%' }}>
-                    <List
-                      itemLayout="horizontal"
-                      dataSource={warningData}
-                      renderItem={(item) => (
-                        <List.Item>
-                          <List.Item.Meta
-                            avatar={<Avatar icon={<WarningOutlined />} style={{ 
-                              backgroundColor: item.level === 'high' ? '#ff4d4f' : item.level === 'medium' ? '#faad14' : '#1890ff'
-                            }} />}
-                            title={item.title}
-                            description={item.desc}
-                          />
-                          <Tag color={item.level === 'high' ? 'red' : item.level === 'medium' ? 'orange' : 'blue'}>
-                            {item.count}条
-                          </Tag>
-                        </List.Item>
-                      )}
-                    />
-                  </Card>
-                </Col>
-              </Row>
-            </div>
-          )}
-          
-          {currentMenu === 'drg-custom-query' && (
-            <DRGCustomQuery />
-          )}
-
-          {currentMenu === 'drg-workbench' && (
-            <DRGWorkbench />
-          )}
-
-          {currentMenu === 'drg-results' && (
-            <DRGResults />
-          )}
-
-          {currentMenu === 'drg-batch' && (
-            <Card><div style={{ textAlign: 'center', padding: 60 }}><Text>批量分组任务开发中...</Text></div></Card>
-          )}
-
-          {currentMenu === 'dip-workbench' && (
-            <DIPWorkbench />
-          )}
-
-          {currentMenu === 'dip-values' && (
-            <DIPDiseaseQuery />
-          )}
-
-          {currentMenu === 'dip-analysis' && (
-            <DIPVarianceAnalysis />
-          )}
-
-          {currentMenu === 'warning-monitor' && (
-            <WarningCenter />
-          )}
-
-          {currentMenu === 'warning-rules' && (
-            <WarningRules />
-          )}
-
-          {currentMenu === 'warning-records' && (
-            <WarningRecords />
-          )}
-
-          {currentMenu === 'profit-dept' && (
-            <ProfitDept />
-          )}
-
-          {currentMenu === 'profit-doctor' && (
-            <ProfitDoctor />
-          )}
-
-          {currentMenu === 'profit-disease' && (
-            <ProfitDisease />
-          )}
-
-          {currentMenu === 'profit-structure' && (
-            <ProfitCostStructure />
-          )}
-
-          {currentMenu === 'qc-center' && (
-            <WarningCenter />
-          )}
-
-          {currentMenu === 'qc-issues' && (
-            <WarningCenter />
-          )}
-
-          {currentMenu === 'qc-stats' && (
-            <WarningCenter />
-          )}
-
-          {currentMenu === 'data-records' && (
-            <HISMedicalRecords />
-          )}
-
-          {currentMenu === 'data-settlement' && (
-            <HISSettlement />
-          )}
-
-          {currentMenu === 'data-sync' && (
-            <HISDataSync />
-          )}
-
-          {currentMenu === 'basic-data-icd-mapping' && (
-            <ICDMapping />
-          )}
-
-          {currentMenu === 'basic-data-icd-query' && (
-            <ICDQuery />
-          )}
-
-          {currentMenu === 'basic-data-adrg-rules' && (
-            <ADRGRuleMaintenance />
-          )}
-
-          {currentMenu === 'basic-data-core-algorithm' && (
-            <CoreAlgorithmConfig />
-          )}
-
-          {currentMenu === 'basic-data-dict' && (
-            <BasicDataMaintenance />
-          )}
-
-          {currentMenu === 'basic-data-table' && (
-            <TableDataMaintenance />
-          )}
-
-          {currentMenu === 'basic-data-dip' && (
-            <DIPDisease />
-          )}
-
-          {currentMenu === 'system-user' && (
-            <SystemUsers />
-          )}
-
-          {currentMenu === 'system-role' && (
-            <SystemRoles />
-          )}
-
-          {currentMenu === 'system-menu' && (
-            <SystemMenus />
-          )}
-
-          {currentMenu === 'system-hospital' && (
-            <SystemHospitals />
-          )}
-
-          {currentMenu === 'system-api' && (
-            <SystemInterfaces />
-          )}
-
-          {currentMenu === 'system-logs' && (
-            <SystemInterfaceLogs />
-          )}
-
-          {currentMenu !== 'dashboard' && currentMenu !== 'drg-custom-query' && currentMenu !== 'drg-workbench' && currentMenu !== 'drg-results' && currentMenu !== 'drg-batch'
-            && currentMenu !== 'dip-workbench' && currentMenu !== 'dip-values' && currentMenu !== 'dip-analysis'
-            && currentMenu !== 'warning-monitor' && currentMenu !== 'warning-rules' && currentMenu !== 'warning-records'
-            && currentMenu !== 'profit-dept' && currentMenu !== 'profit-doctor' && currentMenu !== 'profit-disease' && currentMenu !== 'profit-structure'
-            && currentMenu !== 'qc-center' && currentMenu !== 'qc-issues' && currentMenu !== 'qc-stats'
-            && currentMenu !== 'data-records' && currentMenu !== 'data-settlement' && currentMenu !== 'data-sync'
-            && currentMenu !== 'basic-data-icd-mapping' && currentMenu !== 'basic-data-icd-query'
-            && currentMenu !== 'basic-data-adrg-rules' && currentMenu !== 'basic-data-core-algorithm'
-            && currentMenu !== 'basic-data-dict' && currentMenu !== 'basic-data-table' && currentMenu !== 'basic-data-dip'
-            && currentMenu !== 'system-user' && currentMenu !== 'system-role'
-            && currentMenu !== 'system-menu' && currentMenu !== 'system-hospital' && currentMenu !== 'system-api' && currentMenu !== 'system-logs' && (
-            <Card>
-              <div style={{ textAlign: 'center', padding: 60, color: '#999' }}>
-                <MenuOutlined style={{ fontSize: 48, marginBottom: 16 }} />
-                <Title level={4}>功能开发中...</Title>
-                <Text>当前模块：{currentMenu}</Text>
-              </div>
-            </Card>
-          )}
+          <Tabs
+            activeKey={currentMenu}
+            onChange={handleTabChange}
+            type="card"
+            size="small"
+            style={{ background: '#fff' }}
+            tabBarStyle={{ marginBottom: 0, background: '#fff' }}
+            items={tabItems}
+            hideAdd
+          />
         </Content>
       </Layout>
     </Layout>
