@@ -315,4 +315,86 @@ ClassMethod FindHospDetail(postObj)
 	quit resultObj
 }
 
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 获取政策类型下拉数据
+/// code:		 01010065
+/// Input:		
+/// Debug：		 w ##class(src.BasicData.SelectDate).GetPolicyTypeData().%ToJSON()  
+ClassMethod GetPolicyTypeData(postJson) As %Library.DynamicObject
+{
+	new (postJson)
+	set resultObj={}
+	set resultObj.errorCode="0"
+	set resultObj.errorMessage="成功"
+	set resultObj.result={}
+	set dataArr=[]
+	try{
+		set tStatement = ##class(%SQL.Statement).%New(1)
+		set sql="SELECT * FROM CB_PolicyType where 1=1"
+		do tStatement.%Prepare(sql)
+		set result=tStatement.%Execute()
+		while result.%Next(.sc){
+			set dataObj={}
+			set dataObj.id=result.%Get("ID")
+			set dataObj.code=result.%Get("Code")
+			set dataObj.descripts=result.%Get("Descripts")
+			set dataObj.descriptsSPCode=result.%Get("ENDesc")
+			set dataObj.descriptsSPCode=##class(src.Interface.ChineseCharacter).GetSPCodeByDescNew(result.%Get("Descripts"))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result=dataArr
+	}catch(e){
+		set status=e.AsStatus()
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set resultObj={}
+		set resultObj.errorCode=errorCode
+		set resultObj.errorMessage=errorMessage
+	}
+	
+	quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 获取医院类型下拉数据
+/// code:		 01010066
+/// Input:		
+/// Debug：		 w ##class(src.BasicData.SelectDate).GetHospTypeData().%ToJSON()  
+ClassMethod GetHospTypeData(postJson) As %Library.DynamicObject
+{
+	new (postJson)
+	set resultObj={}
+	set resultObj.errorCode="0"
+	set resultObj.errorMessage="成功"
+	set resultObj.result={}
+	set dataArr=[]
+	try{
+		set tStatement = ##class(%SQL.Statement).%New(1)
+		set sql="SELECT * FROM CB_HospType where 1=1"
+		do tStatement.%Prepare(sql)
+		set result=tStatement.%Execute()
+		while result.%Next(.sc){
+			set dataObj={}
+			set dataObj.id=result.%Get("ID")
+			set dataObj.code=result.%Get("Code")
+			set dataObj.descripts=result.%Get("Descripts")
+			set dataObj.descriptsSPCode=result.%Get("ENDesc")
+			set dataObj.descriptsSPCode=##class(src.Interface.ChineseCharacter).GetSPCodeByDescNew(result.%Get("Descripts"))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result=dataArr
+	}catch(e){
+		set status=e.AsStatus()
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set resultObj={}
+		set resultObj.errorCode=errorCode
+		set resultObj.errorMessage=errorMessage
+	}
+	
+	quit resultObj
+}
+
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Table,
@@ -27,16 +27,18 @@ import {
   EyeOutlined,
   ExclamationCircleOutlined,
   BellOutlined,
-  QuestionCircleOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { queryWarningRules, saveWarningRule, deleteWarningRule } from '@/api/warning';
+import type { WarningRule } from '@/api/warning';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
 // 规则类型
-const RULE_TYPES = {
+const RULE_TYPES: Record<string, string> = {
   '01': '费用超支',
   '02': '低倍率',
   '03': '高倍率',
@@ -45,117 +47,15 @@ const RULE_TYPES = {
 };
 
 // 预警级别
-const WARNING_LEVELS = {
+const WARNING_LEVELS: Record<number, { text: string; color: string }> = {
   1: { text: '提示', color: 'success' },
   2: { text: '警告', color: 'warning' },
   3: { text: '严重', color: 'error' },
 };
 
-interface WarningRule {
-  id: string;
-  ruleCode: string;
-  ruleName: string;
-  ruleType: string;
-  drgCode: string;
-  deptCode: string;
-  thresholdPercent: number;
-  warningLevel: 1 | 2 | 3;
-  isEnabled: boolean;
-  remarks: string;
-  createUser: string;
-  createDate: string;
-}
-
-// 模拟数据
-const mockRules: WarningRule[] = [
-  {
-    id: '1',
-    ruleCode: 'WR001',
-    ruleName: '费用超支预警（严重）',
-    ruleType: '01',
-    drgCode: '',
-    deptCode: '',
-    thresholdPercent: 30,
-    warningLevel: 3,
-    isEnabled: true,
-    remarks: '费用超过DRG支付标准30%触发严重预警',
-    createUser: '管理员',
-    createDate: '2026-03-01',
-  },
-  {
-    id: '2',
-    ruleCode: 'WR002',
-    ruleName: '费用超支预警（警告）',
-    ruleType: '01',
-    drgCode: '',
-    deptCode: '',
-    thresholdPercent: 20,
-    warningLevel: 2,
-    isEnabled: true,
-    remarks: '费用超过DRG支付标准20%触发警告',
-    createUser: '管理员',
-    createDate: '2026-03-01',
-  },
-  {
-    id: '3',
-    ruleCode: 'WR003',
-    ruleName: '高倍率预警',
-    ruleType: '03',
-    drgCode: '',
-    deptCode: '',
-    thresholdPercent: 25,
-    warningLevel: 2,
-    isEnabled: true,
-    remarks: '费用高于DRG支付标准25%判定为高倍率',
-    createUser: '管理员',
-    createDate: '2026-03-02',
-  },
-  {
-    id: '4',
-    ruleCode: 'WR004',
-    ruleName: '低倍率预警',
-    ruleType: '02',
-    drgCode: '',
-    deptCode: '',
-    thresholdPercent: 40,
-    warningLevel: 1,
-    isEnabled: true,
-    remarks: '费用低于DRG支付标准40%判定为低倍率',
-    createUser: '管理员',
-    createDate: '2026-03-02',
-  },
-  {
-    id: '5',
-    ruleCode: 'WR005',
-    ruleName: '编码异常预警',
-    ruleType: '04',
-    drgCode: '',
-    deptCode: '',
-    thresholdPercent: 0,
-    warningLevel: 2,
-    isEnabled: false,
-    remarks: '诊断/手术编码存在逻辑异常时触发',
-    createUser: '管理员',
-    createDate: '2026-03-03',
-  },
-  {
-    id: '6',
-    ruleCode: 'WR006',
-    ruleName: '心内科专项预警',
-    ruleType: '01',
-    drgCode: '',
-    deptCode: '心内科',
-    thresholdPercent: 15,
-    warningLevel: 2,
-    isEnabled: true,
-    remarks: '心内科专项费用预警规则',
-    createUser: '管理员',
-    createDate: '2026-03-05',
-  },
-];
-
 const Rules: React.FC = () => {
-  const [data, setData] = useState<WarningRule[]>(mockRules);
+  const [data, setData] = useState<WarningRule[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState('新增规则');
@@ -163,6 +63,75 @@ const Rules: React.FC = () => {
   const [form] = Form.useForm();
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewRule, setPreviewRule] = useState<WarningRule | null>(null);
+  const [searchForm] = Form.useForm();
+  const [saving, setSaving] = useState(false);
+
+  // 查询预警规则列表
+  const fetchRules = async () => {
+    setLoading(true);
+    try {
+      const values = searchForm.getFieldsValue();
+      const res: any = await queryWarningRules(
+        {
+          ruleCode: values.ruleCode || '',
+          ruleName: values.ruleName || '',
+          ruleType: values.ruleType || '',
+          isActive: values.isActive || '',
+        },
+        {
+          pageSize: 100,
+          currentPage: 1,
+        }
+      );
+      
+      if (res.errorCode === '0') {
+        // 转换后端数据格式
+        const list = (res.result.rows || []).map((item: any) => ({
+          id: item.id,
+          ruleCode: item.ruleCode,
+          ruleName: item.ruleName,
+          ruleDesc: item.ruleDesc,
+          ruleType: item.ruleType,
+          thresholdType: item.thresholdType,
+          thresholdValue: item.thresholdValue,
+          mdcCode: item.mdcCode,
+          adrgCode: item.adrgCode,
+          drgCode: item.drgCode,
+          warningLevel: item.warningLevel || 1,
+          isActive: item.isActive === 'Y' || item.isActive === '1',
+          seqNo: item.seqNo,
+          createDate: item.createDate,
+          createTime: item.createTime,
+          remark: item.remark,
+        }));
+        setData(list);
+        setTotal(res.result.total || 0);
+      } else {
+        message.error(res.errorMessage || '查询失败');
+      }
+    } catch (error) {
+      console.error('查询预警规则失败:', error);
+      message.error('查询失败，请检查网络连接');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 页面加载时查询数据
+  useEffect(() => {
+    fetchRules();
+  }, []);
+
+  // 搜索
+  const handleSearch = () => {
+    fetchRules();
+  };
+
+  // 重置搜索
+  const handleReset = () => {
+    searchForm.resetFields();
+    fetchRules();
+  };
 
   // 打开新增弹窗
   const handleAdd = () => {
@@ -170,9 +139,10 @@ const Rules: React.FC = () => {
     setModalTitle('新增预警规则');
     form.resetFields();
     form.setFieldsValue({
-      isEnabled: true,
+      isActive: true,
       warningLevel: 2,
-      thresholdPercent: 20,
+      thresholdValue: 20,
+      thresholdType: '01',
     });
     setModalVisible(true);
   };
@@ -181,58 +151,113 @@ const Rules: React.FC = () => {
   const handleEdit = (record: WarningRule) => {
     setEditingRecord(record);
     setModalTitle('编辑预警规则');
-    form.setFieldsValue(record);
+    form.setFieldsValue({
+      ruleCode: record.ruleCode,
+      ruleName: record.ruleName,
+      ruleDesc: record.ruleDesc,
+      ruleType: record.ruleType,
+      thresholdType: record.thresholdType || '01',
+      thresholdValue: record.thresholdValue,
+      mdcCode: record.mdcCode,
+      adrgCode: record.adrgCode,
+      drgCode: record.drgCode,
+      warningLevel: record.warningLevel,
+      isActive: record.isActive,
+      seqNo: record.seqNo || 0,
+      remark: record.remark,
+    });
     setModalVisible(true);
   };
 
   // 删除规则
-  const handleDelete = (id: string) => {
-    const newData = data.filter(item => item.id !== id);
-    setData(newData);
-    message.success('删除成功');
+  const handleDelete = async (id: string) => {
+    try {
+      const res: any = await deleteWarningRule(id);
+      if (res.errorCode === '0') {
+        message.success('删除成功');
+        fetchRules();
+      } else {
+        message.error(res.errorMessage || '删除失败');
+      }
+    } catch (error) {
+      console.error('删除预警规则失败:', error);
+      message.error('删除失败，请检查网络连接');
+    }
   };
 
   // 切换启用状态
-  const handleToggleEnable = (record: WarningRule) => {
-    const newData = data.map(item => {
-      if (item.id === record.id) {
-        return { ...item, isEnabled: !item.isEnabled };
+  const handleToggleEnable = async (record: WarningRule) => {
+    try {
+      const newStatus = !record.isActive;
+      const res: any = await saveWarningRule({
+        ruleId: record.id,
+        ruleCode: record.ruleCode,
+        ruleName: record.ruleName,
+        ruleDesc: record.ruleDesc,
+        ruleType: record.ruleType,
+        thresholdType: record.thresholdType || '01',
+        thresholdValue: record.thresholdValue,
+        mdcCode: record.mdcCode,
+        adrgCode: record.adrgCode,
+        drgCode: record.drgCode,
+        warningLevel: record.warningLevel,
+        isActive: newStatus ? 'Y' : 'N',
+        seqNo: record.seqNo,
+        remark: record.remark,
+      });
+      if (res.errorCode === '0') {
+        message.success(`${newStatus ? '启用' : '禁用'}成功`);
+        fetchRules();
+      } else {
+        message.error(res.errorMessage || '操作失败');
       }
-      return item;
-    });
-    setData(newData);
-    message.success(`${record.isEnabled ? '禁用' : '启用'}成功`);
+    } catch (error) {
+      console.error('切换启用状态失败:', error);
+      message.error('操作失败，请检查网络连接');
+    }
   };
 
   // 保存规则
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
+      setSaving(true);
       
-      if (editingRecord) {
-        // 编辑
-        const newData = data.map(item => {
-          if (item.id === editingRecord.id) {
-            return { ...item, ...values };
-          }
-          return item;
-        });
-        setData(newData);
-        message.success('修改成功');
+      const ruleData = {
+        ruleId: editingRecord?.id || '',
+        ruleCode: values.ruleCode,
+        ruleName: values.ruleName,
+        ruleDesc: values.ruleDesc || '',
+        ruleType: values.ruleType,
+        thresholdType: values.thresholdType || '01',
+        thresholdValue: values.thresholdValue || 0,
+        mdcCode: values.mdcCode || '',
+        adrgCode: values.adrgCode || '',
+        drgCode: values.drgCode || '',
+        warningLevel: values.warningLevel,
+        isActive: values.isActive ? 'Y' : 'N',
+        seqNo: values.seqNo || 0,
+        remark: values.remark || '',
+      };
+      
+      const res: any = await saveWarningRule(ruleData);
+      
+      if (res.errorCode === '0') {
+        message.success(editingRecord ? '修改成功' : '新增成功');
+        setModalVisible(false);
+        fetchRules();
       } else {
-        // 新增
-        const newRule: WarningRule = {
-          ...values,
-          id: Date.now().toString(),
-          createUser: '当前用户',
-          createDate: new Date().toISOString().split('T')[0],
-        };
-        setData([newRule, ...data]);
-        message.success('新增成功');
+        message.error(res.errorMessage || '保存失败');
       }
-      setModalVisible(false);
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.error('保存预警规则失败:', error);
+      if (error.errorFields) {
+        message.error('请检查必填项');
+      } else {
+        message.error(error.message || '保存失败');
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -260,7 +285,7 @@ const Rules: React.FC = () => {
       dataIndex: 'ruleType',
       key: 'ruleType',
       width: 120,
-      render: (type: string) => RULE_TYPES[type],
+      render: (type: string) => RULE_TYPES[type] || type,
     },
     {
       title: '适用DRG',
@@ -278,8 +303,8 @@ const Rules: React.FC = () => {
     },
     {
       title: '阈值(%)',
-      dataIndex: 'thresholdPercent',
-      key: 'thresholdPercent',
+      dataIndex: 'thresholdValue',
+      key: 'thresholdValue',
       width: 100,
       align: 'center',
     },
@@ -288,16 +313,16 @@ const Rules: React.FC = () => {
       dataIndex: 'warningLevel',
       key: 'warningLevel',
       width: 100,
-      render: (level: 1 | 2 | 3) => (
-        <Tag color={WARNING_LEVELS[level].color}>
-          {WARNING_LEVELS[level].text}
+      render: (level: number) => (
+        <Tag color={WARNING_LEVELS[level]?.color || 'default'}>
+          {WARNING_LEVELS[level]?.text || '未知'}
         </Tag>
       ),
     },
     {
       title: '状态',
-      dataIndex: 'isEnabled',
-      key: 'isEnabled',
+      dataIndex: 'isActive',
+      key: 'isActive',
       width: 100,
       render: (enabled: boolean, record) => (
         <Switch
@@ -310,8 +335,8 @@ const Rules: React.FC = () => {
     },
     {
       title: '创建人',
-      dataIndex: 'createUser',
-      key: 'createUser',
+      dataIndex: 'createUserDr',
+      key: 'createUserDr',
       width: 100,
     },
     {
@@ -366,11 +391,51 @@ const Rules: React.FC = () => {
 
   return (
     <div style={{ padding: 16, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* 搜索表单 */}
+      <Card size="small" style={{ marginBottom: 16 }}>
+        <Form form={searchForm} layout="inline">
+          <Form.Item name="ruleCode" label="规则编码">
+            <Input placeholder="请输入规则编码" style={{ width: 150 }} />
+          </Form.Item>
+          <Form.Item name="ruleName" label="规则名称">
+            <Input placeholder="请输入规则名称" style={{ width: 150 }} />
+          </Form.Item>
+          <Form.Item name="ruleType" label="规则类型">
+            <Select placeholder="请选择" style={{ width: 120 }} allowClear>
+              <Option value="01">费用超支</Option>
+              <Option value="02">低倍率</Option>
+              <Option value="03">高倍率</Option>
+              <Option value="04">编码异常</Option>
+              <Option value="05">分解住院</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item name="isActive" label="状态">
+            <Select placeholder="请选择" style={{ width: 100 }} allowClear>
+              <Option value="Y">启用</Option>
+              <Option value="N">禁用</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item>
+            <Space>
+              <Button type="primary" onClick={handleSearch}>
+                查询
+              </Button>
+              <Button onClick={handleReset}>重置</Button>
+              <Button icon={<ReloadOutlined />} onClick={fetchRules}>
+                刷新
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Card>
+
+      {/* 数据表格 */}
       <Card
         title={
           <Space>
             <BellOutlined />
             <span>预警规则配置</span>
+            <Text type="secondary">（共 {total} 条）</Text>
           </Space>
         }
         extra={
@@ -386,8 +451,9 @@ const Rules: React.FC = () => {
           dataSource={data}
           rowKey="id"
           loading={loading}
-          scroll={{ x: 1400, y: 'calc(100vh - 280px)' }}
+          scroll={{ x: 1400, y: 'calc(100vh - 380px)' }}
           pagination={{
+            total: total,
             pageSize: 10,
             showSizeChanger: true,
             showTotal: (total) => `共 ${total} 条`,
@@ -407,6 +473,7 @@ const Rules: React.FC = () => {
         onOk={handleSave}
         onCancel={() => setModalVisible(false)}
         width={700}
+        confirmLoading={saving}
       >
         <Form form={form} layout="vertical">
           <Row gutter={16}>
@@ -416,7 +483,7 @@ const Rules: React.FC = () => {
                 name="ruleCode"
                 rules={[{ required: true, message: '请输入规则编码' }]}
               >
-                <Input placeholder="如：WR001" />
+                <Input placeholder="如：WR001" disabled={!!editingRecord} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -429,6 +496,13 @@ const Rules: React.FC = () => {
               </Form.Item>
             </Col>
           </Row>
+
+          <Form.Item
+            label="规则描述"
+            name="ruleDesc"
+          >
+            <Input.TextArea rows={2} placeholder="请输入规则描述" />
+          </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
@@ -464,24 +538,43 @@ const Rules: React.FC = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="阈值百分比"
-                name="thresholdPercent"
+                label="阈值类型"
+                name="thresholdType"
+              >
+                <Select placeholder="请选择阈值类型">
+                  <Option value="01">百分比</Option>
+                  <Option value="02">固定值</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="阈值"
+                name="thresholdValue"
                 rules={[{ required: true, message: '请输入阈值' }]}
-                tooltip="费用偏差达到此比例时触发预警"
+                tooltip="百分比类型表示费用偏差比例，固定值类型表示费用偏差金额"
               >
                 <InputNumber
                   min={0}
-                  max={100}
-                  formatter={(value) => `${value}%`}
-                  parser={(value) => value?.replace('%', '') as any}
                   style={{ width: '100%' }}
                 />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="排序号"
+                name="seqNo"
+              >
+                <InputNumber min={0} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 label="是否启用"
-                name="isEnabled"
+                name="isActive"
                 valuePropName="checked"
               >
                 <Switch checkedChildren="启用" unCheckedChildren="禁用" />
@@ -510,9 +603,30 @@ const Rules: React.FC = () => {
             </Col>
           </Row>
 
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="MDC编码"
+                name="mdcCode"
+                tooltip="为空表示适用全部MDC"
+              >
+                <Input placeholder="为空表示全部" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label="ADRG编码"
+                name="adrgCode"
+                tooltip="为空表示适用全部ADRG"
+              >
+                <Input placeholder="为空表示全部" />
+              </Form.Item>
+            </Col>
+          </Row>
+
           <Form.Item
             label="备注"
-            name="remarks"
+            name="remark"
           >
             <TextArea rows={3} placeholder="请输入备注说明" />
           </Form.Item>
@@ -538,18 +652,18 @@ const Rules: React.FC = () => {
                 <ExclamationCircleOutlined
                   style={{
                     fontSize: 48,
-                    color: WARNING_LEVELS[previewRule.warningLevel].color === 'error' ? '#ff4d4f' :
-                           WARNING_LEVELS[previewRule.warningLevel].color === 'warning' ? '#faad14' : '#52c41a',
+                    color: WARNING_LEVELS[previewRule.warningLevel]?.color === 'error' ? '#ff4d4f' :
+                           WARNING_LEVELS[previewRule.warningLevel]?.color === 'warning' ? '#faad14' : '#52c41a',
                   }}
                 />
                 <Title level={4} style={{ marginTop: 16, marginBottom: 0 }}>
                   {previewRule.ruleName}
                 </Title>
                 <Tag
-                  color={WARNING_LEVELS[previewRule.warningLevel].color}
+                  color={WARNING_LEVELS[previewRule.warningLevel]?.color}
                   style={{ marginTop: 8 }}
                 >
-                  {WARNING_LEVELS[previewRule.warningLevel].text}级别
+                  {WARNING_LEVELS[previewRule.warningLevel]?.text}级别
                 </Tag>
               </Col>
               <Col span={24}>
@@ -567,26 +681,26 @@ const Rules: React.FC = () => {
               </Col>
               <Col span={12}>
                 <Text strong>触发阈值：</Text>
-                <Text type="danger" strong>{previewRule.thresholdPercent}%</Text>
+                <Text type="danger" strong>{previewRule.thresholdValue}%</Text>
               </Col>
               <Col span={12}>
                 <Text strong>当前状态：</Text>
-                <Tag color={previewRule.isEnabled ? 'success' : 'default'}>
-                  {previewRule.isEnabled ? '已启用' : '已禁用'}
+                <Tag color={previewRule.isActive ? 'success' : 'default'}>
+                  {previewRule.isActive ? '已启用' : '已禁用'}
                 </Tag>
               </Col>
-              {previewRule.remarks && (
+              {previewRule.remark && (
                 <Col span={24}>
                   <Text strong>备注说明：</Text>
                   <div style={{ marginTop: 8, padding: 12, background: '#f5f5f5', borderRadius: 4 }}>
-                    {previewRule.remarks}
+                    {previewRule.remark}
                   </div>
                 </Col>
               )}
               <Col span={24} style={{ marginTop: 16 }}>
                 <Alert
                   message="预警示例"
-                  description={`当病例费用${previewRule.ruleType === '02' ? '低于' : '超过'}DRG支付标准的${previewRule.thresholdPercent}%时，将触发此预警规则`}
+                  description={`当病例费用${previewRule.ruleType === '02' ? '低于' : '超过'}DRG支付标准的${previewRule.thresholdValue}%时，将触发此预警规则`}
                   type="info"
                   showIcon
                 />

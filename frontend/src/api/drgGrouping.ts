@@ -727,6 +727,7 @@ export interface DRGGroupResultLowerCamel {
   }>;
   /** 医疗机构算法信息数组 */
   hospAlgorithmInfo?: Array<{
+    totalCost: any;
     hisHospCode: string;
     hospCode: string;
     hospName: string;
@@ -736,5 +737,13 @@ export interface DRGGroupResultLowerCamel {
     pipValue: string | number;
     dgdov: string | number;
     payStandard: string | number;
+    /** 当前费用总额 */
+    totalAmt?: string | number;
+    /** 预估盈利 */
+    preProfit?: string | number;
+    /** 预估亏损 */
+    preLoss?: string | number;
+    /** 差异率 */
+    discrepancyRate?: string | number;
   }>;
 }

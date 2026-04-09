@@ -53,20 +53,23 @@ Property OrganizationCode As %String(COLLATION = "UPPER", MAXLEN = 30, TRUNCATE 
 /// 营业执照 
 Property Businesslicense As %String(COLLATION = "UPPER", MAXLEN = 30, TRUNCATE = 1) [ Required, SqlColumnNumber = 12, SqlFieldName = Businesslicense ];
 
+/// 政策类型 DRG\DIP\ALL 
+Property PolicyTypeDr As CBPolicyType [ Required, SqlColumnNumber = 13, SqlFieldName = PolicyType_Dr ];
+
 /// 生效日期 此日期开始不能用,不填说明一直可用,如果不可用需要看此日期
-Property StartDate As %Date [ SqlColumnNumber = 13, SqlFieldName = StartDate ];
+Property StartDate As %Date [ SqlColumnNumber = 14, SqlFieldName = StartDate ];
 
 /// 失效日期 系统自动产生
-Property StopDate As %Date [ SqlColumnNumber = 14, SqlFieldName = StopDate ];
+Property StopDate As %Date [ SqlColumnNumber = 15, SqlFieldName = StopDate ];
 
 /// 创建日期 系统自动产生
-Property CreateDate As %Date [ Required, SqlColumnNumber = 15, SqlFieldName = CreateDate ];
+Property CreateDate As %Date [ Required, SqlColumnNumber = 16, SqlFieldName = CreateDate ];
 
 /// 创建时间 指向用户表 HB_User
-Property CreateTime As %Time [ Required, SqlColumnNumber = 16, SqlFieldName = CreateTime ];
+Property CreateTime As %Time [ Required, SqlColumnNumber = 17, SqlFieldName = CreateTime ];
 
 /// 创建人员ID 与USER表里的ID相同
-Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 17, SqlFieldName = CreateUser_Dr ];
+Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 18, SqlFieldName = CreateUser_Dr ];
 
 Storage Default
 {
@@ -121,6 +124,12 @@ Storage Default
 </Value>
 <Value name="17">
 <Value>CreateUserDr</Value>
+</Value>
+<Value name="18">
+<Value>PolicyType</Value>
+</Value>
+<Value name="19">
+<Value>PolicyTypeDr</Value>
 </Value>
 </Data>
 <DataLocation>^CBHospitalD</DataLocation>

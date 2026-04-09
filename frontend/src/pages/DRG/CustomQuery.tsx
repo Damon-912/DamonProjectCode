@@ -71,14 +71,6 @@ const DRGCustomQuery: React.FC = () => {
     hospitalsRef.current = hospitals;
   }, [hospitals]);
 
-  // 回车键触发查询的函数
-  const triggerSubmitOnEnter = () => {
-    const submitButton = document.querySelector('button[type="submit"]');
-    if (submitButton) {
-      (submitButton as HTMLButtonElement).click();
-    }
-  };
-
   // 提交分组查询 - 使用小驼峰格式
   const handleSubmit = async (values: any) => {
     try {
@@ -110,6 +102,22 @@ const DRGCustomQuery: React.FC = () => {
         message.error('当新生儿天数大于0时,年龄不能大于1岁');
         setLoading(false);
         return;
+      }
+
+      // 校验当前医疗费用总额 - 如果不为空且不为0，则必须是有效金额
+      const totalCost = values.TotalCost;
+      if (totalCost !== undefined && totalCost !== null && totalCost !== '' && Number(totalCost) !== 0) {
+        const totalCostNum = Number(totalCost);
+        if (isNaN(totalCostNum)) {
+          message.error('当前医疗费用总额必须是有效数字');
+          setLoading(false);
+          return;
+        }
+        if (totalCostNum <= 0) {
+          message.error('当前医疗费用总额必须是大于0的金额');
+          setLoading(false);
+          return;
+        }
       }
 
       // 获取主手术代码
@@ -703,7 +711,6 @@ const DRGCustomQuery: React.FC = () => {
               form.setFieldValue('MainDiagnosisCode', e.target.value);
             }
           }}
-          onPressEnter={triggerSubmitOnEnter}
         />
       )
     },
@@ -715,7 +722,6 @@ const DRGCustomQuery: React.FC = () => {
           placeholder="如：急性心肌梗死"
           value={diagnoses[index]?.diagName}
           onChange={(e) => updateDiagnosis(index, 'diagName', e.target.value)}
-          onPressEnter={triggerSubmitOnEnter}
         />
       )
     },
@@ -783,7 +789,6 @@ const DRGCustomQuery: React.FC = () => {
               form.setFieldValue('MainOperationCode', e.target.value);
             }
           }}
-          onPressEnter={triggerSubmitOnEnter}
         />
       )
     },
@@ -795,13 +800,6 @@ const DRGCustomQuery: React.FC = () => {
           placeholder="如：冠状动脉造影术"
           value={operations[index]?.oprnName}
           onChange={(e) => updateOperation(index, 'oprnName', e.target.value)}
-          onPressEnter={() => {
-            // 回车键触发查询按钮
-            const submitButton = document.querySelector('button[type="submit"]');
-            if (submitButton) {
-              (submitButton as HTMLButtonElement).click();
-            }
-          }}
         />
       )
     },
@@ -838,7 +836,6 @@ const DRGCustomQuery: React.FC = () => {
           placeholder="如：10001"
           value={hospitals[index]?.code}
           onChange={(e) => updateHospital(index, 'code', e.target.value)}
-          onPressEnter={triggerSubmitOnEnter}
         />
       )
     },
@@ -850,7 +847,6 @@ const DRGCustomQuery: React.FC = () => {
           placeholder="如：XX市人民医院"
           value={hospitals[index]?.descripts}
           onChange={(e) => updateHospital(index, 'descripts', e.target.value)}
-          onPressEnter={triggerSubmitOnEnter}
         />
       )
     },
@@ -922,6 +918,11 @@ const DRGCustomQuery: React.FC = () => {
               form={form}
               layout="vertical"
               onFinish={handleSubmit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                }
+              }}
               initialValues={{
                 Sex: '1',
                 Age: 0,
@@ -1000,16 +1001,9 @@ const DRGCustomQuery: React.FC = () => {
             {/* 第二行：科室和住院信息 */}
             <Row gutter={16}>
               <Col span={6}>
-                <Form.Item name="Department" label="科室">
+                <Form.Item name="TotalCost" label="当前医疗费用总额(元)">
                   <Input 
-                    placeholder="如：心内科"
-                    onPressEnter={() => {
-                      // 回车键触发查询按钮
-                      const submitButton = document.querySelector('button[type="submit"]');
-                      if (submitButton) {
-                        (submitButton as HTMLButtonElement).click();
-                      }
-                    }}
+                    placeholder="请输入费用总额"
                   />
                 </Form.Item>
               </Col>
@@ -1018,13 +1012,6 @@ const DRGCustomQuery: React.FC = () => {
                   <InputNumber 
                     min={1} 
                     style={{ width: '100%' }}
-                    onPressEnter={() => {
-                      // 回车键触发查询按钮
-                      const submitButton = document.querySelector('button[type="submit"]');
-                      if (submitButton) {
-                        (submitButton as HTMLButtonElement).click();
-                      }
-                    }}
                   />
                 </Form.Item>
               </Col>
@@ -1034,13 +1021,6 @@ const DRGCustomQuery: React.FC = () => {
                     min={0} 
                     max={9999} 
                     style={{ width: '100%' }}
-                    onPressEnter={() => {
-                      // 回车键触发查询按钮
-                      const submitButton = document.querySelector('button[type="submit"]');
-                      if (submitButton) {
-                        (submitButton as HTMLButtonElement).click();
-                      }
-                    }}
                   />
                 </Form.Item>
               </Col>
@@ -1051,13 +1031,6 @@ const DRGCustomQuery: React.FC = () => {
                     max={10} 
                     placeholder="≥2为严重创伤" 
                     style={{ width: '100%' }}
-                    onPressEnter={() => {
-                      // 回车键触发查询按钮
-                      const submitButton = document.querySelector('button[type="submit"]');
-                      if (submitButton) {
-                        (submitButton as HTMLButtonElement).click();
-                      }
-                    }}
                   />
                 </Form.Item>
               </Col>
@@ -1395,20 +1368,36 @@ const DRGCustomQuery: React.FC = () => {
                           </div>
                           <Row gutter={[8, 4]}>
                             <Col span={12}>
-                              <Text type="secondary" style={{ fontSize: 11 }}>分值: </Text>
+                              <Text type="secondary" style={{ fontSize: 11 }}>基准点数: </Text>
                               <Text style={{ fontSize: 12 }}>{item.points || '-'}</Text>
                             </Col>
                             <Col span={12}>
-                              <Text type="secondary" style={{ fontSize: 11 }}>付费标准: </Text>
+                              <Text type="secondary" style={{ fontSize: 11 }}>预估标准: </Text>
                               <Text style={{ fontSize: 12 }}>{item.payStandard || '-'}</Text>
                             </Col>
                             <Col span={12}>
-                              <Text type="secondary" style={{ fontSize: 11 }}>点值: </Text>
+                              <Text type="secondary" style={{ fontSize: 11 }}>基准点值: </Text>
                               <Text style={{ fontSize: 12 }}>{item.pipValue || '-'}</Text>
                             </Col>
                             <Col span={12}>
                               <Text type="secondary" style={{ fontSize: 11 }}>差异系数: </Text>
                               <Text style={{ fontSize: 12 }}>{item.dgdov || '-'}</Text>
+                            </Col>
+                            <Col span={12}>
+                              <Text type="secondary" style={{ fontSize: 11 }}>当前费用总额: </Text>
+                              <Text style={{ fontSize: 12 }}>{item.totalCost !== undefined ? `¥${item.totalCost}` : '-'}</Text>
+                            </Col>
+                            <Col span={12}>
+                              <Text type="secondary" style={{ fontSize: 11 }}>预估盈利: </Text>
+                              <Text style={{ fontSize: 12, color: '#52c41a' }}>{item.preProfit !== undefined ? `¥${item.preProfit}` : '-'}</Text>
+                            </Col>
+                            <Col span={12}>
+                              <Text type="secondary" style={{ fontSize: 11 }}>预估亏损: </Text>
+                              <Text style={{ fontSize: 12, color: '#ff4d4f' }}>{item.preLoss !== undefined ? `¥${item.preLoss}` : '-'}</Text>
+                            </Col>
+                            <Col span={12}>
+                              <Text type="secondary" style={{ fontSize: 11 }}>差异率: </Text>
+                              <Text style={{ fontSize: 12 }}>{item.discrepancyRate !== undefined ? `${item.discrepancyRate}%` : '-'}</Text>
                             </Col>
                           </Row>
                         </Card>

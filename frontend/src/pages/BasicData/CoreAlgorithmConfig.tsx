@@ -218,6 +218,10 @@ const CoreAlgorithmConfig: React.FC = () => {
     setModalOpen(true);
     fetchProvinceData(); // 弹窗打开时获取省数据
     fetchHospitalData(); // 弹窗打开时获取医疗机构数据
+    // 设置生效日期默认值为当年1月1日
+    form.setFieldsValue({
+      startDate: dayjs().startOf('year')
+    });
   };
 
   const handleEdit = async (record: CoreAlgorithmItem) => {
@@ -305,7 +309,7 @@ const CoreAlgorithmConfig: React.FC = () => {
     }
   };
 
-  // 计算支付标准：基准点数 × 病组差异系数 × 预估点值
+  // 计算预估支付标准：基准点数 × 病组差异系数 × 预估点值
   const calculatePayStandard = (points?: string | number, dgdov?: string | number, pipValue?: string | number) => {
     const p = parseFloat(String(points || 0));
     const d = parseFloat(String(dgdov || 0));
@@ -316,7 +320,7 @@ const CoreAlgorithmConfig: React.FC = () => {
     return (p * d * v).toFixed(2);
   };
 
-  // 监听算法参数字段变化，自动计算支付标准
+  // 监听算法参数字段变化，自动计算预估支付标准
   const handleAlgorithmValueChange = (changedValues: any, allValues: any) => {
     const fields = ['points', 'dgdov', 'pipValue'];
     const hasChanged = Object.keys(changedValues).some(key => fields.includes(key));
@@ -384,7 +388,7 @@ const CoreAlgorithmConfig: React.FC = () => {
       align: 'right',
     },
     {
-      title: '支付标准',
+      title: '预估支付标准',
       dataIndex: 'payStandard',
       width: 100,
       align: 'right',
@@ -433,7 +437,7 @@ const CoreAlgorithmConfig: React.FC = () => {
           <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>编辑</Button>
           <Popconfirm
             title="确认删除"
-            description="确定要删除该DRG核心算法配置吗？"
+            description="确定要删除该DRG算法配置吗？"
             onConfirm={() => handleDelete(record.id)}
             okText="确定"
             cancelText="取消"
@@ -585,7 +589,7 @@ const CoreAlgorithmConfig: React.FC = () => {
 
       {/* 新增/编辑弹窗 */}
       <Modal
-        title={editRecord ? '编辑DRG核心算法配置' : '新增DRG核心算法配置'}
+        title={editRecord ? '编辑DRG算法配置' : '新增DRG算法配置'}
         open={modalOpen}
         onOk={handleSave}
         onCancel={() => setModalOpen(false)}
@@ -629,7 +633,7 @@ const CoreAlgorithmConfig: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="payStandard" label="支付标准(PayStandard)">
+                <Form.Item name="payStandard" label="预估支付标准(PayStandard)">
                   <Input placeholder="如 26880" />
                 </Form.Item>
               </Col>

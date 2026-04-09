@@ -8,19 +8,18 @@ import {
   Modal,
   message,
   Space,
-  Tag,
-  Popconfirm,
   Row,
   Col,
   DatePicker,
-  Form
+  Form,
+  Switch,
+  Tag
 } from 'antd';
 import {
   PlusOutlined,
   SearchOutlined,
   ReloadOutlined,
   EditOutlined,
-  DeleteOutlined,
   EyeOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -28,12 +27,21 @@ import dayjs from 'dayjs';
 import {
   queryHospitals,
   saveHospital,
-  deleteHospital,
   type HospitalItem,
   type SaveHospitalParams
 } from '../../api/hospital';
+import {
+  getProvinceData,
+  getCityData,
+  getAreaData,
+  getPolicyTypeData,
+  type ProvinceItem,
+  type CityItem,
+  type AreaItem,
+  type PolicyTypeItem
+} from '../../api/basicData';
 
-const { Option } = Select;
+
 
 // 分页参数
 interface PaginationParams {
@@ -58,9 +66,21 @@ const Hospitals: React.FC = () => {
   const [detailRecord, setDetailRecord] = useState<HospitalItem | null>(null);
 
   // 查询条件
-  const [code, setCode] = useState('');
+  const [organizationCode, setOrganizationCode] = useState('');
   const [descripts, setDescripts] = useState('');
   const [active, setActive] = useState('');
+
+  // 省市区下拉数据
+  const [provinceList, setProvinceList] = useState<ProvinceItem[]>([]);
+  const [cityList, setCityList] = useState<CityItem[]>([]);
+  const [areaList, setAreaList] = useState<AreaItem[]>([]);
+  const [provinceLoading, setProvinceLoading] = useState(false);
+  const [cityLoading, setCityLoading] = useState(false);
+  const [areaLoading, setAreaLoading] = useState(false);
+
+  // 政策类型下拉数据
+  const [policyTypeList, setPolicyTypeList] = useState<PolicyTypeItem[]>([]);
+  const [policyTypeLoading, setPolicyTypeLoading] = useState(false);
 
   // 表格列定义
   const columns: ColumnsType<HospitalItem> = [
@@ -71,22 +91,23 @@ const Hospitals: React.FC = () => {
       render: (_, __, index) => (pagination.current - 1) * pagination.pageSize + index + 1
     },
     {
-      title: '机构代码',
-      dataIndex: 'code',
-      key: 'code',
+      title: '定点机构代码',
+      dataIndex: 'organizationCode',
+      key: 'organizationCode',
       width: 120
     },
+
     {
-      title: 'HIS机构代码',
-      dataIndex: 'hisCode',
-      key: 'hisCode',
-      width: 100
-    },
-    {
-      title: '机构名称',
+      title: '定点机构名称',
       dataIndex: 'descripts',
       key: 'descripts',
       width: 200
+    },
+        {
+      title: 'HIS机构代码',
+      dataIndex: 'code',
+      key: 'code',
+      width: 100
     },
     {
       title: '医院级别',
@@ -114,27 +135,33 @@ const Hospitals: React.FC = () => {
         `${record.proDesc || ''} ${record.cityDesc || ''} ${record.areaDesc || ''}`
     },
     {
-      title: '组织机构代码',
-      dataIndex: 'organizationCode',
-      key: 'organizationCode',
+      title: '政策类型',
+      dataIndex: 'policyTypeDesc',
+      key: 'policyTypeDesc',
       width: 150
     },
     {
       title: '状态',
       dataIndex: 'active',
       key: 'active',
-      width: 80,
-      render: (active: string) => (
-        <Tag color={active === 'Y' ? 'green' : 'red'}>
-          {active === 'Y' ? '启用' : '停用'}
-        </Tag>
+      width: 100,
+      render: (active: string, record: HospitalItem) => (
+        <Switch
+          checked={active === 'Y'}
+          checkedChildren="启用"
+          unCheckedChildren="停用"
+          onChange={(checked) => {
+            const newActive = checked ? 'Y' : 'N';
+            handleToggleActive(record, newActive);
+          }}
+        />
       )
     },
     {
       title: '操作',
       key: 'action',
       fixed: 'right',
-      width: 180,
+      width: 120,
       render: (_, record) => (
         <Space size="small">
           <Button
@@ -153,17 +180,6 @@ const Hospitals: React.FC = () => {
           >
             编辑
           </Button>
-          <Popconfirm
-            title="确认删除"
-            description={`确定要删除医疗机构"${record.descripts}"吗？`}
-            onConfirm={() => handleDelete(record)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-              删除
-            </Button>
-          </Popconfirm>
         </Space>
       )
     }
@@ -175,7 +191,7 @@ const Hospitals: React.FC = () => {
     try {
       const res = await queryHospitals(
         {
-          code: code || undefined,
+          organizationCode: organizationCode || undefined,
           desc: descripts || undefined,
           active: active || undefined
         },
@@ -212,7 +228,7 @@ const Hospitals: React.FC = () => {
 
   // 重置
   const handleReset = () => {
-    setCode('');
+    setOrganizationCode('');
     setDescripts('');
     setActive('');
     setPagination(prev => ({ ...prev, current: 1 }));
@@ -224,29 +240,164 @@ const Hospitals: React.FC = () => {
     setEditingRecord(null);
     setModalTitle('新增医疗机构');
     modalForm.resetFields();
-    modalForm.setFieldsValue({ active: 'Y' });
+    setCityList([]); // 清空城市数据
+    setAreaList([]); // 清空区县数据
     setModalVisible(true);
+    
+    // 加载省份数据
+    fetchProvinceData();
+    // 加载政策类型数据
+    fetchPolicyTypeData();
+    
+    // 使用 setTimeout 确保表单已渲染后再设置默认值
+    setTimeout(() => {
+      modalForm.setFieldsValue({ active: 'Y' });
+    }, 0);
+  };
+
+  // 获取省份数据
+  const fetchProvinceData = async () => {
+    setProvinceLoading(true);
+    try {
+      const res = await getProvinceData();
+      if (res.errorCode === '0' && res.result) {
+        setProvinceList(res.result);
+      } else {
+        message.error(res.errorMessage || '获取省份数据失败');
+      }
+    } catch (error) {
+      console.error('获取省份数据失败:', error);
+      message.error('获取省份数据异常');
+    } finally {
+      setProvinceLoading(false);
+    }
+  };
+
+  // 获取城市数据
+  const fetchCityData = async (provinceID: string) => {
+    if (!provinceID) {
+      setCityList([]);
+      setAreaList([]);
+      return;
+    }
+    setCityLoading(true);
+    try {
+      const res = await getCityData(provinceID);
+      if (res.errorCode === '0' && res.result) {
+        setCityList(res.result);
+        setAreaList([]); // 清空区县数据
+      } else {
+        message.error(res.errorMessage || '获取城市数据失败');
+      }
+    } catch (error) {
+      console.error('获取城市数据失败:', error);
+      message.error('获取城市数据异常');
+    } finally {
+      setCityLoading(false);
+    }
+  };
+
+  // 获取区县数据 (01010009)
+  const fetchAreaData = async (cityID: string) => {
+    if (!cityID) {
+      setAreaList([]);
+      return;
+    }
+    setAreaLoading(true);
+    try {
+      const res = await getAreaData(cityID);
+      if (res.errorCode === '0' && res.result) {
+        setAreaList(res.result);
+      } else {
+        message.error(res.errorMessage || '获取区县数据失败');
+      }
+    } catch (error) {
+      console.error('获取区县数据失败:', error);
+      message.error('获取区县数据异常');
+    } finally {
+      setAreaLoading(false);
+    }
+  };
+
+  // 获取政策类型数据 (01010065)
+  const fetchPolicyTypeData = async () => {
+    setPolicyTypeLoading(true);
+    try {
+      const res = await getPolicyTypeData();
+      if (res.errorCode === '0' && res.result) {
+        setPolicyTypeList(res.result);
+      } else {
+        message.error(res.errorMessage || '获取政策类型数据失败');
+      }
+    } catch (error) {
+      console.error('获取政策类型数据失败:', error);
+      message.error('获取政策类型异常');
+    } finally {
+      setPolicyTypeLoading(false);
+    }
+  };
+
+  // 省份选择变化
+  const handleProvinceChange = (value: string) => {
+    modalForm.setFieldsValue({ cityID: undefined, areaID: undefined });
+    if (value) {
+      fetchCityData(value);
+    } else {
+      setCityList([]);
+      setAreaList([]);
+    }
+  };
+
+  // 城市选择变化
+  const handleCityChange = (value: string) => {
+    modalForm.setFieldsValue({ areaID: undefined });
+    if (value) {
+      fetchAreaData(value);
+    } else {
+      setAreaList([]);
+    }
   };
 
   // 编辑
-  const handleEdit = (record: HospitalItem) => {
+  const handleEdit = async (record: HospitalItem) => {
     setEditingRecord(record);
     setModalTitle('编辑医疗机构');
-    modalForm.setFieldsValue({
-      code: record.code,
-      descripts: record.descripts,
-      hospGradeID: record.hospGradeID,
-      hospTypeID: record.hospTypeID,
-      hospNatureID: record.hospNatureID,
-      proID: record.provIDID,
-      cityID: record.cityIDID,
-      areaID: record.areaIDID,
-      active: record.active,
-      organizationCode: record.organizationCode,
-      businesslicense: record.businesslicense,
-      startDate: record.createDate ? dayjs(record.createDate) : null
-    });
+    modalForm.resetFields(); // 先清空表单
     setModalVisible(true);
+
+    // 加载省份数据
+    await fetchProvinceData();
+    // 加载政策类型数据
+    await fetchPolicyTypeData();
+    
+    // 如果记录中有省份ID，加载对应的城市数据
+    if (record.provIDID) {
+      await fetchCityData(String(record.provIDID));
+    }
+    
+    // 如果记录中有城市ID，加载对应的区县数据
+    if (record.cityIDID) {
+      await fetchAreaData(String(record.cityIDID));
+    }
+
+    // 使用 setTimeout 确保表单已渲染后再设置值
+    setTimeout(() => {
+      modalForm.setFieldsValue({
+        organizationCode: record.organizationCode,
+        code: record.code,       
+        descripts: record.descripts,
+        hospGradeID: record.hospGradeID,
+        hospTypeID: record.hospTypeID,
+        hospNatureID: record.hospNatureID,
+        proID: record.provIDID,
+        cityID: record.cityIDID,
+        areaID: record.areaIDID,
+        active: record.active,
+        policyType: record.policyTypeID !== undefined && record.policyTypeID !== null && record.policyTypeID !== '' ? Number(record.policyTypeID) : undefined,
+        businesslicense: record.businesslicense,
+        startDate: record.createDate ? dayjs(record.createDate) : null
+      });
+    }, 100);
   };
 
   // 查看详情
@@ -255,20 +406,37 @@ const Hospitals: React.FC = () => {
     setDetailVisible(true);
   };
 
-  // 删除
-  const handleDelete = async (record: HospitalItem) => {
+  // 切换启用/停用状态
+  const handleToggleActive = async (record: HospitalItem, newActive: string) => {
     try {
-      const res = await deleteHospital(record.hospitalID);
+      const params: SaveHospitalParams = {
+        hospitalID: record.hospitalID,
+        code: record.code,
+        descripts: record.descripts,
+        hospGradeID: record.hospGradeID ? String(record.hospGradeID) : undefined,
+        hospTypeID: String(record.hospTypeID),
+        hospNatureID: String(record.hospNatureID),
+        provIDID: String(record.provIDID),
+        cityIDID: String(record.cityIDID),
+        areaIDID: record.areaIDID ? String(record.areaIDID) : undefined,
+        policyTypeID: record.policyTypeID,
+        active: newActive,
+        organizationCode: record.organizationCode,
+        businesslicense: record.businesslicense,
+        startDate: record.createDate || ''
+      };
+
+      const res = await saveHospital(params);
 
       if (res.errorCode === '0') {
-        message.success('删除成功');
+        message.success(newActive === 'Y' ? '已启用' : '已停用');
         fetchData(pagination.current, pagination.pageSize);
       } else {
-        message.error(res.errorMessage || '删除失败');
+        message.error(res.errorMessage || '状态修改失败');
       }
     } catch (error) {
-      console.error('删除医疗机构失败:', error);
-      message.error('删除医疗机构失败');
+      console.error('修改状态失败:', error);
+      message.error('修改状态失败');
     }
   };
 
@@ -278,15 +446,16 @@ const Hospitals: React.FC = () => {
       const values = await modalForm.validateFields();
 
       const params: SaveHospitalParams = {
-        ID: editingRecord?.hospitalID,
+        hospitalID: editingRecord?.hospitalID,
         code: values.code,
         descripts: values.descripts,
-        hospGradeID: values.hospGradeID,
-        hospTypeID: values.hospTypeID,
-        hospNatureID: values.hospNatureID,
-        provIDID: values.proID,
-        cityIDID: values.cityID,
-        areaIDID: values.areaID,
+        hospGradeID: values.hospGradeID ? String(values.hospGradeID) : undefined,
+        hospTypeID: String(values.hospTypeID),
+        hospNatureID: String(values.hospNatureID),
+        provIDID: String(values.proID),
+        cityIDID: String(values.cityID),
+        areaIDID: values.areaID ? String(values.areaID) : undefined,
+        policyTypeID: values.policyType !== undefined && values.policyType !== null ? String(values.policyType) : '',
         active: values.active,
         organizationCode: values.organizationCode,
         businesslicense: values.businesslicense,
@@ -315,16 +484,16 @@ const Hospitals: React.FC = () => {
         <Row gutter={16} align="middle">
           <Col>
             <Input
-              placeholder="机构代码"
-              value={code}
-              onChange={e => setCode(e.target.value)}
+              placeholder="定点机构代码"
+              value={organizationCode}
+              onChange={e => setOrganizationCode(e.target.value)}
               style={{ width: 140 }}
               allowClear
             />
           </Col>
           <Col>
             <Input
-              placeholder="机构名称"
+              placeholder="定点机构名称"
               value={descripts}
               onChange={e => setDescripts(e.target.value)}
               style={{ width: 180 }}
@@ -338,10 +507,11 @@ const Hospitals: React.FC = () => {
               onChange={v => setActive(v || '')}
               style={{ width: 100 }}
               allowClear
-            >
-              <Option value="Y">启用</Option>
-              <Option value="N">停用</Option>
-            </Select>
+              options={[
+                { value: 'Y', label: '启用' },
+                { value: 'N', label: '停用' }
+              ]}
+            />
           </Col>
           <Col>
             <Space>
@@ -391,24 +561,34 @@ const Hospitals: React.FC = () => {
         onOk={handleSave}
         onCancel={() => setModalVisible(false)}
         width={800}
-        destroyOnClose
       >
         <Form
           form={modalForm}
           layout="vertical"
-          preserve={false}
         >
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="code"
-                label="机构代码"
-                rules={[{ required: true, message: '请输入机构代码' }]}
+                name="organizationCode"
+                label="定点机构代码"
+                rules={[{ required: true, message: '请输入定点机构代码' }]}
               >
-                <Input placeholder="请输入机构代码" maxLength={20} />
+                <Input placeholder="请输入定点机构代码" maxLength={20} />
               </Form.Item>
             </Col>
             <Col span={12}>
+              <Form.Item
+                name="code"
+                label="HIS机构代码"
+                rules={[{ required: true, message: '请输入HIS机构代码' }]}
+              >
+                <Input placeholder="请输入HIS机构代码" maxLength={20} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={24}>
               <Form.Item
                 name="descripts"
                 label="机构名称"
@@ -424,14 +604,16 @@ const Hospitals: React.FC = () => {
               <Form.Item
                 name="hospGradeID"
                 label="医院级别"
+                rules={[{ required: true, message: '请选择医院级别' }]}                
               >
-                <Select placeholder="请选择医院级别">
-                  <Option value={1}>三级甲等</Option>
-                  <Option value={2}>三级乙等</Option>
-                  <Option value={3}>二级甲等</Option>
-                  <Option value={4}>二级乙等</Option>
-                  <Option value={5}>一级医院</Option>
-                </Select>
+                <Select placeholder="请选择医院级别"
+                  options={[
+                    { value: 1, label: '一级' },
+                    { value: 2, label: '二级' },
+                    { value: 3, label: '三级' },
+                    { value: 4, label: '省级' },
+                  ]}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -440,13 +622,15 @@ const Hospitals: React.FC = () => {
                 label="医院类型"
                 rules={[{ required: true, message: '请选择医院类型' }]}
               >
-                <Select placeholder="请选择医院类型">
-                  <Option value={1}>综合医院</Option>
-                  <Option value={2}>中医医院</Option>
-                  <Option value={3}>专科医院</Option>
-                  <Option value={4}>社区卫生服务中心</Option>
-                  <Option value={5}>卫生院</Option>
-                </Select>
+                <Select placeholder="请选择医院类型"
+                  options={[
+                    { value: 1, label: '综合医院' },
+                    { value: 2, label: '中医医院' },
+                    { value: 3, label: '专科医院' },
+                    { value: 4, label: '社区卫生服务中心' },
+                    { value: 5, label: '卫生院' }
+                  ]}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -458,11 +642,13 @@ const Hospitals: React.FC = () => {
                 label="医院性质"
                 rules={[{ required: true, message: '请选择医院性质' }]}
               >
-                <Select placeholder="请选择医院性质">
-                  <Option value={1}>公立医院</Option>
-                  <Option value={2}>民营医院</Option>
-                  <Option value={3}>合资医院</Option>
-                </Select>
+                <Select placeholder="请选择医院性质"
+                  options={[
+                    { value: 1, label: '公立医院' },
+                    { value: 2, label: '民营医院' },
+                    { value: 3, label: '合资医院' }
+                  ]}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -471,10 +657,12 @@ const Hospitals: React.FC = () => {
                 label="使用状态"
                 rules={[{ required: true, message: '请选择使用状态' }]}
               >
-                <Select placeholder="请选择使用状态">
-                  <Option value="Y">启用</Option>
-                  <Option value="N">停用</Option>
-                </Select>
+                <Select placeholder="请选择使用状态"
+                  options={[
+                    { value: 'Y', label: '启用' },
+                    { value: 'N', label: '停用' }
+                  ]}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -486,13 +674,20 @@ const Hospitals: React.FC = () => {
                 label="省份"
                 rules={[{ required: true, message: '请选择省份' }]}
               >
-                <Select placeholder="请选择省份">
-                  <Option value={1}>北京市</Option>
-                  <Option value={2}>上海市</Option>
-                  <Option value={3}>广东省</Option>
-                  <Option value={4}>江苏省</Option>
-                  <Option value={5}>浙江省</Option>
-                </Select>
+                <Select 
+                  placeholder="请选择省份"
+                  loading={provinceLoading}
+                  onChange={handleProvinceChange}
+                  allowClear
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
+                  }
+                  options={provinceList.map(item => ({
+                    value: item.id,
+                    label: item.descripts
+                  }))}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -501,13 +696,20 @@ const Hospitals: React.FC = () => {
                 label="城市"
                 rules={[{ required: true, message: '请选择城市' }]}
               >
-                <Select placeholder="请选择城市">
-                  <Option value={1}>北京市</Option>
-                  <Option value={2}>上海市</Option>
-                  <Option value={3}>广州市</Option>
-                  <Option value={4}>深圳市</Option>
-                  <Option value={5}>南京市</Option>
-                </Select>
+                <Select 
+                  placeholder="请选择城市"
+                  loading={cityLoading}
+                  onChange={handleCityChange}
+                  allowClear
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
+                  }
+                  options={cityList.map(item => ({
+                    value: item.id,
+                    label: item.descripts
+                  }))}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -517,15 +719,20 @@ const Hospitals: React.FC = () => {
               <Form.Item
                 name="areaID"
                 label="区县"
-                rules={[{ required: true, message: '请选择区县' }]}
               >
-                <Select placeholder="请选择区县">
-                  <Option value={1}>东城区</Option>
-                  <Option value={2}>西城区</Option>
-                  <Option value={3}>朝阳区</Option>
-                  <Option value={4}>海淀区</Option>
-                  <Option value={5}>丰台区</Option>
-                </Select>
+                <Select 
+                  placeholder="请选择区县"
+                  loading={areaLoading}
+                  allowClear
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.label as string)?.toLowerCase().includes(input.toLowerCase())
+                  }
+                  options={areaList.map(item => ({
+                    value: item.id,
+                    label: item.descripts
+                  }))}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -541,11 +748,17 @@ const Hospitals: React.FC = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="organizationCode"
-                label="组织机构代码"
-                rules={[{ required: true, message: '请输入组织机构代码' }]}
+                name="policyType"
+                label="执行政策类型"
+                rules={[{ required: false, message: '请选择执行政策类型' }]}
               >
-                <Input placeholder="请输入组织机构代码" maxLength={30} />
+             <Select placeholder="请选择执行政策类型"
+                  loading={policyTypeLoading}
+                  options={policyTypeList.map(item => ({
+                    value: Number(item.code),
+                    label: item.descripts
+                  }))}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -577,10 +790,10 @@ const Hospitals: React.FC = () => {
           <div>
             <Row gutter={[16, 16]}>
               <Col span={12}>
-                <p><strong>机构代码：</strong>{detailRecord.code}</p>
+                <p><strong>定点机构代码：</strong>{detailRecord.organizationCode}</p>
               </Col>
               <Col span={12}>
-                <p><strong>HIS机构代码：</strong>{detailRecord.hisCode || '-'}</p>
+                <p><strong>HIS机构代码：</strong>{detailRecord.code || '-'}</p>
               </Col>
             </Row>
             <Row gutter={[16, 16]}>
@@ -629,10 +842,10 @@ const Hospitals: React.FC = () => {
             </Row>
             <Row gutter={[16, 16]}>
               <Col span={12}>
-                <p><strong>组织机构代码：</strong>{detailRecord.organizationCode}</p>
+                <p><strong>执行政策类型：</strong>{detailRecord.policyTypeDesc || '-'}</p>
               </Col>
               <Col span={12}>
-                <p><strong>营业执照：</strong>{detailRecord.businesslicense}</p>
+                <p><strong>营业执照：</strong>{detailRecord.businesslicense || '-'}</p>
               </Col>
             </Row>
           </div>

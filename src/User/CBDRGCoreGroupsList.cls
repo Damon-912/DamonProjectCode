@@ -53,30 +53,33 @@ Property SelectionCriteria As %String [ SqlColumnNumber = 16, SqlFieldName = Sel
 /// 联合规则标志 1是0否
 Property UnionFlag As %String [ InitialExpression = "0", SqlColumnNumber = 17, SqlFieldName = UnionFlag ];
 
+/// 细分规则标志 1是0否
+Property SegmentationFlag As %String [ InitialExpression = "1", SqlColumnNumber = 18, SqlFieldName = SegmentationFlag ];
+
 /// 省 指向CB_Province
-Property ProvinceDr As CBProvince [ Required, SqlColumnNumber = 18, SqlFieldName = Province_Dr ];
+Property ProvinceDr As CBProvince [ Required, SqlColumnNumber = 19, SqlFieldName = Province_Dr ];
 
 Index Province On ProvinceDr;
 
 /// 市 指向CB_City
-Property CityDr As CBCity [ Required, SqlColumnNumber = 19, SqlFieldName = City_Dr ];
+Property CityDr As CBCity [ Required, SqlColumnNumber = 20, SqlFieldName = City_Dr ];
 
 Index City On CityDr;
 
 /// 生效日期 真正开始使用日期
-Property StartDate As %Date [ Required, SqlColumnNumber = 20, SqlFieldName = StartDate ];
+Property StartDate As %Date [ Required, SqlColumnNumber = 21, SqlFieldName = StartDate ];
 
 /// 失效日期 此日期开始不能用,不填说明一直可用,如果不可用需要看此日期
-Property StopDate As %Date [ SqlColumnNumber = 21, SqlFieldName = StopDate ];
+Property StopDate As %Date [ SqlColumnNumber = 22, SqlFieldName = StopDate ];
 
 /// 创建日期 系统自动产生
-Property CreateDate As %Date [ Required, SqlColumnNumber = 22, SqlFieldName = CreateDate ];
+Property CreateDate As %Date [ Required, SqlColumnNumber = 23, SqlFieldName = CreateDate ];
 
 /// 创建时间 系统自动产生
-Property CreateTime As %Time [ Required, SqlColumnNumber = 23, SqlFieldName = CreateTime ];
+Property CreateTime As %Time [ Required, SqlColumnNumber = 24, SqlFieldName = CreateTime ];
 
 /// 创建人员ID 指向HB_User表
-Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 24, SqlFieldName = CreateUser_Dr ];
+Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 25, SqlFieldName = CreateUser_Dr ];
 
 Storage Default
 {
@@ -152,6 +155,9 @@ Storage Default
 </Value>
 <Value name="24">
 <Value>UnionFlag</Value>
+</Value>
+<Value name="25">
+<Value>SegmentationFlag</Value>
 </Value>
 </Data>
 <DataLocation>^CBDRGCoreGroupsListD</DataLocation>

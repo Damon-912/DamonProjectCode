@@ -12,16 +12,23 @@ import { invoke } from './request';
 import type { ApiResponse, Pagination, PageResult } from './basicData';
 
 /** 医疗机构记录 - 匹配后端返回字段 */
+/** 
+ * 后端字段映射说明：
+ * - HospGrade_Dr -> hospGradeID
+ * - ProvID_Dr -> provIDID
+ * - CityID_Dr -> cityIDID
+ * - AreaID_Dr -> areaIDID
+ */
 export interface HospitalItem {
-  hospitalID: number;
+  ID: string;
+  hospitalID: string;
   code: string;
-  hisCode?: string;
   descripts: string;
   hospGradeID?: number;
   gradeDesc?: string;
-  hospTypeID: number;
+  hospTypeID: string;
   typeDesc?: string;
-  hospNatureID: number;
+  hospNatureID: string;
   natureDesc?: string;
   provIDID: number;
   proDesc?: string;
@@ -30,6 +37,8 @@ export interface HospitalItem {
   areaIDID: number;
   areaDesc?: string;
   active: string;
+  policyTypeID: string;
+  policyTypeDesc: string;
   organizationCode: string;
   businesslicense: string;
   createDate?: string;
@@ -38,24 +47,25 @@ export interface HospitalItem {
 
 /** 保存医疗机构参数 - 匹配后端期望字段 */
 export interface SaveHospitalParams {
-  ID?: number;
+  hospitalID?: string;  // 修改医疗机构时使用ID
   code: string;
   descripts: string;
-  hospGradeID?: number;
-  hospTypeID: number;
-  hospNatureID: number;
-  provIDID: number;
-  cityIDID: number;
-  areaIDID: number;
+  hospGradeID?: string;
+  hospTypeID: string;
+  hospNatureID: string;
+  provIDID: string;
+  cityIDID: string;
+  areaIDID?: string;
+  policyTypeID: string;
   active: string;
-  organizationCode: string;
-  businesslicense: string;
+  organizationCode?: string;
+  businesslicense?: string;
   startDate?: string;
 }
 
 /** 查询医疗机构参数 */
 export interface QueryHospitalParams {
-  code?: string;
+  organizationCode?: string;
   desc?: string;
   active?: string;
 }
@@ -72,7 +82,7 @@ export const queryHospitals = (
 export const saveHospital = (
   params: SaveHospitalParams
 ): Promise<ApiResponse> => {
-  if (params.ID) {
+  if (params.hospitalID) {
     // 修改
     return invoke('01050102', [params]);
   }

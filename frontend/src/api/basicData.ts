@@ -192,6 +192,7 @@ export interface AdrgRuleItem {
   thirdlyProcedure: string;
   thirdlyProcedureName: string;
   unionFlag: string;
+  segmentationFlag: string;
   selectionCriteria: string;
   provinceId: string;
   provinceDesc: string;
@@ -220,6 +221,7 @@ export interface SaveAdrgRuleParams {
   thirdlyProcedure: string;
   thirdlyProcedureName: string;
   unionFlag: string;
+  segmentationFlag: string;
   selectionCriteria: string;
   provinceId: string;
   cityId: string;
@@ -229,6 +231,7 @@ export interface SaveAdrgRuleParams {
 
 /** 查询ADRG规则参数 */
 export interface QueryAdrgRuleParams {
+  adrg?: string;
   adrgDesc?: string;
   status?: string;
 }
@@ -304,8 +307,8 @@ export interface SaveCoreAlgorithmParams {
   fixmedinsName: string;
   provinceDr: string;
   cityID: string;
-  startDate: string;
-  stopDate: string;
+  startDate: any;
+  stopDate: any;
   identification: string;
   remark: string;
 }
@@ -611,6 +614,36 @@ export const getCityData = (
   provinceID: string
 ): Promise<ApiResponse<CityItem[]>> => {
   return invoke('01010008', [{ provinceID }]);
+};
+
+/** 区县下拉数据项 */
+export interface AreaItem {
+  id: string;
+  code: string;
+  descripts: string;
+  descriptsSPCode: string;
+}
+
+/** 获取区县下拉数据 (01010009) */
+export const getAreaData = (
+  cityID: string
+): Promise<ApiResponse<AreaItem[]>> => {
+  return invoke('01010009', [{ cityID }]);
+};
+
+// ========== 政策类型下拉数据 (01010065) ==========
+
+/** 政策类型下拉数据项 */
+export interface PolicyTypeItem {
+  id: string;
+  code: string;
+  descripts: string;
+  descriptsSPCode: string;
+}
+
+/** 获取政策类型下拉数据 (01010065) */
+export const getPolicyTypeData = (): Promise<ApiResponse<PolicyTypeItem[]>> => {
+  return invoke('01010065', [{}]);
 };
 
 // ========== 医疗机构查询 (01010064) ==========

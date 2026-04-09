@@ -3,7 +3,7 @@ import {
   Card, Table, Button, Input, Select, Space, Modal, Form, InputNumber,
   Row, Col, Tag, message, Popconfirm, DatePicker
 } from 'antd';
-import { PlusOutlined, SearchOutlined, ReloadOutlined, DeleteOutlined, EditOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { PlusOutlined, SearchOutlined, ReloadOutlined, DeleteOutlined, EditOutlined, EyeOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import {
   queryAdrgRules, saveAdrgRule, deleteAdrgRule,
@@ -18,8 +18,10 @@ const ADRGRuleMaintenance: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
+  const [expandedRowKeys, setExpandedRowKeys] = useState<string[]>([]);
 
   // 查询条件
+  const [adrg, setAdrg] = useState('');
   const [adrgDesc, setAdrgDesc] = useState('');
   const [status, setStatus] = useState('');
 
@@ -33,7 +35,7 @@ const ADRGRuleMaintenance: React.FC = () => {
     setLoading(true);
     try {
       const res = await queryAdrgRules(
-        { adrgDesc: adrgDesc || undefined, status: status || undefined },
+        { adrg: adrg || undefined, adrgDesc: adrgDesc || undefined, status: status || undefined },
         { pageSize: size, currentPage: page }
       );
       if (res.errorCode === '0' && res.result) {
@@ -47,12 +49,12 @@ const ADRGRuleMaintenance: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [adrgDesc, status, currentPage, pageSize]);
+  }, [adrg, adrgDesc, status, currentPage, pageSize]);
 
   useEffect(() => {
     fetchData(1, pageSize);
     setCurrentPage(1);
-  }, [adrgDesc, status]);
+  }, [adrg, adrgDesc, status]);
 
   const handleSearch = () => {
     setCurrentPage(1);
@@ -60,6 +62,7 @@ const ADRGRuleMaintenance: React.FC = () => {
   };
 
   const handleReset = () => {
+    setAdrg('');
     setAdrgDesc('');
     setStatus('');
   };
@@ -88,6 +91,7 @@ const ADRGRuleMaintenance: React.FC = () => {
       thirdlyProcedure: record.thirdlyProcedure,
       thirdlyProcedureName: record.thirdlyProcedureName,
       unionFlag: record.unionFlag,
+      segmentationFlag: record.segmentationFlag,
       selectionCriteria: record.selectionCriteria,
       provinceId: record.provinceId,
       cityId: record.cityId,
@@ -173,6 +177,12 @@ const ADRGRuleMaintenance: React.FC = () => {
       render: (v: string) => v === '1' ? <Tag color="blue">是</Tag> : <Tag>否</Tag>,
     },
     {
+      title: '细分标志',
+      dataIndex: 'segmentationFlag',
+      width: 80,
+      render: (v: string) => v === '1' ? <Tag color="blue">是</Tag> : <Tag>否</Tag>,
+    },
+    {
       title: '状态',
       dataIndex: 'statusDesc',
       width: 70,
@@ -183,10 +193,16 @@ const ADRGRuleMaintenance: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 120,
+      width: 180,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
+          <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => {
+            const keys = expandedRowKeys.includes(record.id)
+              ? expandedRowKeys.filter(k => k !== record.id)
+              : [...expandedRowKeys, record.id];
+            setExpandedRowKeys(keys);
+          }}>详情</Button>
           <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>编辑</Button>
           <Popconfirm
             title="确认删除"
@@ -207,6 +223,15 @@ const ADRGRuleMaintenance: React.FC = () => {
       {/* 查询条件 */}
       <Card size="small" style={{ marginBottom: 16 }}>
         <Row gutter={16} align="middle">
+          <Col>
+            <Input
+              placeholder="ADRG代码"
+              value={adrg}
+              onChange={e => setAdrg(e.target.value)}
+              style={{ width: 120 }}
+              allowClear
+            />
+          </Col>
           <Col>
             <Input
               placeholder="ADRG名称"
@@ -252,6 +277,8 @@ const ADRGRuleMaintenance: React.FC = () => {
           scroll={{ x: 1200 }}
           size="small"
           expandable={{
+            showExpandColumn: false,
+            expandedRowKeys: expandedRowKeys,
             expandedRowRender: (record) => (
               <div style={{ padding: '8px 0' }}>
                 <Row gutter={[16, 8]}>
@@ -263,6 +290,7 @@ const ADRGRuleMaintenance: React.FC = () => {
                   <Col span={8}><strong>其他手术名称：</strong>{record.secondaryProcedureName || '-'}</Col>
                   <Col span={8}><strong>第三手术编码：</strong>{record.thirdlyProcedure || '-'}</Col>
                   <Col span={8}><strong>第三手术名称：</strong>{record.thirdlyProcedureName || '-'}</Col>
+                  <Col span={8}><strong>细分标志：</strong>{record.segmentationFlag === '1' ? '是' : '否'}</Col>
                   <Col span={8}><strong>入组条件：</strong>{record.selectionCriteria || '-'}</Col>
                   <Col span={8}><strong>省：</strong>{record.provinceDesc || record.provinceId || '-'}</Col>
                   <Col span={8}><strong>市：</strong>{record.cityDesc || record.cityId || '-'}</Col>
@@ -324,7 +352,15 @@ const ADRGRuleMaintenance: React.FC = () => {
                   </Select>
                 </Form.Item>
               </Col>
-              <Col span={16}>
+              <Col span={8}>
+                <Form.Item name="segmentationFlag" label="细分标志">
+                  <Select>
+                    <Option value="0">否</Option>
+                    <Option value="1">是</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={8}>
                 <Form.Item name="selectionCriteria" label="入组条件">
                   <Input placeholder="如 包含以下主要手术或操作" />
                 </Form.Item>

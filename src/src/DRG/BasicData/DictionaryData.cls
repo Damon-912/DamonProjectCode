@@ -416,8 +416,10 @@ ClassMethod GetDRGBasicDataSub(jsonObj) As %Library.DynamicObject
 	new (jsonObj)
 	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
 	set pageSize="",currentPage=1,count=0,dataArr=[]
-	try{
-		if (jsonObj.%IsDefined("pagination")'=0) {
+	try
+	{
+		if (jsonObj.%IsDefined("pagination")'=0) 
+		{
 			set pagationObj=jsonObj.pagination.%Get(0)
 			set pageSize=pagationObj.pageSize
 			set currentPage=pagationObj.currentPage
@@ -429,21 +431,22 @@ ClassMethod GetDRGBasicDataSub(jsonObj) As %Library.DynamicObject
 		set insuCode=params.insuCode
 
 		set sql =" SELECT ID,HBDictionaries_Dr as dictID,Code,Descripts,StartDate,StopDate,"
-		        _" identification FROM HB_DRGBasicDataSub "
+		        _" identification FROM HB_DRGBasicDataSub where 1=1 "
 		        						
 		if (insuCode '= "")
 		{
-		    set sql = sql_" where HBDictionaries_Dr->InsuCode="_insuCode	
+		    set sql = sql_" And HBDictionaries_Dr->InsuCode="_insuCode	
 		}
 		else
 		{
-		    set sql = sql_" where HBDictionaries_Dr="_dictID	
+		    set sql = sql_" And HBDictionaries_Dr="_dictID	
 		}
-				
+			
 		if desc'=""
 		{
-			set sql=sql_" and Descripts like '%"_desc_"%'" 
-		}	
+			set sql = sql_" And Descripts like '%"_desc_"%'" 		
+		}
+		
 		set sqlObj=##class(%SQL.Statement).%New(1)
 		set sc=sqlObj.%Prepare(sql)
 		set result=sqlObj.%Execute()
@@ -499,9 +502,12 @@ ClassMethod GetDRGBasicDataSub(jsonObj) As %Library.DynamicObject
 			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
 			do dataArr.%Push(dataObj)
 		}
+		
 		set resultObj.result.rows=dataArr
 		set resultObj.result.total=count		
-	}catch(e){
+	}
+	catch(e)
+	{
 		set status=e.AsStatus()
 		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
 		set errorInfo="查询DRG基础数据明细出现问题:w ##class("_$ClassName()_").GetDRGBasicDataSub("_jsonObj.%ToJSON()_")"
@@ -604,7 +610,8 @@ ClassMethod SaveDRGCoreGroupsList(postObj) As %Library.DynamicObject
 		set SecondaryProcedureName=params.secondaryProcedureName
 		
 		set ThirdlyProcedure=params.thirdlyProcedure		
-		set ThirdlyProcedureName=params.thirdlyProcedureName		
+		set ThirdlyProcedureName=params.thirdlyProcedureName	
+		set SegmentationFlag=params.segmentationFlag	
 		set UnionFlag=params.unionFlag
 		set SelectionCriteria=params.selectionCriteria		
 		set provinceID=params.provinceID
@@ -665,6 +672,7 @@ ClassMethod SaveDRGCoreGroupsList(postObj) As %Library.DynamicObject
 		set dataObj.ThirdlyProcedure=ThirdlyProcedure		
 		set dataObj.ThirdlyProcedureName=ThirdlyProcedureName
 		set dataObj.UnionFlag=UnionFlag				
+		set dataObj.SegmentationFlag=SegmentationFlag
 		set dataObj.SelectionCriteria=SelectionCriteria												
 		set dataObj.ProvinceDr=provinceID
 		set dataObj.CityDr=cityID		
@@ -735,7 +743,7 @@ ClassMethod GetDRGCoreGroupsList(jsonObj) As %Library.DynamicObject
 		        _" SecondaryDiagnosis,SecondaryDiagnosisName,MajorProcedure,MajorProcedureName, "
 		        _" SecondaryProcedure,SecondaryProcedureName,SelectionCriteria, "
 		        _" StartDate,StopDate,ThirdlyDiagnosis,ThirdlyDiagnosisName,"
-		        _" ThirdlyProcedure,ThirdlyProcedureName,UnionFlag "
+		        _" ThirdlyProcedure,ThirdlyProcedureName,UnionFlag,SegmentationFlag "
 			    _" FROM CB_DRGCoreGroupsList where 1=1"
 			    
 		if adrgDesc'=""
@@ -767,7 +775,8 @@ ClassMethod GetDRGCoreGroupsList(jsonObj) As %Library.DynamicObject
 		    set dataObj.secondaryProcedureName=result.%Get("SecondaryProcedureName")
 		    set dataObj.thirdlyProcedure=result.%Get("ThirdlyProcedure")		
 		    set dataObj.thirdlyProcedureName=result.%Get("ThirdlyProcedureName")		   		   
-		    set dataObj.unionFlag=result.%Get("UnionFlag")		   
+		    set dataObj.unionFlag=result.%Get("UnionFlag")
+		    set dataObj.segmentationFlag=result.%Get("SegmentationFlag")		   
 		    set dataObj.selectionCriteria=result.%Get("SelectionCriteria")				
 								
 			set dataObj.provinceID=result.%Get("ProvinceID")

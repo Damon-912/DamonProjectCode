@@ -96,7 +96,7 @@ const BasicDataMaintenance: React.FC = () => {
   }, [mainSearch]);
 
   // 加载明细数据（支持分页）
-  const fetchSubData = useCallback(async (page = subCurrentPage, size = subPageSize) => {
+  const fetchSubData = async (page = subCurrentPage, size = subPageSize) => {
     if (!selectedRow) return;
     setSubLoading(true);
     try {
@@ -120,7 +120,7 @@ const BasicDataMaintenance: React.FC = () => {
     } finally {
       setSubLoading(false);
     }
-  }, [selectedRow, subSearch, subCurrentPage, subPageSize]);
+  };
 
   // 选中主表行时，自动查询明细数据
   useEffect(() => {
@@ -128,7 +128,8 @@ const BasicDataMaintenance: React.FC = () => {
       setSubCurrentPage(1);
       fetchSubData(1, subPageSize);
     }
-  }, [selectedRow?.dictID, fetchSubData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRow?.dictID]);
 
   const handleMainSearch = () => {
     setCurrentPage(1);
