@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Form, Input, Button, Card, Checkbox, message } from 'antd';
 import { UserOutlined, LockOutlined, MedicineBoxOutlined } from '@ant-design/icons';
 import './index.css';
+import { isValidUser } from '../../api/logon';
+import { setTempUserInfo } from '../../utils/auth';
 
 interface LoginFormValues {
   username: string;
@@ -9,18 +11,45 @@ interface LoginFormValues {
   remember: boolean;
 }
 
-const Login: React.FC = () => {
+interface LoginProps {
+  onLoginSuccess?: () => void;
+}
+
+const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [loading, setLoading] = useState(false);
 
   const onFinish = async (values: LoginFormValues) => {
     setLoading(true);
-    // 模拟登录请求（不进行实际身份验证）
-    setTimeout(() => {
+    try {
+      // 调用验证用户接口（直接传明文密码）
+      const res = await isValidUser({
+        userName: values.username,
+        passWord: values.password
+      });
+
+      if (String(res.errorCode) === '0' && res.result && res.result.length > 0) {
+        const userInfo = res.result[0];
+        
+        // 保存用户信息到临时存储（用于选择页面）
+        setTempUserInfo({
+          userID: userInfo.userID,
+          userCode: userInfo.userCode,
+          userName: userInfo.userName
+        });
+
+        message.success('验证成功');
+        
+        // 跳转到医院角色选择页面
+        onLoginSuccess?.();
+      } else {
+        message.error(res.errorMessage || '用户名或密码错误');
+      }
+    } catch (error) {
+      console.error('登录失败:', error);
+      message.error('登录失败，请检查网络连接');
+    } finally {
       setLoading(false);
-      message.success('登录成功');
-      // 这里后续可以添加跳转到主页面的逻辑
-      window.location.href = '/'; // 跳转到主页面
-    }, 1000);
+    }
   };
 
   return (

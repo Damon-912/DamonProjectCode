@@ -287,4 +287,34 @@ ClassMethod DeleteDRGSegmentationRules(jsonObj) As %Library.DynamicObject
 	quit ##class(src.DRG.BasicData.DRGRSegmentationRules).DeleteDRGSegmentationRules(jsonObj)
 }
 
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: DRGs编码导入预览（校验数据并返回预览结果）
+/// 02010047
+ClassMethod PreviewImportDRGs(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGCataLog).PreviewImportDrg(jsonObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 确认导入DRGs编码信息
+/// 02010048
+ClassMethod ConfirmImportDRGs(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGCataLog).ConfirmImportICD(jsonObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 下载DRGs编码导入模板
+/// 02010049
+ClassMethod DownloadDRGsTemplate(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGCataLog).ConfirmImportDrg(jsonObj)
+}
+
 }

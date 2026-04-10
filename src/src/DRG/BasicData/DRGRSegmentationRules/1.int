@@ -1,6 +1,6 @@
 ROUTINE src.DRG.BasicData.DRGRSegmentationRules.1 [Type=INT,Generated]
  ;src.DRG.BasicData.DRGRSegmentationRules.1
- ;Generated for class src.DRG.BasicData.DRGRSegmentationRules.  Do NOT edit. 04/09/2026 07:30:53PM
+ ;Generated for class src.DRG.BasicData.DRGRSegmentationRules.  Do NOT edit. 04/09/2026 10:15:43PM
  ;;64483853;src.DRG.BasicData.DRGRSegmentationRules
  ;
 zDeleteDRGSegmentationRules(jsonObj)

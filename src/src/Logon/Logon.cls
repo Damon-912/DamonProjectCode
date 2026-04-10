@@ -149,23 +149,19 @@ ClassMethod Logon(postObj) As %Library.DynamicAbstractObject
 			quit
 		}*/
 
-		set expStr="^"
-		; 验证用户名密码是否正确
+	set expStr="^"
+	; 验证用户名密码是否正确（密码为空则跳过验证，第一步已验证）
+	if passWord'="" {
 		set isValid=##class(src.Encryption.HBUser).IsValidUser(userCode,passWord,expStr)
-
-		set result=[],resultobj={}		; {} Library.DynamicObject,  [] Library.DynamicArray
 		if $p($g(isValid),"^",1)'=0 {
 			set outputobj.errorCode=$p(isValid,"^",1)
 			set outputobj.errorMessage=$p(isValid,"^",2)
-			; 插入错误次数日志
-			//do ##class(src.Logon.SessionLogon).InsertFailureInfo(failureObj)
 			quit
-		}else{
-			; 登录成功清除错误次数日志
-			set unLockObj={}
-			set unLockObj.loginName=userCode
-			//do ##class(src.Logon.SessionLogon).UnlockUserFailureInfo(unLockObj)
 		}
+		set userID=$p(isValid,"^",2)
+	}
+
+	set result=[],resultobj={}		; {} Library.DynamicObject,  [] Library.DynamicArray
 		
 		;登录方式验证
 		if (userLogonType'="")&&("^01^02^03^04^05^06^"'[("^"_userLogonType_"^")) {
@@ -175,7 +171,7 @@ ClassMethod Logon(postObj) As %Library.DynamicAbstractObject
 			quit
 		}
 		;quit:$p($g(isValid),"^",1)'=0 outputobj
-		set userID=$p(isValid,"^",2)
+		; userID 已从前端参数获取（密码为空时）或从验证结果获取（密码不为空时）
 		//b ;2
 		set userInfo=##class(src.Encryption.HBUser).getUserInfo(userID)	
 		if +$g(userInfo)'=0 {
@@ -328,14 +324,14 @@ ClassMethod GetLogonGroupByUserId(postObj) As %Library.DynamicAbstractObject
 	While rs.%Next(){
 		Set obj={}
 		Set obj.userLogonLocID=rs.%Get("ID")
-		Set obj.logonHospID=rs.%Get("Hosp_Dr")
-		Set obj.logonHospDesc=rs.%Get("hospDesc")
-		Set obj.logonHospCode=rs.%Get("hospCode")
-		Set obj.logonGroupID=rs.%Get("Group_Dr")
-		Set obj.logonGroupDesc=rs.%Get("groupDesc")
+		Set obj.hospID=rs.%Get("Hosp_Dr")
+		Set obj.hospDesc=rs.%Get("hospDesc")
+		Set obj.hospCode=rs.%Get("hospCode")
+		Set obj.groupID=rs.%Get("Group_Dr")
+		Set obj.groupDesc=rs.%Get("groupDesc")
 		
-		Set obj.logonUserID=rs.%Get("User_Dr")
-		Set obj.logonUserDesc=rs.%Get("userDesc")
+		Set obj.userID=rs.%Get("User_Dr")
+		Set obj.userDesc=rs.%Get("userDesc")
 		Set obj.isDefault=rs.%Get("IsDefault")
 		;//所属医院
 		set hospFlag=0

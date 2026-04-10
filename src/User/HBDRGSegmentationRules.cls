@@ -9,8 +9,10 @@ Property ADRG As %String(COLLATION = "UPPER", TRUNCATE = 1) [ Required, SqlColum
 
 Index ADRGIdx On ADRG;
 
+Index ADRGUnique On ADRG [ PrimaryKey, Unique ];
+
 /// ADRG描述 非空
-Property ADRGDesc As %String(COLLATION = "UPPER", TRUNCATE = 1) [ Required, SqlColumnNumber = 3, SqlFieldName = ADRGDesc ];
+Property ADRGDesc As %String(COLLATION = "UPPER", MAXLEN = 200, TRUNCATE = 1) [ Required, SqlColumnNumber = 3, SqlFieldName = ADRGDesc ];
 
 /// 省 指向CB_Province
 Property ProvinceDr As CBProvince [ Required, SqlColumnNumber = 4, SqlFieldName = Province_Dr ];
@@ -18,19 +20,18 @@ Property ProvinceDr As CBProvince [ Required, SqlColumnNumber = 4, SqlFieldName 
 /// 市 指向CB_City
 Property CityDr As CBCity [ Required, SqlColumnNumber = 5, SqlFieldName = City_Dr ];
 
-Index DataIndex On (ADRG, ProvinceDr, CityDr);
-
 /// 行政区划代码
 Property Admvs As %String [ Required, SqlColumnNumber = 6, SqlFieldName = Admvs ];
 
 /// 联合标志 0-否 1-是
 Property UnionFlag As %String [ Required, SqlColumnNumber = 7, SqlFieldName = UnionFlag ];
 
-/// 细分标志 0-否 1-是
+/// 细分标志 0-否 1-是，
+/// 如果不需要再细分，那么DRG编码第四位默认是9，需要细分的ADRG最后一位根据患者就诊信息进一步判断
 Property SegmentationFlag As %String [ Required, SqlColumnNumber = 8, SqlFieldName = SegmentationFlag ];
 
 /// 入组规则
-Property SelectionCriteria As %String [ SqlColumnNumber = 9, SqlFieldName = SelectionCriteria ];
+Property SelectionCriteria As %String(MAXLEN = 500) [ SqlColumnNumber = 9, SqlFieldName = SelectionCriteria ];
 
 /// 更新日期 系统自动产生
 Property UpdateDate As %Date [ Required, SqlColumnNumber = 10, SqlFieldName = UpdateDate ];
@@ -78,17 +79,14 @@ Storage Default
 <Value>UpdateTime</Value>
 </Value>
 <Value name="12">
-<Value>SelectionCriteria</Value>
-</Value>
-<Value name="13">
 <Value>UpdateUserDr</Value>
 </Value>
 </Data>
-<DataLocation>^HBDRGSegRulesD</DataLocation>
+<DataLocation>^HBDRGSegmentationRulesD</DataLocation>
 <DefaultData>HBDRGSegmentationRulesDefaultData</DefaultData>
-<IdLocation>^HBDRGSegRulesD</IdLocation>
-<IndexLocation>^HBDRGSegRulesI</IndexLocation>
-<StreamLocation>^HBDRGSegRulesS</StreamLocation>
+<IdLocation>^HBDRGSegmentationRulesD</IdLocation>
+<IndexLocation>^HBDRGSegmentationRulesI</IndexLocation>
+<StreamLocation>^HBDRGSegmentationRulesS</StreamLocation>
 <Type>%Storage.Persistent</Type>
 }
 

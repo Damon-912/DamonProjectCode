@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   Card, Form, Input, Select, Button, Space, Table, Row, Col,
-  Tag, message, Modal, Popconfirm
+  Tag, message, Modal, Popconfirm, Switch
 } from 'antd';
 import {
   SearchOutlined, ReloadOutlined, FileTextOutlined,
@@ -40,7 +40,7 @@ const DRGSegmentationRules: React.FC = () => {
   const [dataSource, setDataSource] = useState<HBDRGSegmentationRulesItem[]>([]);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(15);
 
   // 省、市下拉数据
   const [provinceList, setProvinceList] = useState<ProvinceItem[]>([]);
@@ -248,11 +248,39 @@ const DRGSegmentationRules: React.FC = () => {
     return value === '1' ? <Tag color={yesColor}>是</Tag> : <Tag color={noColor}>否</Tag>;
   };
 
+  /** 处理Switch切换 */
+  const handleSwitchChange = async (record: HBDRGSegmentationRulesItem, field: 'unionFlag' | 'segmentationFlag', checked: boolean) => {
+    try {
+      const value = checked ? '1' : '0';
+      const params: SaveHBDRGSegmentationRulesParams = {
+        id: record.id,
+        adrg: record.adrg,
+        adrgDesc: record.adrgDesc,
+        provinceDr: record.provinceID,
+        cityDr: record.cityID,
+        admvs: record.admvs,
+        unionFlag: field === 'unionFlag' ? value : record.unionFlag,
+        segmentationFlag: field === 'segmentationFlag' ? value : record.segmentationFlag,
+        selectionCriteria: record.selectionCriteria,
+      };
+
+      const res = await saveHBDRGSegmentationRules(params);
+      if (res.errorCode === '0' || res.errorCode === '00') {
+        message.success('修改成功');
+        loadData(currentPage, pageSize);
+      } else {
+        message.error(res.errorMessage || '保存失败');
+      }
+    } catch (error: any) {
+      message.error('保存失败：' + (error.message || '网络异常'));
+    }
+  };
+
   const columns: ColumnsType<HBDRGSegmentationRulesItem> = [
     {
       title: 'ADRG代码',
       dataIndex: 'adrg',
-      width: 100,
+      width: 60,
       render: (text: string) => <Tag color="blue">{text}</Tag>,
     },
     {
@@ -261,30 +289,42 @@ const DRGSegmentationRules: React.FC = () => {
       width: 250,
     },
     {
-      title: '行政区划',
-      dataIndex: 'admvs',
-      width: 140,
-      render: (text: string) => text || '-',
-    },
-    {
       title: '省市',
-      width: 160,
+      width: 180,
       render: (_, record) => `${record.provinceDesc || ''} ${record.cityDesc || ''}`.trim(),
       ellipsis: true,
     },
     {
+      title: '行政区划',
+      dataIndex: 'admvs',
+      width: 100,
+      render: (text: string) => text || '-',
+    },
+    {
       title: '联合标志',
       dataIndex: 'unionFlag',
-      width: 90,
+      width: 80,
       align: 'center',
-      render: (val: string) => renderFlagTag(val),
+      render: (val: string, record: HBDRGSegmentationRulesItem) => (
+        <Switch
+          checked={val === '1'}
+          onChange={(checked) => handleSwitchChange(record, 'unionFlag', checked)}
+          size="small"
+        />
+      ),
     },
     {
       title: '细分标志',
       dataIndex: 'segmentationFlag',
-      width: 90,
+      width: 80,
       align: 'center',
-      render: (val: string) => renderFlagTag(val, 'orange'),
+      render: (val: string, record: HBDRGSegmentationRulesItem) => (
+        <Switch
+          checked={val === '1'}
+          onChange={(checked) => handleSwitchChange(record, 'segmentationFlag', checked)}
+          size="small"
+        />
+      ),
     },
     {
       title: '入组规则',
@@ -296,23 +336,14 @@ const DRGSegmentationRules: React.FC = () => {
     {
       title: '操作',
       width: 120,
-      fixed: 'right',
+      //fixed: 'right',
+      align: 'center',
       render: (_, record) => (
         <Space size="small">
           <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleOpenEdit(record)}>
             编辑
           </Button>
-          <Popconfirm
-            title="删除确认"
-            description={`确定要删除ADRG细分规则 "${record.adrg} - ${record.adrgDesc}" 吗？`}
-            onConfirm={() => handleDelete(record)}
-            okText="确定"
-            cancelText="取消"
-          >
-            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-              删除
-            </Button>
-          </Popconfirm>
+
         </Space>
       ),
     },

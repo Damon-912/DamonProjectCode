@@ -53,7 +53,7 @@ Property SampleDr As User.CBSample;
 // ======== 索引定义 ========
 
 /// 主键索引
-Index CodeIndex On Code [ PrimaryKey ] ;
+Index CodeIndex On Code [ PrimaryKey ];
 
 /// 创建用户索引
 Index CreateUserDrIndex On CreateUserDr As Exact;

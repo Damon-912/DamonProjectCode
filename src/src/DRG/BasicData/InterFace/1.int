@@ -1,8 +1,11 @@
 ROUTINE src.DRG.BasicData.InterFace.1 [Type=INT,Generated]
  ;src.DRG.BasicData.InterFace.1
- ;Generated for class src.DRG.BasicData.InterFace.  Do NOT edit. 04/09/2026 07:20:16PM
- ;;56613471;src.DRG.BasicData.InterFace
+ ;Generated for class src.DRG.BasicData.InterFace.  Do NOT edit. 04/09/2026 10:26:02PM
+ ;;42727A46;src.DRG.BasicData.InterFace
  ;
+zConfirmImportDRGs(jsonObj)
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGCataLog).ConfirmImportICD(jsonObj)
 zConfirmImportICD(jsonObj)
 	new (jsonObj)
 	quit ##class(src.DRG.BasicData.ICDInfo).ConfirmImportICD(jsonObj)
@@ -28,6 +31,9 @@ zDeleteDRGSegmentationRules(jsonObj)
 	quit ##class(src.DRG.BasicData.DRGRSegmentationRules).DeleteDRGSegmentationRules(jsonObj)
 zDeleteICDMappingInfo(jsonObj)
 	Quit ##class(src.DRG.BasicData.ICDInfo).DeleteMappingInfo(jsonObj)
+zDownloadDRGsTemplate(jsonObj)
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGCataLog).ConfirmImportDrg(jsonObj)
 zDownloadImportTemplate(jsonObj)
 	new (jsonObj)
 	quit ##class(src.DRG.BasicData.ICDInfo).DownloadImportTemplate(jsonObj)
@@ -59,6 +65,9 @@ zGetICDMappingInfo(jsonObj)
 zGetMedInsuICDInfo(jsonObj)
 	new (jsonObj)
 	quit ##class(src.DRG.BasicData.ICDInfo).GetMedInsuICDInfo(jsonObj)
+zPreviewImportDRGs(jsonObj)
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGCataLog).PreviewImportDrg(jsonObj)
 zPreviewImportICD(jsonObj)
 	new (jsonObj)
 	quit ##class(src.DRG.BasicData.ICDInfo).PreviewImportICD(jsonObj)

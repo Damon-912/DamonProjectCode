@@ -66,38 +66,66 @@ export interface SessionInfo {
  */
 const getDefaultSession = (): SessionInfo => {
   try {
-    const sessionStr = localStorage.getItem('session');
+    const sessionStr = localStorage.getItem('drg_session');
     if (sessionStr) {
-      return JSON.parse(sessionStr);
+      const session = JSON.parse(sessionStr);
+      return {
+        userID: session.userID || '',
+        userCode: session.userCode || '',
+        userName: session.userName || '',
+        locID: session.locID || '',
+        locDesc: session.locDesc || '',
+        groupID: session.groupID || '',
+        groupDesc: session.groupDesc || '',
+        hospID: session.hospID || '',
+        hospCode: session.hospCode || '',
+        hospDesc: session.hospDesc || '',
+        langID: session.langID || 1,
+        langDesc: session.langDesc || '简体中文',
+        changeFlag: session.changeFlag || 'N',
+        changeDesc: session.changeDesc || '',
+        lastLoginDate: session.lastLoginDate || '',
+        lastLoginTime: session.lastLoginTime || '',
+        directorAuth: session.directorAuth || 'N',
+        defaultMenuType: session.defaultMenuType || '',
+        titleDesc: session.titleDesc || '',
+        userYBCode: session.userYBCode || '',
+        hospYBCode: session.hospYBCode || '',
+        path: session.path || '',
+        sessionID: session.sessionID || '',
+        errorMessageTime: session.errorMessageTime || '',
+        language: session.language || 'CN',
+        messageTime: session.messageTime || 1,
+      };
     }
   } catch (e) {
     console.warn('读取 session 失败:', e);
   }
-  // 返回默认 session（临时默认值）- 所有字段必须有值，无值传空
+  // 返回空session（未登录状态）
   return {
-    userID: '158',
-    userCode: 'admin',
-    userName: 'admin',
-    locID: '2300',
-    locDesc: '信息中心',
-    groupID: '3',
-    groupDesc: '医院维护员',
-    hospID: '25',
-    hospCode: 'H03',
-    hospDesc: '合肥普瑞眼科医院',
+    userID: '',
+    userCode: '',
+    userName: '',
+    locID: '',
+    locDesc: '',
+    groupID: '',
+    groupDesc: '',
+    hospID: '',
+    hospCode: '',
+    hospDesc: '',
     langID: 1,
     langDesc: '简体中文',
     changeFlag: 'N',
     changeDesc: '',
-    lastLoginDate: '2026-01-01',
-    lastLoginTime: '00:00:00',
+    lastLoginDate: '',
+    lastLoginTime: '',
     directorAuth: 'N',
-    defaultMenuType: '2',
+    defaultMenuType: '',
     titleDesc: '',
     userYBCode: '',
-    hospYBCode: 'H34010400768',
+    hospYBCode: '',
     path: '',
-    sessionID: 'P9BXebxmDI',
+    sessionID: '',
     errorMessageTime: '',
     language: 'CN',
     messageTime: 1,

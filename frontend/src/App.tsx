@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Layout, Menu, Card, Row, Col, Statistic, Table, Tag, Progress, List, Avatar, Typography, Tabs, Input, Dropdown, Badge } from 'antd';
+import { Layout, Menu, Card, Row, Col, Statistic, Table, Tag, Progress, List, Avatar, Typography, Tabs, Input, Dropdown, Badge, Button, Popconfirm, message } from 'antd';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import {
@@ -22,11 +22,14 @@ import {
   ExperimentOutlined,
   CalculatorOutlined,
   CloseOutlined,
-  HomeOutlined
+  HomeOutlined,
+  LogoutOutlined
 } from '@ant-design/icons';
 import type { MenuProps, TabsProps } from 'antd';
 import './App.css';
 import DRGCustomQuery from './pages/DRG/CustomQuery';
+import Login from './pages/Login';
+import SelectHospRole from './pages/Login/SelectHospRole';
 import ICDMapping from './pages/BasicData/ICDMapping';
 import ICDQuery from './pages/BasicData/ICDQuery';
 import ADRGRuleMaintenance from './pages/BasicData/ADRGRuleMaintenance';
@@ -59,6 +62,7 @@ import ProfitCostStructure from './pages/Profit/CostStructure';
 
 // System pages
 import SystemUsers from './pages/System/Users';
+import SystemUserApply from './pages/System/UserApply';
 import SystemRoles from './pages/System/Roles';
 import SystemMenus from './pages/System/Menus';
 import SystemInterfaces from './pages/System/Interfaces';
@@ -72,6 +76,9 @@ import HISDataSync from './pages/HIS/DataSync';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
+
+// 登录状态类型
+type AuthState = 'login' | 'select' | 'authenticated';
 
 // 扁平化菜单项用于搜索
 interface FlatMenuItem {
@@ -150,6 +157,7 @@ const menuTitleMap: Record<string, string> = {
   'basic-data-drg-catalog': 'DRGs目录信息表',
   'basic-data-segmentation-rules': 'ADRG细分规则表',
   'system-user': '用户管理',
+  'system-user-apply': '用户申请审核',
   'system-role': '角色权限',
   'system-menu': '菜单配置',
   'system-hospital': '医疗机构管理',
@@ -241,13 +249,21 @@ const menuItems: MenuProps['items'] = [
     ],
   },
   {
+    key: 'user',
+    icon: <UserOutlined />,
+    label: '用户管理',
+    children: [
+      { key: 'system-user', label: '用户管理' },
+      { key: 'system-user-apply', label: '用户申请审核' },
+      { key: 'system-role', label: '角色权限' },
+      { key: 'system-menu', label: '菜单配置' },
+    ],
+  },
+  {
     key: 'system',
     icon: <SafetyOutlined />,
     label: '系统管理',
     children: [
-      { key: 'system-user', label: '用户管理' },
-      { key: 'system-role', label: '角色权限' },
-      { key: 'system-menu', label: '菜单配置' },
       { key: 'system-hospital', label: '医疗机构管理' },
       { key: 'system-api', label: '接口服务配置' },
       { key: 'system-logs', label: '接口日志' },
@@ -289,10 +305,44 @@ function App() {
     dayjs.locale('zh-cn');
   }, []);
 
+  // 登录状态管理
+  const [authState, setAuthState] = useState<AuthState>('login');
+  const [userInfo, setUserInfo] = useState<{ userName: string; hospName: string } | null>(null);
+
+  // 主应用状态（必须在条件渲染之前声明所有hooks）
   const [collapsed, setCollapsed] = useState(false);
   const [currentMenu, setCurrentMenu] = useState('dashboard');
   const [menuSearch, setMenuSearch] = useState('');
   const [searchVisible, setSearchVisible] = useState(false);
+
+  // 检查登录状态
+  useEffect(() => {
+    const sessionStr = localStorage.getItem('drg_session');
+    if (sessionStr) {
+      try {
+        const session = JSON.parse(sessionStr);
+        if (session.sessionID) {
+          setAuthState('authenticated');
+          setUserInfo({
+            userName: session.userName || '管理员',
+            hospName: session.hospDesc || ''
+          });
+        }
+      } catch (e) {
+        console.error('解析session失败:', e);
+      }
+    }
+  }, []);
+
+  // 处理登出
+  const handleLogout = () => {
+    localStorage.removeItem('drg_session');
+    setAuthState('login');
+    setUserInfo(null);
+    message.success('已登出');
+  };
+
+
 
   // 获取扁平化的菜单列表用于搜索
   const flatMenuList = flattenMenuItems(menuItems);
@@ -467,6 +517,8 @@ function App() {
         return <DRGSegmentationRules />;
       case 'system-user':
         return <SystemUsers />;
+      case 'system-user-apply':
+        return <SystemUserApply />;
       case 'system-role':
         return <SystemRoles />;
       case 'system-menu':
@@ -525,6 +577,22 @@ function App() {
     closable: tab.closable,
     children: renderContent(tab.key)
   }));
+
+  // 根据登录状态渲染不同内容
+  if (authState === 'login') {
+    return (
+      <Login onLoginSuccess={() => setAuthState('select')} />
+    );
+  }
+
+  if (authState === 'select') {
+    return (
+      <SelectHospRole
+        onSelectSuccess={() => setAuthState('authenticated')}
+        onBack={() => setAuthState('login')}
+      />
+    );
+  }
 
   return (
     <Layout style={{ minHeight: '100vh', display: 'flex', flexDirection: 'row' }}>
@@ -663,8 +731,25 @@ function App() {
         }}>
           <Title level={4} style={{ margin: 0 }}>{menuTitleMap[currentMenu] || '监控仪表盘'}</Title>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
-            <Text>管理员</Text>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 14, fontWeight: 500 }}>{userInfo?.userName || '管理员'}</div>
+              <div style={{ fontSize: 12, color: '#8c8c8c' }}>{userInfo?.hospName || ''}</div>
+            </div>
+            <Popconfirm
+              title="确认登出"
+              description="确定要退出登录吗？"
+              onConfirm={handleLogout}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Button 
+                type="text" 
+                icon={<LogoutOutlined />} 
+                style={{ color: '#8c8c8c' }}
+              >
+                登出
+              </Button>
+            </Popconfirm>
           </div>
         </Header>
         <Content style={{ 

@@ -1,8 +1,219 @@
 ROUTINE src.DRG.BasicData.DRGCataLog.1 [Type=INT,Generated]
  ;src.DRG.BasicData.DRGCataLog.1
- ;Generated for class src.DRG.BasicData.DRGCataLog.  Do NOT edit. 04/09/2026 07:00:30PM
- ;;55644A67;src.DRG.BasicData.DRGCataLog
+ ;Generated for class src.DRG.BasicData.DRGCataLog.  Do NOT edit. 04/09/2026 10:26:00PM
+ ;;757A366C;src.DRG.BasicData.DRGCataLog
  ;
+zConfirmImportDRGs(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"导入完成","result":{"totalCount":0,"successCount":0,"failCount":0,"duplicateCount":0,"newCount":0,"failList":[]}}
+	set (totalCount,successCount,failCount,duplicateCount,newCount)=0
+	set failList=[]
+	try
+	{
+		set params=jsonObj.params.%Get(0)
+		// 检查必需参数
+		if '$isobject(params) {
+			set resultObj.errorCode="02010001"
+			set resultObj.errorMessage="参数错误：缺少params参数"
+			quit
+		}
+		set fileData=params.fileData
+		set provinceID=params.provinceID
+		set cityID=params.cityID
+		if (provinceID="")||(cityID="")
+		{
+			set resultObj.errorCode="-1"
+			set resultObj.errorMessage="接口入参省、市代码不能为空！"
+			quit	
+		}
+		// 获取用户ID
+		set createUserDr=""
+		if $isobject(jsonObj.session) 
+		{
+			set session=jsonObj.session.%Get(0)
+			set:session'="" createUserDr=session.userID
+		}
+		set:createUserDr="" createUserDr="158"
+		// Base64解码
+		set csvContent=""
+		try {
+			set csvContent=$zcvt(fileData,"I","BASE64")
+		} catch e1 {
+			try {
+				set binaryData=##class(%SYSTEM.Encryption).Base64Decode(fileData)
+				set csvContent=$zcvt(binaryData,"I","UTF8")
+				if csvContent["?" {
+					set csvContent=$zcvt(binaryData,"I","GB18030")
+				}
+			} catch e2 {
+				set csvContent=binaryData
+			}
+		}
+		if csvContent=""
+		{
+			set resultObj.errorCode="02010003"
+			set resultObj.errorMessage="文件解码失败，请提供有效的CSV文件"
+			quit
+		}
+		// 解析CSV并执行导入
+		set lineNum=0
+		set ptr=1
+		for
+		{
+			set line=$piece(csvContent,$c(10),ptr)
+			quit:line=""
+			set ptr=ptr+1
+			set lineNum=lineNum+1
+			continue:lineNum=1  // 跳过表头
+			set line=$replace(line,$c(13),"")
+			continue:line=""
+			set totalCount=totalCount+1
+			set rowNum=lineNum-1
+			// 解析CSV列
+			set code=$piece(line,",",1)
+			set descripts=$piece(line,",",2)
+			set admvs=$piece(line,",",3)
+			// 必填校验
+			if (code="")||(descripts="")||(admvs="")
+			{
+				set failCount=failCount+1
+				set failObj={}
+				set failObj.rowNum=rowNum
+				set failObj.code=code
+				set errorDetail="必填字段为空: "
+				if code="" set errorDetail=errorDetail_"DRG代码 "
+				if descripts="" set errorDetail=errorDetail_"DRG描述 "
+				if admvs="" set errorDetail=errorDetail_"行政区划 "
+				set failObj.errorMsg=errorDetail
+				do failList.%Push(failObj)
+				continue
+			}
+			// 检查是否已存在
+			set existingID=""
+			 ;---&sql(SELECT ID INTO :existingID FROM SQLUser.HB_DRGCataLog 
+ 			 ;---			     WHERE Code=:code AND Province_Dr=:provinceID AND City_Dr=:cityID)
+ 			 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, cityID, code, existingID, provinceID
+			do %0Ao
+			// 构建数据对象
+			set dataObj={}
+			set dataObj.Code=code
+			set dataObj.Descripts=descripts
+			set dataObj.Admvs=admvs
+			set dataObj.ProvinceDr=provinceID
+			set dataObj.CityDr=cityID
+			set dataObj.UpdateUserDr=createUserDr
+			set dataObj.UpdateDate=$zd($h,3)
+			set dataObj.UpdateTime=$zt($p($h,",",2),1)
+			set insObj={},data=[]
+			set insObj.className="User.HBDRGCataLog"
+			set insObj.updateUserID=createUserDr
+			do data.%Push(dataObj)
+			set insObj.data=data
+			if existingID'=""
+			{
+				// 更新
+				set dataObj.ID=existingID
+				set rtn=##class(src.util.operatetable).Update(.insObj)
+				set duplicateCount=duplicateCount+1
+			}
+			else
+			{
+				// 新增
+				set dataObj.CreateDate=$zd($h,3)
+				set dataObj.CreateTime=$zt($p($h,",",2),1)
+				set dataObj.CreateUserDr=createUserDr
+				set rtn=##class(src.util.operatetable).Insert(.insObj)
+				set newCount=newCount+1
+			}
+			if rtn.errorCode'=0
+			{
+				set failCount=failCount+1
+				set failObj={}
+				set failObj.rowNum=rowNum
+				set failObj.code=code
+				set failObj.errorMsg=rtn.errorMessage
+				do failList.%Push(failObj)
+			}
+			else
+			{
+				set successCount=successCount+1
+			}
+		}
+		set resultObj.result.totalCount=totalCount
+		set resultObj.result.successCount=successCount
+		set resultObj.result.failCount=failCount
+		set resultObj.result.duplicateCount=duplicateCount
+		set resultObj.result.newCount=newCount
+		set resultObj.result.failList=failList
+		if failCount>0
+		{
+			set resultObj.errorCode="02010002"
+			set resultObj.errorMessage="导入完成，部分数据导入失败，请查看失败列表"
+		}
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="DRG目录确认导入出现问题:w ##class("_$ClassName()_").ConfirmImportDrg("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+ q
+%0Ao n sqldata14d,sqldata15d,sqldata16d,sqldata26d,sqldata27d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata5d,sqldata7d,sqldata12d,sqldata3d,sqldata13d
+ s $zt="%0Aerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata14d=$zu(115,2)
+ s sqldata15d=0,sqldata16d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(code),sqldata6d=$s($g(provinceID)="":"",$isvalidnum(provinceID):+provinceID,1:provinceID),sqldata8d=$s($g(cityID)="":"",$isvalidnum(cityID):+cityID,1:cityID)
+ s SQLCODE=100
+ s sqldata11d=$zu(28,sqldata4d,5)
+ ; asl MOD# 2
+ s sqldata10d=sqldata11d
+ s sqldata5d=sqldata6d
+ s sqldata7d=sqldata8d
+ i sqldata10d="" g %0AmBdun
+ i sqldata5d="" g %0AmBdun
+ i sqldata7d="" g %0AmBdun
+ s existingID=""
+%0AmBk1 s existingID=$o(^HBDRGCataLogI("DataIndex",sqldata10d,sqldata5d,sqldata7d,existingID))
+ i existingID="" g %0AmBdun
+ goto:sqldata14d'=1 %0AmBuncommitted
+ if sqldata14d=1 {
+ 	lock +^HBDRGCataLogD($p(existingID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata16d=$name(^HBDRGCataLogD($p(existingID,"||",1)))_"#""SI""",sqldata15d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGCataLog for RowID value: "_existingID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata12d=$zlist(sqldata10d,sqldata7d,sqldata5d)
+ i existingID'="" s sqldata26d="" i $d(^HBDRGCataLogD(existingID),sqldata26d)
+ e  g %0AmCdun
+ S $lg(,sqldata3d,,,sqldata5d,sqldata7d)=sqldata26d
+ s sqldata10d=$zu(28,sqldata3d,5)
+ s sqldata13d=$zlist(sqldata10d,sqldata7d,sqldata5d)
+ g:sqldata12d'=sqldata13d %0AmCdun
+%0AmBuncommitted ;
+ s SQLCODE=0 g %0Ac
+%0AmCdun if $g(sqldata14d)=1 { if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }}
+ g %0AmBk1
+%0AmBdun 
+%0AmAdun 
+%0Ac set %ROWCOUNT='SQLCODE
+ if $g(sqldata14d)=1 {
+ 	if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata27d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"3WJv3rD4AhrrR8Yx5ctKsaeemFM="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"3WJv3rD4AhrrR8Yx5ctKsaeemFM=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Aerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Ac
 zDeleteDRGCataLog(jsonObj)
 	new (jsonObj)
 	set resultObj={"errorCode":"0","errorMessage":"删除成功","result":{}}
@@ -17,7 +228,7 @@ zDeleteDRGCataLog(jsonObj)
 		}
 		 ;---&sql(DELETE FROM HB_DRGCataLog WHERE ID=:ID)
  		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, ID, SQLCODE
-		do %0Ao
+		do %0Co
 		if SQLCODE'=0 {
 			set resultObj.errorCode="04000009"
 			set resultObj.errorMessage="删除失败，SQL错误码："_SQLCODE
@@ -34,8 +245,8 @@ zDeleteDRGCataLog(jsonObj)
 	}
 	quit resultObj
  q
-%0Ao n sqldata3d,sqldata4d,sqldata5d,sqldata6d,sqldata7d,sqldata8d,sqldata11d,sqldata14d,sqldata2d,sqldata1d
- s $zt="%0Aerr"
+%0Co n sqldata3d,sqldata4d,sqldata5d,sqldata6d,sqldata7d,sqldata8d,sqldata11d,sqldata14d,sqldata2d,sqldata1d
+ s $zt="%0Cerr"
  n %sqltime s %sqltime=$zh
  s sqldata3d=0,sqldata4d=$g(%0CacheRowLimit,9223372036854775807)
  s sqldata5d=$zu(115,2)
@@ -46,17 +257,17 @@ zDeleteDRGCataLog(jsonObj)
  ; asl MOD# 2
  s sqldata1d=sqldata2d
  i sqldata1d'="",$d(^HBDRGCataLogD(sqldata1d))
- e  g %0AmBdun
- set sqldata11d=##class(User.HBDRGCataLog).%SQLGetLock(sqldata1d) i 'sqldata11d s SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler40",,"DELETE","SQLUser"_"."_"HB_DRGCataLog",sqldata1d) g %0Ac
+ e  g %0CmBdun
+ set sqldata11d=##class(User.HBDRGCataLog).%SQLGetLock(sqldata1d) i 'sqldata11d s SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler40",,"DELETE","SQLUser"_"."_"HB_DRGCataLog",sqldata1d) g %0Cc
  ; asl MOD# 3
  i sqldata1d'="",$d(^HBDRGCataLogD(sqldata1d))
- e  g %0AmCdun
+ e  g %0CmCdun
  do ##class(User.HBDRGCataLog).%SQLDelete(sqldata1d,$c(0,2,0,0,0,0,0),'$g(sqldata8d))
- i 'SQLCODE { i $i(sqldata3d)'<sqldata4d { d:sqldata11d=1 ##class(User.HBDRGCataLog).%SQLReleaseLock(sqldata1d) g %0Ac }}
-%0AmCdun d:sqldata11d=1 ##class(User.HBDRGCataLog).%SQLReleaseLock(sqldata1d) g:SQLCODE<0 %0Ac
-%0AmBdun 
-%0AmAdun 
-%0Ac set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(sqldata3d),1:0)
+ i 'SQLCODE { i $i(sqldata3d)'<sqldata4d { d:sqldata11d=1 ##class(User.HBDRGCataLog).%SQLReleaseLock(sqldata1d) g %0Cc }}
+%0CmCdun d:sqldata11d=1 ##class(User.HBDRGCataLog).%SQLReleaseLock(sqldata1d) g:SQLCODE<0 %0Cc
+%0CmBdun 
+%0CmAdun 
+%0Cc set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(sqldata3d),1:0)
  If $zu(115,1),$g(sqldata8d) { TCOMMIT:SQLCODE'<0  TROLLBACK:SQLCODE<0 1 } TCOMMIT:SQLCODE=100&&(%ROWCOUNT=0)&&($g(sqldata7d))&&($zu(115,1)=2) 
  n context,tmp,count,total,mean s context=$system.Context.SQL()
  if $d(%sqltime) { s %sqltime=$g(sqldata14d)+$zh-%sqltime
@@ -65,10 +276,37 @@ zDeleteDRGCataLog(jsonObj)
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"iQQdKniCpzKqskReZK1cMNM60yg=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
  q
-%0Aerr s $zt=""
+%0Cerr s $zt=""
  d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
  d:$g(sqldata11d)=1 ##class(User.HBDRGCataLog).%SQLReleaseLock(sqldata1d)
- g %0Ac
+ g %0Cc
+zDownloadDRGsTemplate(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"下载成功","result":{}}
+	try
+	{
+		// 创建模板内容
+		set templateContent="DRG代码,DRG描述,行政区划"_$c(10)
+		set templateContent=templateContent_"ES23,呼吸系统肿瘤,110"_$c(10)
+		set templateContent=templateContent_"FB23,心脏介入治疗,110"_$c(10)
+		set templateContent=templateContent_"IC13,关节置换,110"_$c(10)
+		// 将内容转换为UTF-8编码
+		set utf8Content=$zcvt(templateContent,"O","UTF8")
+		// Base64编码
+		set base64Data=$zcvt(utf8Content,"O","BASE64")
+		set resultObj.result.fileName="DRG目录导入模板.csv"
+		set resultObj.result.fileData=base64Data
+		set resultObj.result.contentType="text/csv; charset=utf-8"
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="下载DRG目录导入模板出现问题:w ##class("_$ClassName()_").DownloadDrgTemplate("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
 zGetDRGCataLogList(jsonObj)
 	new (jsonObj)
 	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
@@ -145,6 +383,194 @@ zGetDRGCataLogList(jsonObj)
 		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
 	}
 	quit resultObj
+zPreviewImportDRGs(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"预览成功","result":{"totalCount":0,"validCount":0,"invalidCount":0,"duplicateCount":0,"previewList":[]}}
+	set (totalCount,validCount,invalidCount,duplicateCount)=0
+	set previewList=[]
+	try
+	{
+		set params=jsonObj.params.%Get(0)
+		// 检查必需参数
+		if '$isobject(params) {
+			set resultObj.errorCode="02010001"
+			set resultObj.errorMessage="参数错误：缺少params参数"
+			quit
+		}
+		set fileData=params.fileData
+		set provinceID=params.provinceID
+		set cityID=params.cityID
+		if (provinceID="")||(cityID="")
+		{
+			set resultObj.errorCode="-1"
+			set resultObj.errorMessage="接口入参省、市代码不能为空！"
+			quit	
+		}
+		if fileData=""
+		{
+			set resultObj.errorCode="02010003"
+			set resultObj.errorMessage="文件数据不能为空"
+			quit
+		}
+		// Base64解码
+		set csvContent=""
+		try {
+			set csvContent=$zcvt(fileData,"I","BASE64")
+		} catch e1 {
+			// 尝试其他解码方式
+			try {
+				set binaryData=##class(%SYSTEM.Encryption).Base64Decode(fileData)
+				set csvContent=$zcvt(binaryData,"I","UTF8")
+				if csvContent["?" {
+					set csvContent=$zcvt(binaryData,"I","GB18030")
+				}
+			} catch e2 {
+				set csvContent=binaryData
+			}
+		}
+		if csvContent=""
+		{
+			set resultObj.errorCode="02010003"
+			set resultObj.errorMessage="文件解码失败，请提供有效的CSV文件"
+			quit
+		}
+		// 解析CSV行
+		set lineNum=0
+		set ptr=1
+		for
+		{
+			set line=$piece(csvContent,$c(10),ptr)
+			quit:line=""
+			set ptr=ptr+1
+			set lineNum=lineNum+1
+			continue:lineNum=1  // 跳过表头
+			set line=$replace(line,$c(13),"")
+			continue:line=""
+			set totalCount=totalCount+1
+			set rowNum=lineNum-1
+			// 解析CSV列
+			set code=$piece(line,",",1)
+			set descripts=$piece(line,",",2)
+			set admvs=$piece(line,",",3)
+			set previewObj={}
+			set previewObj.rowNum=rowNum
+			set previewObj.code=code
+			set previewObj.descripts=descripts
+			set previewObj.admvs=admvs
+			// 数据校验
+			if code=""
+			{
+				set previewObj.status="invalid"
+				set previewObj.errorMsg="DRG代码不能为空"
+				set invalidCount=invalidCount+1
+				do previewList.%Push(previewObj)
+				continue
+			}
+			if descripts=""
+			{
+				set previewObj.status="invalid"
+				set previewObj.errorMsg="DRG描述不能为空"
+				set invalidCount=invalidCount+1
+				do previewList.%Push(previewObj)
+				continue
+			}
+			if admvs=""
+			{
+				set previewObj.status="invalid"
+				set previewObj.errorMsg="行政区划不能为空"
+				set invalidCount=invalidCount+1
+				do previewList.%Push(previewObj)
+				continue
+			}
+			// 检查是否已存在
+			set existingID=""
+			 ;---&sql(SELECT ID INTO :existingID FROM SQLUser.HB_DRGCataLog 
+ 			 ;---			     WHERE Code=:code AND Province_Dr=:provinceID AND City_Dr=:cityID)
+ 			 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, cityID, code, existingID, provinceID
+			do %0Eo
+			if existingID'=""
+			{
+				set previewObj.status="duplicate"
+				set previewObj.errorMsg="该DRG代码已存在，导入将执行更新操作"
+				set duplicateCount=duplicateCount+1
+			}
+			else
+			{
+				set previewObj.status="valid"
+				set previewObj.errorMsg=""
+				set validCount=validCount+1
+			}
+			do previewList.%Push(previewObj)
+		}
+		set resultObj.result.totalCount=totalCount
+		set resultObj.result.validCount=validCount
+		set resultObj.result.invalidCount=invalidCount
+		set resultObj.result.duplicateCount=duplicateCount
+		set resultObj.result.previewList=previewList
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="DRG目录导入预览出现问题:w ##class("_$ClassName()_").PreviewImportDrg("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+ q
+%0Eo n sqldata14d,sqldata15d,sqldata16d,sqldata26d,sqldata27d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata5d,sqldata7d,sqldata12d,sqldata3d,sqldata13d
+ s $zt="%0Eerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata14d=$zu(115,2)
+ s sqldata15d=0,sqldata16d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(code),sqldata6d=$s($g(provinceID)="":"",$isvalidnum(provinceID):+provinceID,1:provinceID),sqldata8d=$s($g(cityID)="":"",$isvalidnum(cityID):+cityID,1:cityID)
+ s SQLCODE=100
+ s sqldata11d=$zu(28,sqldata4d,5)
+ ; asl MOD# 2
+ s sqldata10d=sqldata11d
+ s sqldata5d=sqldata6d
+ s sqldata7d=sqldata8d
+ i sqldata10d="" g %0EmBdun
+ i sqldata5d="" g %0EmBdun
+ i sqldata7d="" g %0EmBdun
+ s existingID=""
+%0EmBk1 s existingID=$o(^HBDRGCataLogI("DataIndex",sqldata10d,sqldata5d,sqldata7d,existingID))
+ i existingID="" g %0EmBdun
+ goto:sqldata14d'=1 %0EmBuncommitted
+ if sqldata14d=1 {
+ 	lock +^HBDRGCataLogD($p(existingID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata16d=$name(^HBDRGCataLogD($p(existingID,"||",1)))_"#""SI""",sqldata15d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGCataLog for RowID value: "_existingID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata12d=$zlist(sqldata10d,sqldata7d,sqldata5d)
+ i existingID'="" s sqldata26d="" i $d(^HBDRGCataLogD(existingID),sqldata26d)
+ e  g %0EmCdun
+ S $lg(,sqldata3d,,,sqldata5d,sqldata7d)=sqldata26d
+ s sqldata10d=$zu(28,sqldata3d,5)
+ s sqldata13d=$zlist(sqldata10d,sqldata7d,sqldata5d)
+ g:sqldata12d'=sqldata13d %0EmCdun
+%0EmBuncommitted ;
+ s SQLCODE=0 g %0Ec
+%0EmCdun if $g(sqldata14d)=1 { if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }}
+ g %0EmBk1
+%0EmBdun 
+%0EmAdun 
+%0Ec set %ROWCOUNT='SQLCODE
+ if $g(sqldata14d)=1 {
+ 	if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata27d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"3WJv3rD4AhrrR8Yx5ctKsaeemFM="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"3WJv3rD4AhrrR8Yx5ctKsaeemFM=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Eerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Ec
 zSaveDRGCataLog(jsonObj)
 	new (jsonObj)
 	set resultObj={}
@@ -188,7 +614,7 @@ zSaveDRGCataLog(jsonObj)
 			// 检查是否已存在相同记录
 			 ;---&sql(SELECT ID INTO :existID FROM HB_DRGCataLog WHERE Code=:code AND Province_Dr=:provinceDr AND City_Dr=:cityDr)
  			 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, cityDr, code, existID, provinceDr
-			do %0Co
+			do %0Go
 			if SQLCODE=0 {
 				set resultObj.errorCode="02041003"
 				set resultObj.errorMessage="该DRG目录已存在（同一省市下代码不能重复）"
@@ -235,8 +661,8 @@ zSaveDRGCataLog(jsonObj)
 	}
 	quit resultObj
  q
-%0Co n sqldata14d,sqldata15d,sqldata16d,sqldata26d,sqldata27d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata5d,sqldata7d,sqldata12d,sqldata3d,sqldata13d
- s $zt="%0Cerr"
+%0Go n sqldata14d,sqldata15d,sqldata16d,sqldata26d,sqldata27d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata5d,sqldata7d,sqldata12d,sqldata3d,sqldata13d
+ s $zt="%0Gerr"
  n %sqltime s %sqltime=$zh
  s sqldata14d=$zu(115,2)
  s sqldata15d=0,sqldata16d=""
@@ -248,13 +674,13 @@ zSaveDRGCataLog(jsonObj)
  s sqldata10d=sqldata11d
  s sqldata5d=sqldata6d
  s sqldata7d=sqldata8d
- i sqldata10d="" g %0CmBdun
- i sqldata5d="" g %0CmBdun
- i sqldata7d="" g %0CmBdun
+ i sqldata10d="" g %0GmBdun
+ i sqldata5d="" g %0GmBdun
+ i sqldata7d="" g %0GmBdun
  s existID=""
-%0CmBk1 s existID=$o(^HBDRGCataLogI("DataIndex",sqldata10d,sqldata5d,sqldata7d,existID))
- i existID="" g %0CmBdun
- goto:sqldata14d'=1 %0CmBuncommitted
+%0GmBk1 s existID=$o(^HBDRGCataLogI("DataIndex",sqldata10d,sqldata5d,sqldata7d,existID))
+ i existID="" g %0GmBdun
+ goto:sqldata14d'=1 %0GmBuncommitted
  if sqldata14d=1 {
  	lock +^HBDRGCataLogD($p(existID,"||",1))#"S":$zu(115,4)
  	if $t { set sqldata16d=$name(^HBDRGCataLogD($p(existID,"||",1)))_"#""SI""",sqldata15d=1 }
@@ -263,18 +689,18 @@ zSaveDRGCataLog(jsonObj)
  ; asl MOD# 3
  s sqldata12d=$zlist(sqldata10d,sqldata7d,sqldata5d)
  i existID'="" s sqldata26d="" i $d(^HBDRGCataLogD(existID),sqldata26d)
- e  g %0CmCdun
+ e  g %0GmCdun
  S $lg(,sqldata3d,,,sqldata5d,sqldata7d)=sqldata26d
  s sqldata10d=$zu(28,sqldata3d,5)
  s sqldata13d=$zlist(sqldata10d,sqldata7d,sqldata5d)
- g:sqldata12d'=sqldata13d %0CmCdun
-%0CmBuncommitted ;
- s SQLCODE=0 g %0Cc
-%0CmCdun if $g(sqldata14d)=1 { if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }}
- g %0CmBk1
-%0CmBdun 
-%0CmAdun 
-%0Cc set %ROWCOUNT='SQLCODE
+ g:sqldata12d'=sqldata13d %0GmCdun
+%0GmBuncommitted ;
+ s SQLCODE=0 g %0Gc
+%0GmCdun if $g(sqldata14d)=1 { if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }}
+ g %0GmBk1
+%0GmBdun 
+%0GmAdun 
+%0Gc set %ROWCOUNT='SQLCODE
  if $g(sqldata14d)=1 {
  	if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }
  }
@@ -285,9 +711,9 @@ zSaveDRGCataLog(jsonObj)
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"JtGXH6L+thnkTKTR+oR4afVbfv0=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
  q
-%0Cerr s $zt=""
+%0Gerr s $zt=""
  d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- g %0Cc
+ g %0Gc
 zXMLDTD(top,format,input,dtdlist)
  Quit ##class(%XML.Implementation).XMLDTD("src.DRG.BasicData.DRGCataLog",.top,.format,.input,.dtdlist)
 zXMLExportInternal()

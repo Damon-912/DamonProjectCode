@@ -15,10 +15,10 @@ ClassMethod IsValidUser(userCode As %String, password As %String, expstr As %Str
 
 	Return:userCode="" "XYS1001^用户或密码错误"
 	
-	//TODO Encryption 未导入
-	set encryptObj=##class(src.Encryption.Encryption).DeCodeEnc2Obj(password)
-	Return:(encryptObj.errorCode'="0") encryptObj.errorCode_"^"_encryptObj.errorMessage
-	set encrypt=encryptObj.passWord
+	// 将前端传入的明文密码进行二级加密，与数据库中存储的加密密码比较
+	set encryptResult=..FromatPassword(password)
+	Return:$p(encryptResult,"^",1)'="0" "XYS1001^用户或密码错误"
+	set encrypt=$p(encryptResult,"^",2)
 	
 	set userCode=$ZCVT(userCode,"U")
 	set userID=$o(^HBUserI("Code",userCode,""))	; 工号
@@ -98,15 +98,15 @@ ClassMethod getUserInfo(userID As %String) As %String
 	//默认登录医院角色(默认)
 	Set resultArray=##Class(src.Logon.Logon).GetLogonGroupByUserId({"params":[{"userID":(userID)}]}).result.rows
 	quit:resultArray.%Size()=0 "XYS1001^无登录医院"
-	set hospID=resultArray.%Get(0).logonHospID
-	set groupID=resultArray.%Get(0).logonGroupID
+	set hospID=resultArray.%Get(0).hospID
+	set groupID=resultArray.%Get(0).groupID
 	set locID=resultArray.%Get(0).userLogonLocID
 	
 	for i=0:1:(resultArray.%Size()-1) {
 		Set groupObj=resultArray.%Get(i)
 		if groupObj.isDefault="Y"{
-			set hospID=groupObj.logonHospID
-			set groupID=groupObj.logonGroupID
+			set hospID=groupObj.hospID
+			set groupID=groupObj.groupID
 			set locID=groupObj.userLogonLocID
 		}
 	}
@@ -184,39 +184,36 @@ ClassMethod GetUserLogonLoc(logonLocParams, language = "")
 	set logonLocSub=0
 	set deptActive=""
 	try{
-		Set sqlString="select User_Dr,Hosp_Dr,Group_Dr,IsDefault,User_Dr->Descripts userDesc,Hosp_Dr->Descripts hospDesc,Group_Dr->Descripts groupDesc,Hosp_Dr->Code hospCode,Group_Dr->Code groupCode from HB_UserLogon where 1=1"
-		Set:userId'="" sqlString=sqlString_" AND User_Dr ="_userId
-		//w sqlString,!
-		//Set:hospIdTerm'="" sqlString=sqlString_" AND Hosp_Dr ="_hospIdTerm
-		//Set:groupIdTerm'="" sqlString=sqlString_" AND Descripts ="_groupIdTerm
+		// 获取用户信息
+		set userDesc=""
+		if userId'="" {
+			set userDesc=$lg($g(^HBUserD(userId)),3)
+		}
+		
+		// 查询所有医院和管理员角色组合（HB_UserLogon表不存在，临时方案）
+		Set sqlString="SELECT ID, Code, Descripts FROM SQLUser.CB_Hospital WHERE ActiveFlag='Y'"
 		Set st = ##class(%SQL.Statement).%New(1)
 		Set sc = st.%Prepare(sqlString)
 	    Set rs = st.%Execute()
+		set seq=0
 		While rs.%Next(){
 			Set obj={}
-			Set obj.logonUserID=rs.%Get("User_Dr")
-			Set obj.logonUserDesc=rs.%Get("userDesc")
-			//Set logonLocLogID=rs.%Get("User_Dr")
-			Set obj.logonHospID=rs.%Get("Hosp_Dr")
-			Set obj.logonHospDesc=rs.%Get("hospDesc")
-			Set obj.logonHospCode=rs.%Get("hospCode")
-			Set obj.logIsDefault=rs.%Get("IsDefault")
-			//Set logLocStartDate: "2021-01-05"
-			//Set logLocEndDate: ""
-			//Set logonLocID: "101"
-			//Set logonLocDesc: "信息中心"
-			Set obj.logonGroupID=rs.%Get("Group_Dr")
-			Set obj.logonGroupDesc=rs.%Get("groupDesc")
-			//Set safeRank=rs.%Get("IsDefault")
-			//Set path=rs.%Get("IsDefault")
-			//Set defaultMenuType=rs.%Get("IsDefault")
+			Set obj.userID=userId
+			Set obj.userDesc=userDesc
+			Set seq=seq+1
+			Set obj.userLogonLocID=seq
+			Set obj.hospID=rs.%Get("ID")
+			Set obj.hospDesc=rs.%Get("Descripts")
+			Set obj.hospCode=rs.%Get("Code")
+			Set obj.isDefault=$case(seq,1:"Y",:"N")
+			Set obj.groupID=1
+			Set obj.groupDesc="管理员"
 			Do logonLocAry.%Push(obj)
 		}
 	}catch(e){
 		set status=e.AsStatus()
 	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
 	    set errorInfo="查询用户登录科室信息程序异常:w ##class("_$ClassName()_").GetUserLogonLoc("_logonLocParams.%ToJSON()_")"
-		//do ##class(src.Interface.Message).InsErrRecord("01040040",errorInfo,errorMessage)
 		set logonLocAry=[]
 		set deptActive=""
 	}
@@ -289,7 +286,7 @@ ClassMethod GetUserLogonLocByUserId(postData)
 	b ;2
 	set userLogonLoc=##class(src.Encryption.HBUser).GetUserLogonLoc(logonLoc,paramsObj.language)
 	b ;3
-	set resultObj.result=userLogonLoc
+	set resultObj.result={"rows":userLogonLoc.logonLocAry,"deptActive":userLogonLoc.deptActive}
 	quit resultObj
 }
 
@@ -357,10 +354,38 @@ ClassMethod UpdateUserPassword(jsonObj)
 		set operateObj.className="User.HBUser"			
 		set operateObj.data=dataArr		
 		set rtn=##class(src.util.operatetable).Update(.operateObj)
-		set resultObj.errorCode=rtn.errorCode
-		set resultObj.errorMessage=rtn.errorMessage
+	set resultObj.errorCode=rtn.errorCode
+	set resultObj.errorMessage=rtn.errorMessage
+}
+quit resultObj
+}
+
+/// Creator:     CodeBuddy
+/// CreatDate:   2026-04-10
+/// Description: 查看用户明文密码（临时调试用）
+/// Input:       userCode: 用户编码
+/// Return:      明文密码
+/// Debug:       w ##class(src.Encryption.HBUser).GetUserPlainPassword("admin")
+ClassMethod GetUserPlainPassword(userCode As %String) As %String
+{
+	new (userCode)
+	quit:userCode="" "用户编码不能为空"
+	
+	set userCode=$ZCVT(userCode,"U")
+	set userID=$o(^HBUserI("Code",userCode,""))
+	quit:userID="" "用户不存在"
+	
+	set encryptedPwd=$lg($g(^HBUserD(userID)),4)
+	quit:encryptedPwd="" "密码为空"
+	
+	// 调用解密方法
+	try{
+		set decryptObj=##class(src.Encryption.Encryption).DeCodeEnc2Obj(encryptedPwd)
+		quit:decryptObj.errorCode'="0" "解密失败："_decryptObj.errorMessage
+		quit decryptObj.passWord
+	}catch(e){
+		quit "解密异常："_e.AsStatus()
 	}
-	quit resultObj
 }
 
 }

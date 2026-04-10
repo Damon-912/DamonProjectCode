@@ -7,6 +7,141 @@
 import { invoke } from './request';
 import type { ApiResponse, Pagination, PageResult } from './basicData';
 
+// ========== 用户管理 (01030101-01030111) ==========
+
+/** 用户列表项 */
+export interface UserItem {
+  userDr: number;           // 用户ID
+  userCode: string;         // 用户编码
+  userName: string;         // 用户姓名
+  sexDr?: number;           // 性别ID
+  sexDesc?: string;         // 性别描述
+  hospDr?: number;          // 医院ID
+  hospDesc?: string;        // 医院名称
+  mobile?: string;          // 手机号
+  credTypeDr?: number;      // 证件类型ID
+  ceadTypeDesc?: string;    // 证件类型描述
+  credNo?: string;          // 证件号
+  image?: string;           // 头像
+  introduce?: string;       // 简介
+  createdByDr?: number;     // 创建人ID
+  creatUserDesc?: string;   // 创建人姓名
+  createdDate?: string;     // 创建日期
+  createdTime?: string;     // 创建时间
+  startDate?: string;       // 启用日期
+  stopDate?: string;        // 停用日期
+  statusFlag?: string;      // 状态 Y/N
+  nickname?: string;        // 昵称
+  mail?: string;            // 邮箱
+  workMobile?: string;      // 工作手机
+  birthDate?: string;       // 出生日期
+}
+
+/** 用户详情 */
+export interface UserDetailItem extends UserItem {
+  password?: string;        // 密码
+  userLogonLoc?: UserLogonLocItem[];  // 权限角色列表
+}
+
+/** 用户申请记录项 */
+export interface UserAuditLogItem {
+  id: number;               // 申请记录ID
+  code?: string;            // 编码
+  descripts?: string;       // 姓名
+  sexDr?: number;           // 性别ID
+  sexDesc?: string;         // 性别描述
+  hospitalDr?: number;      // 医院ID
+  hospDesc?: string;        // 医院名称
+  mobile?: string;          // 手机号
+  credTypeDr?: number;      // 证件类型ID
+  credTypeDesc?: string;    // 证件类型描述
+  credNo?: string;          // 证件号
+  image?: string;           // 头像
+  introduce?: string;       // 简介
+  auditUserDr?: number;     // 审核人ID
+  auditUserDesc?: string;   // 审核人姓名
+  auditGroupDr?: number;    // 审核组ID
+  auditGroupDesc?: string;  // 审核组名称
+  auditStatus?: string;     // 审核状态 R=待审核 Y=已通过 N=已驳回
+  auditRemarks?: string;    // 审核备注
+  applyDate?: string;       // 申请日期
+  applyTime?: string;       // 申请时间
+  applyDateTime?: string;   // 申请日期时间
+  createdByDr?: number;     // 创建人ID
+  createDateTime?: string;  // 创建日期时间
+}
+
+/** 用户权限角色项 */
+export interface UserLogonLocItem {
+  userLogonLocID?: number;  // 权限角色记录ID
+  userID?: number;          // 用户ID
+  userDesc?: string;        // 用户姓名
+  hospID?: number;          // 医院ID
+  hospDesc?: string;        // 医院名称
+  hospCode?: string;        // 医院编码
+  groupID?: number;         // 角色组ID
+  groupDesc?: string;       // 角色组名称
+  isDefault?: string;       // 是否默认 Y/N
+  updateDate?: string;      // 更新日期
+  updateTime?: string;      // 更新时间
+  startDate?: string;       // 开始日期
+  stopDate?: string;        // 结束日期
+}
+
+/** 新增/编辑用户参数 */
+export interface SaveUserParams {
+  userDr?: number;          // 用户ID（为空则新增）
+  userID?: string;          // 当前操作用户ID
+  userName: string;         // 用户姓名（必填）
+  mobile: string;           // 手机号（必填，11位）
+  sexID?: string;           // 性别ID（必填）
+  credTypeID?: string;      // 证件类型ID
+  credNo?: string;          // 证件号
+  birthDate?: string;       // 出生日期
+  workMobile?: string;      // 工作手机
+  mail?: string;            // 邮箱
+  nickname?: string;        // 昵称
+  image?: string;           // 头像
+  introduce?: string;       // 简介
+  hospID?: string;          // 所属医院ID（必填）
+  hospDesc?: string;        // 医院名称
+  startDate: string;        // 启用日期（必填）
+  stopDate?: string;        // 停用日期
+  statusFlag?: string;      // 状态 Y/N（默认Y）
+  createdDate?: string;     // 创建日期（编辑时保留）
+  createdTime?: string;     // 创建时间（编辑时保留）
+}
+
+/** 用户申请参数 */
+export interface UserApplyParams {
+  code?: string;            // 编码
+  descripts: string;        // 姓名（必填）
+  sexID?: string;           // 性别ID（必填）
+  mobile: string;           // 手机号（必填）
+  credTypeID?: string;      // 证件类型ID
+  credNo?: string;          // 证件号
+  hospitalID: string;       // 所属医院ID（必填）
+  introduce?: string;       // 简介
+  auditGroupID?: string;    // 审核组ID
+  password?: string;        // 密码
+}
+
+/** 审核参数 */
+export interface AuditParams {
+  userAuditLogID: number;   // 申请记录ID（必填）
+  auditStatus: string;      // 审核状态 Y=通过 N=驳回（必填）
+  auditRemarks?: string;    // 审核备注
+}
+
+/** 角色分配参数 */
+export interface SaveUserLogonLocParams {
+  userLogonLocID?: number;  // 记录ID（为空则新增）
+  userID?: number;          // 用户ID
+  hospID: string;           // 医院ID（必填）
+  groupID: string;          // 角色组ID（必填）
+  isDefault?: string;       // 是否默认 Y/N（默认N）
+}
+
 // ========== 接口服务配置 (01010017, 01010016, 01010018) ==========
 
 /** 接口服务记录 */
@@ -89,4 +224,103 @@ export const saveInterfaceService = (
 export const queryInterfaceDropdownData = (
 ): Promise<ApiResponse<InterfaceDropdownData>> => {
   return invoke('01010018', [{}]);
+};
+
+// ========== 用户管理 API 函数 (01030101-01030111) ==========
+
+/** 查询用户列表 (01030101) - 服务端分页
+ * 后端会根据session中的groupID自动进行医院数据权限过滤
+ */
+export const queryUsers = (
+  params: {
+    code?: string;           // 用户编码
+    descripts?: string;      // 用户姓名
+    status?: string;         // 状态 Y/N/all
+    hospID?: string;         // 医院ID
+    groupID?: string;        // 角色组ID
+  },
+  pagination: Pagination
+): Promise<ApiResponse<PageResult<UserItem>>> => {
+  return invoke('01030101', [params], undefined, pagination);
+};
+
+/** 新增/编辑用户 (01030102)
+ * 后端使用session.userID作为创建人和更新人
+ * userDr为空时新增，有值时编辑
+ */
+export const saveUser = (
+  params: SaveUserParams
+): Promise<ApiResponse> => {
+  return invoke('01030102', [params]);
+};
+
+/** 查询用户申请记录列表 (01030107) - 服务端分页 */
+export const queryApplyLogs = (
+  params: {
+    auditStatus?: string;    // 审核状态 R=待审核 Y=已通过 N=已驳回
+    hospitalID?: string;     // 医院ID
+    beginDate?: string;      // 开始日期
+    endDate?: string;        // 结束日期
+  },
+  pagination: Pagination
+): Promise<ApiResponse<PageResult<UserAuditLogItem>>> => {
+  return invoke('01030107', [params], undefined, pagination);
+};
+
+/** 查询用户申请详情 (01030108) */
+export const getUserAuditLogDetail = (
+  params: {
+    userAuditLogID: number;  // 申请记录ID
+  }
+): Promise<ApiResponse<UserAuditLogItem>> => {
+  return invoke('01030108', [params]);
+};
+
+/** 提交用户注册申请 (01030105)
+ * 申请状态默认为"R"(待审核)
+ */
+export const submitUserApply = (
+  params: UserApplyParams
+): Promise<ApiResponse> => {
+  return invoke('01030105', [params]);
+};
+
+/** 审核用户申请 (01030106)
+ * 后端使用session.userID作为审核人
+ * auditStatus: Y=通过 N=驳回
+ */
+export const auditUserApply = (
+  params: AuditParams
+): Promise<ApiResponse> => {
+  return invoke('01030106', [params]);
+};
+
+/** 保存/更新用户权限角色 (01030109)
+ * 后端使用session.userID作为更新人
+ * userLogonLocID为空时新增，有值时更新
+ */
+export const saveUserLogonLoc = (
+  params: SaveUserLogonLocParams
+): Promise<ApiResponse> => {
+  return invoke('01030109', [params]);
+};
+
+/** 删除用户权限角色 (01030110)
+ * 后端使用session.userID作为更新人
+ */
+export const deleteUserLogonLoc = (
+  params: {
+    userLogonLocID: number;  // 权限角色记录ID
+  }
+): Promise<ApiResponse> => {
+  return invoke('01030110', [params]);
+};
+
+/** 查询用户详情含角色列表 (01030111) */
+export const getUserDetail = (
+  params: {
+    userID: number;          // 用户ID
+  }
+): Promise<ApiResponse<{ rows: UserLogonLocItem[] }>> => {
+  return invoke('01030111', [params]);
 };
