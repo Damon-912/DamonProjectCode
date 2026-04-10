@@ -227,4 +227,64 @@ ClassMethod DeleteDRGCoreAlgorithm(jsonObj) As %Library.DynamicAbstractObject
 	Quit ##class(src.DRG.BasicData.CoreAlgorithm).DeleteDRGCoreAlgorithm(jsonObj)
 }
 
+/// Creator:     系统
+/// CreatDate:   2026-04-09
+/// Description: 查询DRG目录信息
+/// 02010041
+ClassMethod GetDRGCataLogList(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGCataLog).GetDRGCataLogList(jsonObj)
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-04-09
+/// Description: 保存/更新DRG目录信息
+/// 02010042
+ClassMethod SaveDRGCataLog(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGCataLog).SaveDRGCataLog(jsonObj)
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-04-09
+/// Description: 删除DRG目录信息
+/// 02010043
+ClassMethod DeleteDRGCataLog(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGCataLog).DeleteDRGCataLog(jsonObj)
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-04-09
+/// Description: 查询ADRG细分规则
+/// 02010044
+ClassMethod GetDRGSegmentationRulesList(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGRSegmentationRules).GetDRGSegmentationRulesList(jsonObj)
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-04-09
+/// Description: 保存/更新ADRG细分规则
+/// 02010045
+ClassMethod SaveDRGSegmentationRules(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGRSegmentationRules).SaveDRGSegmentationRules(jsonObj)
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-04-09
+/// Description: 删除ADRG细分规则
+/// 02010046
+ClassMethod DeleteDRGSegmentationRules(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGRSegmentationRules).DeleteDRGSegmentationRules(jsonObj)
+}
+
 }

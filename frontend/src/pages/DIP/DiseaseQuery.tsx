@@ -14,6 +14,7 @@ import {
   type DIPPointsItem, type DIPCatalogItem
 } from '../../api/dip';
 import { getProvinceData, getCityData, type ProvinceItem, type CityItem } from '../../api/basicData';
+import CustomPagination from '../../components/CustomPagination';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -452,24 +453,20 @@ const DiseaseQuery: React.FC = () => {
               loading={pointsLoading}
               scroll={{ x: 1400 }}
               size="small"
-              pagination={{
-                current: pointsPage,
-                pageSize: pointsPageSize,
-                total: pointsTotal,
-                showSizeChanger: true,
-                showTotal: (t) => `共 ${t} 条`,
-                onChange: (page, size) => {
+              pagination={false}
+            />
+            <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+              <CustomPagination
+                current={pointsPage}
+                pageSize={pointsPageSize}
+                total={pointsTotal}
+                onChange={(page, size) => {
                   setPointsPage(page);
                   setPointsPageSize(size);
                   fetchPoints(page, size);
-                },
-                locale: {
-                  items_per_page: '/页',
-                  jump_to: '跳至',
-                  page: '页',
-                }
-              }}
-            />
+                }}
+              />
+            </div>
           </Card>
         </TabPane>
 
@@ -555,7 +552,6 @@ const DiseaseQuery: React.FC = () => {
 
           <Card size="small">
             <div style={{ marginBottom: 12 }}>
-              <span style={{ color: '#999' }}>共 {catalogTotal} 条记录</span>
             </div>
             <Table
               columns={catalogColumns}
@@ -564,19 +560,20 @@ const DiseaseQuery: React.FC = () => {
               loading={catalogLoading}
               scroll={{ x: 1500 }}
               size="small"
-              pagination={{
-                current: catalogPage,
-                pageSize: catalogPageSize,
-                total: catalogTotal,
-                showSizeChanger: true,
-                showTotal: (t) => `共 ${t} 条`,
-                onChange: (page, size) => {
+              pagination={false}
+            />
+            <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+              <CustomPagination
+                current={catalogPage}
+                pageSize={catalogPageSize}
+                total={catalogTotal}
+                onChange={(page, size) => {
                   setCatalogPage(page);
                   setCatalogPageSize(size);
                   fetchCatalog(page, size);
-                },
-              }}
-            />
+                }}
+              />
+            </div>
           </Card>
         </TabPane>
       </Tabs>

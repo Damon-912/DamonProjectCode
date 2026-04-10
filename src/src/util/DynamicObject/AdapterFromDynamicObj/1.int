@@ -1,0 +1,119 @@
+ROUTINE src.util.DynamicObject.AdapterFromDynamicObj.1 [Type=INT,Generated]
+ ;src.util.DynamicObject.AdapterFromDynamicObj.1
+ ;Generated for class src.util.DynamicObject.AdapterFromDynamicObj.  Do NOT edit. 12/23/2025 05:01:53PM
+ ;;4B434931;src.util.DynamicObject.AdapterFromDynamicObj
+ ;
+zFromDynamicObj(pDynamicObject) public {
+	set sc=1
+	try {
+	} catch(ex) {
+		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+	}
+	quit sc }
+zGetXSDAssignValue(pParentObject,pPropertyName,pXSDValue) public {
+	quit:pXSDValue="" ""
+	try {
+		set tLogicalValue=$METHOD(pParentObject,pPropertyName_"XSDToLogical",pXSDValue)
+		set:tLogicalValue="" tLogicalValue=pXSDValue
+	} catch(ex) {
+		set tLogicalValue=pXSDValue
+	}
+	quit tLogicalValue }
+zIsDynamicArray(pDynamicArray) public {
+	quit:($GET(pDynamicArray,"")="") 0
+	quit:'$ISOBJECT(pDynamicArray) 0
+	quit pDynamicArray.%Extends("%Library.DynamicArray") }
+zIsDynamicObject(pDynamicObject) public {
+	quit:($GET(pDynamicObject,"")="") 0
+	quit:'$ISOBJECT(pDynamicObject) 0
+	quit pDynamicObject.%Extends("%Library.DynamicObject") }
+zSetArrayOfDTFromDynamicObjectA(pDynamicArray,pTargetedArrayOfDataTypes,pParentObject,pPropertyName) public {
+	set sc=1
+	quit:'$ISOBJECT($GET(pDynamicArray,"")) //The dynamic array element did not exist or wasn't appropriate so leave existing array as is.
+	try {
+		do pTargetedArrayOfDataTypes.Clear() //Logic is to clear all existing elements as per business logic requested.
+		set tIterator = pDynamicArray.%GetIterator()
+		set tKey="",tValue=""
+		while tIterator.%GetNext(.tKey , .tValue ) {
+			do pTargetedArrayOfDataTypes.SetAt(..GetXSDAssignValue(pParentObject,pPropertyName,tValue),(tKey+1)) //Adding 1 since arrays in DynamicArrays are 0 bassed.
+		}
+	} catch(ex) {
+		set sc=ex.AsStatus()
+	}
+	quit sc }
+zSetArrayOfObjectsFromDynamicOb(pDynamicArray,pTargetedArrayOfObjects,pTargetArrayElementTypeClassName) public {
+	set sc=1
+	quit:'$ISOBJECT($GET(pDynamicArray,"")) 1 //The dynamic array element did not exist or wasn't appropriate.
+	try {
+		do pTargetedArrayOfObjects.Clear() //Logic is to clear all existing elements as per business logic requested.
+		set tIterator = pDynamicArray.%GetIterator()
+		set tKey="",tDynamicObjectElement=""
+		while tIterator.%GetNext(.tKey , .tDynamicObjectElement ) {
+			set tNewArrayElement=$CLASSMETHOD(pTargetArrayElementTypeClassName,"%New")
+			set sc1=tNewArrayElement.FromDynamicObj(tDynamicObjectElement)
+			set:('sc1) sc=$SYSTEM.Status.AppendStatus(sc1,sc)
+			do pTargetedArrayOfObjects.SetAt(tNewArrayElement,(tKey+1)) //Adding 1 since arrays in DynamicArrays are 0 bassed.
+		}
+	} catch(ex) {
+		set sc=ex.AsStatus()
+	}
+	quit sc }
+zSetArrayOfPersistentObjectsFro(pDynamicArray,pTargetedArrayOfPersistentObjects) public {
+	set sc=1
+	quit:'$ISOBJECT($GET(pDynamicArray,"")) //The dynamic array element did not exist or wasn't appropriate so leave existing array as is.
+	try {
+		do pTargetedArrayOfPersistentObjects.Clear() //Logic is to clear all existing elements as per business logic requested.
+		set tIterator = pDynamicArray.%GetIterator()
+		set tKey="",tObjectId=""
+		while tIterator.%GetNext(.tKey , .tObjectId ) {
+			do pTargetedArrayOfPersistentObjects.SetObjectIdAt(tObjectId,tKey+1)
+		}
+	} catch(ex) {
+		set sc=ex.AsStatus()
+	}
+	quit sc }
+zSetListOfDTFromDynamicObjectAr(pDynamicArray,pTargetedListOfDataTypes,pParentObject,pPropertyName) public {
+	set sc=1
+	quit:'$ISOBJECT($GET(pDynamicArray,"")) //The dynamic array element did not exist or wasn't appropriate so leave existing array as is.
+	try {
+		do pTargetedListOfDataTypes.Clear() //Logic is to clear all existing elements as per business logic requested.
+		set tIterator = pDynamicArray.%GetIterator()
+		set tKey="",tValue=""
+		while tIterator.%GetNext(.tKey , .tValue ) {
+			do pTargetedListOfDataTypes.Insert(..GetXSDAssignValue(pParentObject,pPropertyName,tValue))
+		}
+	} catch(ex) {
+		set sc=ex.AsStatus()
+	}
+	quit sc }
+zSetListOfObjectsFromDynamicObj(pDynamicArray,pTargetedListOfObjects,pTargetListElementTypeClassName) public {
+	set sc=1
+	quit:'$ISOBJECT($GET(pDynamicArray,"")) 1 //The dynamic array element did not exist or wasn't appropriate.
+	try {
+		do pTargetedListOfObjects.Clear() //Logic is to clear all existing elements as per business logic requested.
+		set tIterator = pDynamicArray.%GetIterator()
+		set tKey="",tDynamicObjectElement=""
+		while tIterator.%GetNext(.tKey , .tDynamicObjectElement ) {
+			set tNewListElement=$CLASSMETHOD(pTargetListElementTypeClassName,"%New")
+			set sc1=tNewListElement.FromDynamicObj(tDynamicObjectElement)
+			set:('sc1) sc=$SYSTEM.Status.AppendStatus(sc1,sc)
+			do pTargetedListOfObjects.Insert(tNewListElement)
+		}
+	} catch(ex) {
+		set sc=ex.AsStatus()
+	}
+	quit sc }
+zSetListOfPersistentObjectsFrom(pDynamicArray,pTargetedListOfPersistentObjects) public {
+	set sc=1
+	quit:'$ISOBJECT($GET(pDynamicArray,"")) //The dynamic array element did not exist or wasn't appropriate so leave existing array as is.
+	try {
+		do pTargetedListOfPersistentObjects.Clear() //Logic is to clear all existing elements as per business logic requested.
+		set tIterator = pDynamicArray.%GetIterator()
+		set tKey="",tObjectId=""
+		while tIterator.%GetNext(.tKey , .tObjectId ) {
+			do pTargetedListOfPersistentObjects.InsertObjectId(tObjectId)
+		}
+	} catch(ex) {
+		set sc=ex.AsStatus()
+	}
+	quit sc }

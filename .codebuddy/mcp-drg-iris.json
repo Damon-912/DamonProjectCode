@@ -1,0 +1,219 @@
+{
+  "name": "drg-iris-mcp",
+  "description": "DRG医保控费预警系统IRIS数据库MCP集成",
+  "version": "1.0.0",
+  "type": "mcp-server",
+  
+  "configurations": {
+    "production": {
+      "server_url": "http://111.229.137.113:52773",
+      "namespace": "USER",
+      "credentials": {
+        "username": "_system",
+        "password": "123456"
+      },
+      "api_endpoint": "/csp/drg/sysInternalMutiple",
+      "timeout": 30000,
+      "retry_count": 3
+    },
+    
+    "development": {
+      "server_url": "http://localhost:52773",
+      "namespace": "USER",
+      "credentials": {
+        "username": "_system",
+        "password": "SYS"
+      },
+      "api_endpoint": "/csp/drg/sysInternalMutiple",
+      "timeout": 30000,
+      "retry_count": 3
+    }
+  },
+  
+  "tools": [
+    {
+      "name": "invoke_drg_interface",
+      "description": "调用DRG系统IRIS接口",
+      "parameters": {
+        "interface_code": {
+          "type": "string",
+          "description": "接口代码，如02010001",
+          "required": true
+        },
+        "params": {
+          "type": "array",
+          "description": "接口参数数组",
+          "required": false
+        },
+        "session_data": {
+          "type": "object",
+          "description": "会话信息（可选，默认使用内置session）",
+          "required": false
+        },
+        "pagination": {
+          "type": "object",
+          "description": "分页参数（可选）",
+          "required": false
+        }
+      }
+    },
+    
+    {
+      "name": "query_drg_warning_records",
+      "description": "查询DRG预警记录",
+      "parameters": {
+        "start_date": {
+          "type": "string",
+          "description": "开始日期（YYYY-MM-DD）",
+          "required": false
+        },
+        "end_date": {
+          "type": "string",
+          "description": "结束日期（YYYY-MM-DD）",
+          "required": false
+        },
+        "warning_level": {
+          "type": "string",
+          "description": "预警级别：高、中、低",
+          "required": false
+        },
+        "page": {
+          "type": "number",
+          "description": "页码",
+          "required": false,
+          "default": 1
+        },
+        "limit": {
+          "type": "number",
+          "description": "每页数量",
+          "required": false,
+          "default": 20
+        }
+      }
+    },
+    
+    {
+      "name": "analyze_profit_data",
+      "description": "进行DRG盈亏数据分析",
+      "parameters": {
+        "analysis_type": {
+          "type": "string",
+          "description": "分析类型：dept（科室）、doctor（医生）、disease（病种）",
+          "required": true
+        },
+        "time_range": {
+          "type": "object",
+          "description": "时间范围：开始日期、结束日期",
+          "required": false
+        },
+        "filter_criteria": {
+          "type": "object",
+          "description": "过滤条件",
+          "required": false
+        }
+      }
+    },
+    
+    {
+      "name": "manage_system_users",
+      "description": "管理系统用户",
+      "parameters": {
+        "operation": {
+          "type": "string",
+          "description": "操作类型：query（查询）、add（新增）、update（更新）、delete（删除）",
+          "required": true
+        },
+        "user_data": {
+          "type": "object",
+          "description": "用户数据",
+          "required": false
+        },
+        "filters": {
+          "type": "object",
+          "description": "过滤条件",
+          "required": false
+        }
+      }
+    }
+  ],
+  
+  "resources": [
+    {
+      "name": "iris_database_connection",
+      "description": "IRIS数据库连接资源",
+      "uri": "iris://111.229.137.113:52773/USER",
+      "metadata": {
+        "server_type": "InterSystems IRIS",
+        "database_version": "2023.1+",
+        "namespace": "USER",
+        "last_verified": "2026-04-09"
+      }
+    },
+    
+    {
+      "name": "drg_interface_documentation",
+      "description": "DRG系统接口文档",
+      "uri": "file://../接口服务说明/00-接口总览.md",
+      "mimeType": "text/markdown",
+      "metadata": {
+        "format": "markdown",
+        "last_updated": "2026-03-20"
+      }
+    },
+    
+    {
+      "name": "drg_data_model",
+      "description": "DRG数据模型定义",
+      "uri": "file://../后端数据库结构开发/DRG后端表结构/",
+      "metadata": {
+        "type": "directory",
+        "file_count": 30
+      }
+    }
+  ],
+  
+  "connection": {
+    "type": "http",
+    "base_url": "http://111.229.137.113:52773",
+    "auth": {
+      "type": "basic",
+      "username": "_system",
+      "password": "123456"
+    },
+    "headers": {
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    },
+    "timeout": 30000
+  },
+  
+  "security": {
+    "api_key": "drg-mcp-access-key-2026",
+    "allowed_origins": ["http://localhost:5173", "http://localhost:8090"],
+    "rate_limiting": {
+      "enabled": true,
+      "requests_per_minute": 60
+    }
+  },
+  
+  "monitoring": {
+    "enabled": true,
+    "metrics_endpoint": "/mcp/metrics",
+    "health_check_endpoint": "/mcp/health",
+    "log_level": "info"
+  },
+  
+  "metadata": {
+    "project": "DRG医保控费预警系统",
+    "environment": "production",
+    "deployment": {
+      "server": "腾讯云轻量应用服务器",
+      "ip_address": "111.229.137.113",
+      "port": 52773,
+      "ssh_port": 22
+    },
+    "integration_type": "database",
+    "last_updated": "2026-04-09",
+    "version": "1.0.0"
+  }
+}

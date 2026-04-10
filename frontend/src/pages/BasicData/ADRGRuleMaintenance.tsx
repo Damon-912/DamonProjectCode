@@ -5,6 +5,7 @@ import {
 } from 'antd';
 import { PlusOutlined, SearchOutlined, ReloadOutlined, DeleteOutlined, EditOutlined, EyeOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import CustomPagination from '../../components/CustomPagination';
 import {
   queryAdrgRules, saveAdrgRule, deleteAdrgRule,
   type AdrgRuleItem, type SaveAdrgRuleParams
@@ -300,24 +301,20 @@ const ADRGRuleMaintenance: React.FC = () => {
               </div>
             ),
           }}
-          pagination={{
-            current: currentPage,
-            pageSize,
-            total,
-            showSizeChanger: true,
-            showTotal: (t) => `共 ${t} 条`,
-            onChange: (page, size) => {
+          pagination={false}
+        />
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <CustomPagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={total}
+            onChange={(page, size) => {
               setCurrentPage(page);
               setPageSize(size);
               fetchData(page, size);
-            },
-            locale: {
-              items_per_page: '/页',
-              jump_to: '跳至',
-              page: '页',
-            }
-          }}
-        />
+            }}
+          />
+        </div>
       </Card>
 
       {/* 新增/编辑弹窗 */}
@@ -326,6 +323,8 @@ const ADRGRuleMaintenance: React.FC = () => {
         open={modalOpen}
         onOk={handleSave}
         onCancel={() => setModalOpen(false)}
+        okText="确定"
+        cancelText="取消"
         confirmLoading={saving}
         width={720}
         destroyOnClose

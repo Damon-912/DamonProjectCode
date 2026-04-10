@@ -1,0 +1,235 @@
+ROUTINE src.util.DynamicObject.FromDynamicObjSourceGenerator.1 [Type=INT,Generated]
+ ;src.util.DynamicObject.FromDynamicObjSourceGenerator.1
+ ;Generated for class src.util.DynamicObject.FromDynamicObjSourceGenerator.  Do NOT edit. 12/23/2025 05:01:52PM
+ ;;57392F59;src.util.DynamicObject.FromDynamicObjSourceGenerator
+ ;
+%NormalizeObject() public {
+	If '$system.CLS.GetModified() Quit 1
+	If m%ReturnSourceCode Set:i%ReturnSourceCode'="" i%ReturnSourceCode=(..ReturnSourceCodeNormalize(i%ReturnSourceCode))
+	Quit 1 }
+%ValidateObject(force=0,checkserial=1) public {
+	set sc=1
+	If '$system.CLS.GetModified() Quit sc
+	If m%ReturnSourceCode Set iv=..ReturnSourceCode If iv'="" Set rc=(..ReturnSourceCodeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"ReturnSourceCode",iv)
+	Quit sc }
+zAddArrayOfDTAssignmentSourceCo(pCompiledProperty) public {
+	set tSourcePropertyName=..GetCompiledPropertyOutputName(pCompiledProperty)
+	set tDynamicObjectReference=..MakeDynamicObjectPropertyValueReference(tSourcePropertyName)
+	set tCommand="..SetArrayOfDTFromDynamicObjectArray(tSourceDynamicArray,"_..MakeTargetPropertyReference(pCompiledProperty.Name)_
+						",$This,"""_pCompiledProperty.Name_""")"
+	do ..AddIsDefinedDynamicArrayWithTryCommand(tSourcePropertyName,tDynamicObjectReference,tCommand) }
+zAddArrayOfObjectsNonPersistant(pCompiledProperty) public {
+	set tSourcePropertyName=..GetCompiledPropertyOutputName(pCompiledProperty)
+	set tDynamicObjectReference=..MakeDynamicObjectPropertyValueReference(tSourcePropertyName)
+	set tCommand="..SetArrayOfObjectsFromDynamicObjectArray(tSourceDynamicArray,"_..MakeTargetPropertyReference(pCompiledProperty.Name)_","""_pCompiledProperty.Type_""")"
+	do ..AddIsDefinedDynamicArrayWithTryCommand(tSourcePropertyName,tDynamicObjectReference,tCommand) }
+zAddArrayOfObjectsPersistantAss(pCompiledProperty) public {
+	set tSourcePropertyName=..GetCompiledPropertyOutputName(pCompiledProperty)
+	set tDynamicObjectReference=..MakeDynamicObjectPropertyValueReference(tSourcePropertyName)
+	set tCommand="..SetArrayOfPersistentObjectsFromDynamicObjectIdArray(tSourceDynamicArray,"_..MakeTargetPropertyReference(pCompiledProperty.Name)_")"
+	do ..AddIsDefinedDynamicArrayWithTryCommand(tSourcePropertyName,tDynamicObjectReference,tCommand) }
+zAddDataTypeAssignmentSourceCod(pCompiledProperty) public {
+	set tSourcePropertyName=..GetCompiledPropertyOutputName(pCompiledProperty)
+	do ..AddSourceCodeLine("		if ("_"pDynamicObject"_".%IsDefined("""_tSourcePropertyName_""")) && ("_..MakeTargetPropertyReference(pCompiledProperty.Name)_"'="_..MakeDynamicObjectPropertyValueReference(tSourcePropertyName)_") {")
+	do ..AddSourceCodeLine("			try {")
+	if ..IsLogicalToXSDCapable(pCompiledProperty) {
+		do ..AddSourceCodeLine("				try {")
+		do ..AddSourceCodeLine("					set tDynamicValue="_..MakeDynamicObjectPropertyValueReference(tSourcePropertyName))
+		do ..AddSourceCodeLine("					set value=$METHOD($THIS,"""_pCompiledProperty.Name_"XSDToLogical"_""",tDynamicValue)")
+		do ..AddSourceCodeLine("					set:((tDynamicValue'="""")&&(value="""")) value=tDynamicValue")
+		do ..AddSourceCodeLine("				} catch(ex) {")
+		do ..AddSourceCodeLine("					set value="_..MakeDynamicObjectPropertyValueReference(tSourcePropertyName))
+		do ..AddSourceCodeLine("					set $ZERROR=""""")
+		do ..AddSourceCodeLine("				}")
+	} else {
+		do ..AddSourceCodeLine("				set value="_..MakeDynamicObjectPropertyValueReference(tSourcePropertyName))
+	}
+	do ..AddSourceCodeLine("				set "_..MakeTargetPropertyReference(pCompiledProperty.Name) _ "=value")
+	do ..AddSourceCodeLine("			} catch(ex) {")
+	do ..AddSourceCodeLine("				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)")
+	do ..AddSourceCodeLine("			}")
+	do ..AddSourceCodeLine("		}") }
+zAddDynamicObjToCurrentAssignme(pCompiledProperty) public {
+	set tPropertyAssignmentType=..GetPropertyAssignmentType(pCompiledProperty)
+	if (tPropertyAssignmentType=1) {
+		do ..AddDataTypeAssignmentSourceCode(pCompiledProperty)
+	} elseif (tPropertyAssignmentType=3) {
+		do ..AddPersistentObjectAssignmentSourceCode(pCompiledProperty)
+	} elseif (tPropertyAssignmentType=2) {
+		do ..AddSerialObjectDynamicAssignmentReferencesSourceCode(pCompiledProperty)
+	} elseif (tPropertyAssignmentType=4) {
+		do ..AddArrayOfDTAssignmentSourceCode(pCompiledProperty)
+	} elseif (tPropertyAssignmentType=5) {
+		do ..AddArrayOfObjectsPersistantAssignmentSourceCode(pCompiledProperty)
+	} elseif (tPropertyAssignmentType=6) {
+		do ..AddArrayOfObjectsNonPersistantAssignmentSourceCode(pCompiledProperty)
+	} elseif (tPropertyAssignmentType=7) {
+		do ..AddListOfDTAssignmentSourceCode(pCompiledProperty)
+	} elseif (tPropertyAssignmentType=8) {
+		do ..AddListOfObjectsPersistantAssignmentSourceCode(pCompiledProperty)
+	} elseif (tPropertyAssignmentType=9) {
+		do ..AddListOfObjectsNonPersistantAssignmentSourceCode(pCompiledProperty)
+	} elseif (tPropertyAssignmentType=10) {
+		do ..AddEmbededRegisteredObjectDynamicAssignmentReferencesSourceCode(pCompiledProperty)
+	}else {
+		//Unknown mode detected. //Ignore
+	} }
+zAddEmbededRegisteredObjectDyna(pCompiledProperty) public {
+	set tSourcePropertyName=..GetCompiledPropertyOutputName(pCompiledProperty)
+	do ..AddSourceCodeLine("		if ("_"pDynamicObject"_".%IsDefined("""_tSourcePropertyName_""")) {")
+	do ..AddSourceCodeLine("			try {")
+	set tDynamicObjectReference=..MakeDynamicObjectPropertyValueReference(tSourcePropertyName)
+	do ..AddSourceCodeLine("				set value="_tDynamicObjectReference)
+	do ..AddSourceCodeLine("				if (..IsDynamicObject(value)) {")
+	do ..AddSourceCodeLine("					set:("_..MakeTargetPropertyReference(pCompiledProperty.Name) _ "=$$$NULLOREF) "_
+															..MakeTargetPropertyReference(pCompiledProperty.Name)_
+																	"=##class("_pCompiledProperty.Type_").%New()")
+	do ..AddSourceCodeLine("					set sc1="_..MakeTargetPropertyReference(pCompiledProperty.Name) _ ".FromDynamicObj(value)")
+	do ..AddSourceCodeLine("				} else {")
+	do ..AddSourceCodeLine("					set sc1=$$$ERROR($$$ReferenceIsNotADynamicObject,""The reference '" _ $REPLACE(tDynamicObjectReference,"""","""""") _"' is not a dynamic object."")")
+	do ..AddSourceCodeLine("				}")
+	do ..AddSourceCodeLine("				set:$$$ISERR(sc1) sc=$SYSTEM.Status.AppendStatus(sc1,sc)")
+	do ..AddSourceCodeLine("			} catch(ex) {")
+	do ..AddSourceCodeLine("				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)")
+	do ..AddSourceCodeLine("			}")
+	do ..AddSourceCodeLine("		}") }
+zAddIsDefinedDynamicArrayWithTr(pSourcePropertyName,pDynamicObjectReference,pCommand) public {
+	do ..AddSourceCodeLine("		if ("_"pDynamicObject"_".%IsDefined("""_pSourcePropertyName_""")) {")
+	do ..AddSourceCodeLine("			try {")
+	do ..AddSourceCodeLine("				set tSourceDynamicArray="_pDynamicObjectReference)
+	do ..AddSourceCodeLine("				if (..IsDynamicArray(tSourceDynamicArray)) {")
+	do ..AddSourceCodeLine("					set sc1="_pCommand)
+	do ..AddSourceCodeLine("				} else {")
+	do ..AddSourceCodeLine("					set sc1=$$$ERROR($$$ReferenceIsNotADynamicObject,""The reference '" _ $REPLACE(pDynamicObjectReference,"""","""""") _"' is not a dynamic object."")")
+	do ..AddSourceCodeLine("				}")
+	do ..AddSourceCodeLine("				set:$$$ISERR(sc1) sc=$SYSTEM.Status.AppendStatus(sc1,sc)")
+	do ..AddSourceCodeLine("			} catch(ex) {")
+	do ..AddSourceCodeLine("				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)")
+	do ..AddSourceCodeLine("			}")
+	do ..AddSourceCodeLine("		}") }
+zAddListOfDTAssignmentSourceCod(pCompiledProperty) public {
+	set tSourcePropertyName=..GetCompiledPropertyOutputName(pCompiledProperty)
+	set tDynamicObjectReference=..MakeDynamicObjectPropertyValueReference(tSourcePropertyName)
+	set tCommand="..SetListOfDTFromDynamicObjectArray(tSourceDynamicArray,"_..MakeTargetPropertyReference(pCompiledProperty.Name)_
+						",$This,"""_pCompiledProperty.Name_""")"
+	do ..AddIsDefinedDynamicArrayWithTryCommand(tSourcePropertyName,tDynamicObjectReference,tCommand) }
+zAddListOfObjectsNonPersistantA(pCompiledProperty) public {
+	set tSourcePropertyName=..GetCompiledPropertyOutputName(pCompiledProperty)
+	set tDynamicObjectReference=..MakeDynamicObjectPropertyValueReference(tSourcePropertyName)
+	set tCommand="..SetListOfObjectsFromDynamicObjectArray(tSourceDynamicArray,"_..MakeTargetPropertyReference(pCompiledProperty.Name)_","""_pCompiledProperty.Type_""")"
+	do ..AddIsDefinedDynamicArrayWithTryCommand(tSourcePropertyName,tDynamicObjectReference,tCommand) }
+zAddListOfObjectsPersistantAssi(pCompiledProperty) public {
+	set tSourcePropertyName=..GetCompiledPropertyOutputName(pCompiledProperty)
+	set tDynamicObjectReference=..MakeDynamicObjectPropertyValueReference(tSourcePropertyName)
+	set tCommand="..SetListOfPersistentObjectsFromDynamicObjectArray(tSourceDynamicArray,"_..MakeTargetPropertyReference(pCompiledProperty.Name)_")"
+	do ..AddIsDefinedDynamicArrayWithTryCommand(tSourcePropertyName,tDynamicObjectReference,tCommand) }
+zAddPersistentObjectAssignmentS(pCompiledProperty) public {
+	set tSourcePropertyName=..GetCompiledPropertyOutputName(pCompiledProperty)
+	do ..AddSourceCodeLine("		if ("_"pDynamicObject"_".%IsDefined("""_tSourcePropertyName_""")) {")
+	do ..AddSourceCodeLine("			try {")
+	do ..AddSourceCodeLine("				set newIdvalue="_..MakeDynamicObjectPropertyValueReference(tSourcePropertyName))
+	do ..AddSourceCodeLine("				set existingIdValue="_..MakeTargetPropertyReference(pCompiledProperty.Name)_"GetObjectId()")
+	//do ..AddSourceCodeLine("				do:(existingIdValue'=newIdvalue) "_..MakeTargetPropertyReference(pCompiledProperty.Name) _ "SetObjectId(newIdvalue)")
+	//do ..AddSourceCodeLine("				set:(existingIdValue'=newIdvalue) set $this."_pCompiledProperty.Name_"=##class("_pCompiledProperty.Type_").%OpenId(newIdvalue) ")
+	do ..AddSourceCodeLine("				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"""_pCompiledProperty.Name_""")=##class("_pCompiledProperty.Type_").%OpenId(newIdvalue)")
+	//do ..AddSourceCodeLine("				set:(existingIdValue'=newIdvalue) set "_..MakeTargetPropertyReference(pCompiledProperty.Name)_"=##class("_pCompiledProperty.Type_").%OpenId(newIdvalue) ")
+	do ..AddSourceCodeLine("			} catch(ex) {")
+	do ..AddSourceCodeLine("				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)")
+	do ..AddSourceCodeLine("			}")
+	do ..AddSourceCodeLine("		}") }
+zAddSerialObjectDynamicAssignme(pCompiledProperty) public {
+	set tSourcePropertyName=..GetCompiledPropertyOutputName(pCompiledProperty)
+	do ..AddSourceCodeLine("		if ("_"pDynamicObject"_".%IsDefined("""_tSourcePropertyName_""")) {")
+	do ..AddSourceCodeLine("			try {")
+	set tDynamicObjectReference=..MakeDynamicObjectPropertyValueReference(tSourcePropertyName)
+	do ..AddSourceCodeLine("				set value="_tDynamicObjectReference)
+	do ..AddSourceCodeLine("				if (..IsDynamicObject(value)) {")
+	do ..AddSourceCodeLine("					set sc1="_..MakeTargetPropertyReference(pCompiledProperty.Name) _ ".FromDynamicObj(value)")
+	do ..AddSourceCodeLine("				} else {")
+	do ..AddSourceCodeLine("					set sc1=$$$ERROR($$$ReferenceIsNotADynamicObject,""The reference '" _ $REPLACE(tDynamicObjectReference,"""","""""") _"' is not a dynamic object."")")
+	do ..AddSourceCodeLine("				}")
+	do ..AddSourceCodeLine("				set:$$$ISERR(sc1) sc=$SYSTEM.Status.AppendStatus(sc1,sc)")
+	do ..AddSourceCodeLine("			} catch(ex) {")
+	do ..AddSourceCodeLine("				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)")
+	do ..AddSourceCodeLine("			}")
+	do ..AddSourceCodeLine("		}") }
+zAddSourceCodeLine(pCode) public {
+	set ..ReturnSourceCode=..ReturnSourceCode_pCode_$CHAR(13,10) }
+zGenerate(pCompiledClass) public {
+	for i=1:1:pCompiledClass.Properties.Count() {
+		set tCompiledPoperty=pCompiledClass.Properties.GetAt(i)
+		if ..IsGettableSettableProperty(tCompiledPoperty) {
+			do ..AddDynamicObjToCurrentAssignmentCodeForProperty(tCompiledPoperty)
+		}
+	}
+	quit ..ReturnSourceCode }
+zGetArrayAssignmentType(pArrayElementClassType) public {
+	if (pArrayElementClassType="datatype") {
+		quit 4
+	} else {
+		if (pArrayElementClassType="persistent") {
+			quit 5
+		} else {
+			quit 6
+		}
+	}
+	quit //Will never be reached - just here for convension.
+}
+zGetCompiledPropertyOutputName(pCompiledProperty) public {
+	quit pCompiledProperty.Name }
+zGetListAssignmentType(pListElementClassType) public {
+	if (pListElementClassType="datatype") {
+		quit 7
+	} else {
+		if (pListElementClassType="persistent") {
+			quit 8
+		} else {
+			quit 9
+		}
+	}
+	quit //Will never be reached - just here for convension.
+}
+zGetOtherAssignmentType(pPropertyClassType,pPropertyCardinality,pIsExtentionOfRegisteredObject) public {
+	if (pPropertyClassType="datatype") {
+		quit 1
+	} elseif (pPropertyClassType="serial") { //Registered Objects share serial output mode
+		quit 2
+	} elseif (((pPropertyClassType="persistent")&&(pPropertyCardinality="")) || (pPropertyCardinality="one") || (pPropertyCardinality="parent")) {
+		quit 3
+	} elseif ((pPropertyClassType="") && (pIsExtentionOfRegisteredObject)) {
+		quit 10
+	}else {
+		quit ""
+	} }
+zGetPropertyAssignmentType(pCompiledProperty) public {
+ 	set tCompiledClass=##class(%Dictionary.CompiledClass).%OpenId(pCompiledProperty.Type,0)
+	if pCompiledProperty.Collection="array" {
+		quit ..GetArrayAssignmentType(tCompiledClass.ClassType)
+	} elseif pCompiledProperty.Collection="list" {
+		quit ..GetListAssignmentType(tCompiledClass.ClassType)	
+	} else {
+		quit:tCompiledClass="" "" //Relationships tend to compile together with the class, so their compiled classes are unavailable.
+		set tIsRegisteredExtention=..IsRegisteredObjectExtention(tCompiledClass) 
+		quit ..GetOtherAssignmentType(tCompiledClass.ClassType,pCompiledProperty.Cardinality,tIsRegisteredExtention)
+	} }
+zIsGettableSettableProperty(pCompiledProperty) public {
+	quit:..IsSystemPercentProperty(pCompiledProperty) 0 //Excluding % start values as "internal"
+	quit:pCompiledProperty.Private 0 //Private properties are not settable/gettable.
+	quit:pCompiledProperty.ReadOnly 0 //
+	quit:((pCompiledProperty.Cardinality="many") || (pCompiledProperty.Cardinality="children")) 0 //Relationships not supported - Remove and add rules if support is needed in future.
+	quit 1 }
+zIsLogicalToXSDCapable(pCompiledProperty) public {
+	set tCompiledMethod=##class(%Dictionary.CompiledPropertyMethod).%OpenId(pCompiledProperty.%Id()_"||"_"LogicalToXSD",0)
+	quit:tCompiledMethod="" 0
+	quit 1 }
+zIsRegisteredObjectExtention(pCompiledClass) public {
+	quit (pCompiledClass.PrimarySuper["~%Library.RegisteredObject~") }
+zIsSystemPercentProperty(pCompiledProperty) public {
+	quit ($EXTRACT(pCompiledProperty.Name,1,1)="%") //Excluding % start values as "internal"
+}
+zMakeDynamicObjectPropertyValue(pSourcePropertyName) public {
+	quit "pDynamicObject"_"."""_pSourcePropertyName_"""" }
+zMakeTargetPropertyReference(pTargetPropertyName) public {
+	quit ".."_pTargetPropertyName }
+zMakeTargetPropertyXSDToLogical(pTargetPropertyName) public {
+	quit ..MakeTargetPropertyReference(pTargetPropertyName)_"XSDToLogical" }

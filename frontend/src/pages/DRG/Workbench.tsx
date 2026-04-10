@@ -46,6 +46,7 @@ import type { ColumnsType } from 'antd/es/table';
 import request from '../../api/request';
 import dayjs from 'dayjs';
 import { drgGroup, convertResultToLowerCamel, type DRGGroupResultLowerCamel } from '@/api/drgGrouping';
+import CustomPagination from '../../components/CustomPagination';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -674,21 +675,16 @@ const Workbench: React.FC = () => {
           size="small"
           scroll={{ y: 'calc(100vh - 420px)' }}
           style={{ flex: 1, width: '100%' }}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            showSizeChanger: true,
-            showTotal: (total) => `共 ${total} 条记录`,
-            onChange: (page, pageSize) => fetchData(page, pageSize || 10),
-            style: { marginBottom: 0, marginTop: 12 },
-            locale: {
-              items_per_page: '/页',
-              jump_to: '跳至',
-              page: '页',
-            }
-          }}
+          pagination={false}
         />
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <CustomPagination
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onChange={(page, pageSize) => fetchData(page, pageSize || 10)}
+          />
+        </div>
       </Card>
       </div>
 

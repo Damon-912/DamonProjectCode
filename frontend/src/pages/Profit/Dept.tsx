@@ -15,6 +15,7 @@ import {
   queryDeptProfit, getDeptProfitStatistics, recalculateProfit,
   type DeptProfitItem, type QueryDeptProfitParams, type DeptProfitStatistics
 } from '../../api/profit';
+import CustomPagination from '../../components/CustomPagination';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -497,24 +498,20 @@ const Dept: React.FC = () => {
           loading={loading}
           scroll={{ x: 1600 }}
           size="small"
-          pagination={{
-            current: currentPage,
-            pageSize,
-            total,
-            showSizeChanger: true,
-            showTotal: (t) => `共 ${t} 条`,
-            onChange: (page, size) => {
+          pagination={false}
+        />
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <CustomPagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={total}
+            onChange={(page, size) => {
               setCurrentPage(page);
               setPageSize(size);
               fetchData(page, size);
-            },
-            locale: {
-              items_per_page: '/页',
-              jump_to: '跳至',
-              page: '页',
-            }
-          }}
-        />
+            }}
+          />
+        </div>
       </Card>
 
       {/* 详情弹窗 */}

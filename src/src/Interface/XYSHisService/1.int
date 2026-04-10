@@ -1,0 +1,588 @@
+ROUTINE src.Interface.XYSHisService.1 [Type=INT,Generated]
+ ;src.Interface.XYSHisService.1
+ ;Generated for class src.Interface.XYSHisService.  Do NOT edit. 12/30/2025 02:26:22PM
+ ;;53773952;src.Interface.XYSHisService
+ ;
+zBDService(InputData,funcName,clsName,inputDir,url)
+	new (InputData, funcName, clsName,inputDir,url)
+	set input={}
+	set input.inputDir=inputDir
+	set input.clsName=clsName
+	set input.funcName=funcName
+    set input.dllInput=InputData.%ToJSON() 
+    set httprequest=##class(%Net.HttpRequest).%New()
+	set httprequest.ContentType="application/json"  
+	do httprequest.EntityBody.SetAttribute("Conten-Type","application/json;charset=gb2312") 
+	set httprequest.Timeout=500000
+	set url=url_"?&input="_input.%ToJSON()
+	set src=httprequest.Get(url) 
+	set oupto=httprequest.HttpResponse.Data.Read()
+	quit:oupto="" oupto
+	set rtn={}.%FromJSON(({}.%FromJSON(oupto).d))
+	quit rtn
+zCloudinsunService(inputObj)
+	new (inputObj)
+	set postStream=##class(%Library.GlobalCharacterStream).%New()
+	do inputObj.%ToJSON(postStream)
+	set httprequest=##class(%Net.HttpRequest).%New()
+	set url="http://172.16.2.10:52773/cloudInsu/sysInternalMutiple"
+	set httprequest.EntityBody = postStream
+	set httprequest.Timeout = 100
+	do httprequest.SetHeader("Authorization","Basic cHJfaHlnOmpqMTIzNDU2")
+	set src=httprequest.Post(url,0) 
+	set httpStream=httprequest.HttpResponse.Data
+	quit httpStream
+zElectronService(Data,ServicePublishCode,HospID)
+	new (Data, ServicePublishCode,HospID)
+	set inputObj={"externalData":{"externalCode":"DHCC","ServicePublishCode":(ServicePublishCode)}}
+	set postStream=##class(%Library.GlobalCharacterStream).%New()
+	set inputObj.InputData=Data
+	do inputObj.%ToJSON(.postStream)
+	set httprequest=##class(%Net.HttpRequest).%New()
+	set url="http://172.16.2.6:52773/External/hipExternalMutiple"
+	do httprequest.SetHeader("Authorization","Basic cHJoaXA6cHJoaXBAMjAyMA==")
+	set httprequest.EntityBody = postStream
+	set src=httprequest.Post(url,0) 
+	set httpStream=httprequest.HttpResponse.Data
+	quit httpStream
+zElectronServiceNew(Data,ServicePublishCode,HospID)
+	new (Data, ServicePublishCode,HospID)
+	set inputObj={"externalData":{"externalCode":"DHCC","ServicePublishCode":(ServicePublishCode)}}
+	set inputObj.InputData=Data
+	set httpStream=##class(src.Interface.XYSHisService).XYSYunHisService(inputObj, "4403001","FrontEndProcessorZYY")
+	quit httpStream
+zFeiShuService(postObj)
+	set postStream=##class(%Library.GlobalCharacterStream).%New()
+	do postObj.%ToJSON(postStream)
+	set request=##class(%Net.HttpRequest).%New()
+	set url="http://172.16.2.10:52773/feishuservice/sysString"
+	do request.SetHeader("Authorization","Basic cHJoaXA6cHJoaXBAMjAyMA==")
+	set request.EntityBody = postStream
+	set src=request.Post(url,0) 
+	set httpStream=request.HttpResponse.Data
+	quit httpStream
+zGSTraceBackToService(InputData,externalCode,ServicePublishCode,HospID)
+	new (InputData, externalCode, ServicePublishCode,HospID)
+	//先获取token
+	set token=""
+	set tokenInfo=$g(^TMP("GSTraceBackToService","token",HospID))
+	if tokenInfo'=""
+	{
+		set tokenObj={}.%FromJSON(tokenInfo)
+		set expiresIn=tokenObj.expiresIn
+		set tokenUpdateTime=tokenObj.tokenUpdateTime
+		set datetimenum=$zdh($p(tokenUpdateTime," ",1),3)*100000+$zth($p(tokenUpdateTime," ",2))+expiresIn-600
+		set newdatetimenum=$p($h,",",1)*100000+$p($h,",",2)
+		if datetimenum>newdatetimenum
+		{
+			set token=tokenObj.token
+		}
+	}
+	if token=""
+	{
+		set secretId=##class(src.Pharmacy.Common.AppCommon).GetAppPropValue("TraceBackTo","secretId","^^^"_HospID)
+		set secretKey=##class(src.Pharmacy.Common.AppCommon).GetAppPropValue("TraceBackTo","secretKey","^^^"_HospID)
+		set inputdata={
+			"secretId": (secretId),
+			"secretKey": (secretKey)
+		}
+		set Tokenstream=##class(src.Interface.XYSHisService).XYSHisService(inputdata,"HIS","GSTBTGetToken",100)      ;HIS调用中台
+		set TokenstreamObj={}.%FromJSON(Tokenstream)
+		if TokenstreamObj.code'=200
+		{
+			set outputObj={
+				"errorCode":(TokenstreamObj.code),
+				"errorMessage":(TokenstreamObj.message)
+			}
+			set outStream=##class(%Library.GlobalCharacterStream).%New()
+			do outputObj.%ToJSON(outStream)
+			quit outStream
+		}
+		set dataobj={}.%FromJSON(TokenstreamObj.data)
+		if dataobj.code'=200
+		{
+			set outputObj={
+				"errorCode":(dataobj.code),
+				"errorMessage":(dataobj.msg)
+			}
+			set outStream=##class(%Library.GlobalCharacterStream).%New()
+			do outputObj.%ToJSON(outStream)
+			quit outStream
+		}
+		set token=dataobj.data.token
+		set ^TMP("GSTraceBackToService","token",HospID)=dataobj.data.%ToJSON()
+	}
+	if ($IsObject(InputData)){
+	 	set InputData=InputData.%ToJSON()
+	}
+	set inputObj={}
+	set inputObj.headersData="Authorization:Bearer "_token
+	set inputObj.body=InputData
+	set httpStream=##class(src.Interface.XYSHisService).XYSHisService(inputObj,externalCode,ServicePublishCode)
+	quit httpStream
+zGetEMRSession()
+	 set ret={},session={}
+	 set param={"params":[{"username":"admin","password":"abc123"}],"code":"1011"}
+	 set ret=..NewEMRService(param)
+	 set:ret.errorCode="0" session=ret.result
+	 return session
+	Quit
+zHCRMService(InputData,externalCode,ServicePublishCode)
+	set inputObj={}
+	set inputObj.hisCode=externalCode
+	set inputObj.serviceCode=ServicePublishCode
+	set inputObj.serviceInput=InputData
+	set postStream=##class(%Library.GlobalCharacterStream).%New()
+	do inputObj.%ToJSON(postStream)
+	set httprequest=##class(%Net.HttpRequest).%New()
+	set url="http://172.16.2.6:52773/prmp/PRMPforHIS"
+	do httprequest.SetHeader("Authorization","Basic cHJoaXA6cHJoaXBAMjAyMA==")
+	set httprequest.EntityBody = postStream
+	set src=httprequest.Post(url) 
+	set httpStream=httprequest.HttpResponse.Data
+	b ;2324
+	quit httpStream
+zHisService(InputData)
+	new (InputData)
+	set postStream=##class(%Library.GlobalCharacterStream).%New()
+	do InputData.%ToJSON(postStream)
+	set httprequest=##class(%Net.HttpRequest).%New()
+	set url="http://172.16.2.6:52773/bdhealth/sysInternalMutiple"
+	do httprequest.SetHeader("Authorization","Basic cHJoaXA6cHJoaXBAMjAyMA==")
+	set httprequest.EntityBody = postStream
+	set httprequest.Timeout=500000
+	set src=httprequest.Post(url,0) 
+	set httpStream=httprequest.HttpResponse.Data
+	quit httpStream
+zINSUService(InputData)
+	new (InputData)
+	set postStream=##class(%Library.GlobalCharacterStream).%New()
+	do InputData.%ToJSON(postStream)
+	set httprequest=##class(%Net.HttpRequest).%New()
+	set url="http://172.16.2.10:52773/cloudInsu/sysInternalMutiple"
+	do httprequest.SetHeader("Authorization","Basic cHJfaHlnOmpqMTIzNDU2")
+	set httprequest.EntityBody = postStream
+	set src=httprequest.Post(url,0) 
+	set httpStream=httprequest.HttpResponse.Data
+	quit httpStream
+zInventoryService(postObj)
+	new (postObj)
+	if '$IsObject(postObj) {
+		set postObj={}.%FromJSON(postObj)
+	}
+	set inputObj={}
+	set externalData={}
+	set externalData.externalCode="HIS"
+	set externalData.ServicePublishCode="updatePayStatus"
+	set inputObj.externalData=externalData
+	set inputObj.InputData=postObj
+	set httprequest=##class(%Net.HttpRequest).%New()
+	do httprequest.SetHeader("Authorization","Basic cHJoaXA6cHJoaXBAMjAyMA==")
+	do httprequest.EntityBody.Write(inputObj.%ToJSON())
+	//set url="http://116.153.70.91/test/api/puwx/updatePayStatus.do"
+	//set url="http://172.20.2.21:8066/oppsisystem/api/puwx/updatePayStatus.do"
+	set url="http://172.16.2.6:52773/External/hipExternalMutiple"
+	set ^TMP("InventoryService","Begin",$zd(+$h,3),$zt($p($h,",",2),1)_$p($zts,",",2))=inputObj.%ToJSON()
+	set src=httprequest.Post(url)
+	set httpStream=httprequest.HttpResponse.Data
+	set retObj={}
+	try {
+		set retObj={}.%FromJSON(httpStream)
+		set ^TMP("InventoryService","Return",$zd(+$h,3),$zt($p($h,",",2),1)_$p($zts,",",2))=retObj.%ToJSON()
+	}catch(e){
+		set ^TMP("InventoryService","ReturnErr",$zd(+$h,3),$zt($p($h,",",2),1)_$p($zts,",",2))=$replace(##class(%SYSTEM.Status).GetErrorText(e.AsStatus(),"cn"),"^"," ")
+		set retObj={}
+	}
+	quit retObj
+zMedInsuService(InputData)
+	new (InputData)
+	set postStream=##class(%Library.GlobalCharacterStream).%New()
+	do InputData.%ToJSON(postStream)
+	set httprequest=##class(%Net.HttpRequest).%New()
+	//set url="http://172.16.2.145:52773/insu/sysMedInsu"
+	set url="http://172.16.2.10:52773/insu/sysMedInsu"
+	;迁移后改为172.16.2.10
+	do httprequest.SetHeader("Authorization","Basic cHJoaXA6cHJoaXBAMjAyMA==")
+	set httprequest.EntityBody = postStream
+	set src=httprequest.Post(url,0) 
+	set httpStream=httprequest.HttpResponse.Data		
+	quit httpStream
+zNewEMRService(InputData)
+	new (InputData)
+	set postStream=##class(%Library.GlobalCharacterStream).%New()
+	do InputData.%ToJSON(postStream)
+	set httprequest=##class(%Net.HttpRequest).%New()
+	set url="http://172.16.2.14:52773/EMRService/sysInternalMutiple"
+	do httprequest.SetHeader("Authorization","Basic cHVydWk6cHIxMjM0")
+	set httprequest.EntityBody = postStream
+	set httprequest.Timeout=500000
+	set src=httprequest.Post(url,0)
+	set httpStream=httprequest.HttpResponse.Data
+	set rtn={}.%FromJSON(httpStream)
+	//b ;rtn
+	quit rtn
+zSHYSXTToService(InputData,sXxlx,HospID)
+	new (InputData, sXxlx, HospID)
+	set outXml=""
+	set flag=##class(src.Insurance.Operation.InsuranceBasicYNMH).JSONObjToXML(InputData,"XMLDATA",.outXml)
+	set xmldata="<?xml version="""_"1.0"_""" encoding=""utf-8""?><XMLDATA>"_outXml_"</XMLDATA>"
+	set sha160=$system.Encryption.SHAHash(160,$zcvt(xmldata, "O", "UTF8"))
+	s sha160 = ##class(src.util.tool).Byte2Hex(sha160)
+	s sha160 = $zconvert(sha160, "U")
+	set sJgbm=##class(src.Pharmacy.Common.AppCommon).GetAppPropValue("YGYYPT","sJgbm","^^^"_HospID)
+	if sXxlx["YY0"
+	{
+		;//药品
+		set sPwd=##class(src.Pharmacy.Common.AppCommon).GetAppPropValue("YGYYPT","sPwd","^^^"_HospID)
+		set sUser=##class(src.Pharmacy.Common.AppCommon).GetAppPropValue("YGYYPT","sUser","^^^"_HospID)
+		set ServicePublishCode=##class(src.Pharmacy.Common.AppCommon).GetAppPropValue("YGYYPT","ServicePublishCode","^^^"_HospID)
+		set inputobj={
+			"arg0":(sUser),
+			"arg1":(sPwd),
+			"arg2":(sJgbm),
+			"arg3":("1.0.0.0"),
+			"arg4":(sXxlx),
+			"arg5":(sha160),
+			"arg6":(xmldata)
+		}
+	}elseif sXxlx["YY1"
+	{
+		;//耗材
+		set sPwd=##class(src.Pharmacy.Common.AppCommon).GetAppPropValue("YGYYPT","sPwd2","^^^"_HospID)
+		set sUser=##class(src.Pharmacy.Common.AppCommon).GetAppPropValue("YGYYPT","sUser2","^^^"_HospID)
+		set ServicePublishCode=##class(src.Pharmacy.Common.AppCommon).GetAppPropValue("YGYYPT","QXServicePublishCode","^^^"_HospID)
+		set inputobj={
+			"sUser":(sUser),
+			"sPwd":(sPwd),
+			"sJgbm":(sJgbm),
+			"sVersion":("1.0.0.0"),
+			"sXxlx":(sXxlx),
+			"sSign":(sha160),
+			"xmlData":(xmldata)
+		}
+	}	
+	b ;inputobj
+	set ret=##class(src.Interface.XYSHisService).XYSHisService(inputobj,"HIS",ServicePublishCode)
+	b ;555
+	set resultObj=##class(src.util.tool).XMLToJSON($replace(ret.Read(9999999999999999999999),"'",""))	
+	quit resultObj
+zWeChatService(postObj)
+	new (postObj)
+	set postStream=##class(%Library.GlobalCharacterStream).%New()
+	do postObj.%ToJSON(postStream)
+	set request=##class(%Net.HttpRequest).%New()
+	set url="http://172.16.2.10:52773/WeChat/sysMutiple"
+	do request.SetHeader("Authorization","Basic cHJoaXA6cHJoaXBAMjAyMA==")
+	set request.EntityBody = postStream
+	set src=request.Post(url,0)
+	set httpStream=request.HttpResponse.Data
+	quit httpStream
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("src.Interface.XYSHisService",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"src.Interface.XYSHisService")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"src.Interface.XYSHisService")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="src.Interface.XYSHisService"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="XYSHisService"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"XYSHisService"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"XYSHisService"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If encoded Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ If indentFlag,encoded { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("src.Interface.XYSHisService",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"src.Interface.XYSHisService")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLNew(document,node,containerOref="")
+	Quit (##class(src.Interface.XYSHisService).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("src.Interface.XYSHisService",top,format,namespacePrefix,input,refOnly,.schema)
+zXYS195Service(InputData)
+	set postStream=##class(%Library.GlobalCharacterStream).%New()
+	do InputData.%ToJSON(postStream)
+	set httprequest=##class(%Net.HttpRequest).%New()
+	// set url="http://xys.szxys.cn:3087/External/hipExternalMutiple"
+	//set url="http://172.18.100.85:52773/External/hipExternalMutiple"
+	set url="http://172.16.2.6:52773/HIPFrontEnd/hipInternalMutiple"
+	do httprequest.SetHeader("Authorization","Basic cHJoaXA6cHJoaXBAMjAyMA==")
+	set httprequest.EntityBody = postStream
+	set src=httprequest.Post(url,0) 
+	set httpStream=httprequest.HttpResponse.Data
+	quit httpStream
+zXYSEPSPService(inputObj)
+	new (inputObj)
+	set postStream=##class(%Library.GlobalCharacterStream).%New()
+	do inputObj.%ToJSON(postStream)
+	set httprequest=##class(%Net.HttpRequest).%New()
+	set url="http://172.16.2.6:52773/EPSPExternal/espExternalMutiple"
+	do httprequest.SetHeader("Authorization","Basic cHJoaXA6cHJoaXBAMjAyMA==")
+	set httprequest.EntityBody = postStream
+	set src=httprequest.Post(url,0) 
+	set httpStream=httprequest.HttpResponse.Data
+	quit httpStream
+zXYSHisService(InputData,externalCode,ServicePublishCode,Timeout="",ServerIP="")
+	new (InputData, externalCode, ServicePublishCode, Timeout,ServerIP)
+	if (ServicePublishCode="Cloudinsunew")&(ServerIP="")
+	{
+		//医保平台走直连，不再走中台 by 20240627 HYG
+		set httpStream=..CloudinsunService(InputData)
+		quit httpStream
+	}
+ 	set inputObj={}
+	set externalData={}
+	set externalData.externalCode=externalCode
+	set externalData.ServicePublishCode=ServicePublishCode
+	set externalData.ServerIP=ServerIP
+	set inputObj.externalData=externalData
+	set inputObj.InputData=InputData
+	set postStream=##class(%Library.GlobalCharacterStream).%New()
+	do inputObj.%ToJSON(postStream)
+	set httprequest=##class(%Net.HttpRequest).%New()
+	set url="http://172.16.2.6:52773/External/hipExternalMutiple"
+	do httprequest.SetHeader("Authorization","Basic cHJoaXA6cHJoaXBAMjAyMA==")
+	set httprequest.EntityBody = postStream
+	set:Timeout'="" httprequest.Timeout=Timeout
+	set src=httprequest.Post(url,0) 
+	set httpStream=httprequest.HttpResponse.Data
+	quit httpStream
+zXYSUPPService(postObj)
+	set postStream=##class(%Library.GlobalCharacterStream).%New()
+	do postObj.%ToJSON(postStream)
+	set request=##class(%Net.HttpRequest).%New()
+	set url="http://172.16.2.10:52773/UPPExternal/UPPExternalMutiple2"
+	do request.SetHeader("Authorization","Basic cHJoaXA6cHJoaXBAMjAyMA==")
+	set request.EntityBody = postStream
+	set request.Timeout=90
+	set src=request.Post(url,0) 
+	set httpStream=request.HttpResponse.Data
+	quit httpStream
+zXYSYunHisService(InputData,externalCode,ServicePublishCode)
+	set inputObj={}
+	set externalData={}
+	set externalData.externalCode=externalCode
+	set externalData.ServicePublishCode=ServicePublishCode
+	set inputObj.externalData=externalData
+	set inputObj.InputData=InputData
+	set postStream=##class(%Library.GlobalCharacterStream).%New()
+	do inputObj.%ToJSON(postStream)
+	set httprequest=##class(%Net.HttpRequest).%New()
+	set url="http://172.16.2.6:52773/External/hipExternalMutiple"
+	do httprequest.SetHeader("Authorization","Basic cHJoaXA6cHJoaXBAMjAyMA==")
+	set httprequest.EntityBody = postStream
+	set src=httprequest.Post(url,0) 
+	set httpStream=httprequest.HttpResponse.Data
+	quit httpStream
+zYBService(InputData,HospID)
+ 	//set inputStrChange="{inParams:\"""_343234343_"\""}"
+ 	set inputStrChange={"params": [{"admID": "489","insuAdmID": "66","userID": "162","locID": "42","hospID": "25","groupID": "315","ip": "10.9.3.202","process": "F04.06.04.01"}],"code": "05210050"}
+ 	//set inputStrChange={"inParams":(inputStrChange.%ToJSON())}
+ 	b 
+	set inputStrChange=$ZCONVERT(inputStrChange.%ToJSON(),"O","URL")
+	set url="http://"_"127.0.0.1"_":62534/XYSWCFService/DynamicLoadingDLL?&input={""inputDir"":""ReadYBCard/INSUYBAHSYB.dll"",""clsName"":""INSUYBAHSYB.INSUYBAHSYB"",""funcName"":""InsuREGPay"",""dllInput"":"_inputStrChange_"}"
+	b ;11
+	set httprequest=##class(%Net.HttpRequest).%New()
+	Set httprequest.ContentType="application/json"
+	do httprequest.EntityBody.SetAttribute("Conten-Type","application/json")
+	set httprequest.Params=url 
+	set httprequest.Timeout=100
+	set src=httprequest.Get(url)
+	set httprequest.Timeout=100
+	set outobj={}
+	b  ;;;
+	if ('src) 
+	{
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(src),",")
+	    set errorMessage=$System.Status.GetErrorText(src,"cn")
+	    set outobj.errorCode=errorCode
+	    set outobj.errorMessage=errorMessage
+	    quit outobj
+	}
+	set oupto=httprequest.HttpResponse.Data.Read()
+	set oupto=##class(src.Insurance.Preservation.InsuPayData).HttpOutstr(oupto)
+	set outobj=##class(%Library.DynamicAbstractObject).%FromJSON(oupto)
+	b  ;;;
+	quit outobj
+ztxtService122222()
+	set content=
+	{
+	    "type":"template",
+	    "data":{
+	        "template_id":"ctp_AAVTlDenhbob",    // 卡片id，参数必填。可在工具的我的卡片中，通过复制卡片 ID 获取。
+	        "template_variable":
+	        {    
+	            "locName":"测试科室",    ;// 如果卡片模板内设置了变量，则可以在此处为变量（key）赋值（value）。
+	            "outpatientVolume":"99999",
+	            "doctorNum":"8888",
+	            "admissionVolume":"7777",
+	            "dataTime":"2023-11-30"
+	        }       
+	    }
+	}.%ToJSON()
+	set postObj={"params":[{"loc":"1376","receivetype":"chat_id","tolocID":"1377","msgtype":"interactive","content":(content)}],"code":"01010003","session":[{"userID":"162","locID":"42","groupID":"315","hospID":"25","sessionID":"6oTKMmiQhi","hospCode":"H03","language":"CN","hostName":"QQ5BH8NC58F2GH2\\Administrator","ipv4":"10.9.3.73","ipv6":"fe80::c81e:8f6c:302d:e62d%5","mac":"50-5B-C2-E4-9C-AD"}]}
+	set httpStream=..FeiShuService(postObj)
+	set resultObj={}.%FromJSON(httpStream)
+	b ;???
+	quit resultObj

@@ -1,0 +1,520 @@
+ROUTINE src.Hospital.Hospital.1 [Type=INT,Generated]
+ ;src.Hospital.Hospital.1
+ ;Generated for class src.Hospital.Hospital.  Do NOT edit. 04/08/2026 05:31:41PM
+ ;;5542577A;src.Hospital.Hospital
+ ;
+zAddHospConf(postObj)
+	new (postObj)
+	Set jsonObj=postObj.params.%Get(0)
+	Set session=postObj.session.%Get(0)
+	Set resultJson={} 
+	Set resultJson.errorCode=0
+	Set resultJson.errorMessage=""
+	Set userID=session.userID
+	Return:userID="" {"errorCode":1,"errorMessage":"userID为空！"}
+	Try{
+		Set json={}
+		Set json.className="User.CBHospital"
+		set json.updateUserID=userID //userID
+		Set data=[]
+		Set newJsonObj={}
+		Set newJsonObj."Code"=jsonObj.code
+		Set newJsonObj."OrganizationCode"=jsonObj.organizationCode
+		Set newJsonObj."Descripts"=jsonObj.descripts
+		Set newJsonObj."HospTypeDr"=jsonObj.hospTypeID
+		Set newJsonObj."HospGradeDr"=jsonObj.hospGradeID
+		Set newJsonObj."HospNatureDr"=jsonObj.hospNatureID
+		Set newJsonObj."PolicyTypeDr"=jsonObj.policyTypeID
+		Set newJsonObj."Businesslicense"=jsonObj.businesslicense
+		Set newJsonObj."Active"="Y"
+		Set:jsonObj.active'="" newJsonObj."Active"=jsonObj.active
+		Set newJsonObj."CreateDate"=$zd(+$h,3)
+		Set newJsonObj."CreateTime"=$zt($p($h,",",2))
+		Set newJsonObj."ProvIDDr"=jsonObj.provIDID
+		Set newJsonObj."CityIDDr"=jsonObj.cityIDID
+		Set newJsonObj."AreaIDDr"=jsonObj.areaIDID
+		Set newJsonObj."CreateUserDr"=userID
+		do data.%Push(newJsonObj)
+		Set json.data=data
+		Set rtn=##class(src.util.operatetable).Insert(json)
+		if rtn.errorCode'=0{
+			Set resultJson.errorCode=rtn.errorCode
+			Set resultJson.errorMessage=rtn.errorMessage
+			Return resultJson
+		}
+		Return rtn
+	}Catch(e){
+		set status=e.AsStatus()
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorInfo="添加医院出现问题:w ##class("_$ClassName()_").AddHospConf("")"
+		do ##class(src.Interface.Message).InsErrRecord("05000001",errorInfo,errorMessage)
+		set resultJson={}
+		set resultJson.errorCode="05000001"
+		set resultJson.errorMessage=##class(src.Interface.Message).GetErrorMessage("05000001")
+	}
+	Return resultJson
+	Quit
+zDeleteHospConf(postObj)
+	new (postObj) 
+	Set resultJson={}
+	Set resultJson.errorCode=0
+	Set resultJson.errorMessage=""
+	Set jsonObj=postObj.params.%Get(0)
+	Set session=postObj.session.%Get(0)
+	Set ID=jsonObj.hospitalID
+	set userID=jsonObj.userID
+	if ID=""{
+		Set resultJson.errorCode=1
+		Set resultJson.errorMessage="记录id不能为空"
+		Return resultJson
+	}
+	Try{
+		Set json={}
+		Set json.className="User.CBHospital"
+		set json.updateUserID=session.userID
+		Set data=[]
+		Set newJsonObj={}
+		Set newJsonObj."ID"=ID
+		do data.%Push(newJsonObj)
+		Set json.data=data
+		Set rtn=##class(src.util.operatetable).Delete(json)
+		if rtn.errorCode'=0{
+			Set resultJson.errorCode=rtn.errorCode
+			Set resultJson.errorMessage=rtn.errorMessage	
+			Return resultJson
+		}
+		Return rtn
+	}Catch(e){
+		set status=e.AsStatus()
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorInfo="删除医院出现问题:w ##class("_$ClassName()_").DeleteHospConf("")"
+		do ##class(src.Interface.Message).InsErrRecord("05000001",errorInfo,errorMessage)
+		set resultJson={}
+		set resultJson.errorCode="05000001"
+		set resultJson.errorMessage=##class(src.Interface.Message).GetErrorMessage("05000001")
+	}
+	Return resultJson
+	Quit
+zFindHospDetail(postObj)
+	new (postObj)
+	Set params=postObj.params.%Get(0)
+	Set pagination=postObj.pagination.%Get(0)
+	Set active=params.active
+	set code =params.code 
+	Set desc=params.desc
+	set policyTypeDesc=params.policyTypeDesc
+	set organizationCode=params.organizationCode
+	Set sql=" select ID,Code,OrganizationCode, Descripts, HospGrade_Dr,HospGrade_Dr->Descripts gradeDesc, "
+	       _" HospType_Dr,HospType_Dr->descripts typeDesc, HospNature_Dr, HospNature_Dr->descripts natureDesc, "
+	       _" ProvID_Dr,ProvID_Dr->Descripts proDesc, CityID_Dr, CityID_Dr->Descripts cityDesc,AreaID_Dr, "
+	       _" AreaID_Dr->Descripts areaDesc,PolicyType_Dr, PolicyType_Dr->Descripts policyTypeDesc, Active, Businesslicense, "
+	       _" CreateDate, CreateTime, CreateUser_Dr from CB_Hospital where 1=1"	                        
+	//Set:active'="" sqlString=sqlString_" AND Active like '%"_active_"%'"
+	//Set:desc'="" sqlString=sqlString_" AND Descripts like '%"_desc_"%'"
+	//Set:code'="" sqlString=sqlString_" AND OrganizationCode like '%"_code_"%'"
+		if (code'="")
+		{
+			set sql=sql_" and Code like '%"_code_"%'" 
+		}
+		if (organizationCode'="")
+		{
+			set sql=sql_" and OrganizationCode like '%"_organizationCode_"%'" 
+		}				
+		if (desc'="")
+		{
+			set sql=sql_" and Descripts like '%"_desc_"%'" 
+		}
+        if (policyTypeDesc'="")
+		{
+			set sql=sql_" and PolicyType_Dr->Descripts like '%"_policyTypeDesc_"%'" 
+		}
+		if (active'="")
+		{
+			set sql=sql_" and Active like '%"_active_"%'" 
+		}		
+	Return ##class(src.util.SQLUtil).SqlForList(sql,pagination)
+	Quit
+zFindHospDetailList(postObj)
+	new (postObj)
+	Set params=postObj.params.%Get(0)
+	Set session=postObj.session.%Get(0)
+	Set hospID=session.hospID
+	Set groupID=session.groupID
+	set hospital=[]
+	set hospStr=##class(src.CBTable.CBTableData).GetHosptialAuth(groupID,hospID,"User.CBHospital")
+	if hospStr="" set hospStr=hospID
+	if hospStr'=""{
+		for i=1:1:$l(hospStr,"^"){
+			set hospId=$p(hospStr,"^",i)
+			continue:hospId=""
+			set hospObj=$CLASSMETHOD("User.CBHospital","%OpenId",hospId)
+			set obj={}
+			set obj.id=hospId
+			set obj.code=hospObj.Code
+			set obj.descripts=hospObj.Descripts
+			do hospital.%Push(obj)
+		}
+	}
+	set resultJson={}
+	set resultJson.errorCode="0"
+	set resultJson.errorMessage="成功"
+	set resultJson.result=hospital
+	quit resultJson
+zFindHospDetailooo(postObj)
+	new (postObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try
+	{
+		if (postObj.%IsDefined("pagination")'=0) 
+		{
+			set pagationObj=postObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		set params=postObj.params.%Get(0)
+		set code =postObj.code
+		set desc=params.desc
+		set active=params.active
+		set tStatement = ##class(%SQL.Statement).%New(1)
+	    Set sql =" select ID,ID as hospitalID, Code, Descripts, HospGrade_Dr, HospGrade_Dr->Descripts gradeDesc, "
+	            _" HospType_Dr,HospType_Dr->descripts typeDesc, HospNature_Dr, HospNature_Dr->descripts natureDesc, "
+	            _" ProvID_Dr,ProvID_Dr->Descripts proDesc, CityID_Dr, CityID_Dr->Descripts cityDesc,AreaID_Dr, "
+	            _" AreaID_Dr->Descripts areaDesc, Active, OrganizationCode, Businesslicense, "
+	            _" CreateDate, CreateTime, CreateUser_Dr from CB_Hospital where 1=1"		
+		if code'=""
+		{
+			set sql=sql_" and OrganizationCode like '%"_code_"%'" 
+		}		
+		if desc'=""
+		{
+			set sql=sql_" and Descripts like '%"_desc_"%'" 
+		}
+		do tStatement.%Prepare(sql)
+		set result=tStatement.%Execute()		
+		while result.%Next(.sc)
+		{
+			set id=result.%Get("ID")
+			set code=result.%Get("Code")
+			set descripts=result.%Get("Descripts")
+			set organizationCode=result.%Get("OrganizationCode")			
+			set hospGradeID=result.%Get("HospGrade_Dr")
+			set gradeDesc=result.%Get("gradeDesc")
+			set hospTypeID=result.%Get("HospType_Dr")
+			set typeDesc=result.%Get("typeDesc")
+			set hospNatureID=result.%Get("HospNature_Dr")
+			set natureDesc=result.%Get("natureDesc")
+			set provID=result.%Get("ProvID_Dr")
+			set proDesc=result.%Get("proDesc")
+			set cityID=result.%Get("CityID_Dr")
+			set cityDesc=result.%Get("cityDesc")
+			set areaID=result.%Get("AreaID_Dr")
+			set areaDesc=result.%Get("areaDesc")
+			set active=result.%Get("Active")			
+			set businesslicense=result.%Get("Businesslicense")
+			set createDate=result.%Get("CreateDate")
+			set createTime=result.%Get("CreateTime")
+			set createUserID=result.%Get("CreateUser_Dr")
+			set startDate=result.%Get("StartDate")
+			set stopDate=result.%Get("StopDate")
+			set dataObj={}
+			set dataObj.id=id
+			set dataObj.code=code
+			set dataObj.descripts=descripts
+			set dataObj.organizationCode=organizationCode									
+			set dataObj.hospGradeID=hospGradeID
+			set dataObj.gradeDesc=gradeDesc
+			set dataObj.hospTypeID=hospTypeID
+			set dataObj.typeDesc=typeDesc
+			set dataObj.hospNatureID=hospNatureID
+			set dataObj.natureDesc=natureDesc
+			set dataObj.provID=provID
+			set dataObj.proDesc=proDesc
+			set dataObj.cityID=cityID
+			set dataObj.cityDesc=cityDesc
+			set dataObj.areaID=areaID
+			set dataObj.areaDesc=areaDesc
+			set dataObj.active=active
+			set dataObj.businesslicense=businesslicense
+			set dataObj.createDate=createDate		
+			set dataObj.createTime=createTime
+			set dataObj.createUserID=createUserID
+			set dataObj.startDate=startDate
+			set dataObj.stopDate=stopDate
+			/*
+			if startDate'=""
+			{
+				set startDate=$zdh(startDate,3)
+			}
+			if stopDate'=""
+			{
+				set stopDate=$zdh(stopDate,3)
+			}
+			set statusDesc="有效"
+			set statusFlag=""
+			if ((startDate'="")&&(startDate>$h))
+			{
+				set statusDesc="失效"
+				set statusFlag="Y"
+			}
+			if ((stopDate'="")&&(stopDate<$h))
+			{
+				set statusDesc="失效"
+				set statusFlag="Y"
+			}
+			if active="Y"
+			{
+				continue:statusFlag="Y"
+			}
+			set dataObj.statusDesc=statusDesc
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			*/
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.Data=dataArr
+		set resultObj.result.TotalCount=count		
+	}
+	catch(e)
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询医疗机构信息出现问题:w ##class("_$ClassName()_").FindHospDetail("_postObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID
+	}
+	quit resultObj
+zUpdateHospConf(postObj)
+	new (postObj)
+	Set jsonObj=postObj.params.%Get(0)
+	Set session=postObj.session.%Get(0)
+	Set resultJson={}
+	Set resultJson.errorCode=0
+	Set resultJson.errorMessage=""
+	Try{
+		Set json={}
+		Set json.className="User.CBHospital"
+		set json.updateUserID=session.uesrID
+		Set data=[]
+		Set newJsonObj={}
+		Set newJsonObj."ID"=jsonObj.hospitalID
+		Set newJsonObj."Code"=jsonObj.code
+		Set newJsonObj."OrganizationCode"=jsonObj.organizationCode
+		Set newJsonObj."Descripts"=jsonObj.descripts
+		Set newJsonObj."HospTypeDr"=jsonObj.hospTypeID
+		Set newJsonObj."HospGradeDr"=jsonObj.hospGradeID
+		Set newJsonObj."HospNatureDr"=jsonObj.hospNatureID
+		Set newJsonObj."PolicyTypeDr"=jsonObj.policyTypeID
+		Set newJsonObj."Businesslicense"=jsonObj.businesslicense
+		if jsonObj.active'="" Set newJsonObj."Active"=jsonObj.active
+		Set newJsonObj."ProvIDDr"=jsonObj.provIDID
+		Set newJsonObj."CityIDDr"=jsonObj.cityIDID
+		Set newJsonObj."AreaIDDr"=jsonObj.areaIDID
+		do data.%Push(newJsonObj)
+		Set json.data=data
+		Set rtn=##class(src.util.operatetable).Update(json)
+		if rtn.errorCode'=0{
+			Set resultJson.errorCode=rtn.errorCode
+			Set resultJson.errorMessage=rtn.errorMessage
+			Return resultJson
+		}
+		Return rtn
+	}Catch(e){
+		set status=e.AsStatus()
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorInfo="修改医院出现问题:w ##class("_$ClassName()_").UpdateHospConf("")"
+		do ##class(src.Interface.Message).InsErrRecord("05000001",errorInfo,errorMessage)
+		set resultJson={}
+		set resultJson.errorCode="05000001"
+		set resultJson.errorMessage=##class(src.Interface.Message).GetErrorMessage("05000001")
+	}
+	Return resultJson
+	Quit
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("src.Hospital.Hospital",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"src.Hospital.Hospital")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"src.Hospital.Hospital")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="src.Hospital.Hospital"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="Hospital"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"Hospital"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"Hospital"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If encoded Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ If indentFlag,encoded { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("src.Hospital.Hospital",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"src.Hospital.Hospital")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLNew(document,node,containerOref="")
+	Quit (##class(src.Hospital.Hospital).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("src.Hospital.Hospital",top,format,namespacePrefix,input,refOnly,.schema)

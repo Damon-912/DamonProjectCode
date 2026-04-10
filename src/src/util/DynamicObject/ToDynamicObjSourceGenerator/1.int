@@ -1,0 +1,226 @@
+ROUTINE src.util.DynamicObject.ToDynamicObjSourceGenerator.1 [Type=INT,Generated]
+ ;src.util.DynamicObject.ToDynamicObjSourceGenerator.1
+ ;Generated for class src.util.DynamicObject.ToDynamicObjSourceGenerator.  Do NOT edit. 12/23/2025 05:01:52PM
+ ;;7144736E;src.util.DynamicObject.ToDynamicObjSourceGenerator
+ ;
+%ConstructCloneInit(object,deep=0,cloned,location) public {
+	Set i%"%%OID"=""
+	If deep>0 {
+		If $isobject(..CompiledProperty)=1 Set r%CompiledProperty=r%CompiledProperty.%ConstructClone(1,.cloned),i%CompiledProperty=""
+	}
+	Quit 1 }
+%NormalizeObject() public {
+	If '$system.CLS.GetModified() Quit 1
+	If m%IsCurrentPropertySerializeEmbededObjectsMode Set:i%IsCurrentPropertySerializeEmbededObjectsMode'="" i%IsCurrentPropertySerializeEmbededObjectsMode=(..IsCurrentPropertySerializeEmbededObjectsModeNormalize(i%IsCurrentPropertySerializeEmbededObjectsMode))
+	If m%IsPropertyNotDT Set:i%IsPropertyNotDT'="" i%IsPropertyNotDT=(..IsPropertyNotDTNormalize(i%IsPropertyNotDT))
+	If m%IsSerializeArraysAsDynamicArraysMode Set:i%IsSerializeArraysAsDynamicArraysMode'="" i%IsSerializeArraysAsDynamicArraysMode=(..IsSerializeArraysAsDynamicArraysModeNormalize(i%IsSerializeArraysAsDynamicArraysMode))
+	If m%IsSerializeEmbededObjectsMode Set:i%IsSerializeEmbededObjectsMode'="" i%IsSerializeEmbededObjectsMode=(..IsSerializeEmbededObjectsModeNormalize(i%IsSerializeEmbededObjectsMode))
+	If m%PropertyValueReferenceString Set:i%PropertyValueReferenceString'="" i%PropertyValueReferenceString=(..PropertyValueReferenceStringNormalize(i%PropertyValueReferenceString))
+	If m%ReturnSourceCode Set:i%ReturnSourceCode'="" i%ReturnSourceCode=(..ReturnSourceCodeNormalize(i%ReturnSourceCode))
+	Quit 1 }
+%SerializeObject(serial,partial=0) public {
+	try {
+		Set sc=..%ValidateObject(,0) Throw:('sc) ##class(%Exception.StatusException).ThrowIfInterrupt(sc)
+		Set sc=..%NormalizeObject() Throw:('sc) ##class(%Exception.StatusException).ThrowIfInterrupt(sc)
+		If r%CompiledProperty'="" { Set:'$data(%objTX(0,+r%CompiledProperty)) %objTX(0,+r%CompiledProperty)=$i(%objTX(1)),%objTX(1,%objTX(0,+r%CompiledProperty))=r%CompiledProperty,%objTX(1,%objTX(0,+r%CompiledProperty),1)=..CompiledPropertyGetObject(1),%objTX(1,%objTX(0,+r%CompiledProperty),6)=1 Set M%CompiledProperty=1,i%CompiledProperty=$listget(%objTX(1,%objTX(0,+r%CompiledProperty),1)) }
+		set sc=1
+	}
+	catch tException {
+		set sc = tException.AsStatus()
+	}
+	Quit sc }
+%AddToSaveSet(depth=3,refresh=0) public {
+	If $data(%objTX(0,+$this)) && ('refresh) Quit 1
+	Set sc=1,intOref=+$this
+	If refresh,$data(%objTX(0,intOref),index) Set intPoref="" For  Set intPoref=$order(%objTX(1,index,2,intPoref)) Quit:intPoref=""  Kill %objTX(1,%objTX(0,intPoref),3,index),%objTX(1,index,2,%objTX(0,intPoref))
+	Set %objTX(0,intOref)=$i(%objTX(1)),%objTX(1,%objTX(1))=$this,%objTX(1,%objTX(1),1)=-1
+	Set Poref=r%CompiledProperty If Poref'="",'$data(%objTX(0,+Poref)) Set %objTX(6,$i(%objTX(6)))=Poref
+exit	Quit sc }
+%ValidateObject(force=0,checkserial=1) public {
+	set sc=1
+	If '$system.CLS.GetModified() Quit sc
+	If m%IsCurrentPropertySerializeEmbededObjectsMode Set iv=..IsCurrentPropertySerializeEmbededObjectsMode If iv'="" Set rc=(..IsCurrentPropertySerializeEmbededObjectsModeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"IsCurrentPropertySerializeEmbededObjectsMode",iv)
+	If m%IsPropertyNotDT Set iv=..IsPropertyNotDT If iv'="" Set rc=(..IsPropertyNotDTIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"IsPropertyNotDT",iv)
+	If m%IsSerializeArraysAsDynamicArraysMode Set iv=..IsSerializeArraysAsDynamicArraysMode If iv'="" Set rc=(..IsSerializeArraysAsDynamicArraysModeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"IsSerializeArraysAsDynamicArraysMode",iv)
+	If m%IsSerializeEmbededObjectsMode Set iv=..IsSerializeEmbededObjectsMode If iv'="" Set rc=(..IsSerializeEmbededObjectsModeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"IsSerializeEmbededObjectsMode",iv)
+	If m%PropertyValueReferenceString Set iv=..PropertyValueReferenceString If iv'="" Set rc=(..PropertyValueReferenceStringIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"PropertyValueReferenceString",iv)
+	If m%ReturnSourceCode Set iv=..ReturnSourceCode If iv'="" Set rc=(..ReturnSourceCodeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"ReturnSourceCode",iv)
+	Quit sc }
+zGenerate(pCompiledClass,pIsSerializeEmbededObjectsMode,pIsSerializeArraysAsDynamicArraysMode) public {
+	set ..ReturnSourceCode=..MakeDynamicObjectSourceObjectOpenTag()
+	set ..IsSerializeEmbededObjectsMode=pIsSerializeEmbededObjectsMode
+	set ..IsSerializeArraysAsDynamicArraysMode=pIsSerializeArraysAsDynamicArraysMode
+	set tFirstPropertyAdded=0
+	if ..IsPersistentClass(pCompiledClass) {
+		set ..ReturnSourceCode=..ReturnSourceCode_..GenerateToDynamicObjSourceCodeForID()
+		set tFirstPropertyAdded=1
+	}
+	for i=1:1:pCompiledClass.Properties.Count() {
+		set tCompiledPoperty=pCompiledClass.Properties.GetAt(i)
+		if ..IsGettableSettableProperty(tCompiledPoperty) {
+			set:tFirstPropertyAdded ..ReturnSourceCode=..ReturnSourceCode_
+															..MakeDynamicObjectSourceFieldSeperator() //Next property
+			set ..ReturnSourceCode=..ReturnSourceCode_..GenerateToDynamicObjSourceCodeForProperty(tCompiledPoperty)
+			set tFirstPropertyAdded=1
+		}
+	}
+	set ..ReturnSourceCode=..ReturnSourceCode_..MakeDynamicObjectSourceObjectCloseTag()
+	quit ..ReturnSourceCode }
+zGenerateDynamicObjectFieldValu() public {
+	if (..IsManyRelationShip(..CompiledProperty)) {
+		quit "(..GenerateManyRelationshipDynamicObjects("_..PropertyValueReferenceString_",.sc))"
+	} elseif ..IsArray(..CompiledProperty) {
+		if ..IsCurrentPropertySerializeEmbededObjectsMode {
+			if ..IsPropertyNotDT {
+				quit "(..GenerateArrayOfObjDynamicArray("_..PropertyValueReferenceString_",.sc))"
+			} else {
+				quit "(..GenerateArrayOfDTDynamicArray($This,"_..MakeQuotedValue(..CompiledProperty.Name)_","_
+														..PropertyValueReferenceString_"))"
+			}
+		} else {
+			if ..IsPropertyNotDT {
+				quit "(..GenerateArrayOfObjDynamicObj("_..PropertyValueReferenceString_",.sc))"
+			} else {
+				quit "(..GenerateArrayOfDTDynamicObj($This,"_..MakeQuotedValue(..CompiledProperty.Name)_","_
+														..PropertyValueReferenceString_"))"
+			}
+		}
+	} elseif ..IsList(..CompiledProperty) {
+		if ..IsPropertyNotDT {
+			quit "(..GenerateListOfObjDynamicObj("_..PropertyValueReferenceString_",.sc))"
+		} else {
+			quit "(..GenerateListOfDTDynamicObj($This,"_..MakeQuotedValue(..CompiledProperty.Name)_","_
+												..PropertyValueReferenceString_"))"
+		}
+	} elseif (..IsPropertyNotDT) { //Embeded object
+		if (..IsPersistentEmbededObjectType(..CompiledProperty) && (('..IsSerializeEmbededObjectsMode) || (..IsOneOrChildRelationShip(..CompiledProperty)))) {
+			quit "("_
+						"$CASE("_
+							"$ISOBJECT("_..PropertyValueReferenceString_"),"_
+							"1:"_..PropertyValueReferenceString_".%Id(),"_
+							":$$$NULLOREF"_
+						")"_
+					")"
+		} else {
+			quit "("_
+						"$CASE("_
+							"$ISOBJECT("_..PropertyValueReferenceString_"),"_
+							"1:"_
+									"$CASE("_..PropertyValueReferenceString_".%Extends(""%Stream.Object""),"_
+											"1:..CopyStreamToString("_..PropertyValueReferenceString_"),"_
+											":"_..PropertyValueReferenceString_".ToDynamicObjRecursive(.sc)),"_
+							":$$$NULLOREF"_
+						")"_
+					")"
+					//"1:"_..PropertyValueReferenceString_".ToDynamicObjRecursive(.sc),"_
+		}
+	} else {
+		//Plain datatype
+		if ..IsLogicalToXSDCapable(..CompiledProperty) {
+			quit "(..GetLogicalToXSDValue($This,"_..MakeQuotedValue(..CompiledProperty.Name)_","_
+											..PropertyValueReferenceString_")"_
+				")"
+		} else {
+			quit "("_..PropertyValueReferenceString_")"
+		}
+	}
+	quit """""" //Never going to reach this quit
+}
+zGenerateToDynamicObjSourceCode() public {
+	quit ..MakeQuotedValue("ID") _ ..MakeDynamicObjectSourceOpeningFieldValueSeperator() _ "(..%Id())" }
+zGenerateToDynamicObjSourceCod2(pCompiledProperty) public {
+	set ..CompiledProperty=pCompiledProperty
+	set ..IsPropertyNotDT=..IsEmbededObjectType(pCompiledProperty)
+	set ..PropertyValueReferenceString=".."_pCompiledProperty.Name
+	set ..IsCurrentPropertySerializeEmbededObjectsMode=..GetObjectSerializeEmbededMode(pCompiledProperty)
+	quit ..MakeDynamicObjectSourceFieldName() _
+			..MakeDynamicObjectSourceOpeningFieldValueSeperator()_
+			..GenerateDynamicObjectFieldValueSource()
+}
+zGetCompiledPropertyOutputName(pCompiledProperty) public {
+	quit pCompiledProperty.Name }
+zGetObjectSerializeEmbededMode(pCompiledProperty) public {
+	set tDynamicObjectProjectionMode=pCompiledProperty.Parameters.GetAt("ArrayDynamicObjectMode")
+	quit:tDynamicObjectProjectionMode="" ..IsSerializeArraysAsDynamicArraysMode //Value not set default to class default.
+	quit:tDynamicObjectProjectionMode="jsonarray" 1
+	quit:tDynamicObjectProjectionMode="native" 0
+	quit ..IsSerializeArraysAsDynamicArraysMode //Value was not set to a valid setting set to class default.
+}
+zIsArray(pCompiledProperty) public {
+	quit ((pCompiledProperty.Collection="array") && (pCompiledProperty.Cardinality="")) }
+zIsEmbededObjectType(pCompiledProperty) public {
+	//We are opening the compiled type of the property to check if it is a data type.
+	set tCompiledClass=##class(%Dictionary.CompiledClass).%OpenId(pCompiledProperty.Type,0)
+	quit:tCompiledClass="" 0 //Relationships tend to compile together with the class, so their compiled classes are unavailable.
+	quit tCompiledClass.ClassType'="datatype" }
+zIsGettableSettableProperty(pCompiledProperty) public {
+	quit:..IsSystemPercentProperty(pCompiledProperty) 0 //Excluding % start values as "internal"
+	quit:pCompiledProperty.Private 0 //Private properties are not settable/gettable.
+	quit:pCompiledProperty.Parameters.GetAt("BlockDOProjection")=1 0 //Properties marked for internal use only.
+	//quit:..IsOneOrChildRelationShip(pCompiledProperty) 0 //Excluding to stop infinite recursion
+	quit 1 }
+zIsList(pCompiledProperty) public {
+	quit ((pCompiledProperty.Collection="list") && (pCompiledProperty.Cardinality="")) }
+zIsLogicalToXSDCapable(pCompiledProperty) public {
+	set tCompiledMethod=##class(%Dictionary.CompiledPropertyMethod).%OpenId(pCompiledProperty.%Id()_"||"_"LogicalToXSD",0)
+	quit:tCompiledMethod="" 0
+	quit 1 }
+zIsManyRelationShip(pCompiledProperty) public {
+	quit ((pCompiledProperty.Cardinality="many") || (pCompiledProperty.Cardinality="children")) }
+zIsOneOrChildRelationShip(pCompiledProperty) public {
+	quit ((pCompiledProperty.Cardinality="one") || (pCompiledProperty.Cardinality="parent")) }
+zIsPersistentClass(pCompiledClass) public {
+	quit (pCompiledClass.ClassType="persistent") }
+zIsPersistentEmbededObjectType(pCompiledProperty) public {
+	//We are opening the compiled type of the property to check if it is a data type.
+	set tCompiledClass=##class(%Dictionary.CompiledClass).%OpenId(pCompiledProperty.Type,0)
+	quit:tCompiledClass="" 0 //Relationships tend to compile together with the class, so their compiled classes are unavailable.
+	quit tCompiledClass.ClassType="persistent" }
+zIsSystemPercentProperty(pCompiledProperty) public {
+	quit ($EXTRACT(pCompiledProperty.Name,1,1)="%") //Excluding % start values as "internal"
+}
+zMakeDynamicObjectSourceFieldNa() public {
+	set tFieldName=..GetCompiledPropertyOutputName(..CompiledProperty)
+	quit ..MakeQuotedValue(tFieldName) }
+zMakeDynamicObjectSourceFieldSe() public {
+	quit "," }
+zMakeDynamicObjectSourceObjectC() public {
+	quit "}" }
+zMakeDynamicObjectSourceObjectO() public {
+	quit "{" }
+zMakeDynamicObjectSourceOpening() public {
+	quit ":" }
+zMakeQuotedValue(pValue) public {
+	quit """" _ pValue _ """" }
+zCompiledPropertyGetObject(force=0) public {
+	Quit $select(r%CompiledProperty=""||(i%CompiledProperty'=""):$select(i%CompiledProperty="":"",1:$listbuild(i%CompiledProperty_"")),(''..CompiledProperty.%GetSwizzleObject(force,.oid)):oid,1:"") }
+zCompiledPropertyGetObjectId(force=0) public {
+	Quit $listget(..CompiledPropertyGetObject(force)) }
+zCompiledPropertyGetSwizzled(noswizzle=0) public {
+	If noswizzle Quit r%CompiledProperty
+	If i%CompiledProperty="" Quit ""
+	Set oref=##class(%Dictionary.CompiledProperty).%Open($select(i%CompiledProperty="":"",1:$listbuild(i%CompiledProperty_"")),,.sc) If ('sc) Do:$get(^%SYS("ThrowSwizzleError"),0) $zutil(96,3,19,1) Quit ""
+	Set modstate=$system.CLS.GetModifiedBits() Set r%CompiledProperty=oref Do $system.CLS.SetModifiedBits(modstate)
+	Quit oref }
+zCompiledPropertyNewObject() public {
+	Set newobject=##class(%Dictionary.CompiledProperty).%New() If newobject="" Quit ""
+	Set ..CompiledProperty=newobject
+	Quit newobject }
+zCompiledPropertySetObject(newvalue) public {
+	If newvalue'="",$data(i%CompiledProperty,tmp),tmp=$listget(newvalue) Quit 1
+	Set i%CompiledProperty=$listget(newvalue),r%CompiledProperty=0,r%CompiledProperty=""
+	Quit 1 }
+zCompiledPropertySetObjectId(newid) public {
+	Quit ..CompiledPropertySetObject($select(newid="":"",1:$listbuild(newid_""))) }
+zCompiledPropertyUnSwizzle(force=0) public {
+	If r%CompiledProperty="" Quit 1
+	Set sc=..CompiledProperty.%GetSwizzleObject(force,.newvalue) Quit:('sc) sc
+	Set modstate=$system.CLS.GetModifiedBits() Set r%CompiledProperty="" Do $system.CLS.SetModifiedBits(modstate)
+	Set i%CompiledProperty=$listget(newvalue)
+	Quit 1 }
+zIsCurrentPropertySerializeEmbe(%val) public {
+	Quit ''%val }
+zIsCurrentPropertySerializeEmb2(%val="") public {
+	Q $s($isvalidnum(%val,0,0,2)&&(+%val'=2):1,1:$$Error^%apiOBJ(7206,%val)) }
+zIsCurrentPropertySerializeEmb4(%val) public {
+	Quit %val\1 }

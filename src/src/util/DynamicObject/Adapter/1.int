@@ -1,0 +1,8 @@
+ROUTINE src.util.DynamicObject.Adapter.1 [Type=INT,Generated]
+ ;src.util.DynamicObject.Adapter.1
+ ;Generated for class src.util.DynamicObject.Adapter.  Do NOT edit. 12/23/2025 05:01:53PM
+ ;;5255714D;src.util.DynamicObject.Adapter
+ ;
+%JSONNew(dynamicObject,containerOref="") public {
+  Quit ##class(src.util.DynamicObject.Adapter).%New()
+}

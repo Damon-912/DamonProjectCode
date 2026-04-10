@@ -1,0 +1,2921 @@
+ROUTINE User.CBBasicDictionarySub.1 [Type=INT,Generated]
+ ;User.CBBasicDictionarySub.1
+ ;Generated for class User.CBBasicDictionarySub.  Do NOT edit. 12/24/2025 10:04:04AM
+ ;;7656377A;User.CBBasicDictionarySub
+ ;
+SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
+ALPHAUP(v,r) { quit $zu(28,v,6) }
+STRING(v,l) { quit $zu(28,v,9,$g(l,32767)) }
+SQLSTRING(v,l) { quit $zu(28,v,8,$g(l,32767)) }
+UPPER(v) { quit $zu(28,v,5) }
+MVR(v) { quit $zu(28,v,2) }
+TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
+%BindExport(dev,Seen,RegisterOref,AllowedDepth,AllowedCapacity) public {
+   i $d(Seen(+$this)) q 1
+   Set Seen(+$this)=$this
+   s sc = 1
+ s proporef=..BDParRef
+ s proporef=..UpdateUserDr
+   d:RegisterOref InitObjVar^%SYS.BINDSRV($this)
+   i dev'="" s t=$io u dev i $zobjexport($this_"",3)+$zobjexport($this."%%OID",3)+$zobjexport($this,3)!1 u t
+ If AllowedDepth>0 Set AllowedDepth = AllowedDepth - 1
+ If AllowedCapacity>0 Set AllowedCapacity = AllowedCapacity - 1/2
+ s proporef=..BDParRef
+       i proporef'="" s sc=1 i AllowedDepth'=0,AllowedCapacity'=0 s sc=proporef.%BindExport(dev,.Seen,RegisterOref,AllowedDepth,AllowedCapacity) q:('sc) sc
+ s proporef=..UpdateUserDr
+       i proporef'="" s sc=1 i AllowedDepth'=0,AllowedCapacity'=0 s sc=proporef.%BindExport(dev,.Seen,RegisterOref,AllowedDepth,AllowedCapacity) q:('sc) sc
+   Quit sc }
+%BuildIndices(pIndexList="",pAutoPurge=1,pLockFlag=0,pJournalFlag=1,pStartID="",pEndID="",pIgnoreIndexList="") public {
+	if ($listlength(pIndexList)=1)&&($listget(pIndexList,1)="") { return 1 }
+	Set class=$classname(),tBuildFlags=1,tBuildFlags(class)=$c(0,0)
+	Set tPtr=0,tStatus=1,pJournalFlag=''pJournalFlag
+	While $listnext(pIndexList,tPtr,tIndex) {
+		continue:tIndex=""
+		If '$d(^oddCOM(class,"i",tIndex)) {
+			Set tStatus=$select(+tStatus:$$Error^%apiOBJ(5066,class_"::"_tIndex),1:$$AppendStatus^%occSystem(tStatus,$$Error^%apiOBJ(5066,class_"::"_tIndex)))
+		}
+	}
+	If ('tStatus) RETURN tStatus
+	if ((pIndexList="")||($listfind(pIndexList,"Code"))),'$listfind(pIgnoreIndexList,"Code") { set $Extract(tBuildFlags(class),1)=$c(1) }
+	if ((pIndexList="")||($listfind(pIndexList,"ParRefCode"))),'$listfind(pIgnoreIndexList,"ParRefCode") { set $Extract(tBuildFlags(class),2)=$c(1) }
+	Quit ..%BuildIndexInternal(.pLockFlag,.pAutoPurge,.pStartID,.pEndID,.pIndexList,.tBuildFlags,"^CBBasicDictionaryD",0,.pJournalFlag,1) }
+%BuildIndicesSegment(pStartID,pEndID,pIndexHandle=0,pLockFlag=1,pFirstRange=0,pJob="") public {
+	New %tIndexBuffer
+	Try {
+		set tStatus=1,tLocked=0
+		If pLockFlag'=2,$Ascii(pIndexHandle($classname()),1),$SortBegin(^CBBasicDictionarySubI("Code")),$increment(^IRIS.TempIndexBuild(pJob,1)) { Do $system.Event.Create($name(^IRIS.TempIndexBuild(pJob,1))) }
+		If pLockFlag'=2,$Ascii(pIndexHandle($classname()),2),$SortBegin(^CBBasicDictionarySubI("ParRefCode")),$increment(^IRIS.TempIndexBuild(pJob,2)) { Do $system.Event.Create($name(^IRIS.TempIndexBuild(pJob,2))) }
+		Set tPrefetch=$prefetchon(^CBBasicDictionaryD)
+		Set tEndID1=$p(pEndID,"||",1),tEndID2=$p(pEndID,"||",2)
+		Set tID1=$p(pStartID,"||",1),tID2=$p(pStartID,"||",2)
+		If tID1="" Goto BSLoop1
+		If tEndID1'="",tID1]]tEndID1 Goto BSLoopDun
+		If tID2="" Goto BSLoop1
+		If tID1=tEndID1,tEndID2'="",tID2]]tEndID2 Goto BSLoopDun
+		If pFirstRange,$data(^CBBasicDictionaryD(tID1,"S",tID2)) Goto BSLoopFile
+		Goto BSLoop3
+BSLoop1	set tID1=$order(^CBBasicDictionaryD(tID1)) Goto:tID1="" BSLoopDun
+		If tEndID1'="",tID1]]tEndID1 Goto BSLoopDun
+BSLoop3	set tID2=$order(^CBBasicDictionaryD(tID1,"S",tID2)) Goto:tID2="" BSLoop1
+		If tID1=tEndID1,tEndID2'="",tID2]]tEndID2 Goto BSLoopDun
+BSLoopFile	set tID = tID1_"||"_tID2
+		If pLockFlag=2 {
+			Set tSC = ..%LockId(tID,1), tLocked=1
+			If ('tSC) {
+				Set tStatus=$select(+tStatus:tSC,1:$$AppendStatus^%occSystem(tStatus,tSC)),tLocked=0
+				Goto BSLoop3
+			}
+		}
+		If pLockFlag'=2||($data(^CBBasicDictionaryD(tID1,"S",tID2))) {
+			Set tSC=..%FileIndices(tID,.pIndexHandle)
+			If ('tSC) {
+				Set tStatus=$select(+tStatus:tSC,1:$$AppendStatus^%occSystem(tStatus,tSC))
+			}
+		}
+		Do:tLocked ..%UnlockId(tID,1,1)
+		Goto BSLoop3
+BSLoopDun
+	}
+	Catch tException {
+		Set tSC=tException.AsStatus(),tStatus=$select(+tStatus:tSC,1:$$AppendStatus^%occSystem(tStatus,tSC))
+	}
+	If pLockFlag'=2,$Ascii(pIndexHandle($classname()),1) {
+		If $increment(^IRIS.TempIndexBuild(pJob,1),-1)=0 { Do $system.Event.Delete($name(^IRIS.TempIndexBuild(pJob,1))) } Else { Try { Do $system.Event.Wait($name(^IRIS.TempIndexBuild(pJob,1))) } Catch {} }
+		If $SortEnd(^CBBasicDictionarySubI("Code")) {}
+	}
+	If pLockFlag'=2,$Ascii(pIndexHandle($classname()),2) {
+		If $increment(^IRIS.TempIndexBuild(pJob,2),-1)=0 { Do $system.Event.Delete($name(^IRIS.TempIndexBuild(pJob,2))) } Else { Try { Do $system.Event.Wait($name(^IRIS.TempIndexBuild(pJob,2))) } Catch {} }
+		If $SortEnd(^CBBasicDictionarySubI("ParRefCode")) {}
+	}
+	Set:$Get(tPrefetch) tPrefetch=$prefetchoff(^CBBasicDictionaryD)
+	Quit tStatus }
+%CheckConstraints(pID,pConstraintList="",pCheckDisabled=0,pErrorInfo) [ SQLCODE,pID,tCol1,tCol2 ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE,tCol1,tCol2 
+	set tStatus = ..%OnDetermineClass($select(pID="":"",1:$listbuild(pID_"")),.tMSTC) if ('tStatus) { set pErrorInfo = $Listbuild(pID) quit tStatus } if tMSTC '= $classname() { quit $classmethod(tMSTC,"%CheckConstraints",pID,pConstraintList) }
+	set tStatus = 1, pErrorInfo = ""
+	 ;---&sql(select BD_ParRef,Code INTO :tCol1,:tCol2 FROM SQLUser.CB_BasicDictionarySub WHERE %ID = :pID)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, pID, tCol1, tCol2
+	do %0Ao
+	if 'SQLCODE {
+		if ((pConstraintList="")||($lf(pConstraintList,"ParRefCode"))) && ('..ParRefCodeCheckUnique(pID,tCol1,tCol2)) { set tStatus = $select(+tStatus:$$Error^%apiOBJ(5808,$classname()_".ParRefCode"),1:$$AppendStatus^%occSystem(tStatus,$$Error^%apiOBJ(5808,$classname()_".ParRefCode"))) }
+		set pErrorInfo = $Listbuild(pID,tCol1,tCol2)
+	} elseif SQLCODE < 0 { set tStatus = $$Error^%apiOBJ(5540,SQLCODE,$Get(%msg)) }
+	quit tStatus }
+ q
+%0Ao n sqldata10d,sqldata11d,sqldata12d,sqldata18d,sqldata24d,sqldata6d,sqldata5d,sqldata8d,sqldata9d
+ s $zt="%0Aerr"
+ s sqldata10d=$zu(115,2)
+ s sqldata11d=0,sqldata12d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata6d=$g(pID)
+ s SQLCODE=100
+ ; asl MOD# 2
+ s sqldata5d=sqldata6d
+ s sqldata8d=$p(sqldata5d,"||"),sqldata9d=$p(sqldata5d,"||",2,*)
+ i sqldata8d'="",sqldata9d'="" s sqldata18d="" i $d(^CBBasicDictionaryD(sqldata8d,"S",sqldata9d),sqldata18d)
+ e  g %0AmBdun
+ S tCol2=$lg(sqldata18d,2)
+ s tCol1=$p(sqldata5d,"||")
+ goto:sqldata10d'=1 %0AmBuncommitted
+ if sqldata10d=1 {
+ 	lock +^CBBasicDictionaryD($p(sqldata5d,"||",1),"S",$p(sqldata5d,"||",2))#"S":$zu(115,4)
+ 	if $t { set sqldata12d=$name(^CBBasicDictionaryD($p(sqldata5d,"||",1),"S",$p(sqldata5d,"||",2)))_"#""SI""",sqldata11d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_BasicDictionarySub for RowID value: "_sqldata5d ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata8d=$p(sqldata5d,"||"),sqldata9d=$p(sqldata5d,"||",2,*)
+ i sqldata8d'="",sqldata9d'="" s sqldata24d="" i $d(^CBBasicDictionaryD(sqldata8d,"S",sqldata9d),sqldata24d)
+ e  g %0AmCdun
+ S tCol2=$lg(sqldata24d,2)
+ s tCol1=$p(sqldata5d,"||")
+%0AmBuncommitted ;
+ s SQLCODE=0 g %0Ac
+%0AmCdun if $g(sqldata10d)=1 { if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }}
+%0AmBdun 
+%0AmAdun 
+%0Ac set %ROWCOUNT='SQLCODE
+ if $g(sqldata10d)=1 {
+ 	if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }
+ }
+ q
+%0Aerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Ac
+%CheckConstraintsForExtent(pConstraintList="",pCheckDisabled=0,pErrorLog) [ SQLCODE,tID ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE,tID 
+	kill pErrorLog set tStatusAll = 1, pErrorLog = 0 if '$listvalid(pConstraintList) { set pConstraintList = $listfromstring(pConstraintList) }
+	 ;---&sql(declare ext cursor for select %ID into :tID FROM SQLUser.CB_BasicDictionarySub)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, tID
+	
+	 ;---&sql(open ext)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	do %ext0o
+	if SQLCODE '< 0 {
+		for {
+			 ;---&sql(fetch ext)
+ 			 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+			try { do %ext0f if SQLCODE'=0 { quit } } catch { do %0Cerr }
+			if SQLCODE { if SQLCODE=100 { quit } elseif SQLCODE<0 { set tStatusAll = $select(+tStatusAll:$$Error^%apiOBJ(5521,SQLCODE,$Get(%msg)),1:$$AppendStatus^%occSystem(tStatusAll,$$Error^%apiOBJ(5521,SQLCODE,$Get(%msg)))) quit } }
+			set tStatus = ..%CheckConstraints(tID,pConstraintList,pCheckDisabled,.tErrorInfo)
+			if ('tStatus) { set tStatusAll = $select(+tStatusAll:tStatus,1:$$AppendStatus^%occSystem(tStatusAll,tStatus)) set:pErrorLog<1000 pErrorLog = pErrorLog + 1, pErrorLog(pErrorLog) = tErrorInfo _ $Listbuild(tStatus) }
+		}
+		 ;---&sql(close ext)
+ 		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+		do %ext0c
+	}
+	quit tStatusAll }
+ q
+%ext0o 
+ try { s SQLCODE=$s($g(%ext0305d(0)):-101,1:0) q:SQLCODE'=0 
+ n %sqltime s %sqltime=$zh
+ s %ext0305d(1)=0,%ext0305d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext0305d(3)=$zu(115,2)
+ s %ext0305d(4)=0,%ext0305d(5)=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s %ext0305d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext0305d(6)=$g(%ext0305d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext0305d }
+ q
+%0Cfirst 
+ ; asl MOD# 2
+ s %ext0305d(7)=""
+%0CmBk1 s %ext0305d(7)=$o(^CBBasicDictionarySubI("Code",%ext0305d(7)))
+ i %ext0305d(7)="" g %0CmBdun
+ s %ext0305d(8)=""
+%0CmBk2 s %ext0305d(8)=$o(^CBBasicDictionarySubI("Code",%ext0305d(7),%ext0305d(8)))
+ i %ext0305d(8)="" g %0CmBk1
+ s %ext0305d(9)=""
+ s %ext0305d(9)=$o(^CBBasicDictionarySubI("Code",%ext0305d(7),%ext0305d(8),%ext0305d(9)))
+ i %ext0305d(9)="" g %0CmBk2
+ s tID=(%ext0305d(8))_"||"_(%ext0305d(9))
+ goto:%ext0305d(3)'=1 %0CmBuncommitted
+ if %ext0305d(3)=1 {
+ 	lock +^CBBasicDictionaryD($p(tID,"||",1),"S",$p(tID,"||",2))#"S":$zu(115,4)
+ 	if $t { set %ext0305d(5)=$name(^CBBasicDictionaryD($p(tID,"||",1),"S",$p(tID,"||",2)))_"#""SI""",%ext0305d(4)=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_BasicDictionarySub for RowID value: "_tID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s %ext0305d(10)=$p(tID,"||"),%ext0305d(9)=$p(tID,"||",2,*)
+ i %ext0305d(10)'="",%ext0305d(9)'="",$d(^CBBasicDictionaryD(%ext0305d(10),"S",%ext0305d(9)))
+ e  g %0CmCdun
+%0CmBuncommitted ;
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext0305d(1)),%ROWID=tID,%ext0305d(0)=10
+ //-- FETCH Output
+ s:$d(%sqltime) %ext0305d(6)=$g(%ext0305d(6))+$zh-%sqltime
+ quit
+%ext0f //-- FETCH tag
+ i '$g(%ext0305d(0)) { s SQLCODE=-102 q  } i %ext0305d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext0305d(2),%ext0305d(1)'<%ext0305d(2) { s SQLCODE=100,%ROWCOUNT=%ext0305d(1),%ext0305d(0)=100 q }
+ n %sqltime s %sqltime=$zh
+ g %0Cfirst:%ext0305d(0)=1
+%0CmCdun if $g(%ext0305d(3))=1 { if $g(%ext0305d(4))=1 { l -@%ext0305d(5) s %ext0305d(4)=0 } elseif $g(%ext0305d(4))=2 { do $classmethod($li(%ext0305d(5)),"%UnlockId",$li(%ext0305d(5),2),1,1)  s %ext0305d(4)=0 }}
+ g %0CmBk2
+%0CmBdun 
+%0CmAdun 
+ s %ROWCOUNT=%ext0305d(1),SQLCODE=100,%ext0305d(0)=100
+ s:$d(%sqltime) %ext0305d(6)=$g(%ext0305d(6))+$zh-%sqltime
+ //-- no [more] data
+ quit
+%ext0c i '$g(%ext0305d(0)) { s SQLCODE=-102 q  }
+ n %sqltime s %sqltime=$zh
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext0305d(1)),1:0)
+ if $g(%ext0305d(3))=1 {
+ 	if $g(%ext0305d(4))=1 { l -@%ext0305d(5) s %ext0305d(4)=0 } elseif $g(%ext0305d(4))=2 { do $classmethod($li(%ext0305d(5)),"%UnlockId",$li(%ext0305d(5),2),1,1)  s %ext0305d(4)=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(%ext0305d(6))+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"xyp1P9E+3YRRWKrDeuUmQHok2uU="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"xyp1P9E+3YRRWKrDeuUmQHok2uU=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ k %ext0305d
+ s SQLCODE=0
+ s:$g(SQLCODE)'<0 SQLCODE=0
+ kill %ext0305d(11)
+ quit  // close
+%0Cerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ s %ext0305d(0)=100
+ quit  // error
+%ComposeOid(id) public {
+	set tCLASSNAME = $listget($g(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))),1)
+	if tCLASSNAME="" { quit $select(id="":"",1:$listbuild(id_"","User.CBBasicDictionarySub")) }
+	set tClass=$piece(tCLASSNAME,$extract(tCLASSNAME),*-1)
+	set:tClass'["." tClass="User."_tClass
+	quit $select(id="":"",1:$listbuild(id_"",tClass)) }
+%ConstructCloneInit(object,deep=0,cloned,location) public {
+	Set i%"%%OID"=""
+	If deep>0 {
+		If $isobject(object.BDParRef)=1 {
+			Set r%BDParRef=object.BDParRef.%ConstructClone(1,.cloned),i%BDParRef=""
+		}
+		If $isobject(..UpdateUserDr)=1 Set r%UpdateUserDr=r%UpdateUserDr.%ConstructClone(1,.cloned),i%UpdateUserDr=""
+	} Else {
+		Set r%BDParRef="",i%BDParRef=""
+	}
+	Quit 1 }
+%DeleteData(id,concurrency) public {
+	Set bsv0N1=$p(id,"||",1)
+	Set bsv0N2=$p(id,"||",2)
+	Quit:id="" $$Error^%apiOBJ(5812)
+	set $Ztrap="DeleteDataERR" set lockok=0,sc=""
+	If concurrency {
+		If $tlevel,$increment(%0CacheLock($classname()))>$zu(156,50,1) {
+			Lock +(^CBBasicDictionaryD):$zu(115,4)
+			Set lockok=$Select($test:2,1:0)
+			Lock:lockok -(^CBBasicDictionaryD)
+		} Else {
+			Lock +(^CBBasicDictionaryD(bsv0N1,"S",bsv0N2)):$zu(115,4)
+			Set lockok=$Select($test:1,1:0)
+		}
+		If 'lockok {
+			Quit $$Error^%apiOBJ(5803,$classname())
+		}
+	}
+	If ($Data(^CBBasicDictionaryD(bsv0N1,"S",bsv0N2))) {
+		Set bsv0N3=^CBBasicDictionaryD(bsv0N1,"S",bsv0N2)
+		Set bsv0N4=$zu(28,$listget(bsv0N3,2),5)
+		If concurrency, (lockok'=2) {
+			Lock +^CBBasicDictionarySubI("ParRefCode",bsv0N1,bsv0N4):$zu(115,4)
+			If $test {
+				Lock -^CBBasicDictionarySubI("ParRefCode",bsv0N1,bsv0N4)
+			} Else {
+				Set sc = $$Error^%apiOBJ(5803,$classname())
+				Goto DeleteDataEXIT
+			}
+		}
+		If $data(^oddEXTR($classname())) {
+			Set fc=""
+			For {
+				Set fc=$order(^rINDEXEXT("F",$classname(),"%1","f",fc))
+				Quit:fc=""
+				Set fk=""
+				For {
+					Set fk=$order(^rINDEXEXT("F",$classname(),"%1","f",fc,fk))
+					Quit:fk=""
+					Set sc=$classmethod(fc,fk_"Delete",id)
+					If ('sc) { Goto DeleteDataEXIT }
+				}
+			}
+			Set fc=""
+			For {
+				Set fc=$order(^rINDEXEXT("F",$classname(),"IDKEY","f",fc))
+				Quit:fc=""
+				Set fk=""
+				For {
+					Set fk=$order(^rINDEXEXT("F",$classname(),"IDKEY","f",fc,fk))
+					Quit:fk=""
+					Set sc=$classmethod(fc,fk_"Delete",id)
+					If ('sc) { Goto DeleteDataEXIT }
+				}
+			}
+			Set fc=""
+			For {
+				Set fc=$order(^rINDEXEXT("F",$classname(),"ParRefCode","f",fc))
+				Quit:fc=""
+				Set fk=""
+				For {
+					Set fk=$order(^rINDEXEXT("F",$classname(),"ParRefCode","f",fc,fk))
+					Quit:fk=""
+					Set sc=$classmethod(fc,fk_"Delete",bsv0N1,$listget(bsv0N3,2))
+					If ('sc) { Goto DeleteDataEXIT }
+				}
+			}
+		}
+		Set bsv0N5=$zu(28,$listget(bsv0N3,2),5)
+		Kill ^CBBasicDictionarySubI("Code",$zu(28,$listget(bsv0N3,2),5),bsv0N1,$p(id,"||",2))
+		Kill ^CBBasicDictionarySubI("ParRefCode",bsv0N1,bsv0N5,$p(id,"||",2))
+		Kill ^CBBasicDictionaryD(bsv0N1,"S",bsv0N2)
+		Set sc=1
+	}
+	Else { Set sc=$$Error^%apiOBJ(5810,$classname(),id) }
+DeleteDataEXIT
+	If concurrency,lockok=1 {
+		Lock -(^CBBasicDictionaryD(bsv0N1,"S",bsv0N2))
+	}
+DeleteDataRET	Set $Ztrap = ""
+	QUIT sc
+DeleteDataERR	Set $Ztrap = "DeleteDataRET"
+	Set sc = $$Error^%apiOBJ(5002,$ZE)
+	Goto DeleteDataEXIT }
+%Exists(oid="") public {
+	Quit ..%ExistsId($listget(oid)) }
+%ExistsId(id) public {
+	Try { set tExists=$s($l(id,"||")'=2:0,$p(id,"||",1)="":0,$p(id,"||",2)="":0,$d(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))):1,1:0) } catch tException { set tExists = 0 if '(tException.%IsA("%Exception.SystemException")) { throw tException } elseif tException.Name'="<SUBSCRIPT>" { ZT $ZE } } quit tExists }
+%FileIndices(id,pIndexHandle=0) public {
+	Set $ZTrap="CatchError",sc=1
+	Set bsv0N2=$p(id,"||",2)
+	Set bsv0N3=$p(id,"||",1)
+	Set bsv0N4=$Get(^CBBasicDictionaryD(bsv0N3,"S",bsv0N2))
+	Set bsv0N5=$listget(bsv0N4,1)
+	If bsv0N5'="" {
+		Set bsv0N1=$piece(bsv0N5,$extract(bsv0N5),*-1)
+		Set:bsv0N1'["." bsv0N1="User."_bsv0N1
+		If bsv0N1'="" {
+			Quit $classmethod(bsv0N1,"%FileIndices",id,.pIndexHandle)
+		}
+	}
+	If ('pIndexHandle)||($Ascii($Get(pIndexHandle("User.CBBasicDictionarySub")),1)=1) {
+		Set bsv0N6=$zu(28,$listget(bsv0N4,2),5)
+		Set ^CBBasicDictionarySubI("Code",bsv0N6,bsv0N3,bsv0N2)=$listget(bsv0N4,1)
+	}
+	If ('pIndexHandle)||($Ascii($Get(pIndexHandle("User.CBBasicDictionarySub")),2)=1) {
+		Set bsv0N7=$zu(28,$listget(bsv0N4,2),5)
+		Set ^CBBasicDictionarySubI("ParRefCode",bsv0N3,bsv0N7,bsv0N2)=$listget(bsv0N4,1)
+	}
+	QUIT 1
+CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
+%InsertBatch(objects,concurrency=0,useTransactions=0) public {
+	try {
+		set numerrs=0,errs="",cnt=0,ptr=0
+		while $listnext(objects,ptr,idList) {
+			set ret=$listnext(objects,ptr,data)
+			set cnt=cnt+1
+			set zzc9v1=$listget(data,2)
+			set zzc9v2=$listget(data,1)
+			set zzc9v3=$li(idList,1)
+			set zzc9v4=$li(idList,2)
+			set lock=0,locku=$c(0)
+			if (useTransactions) tstart
+			set zzc9v4=$i(^CBBasicDictionaryC("S")),id=zzc9v3_"||"_zzc9v4
+			if (zzc9v3'="")&&('##class(User.CBBasicDictionary).%ExistsId(zzc9v3)) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5824,"User.CBBasicDictionarySub.BDParRef("_$zu(144,1,zzc9v3)_")")) }
+			set zzc14v1=$zu(28,zzc9v1,5)
+			try {
+				set tInnerException = ""
+				;
+				if concurrency { if $tlevel,$i(%0CacheLock($classname()))>$zu(156,50,1) { lock +(^CBBasicDictionaryD):$zu(115,4) set lock=$Select($test:2,1:0) lock:lock -(^CBBasicDictionaryD) } else { lock +(^CBBasicDictionaryD(zzc9v3,"S",zzc9v4)):$zu(115,4) set lock=$Select($test:1,1:0) } if 'lock { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
+				if (concurrency)&&($g(%0CacheLock($classname()))'>$zu(156,50,1)) { l +^CBBasicDictionarySubI("ParRefCode",zzc9v3,zzc14v1):$zu(115,4) if $Test { Set $Extract(locku,1)=$c(1) } Else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } } If $data(^CBBasicDictionarySubI("ParRefCode",zzc9v3,zzc14v1)) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5808,$classname()_":ParRefCode:"_$zreference)) }
+				set ^CBBasicDictionaryD(zzc9v3,"S",zzc9v4)=data
+				set ^CBBasicDictionarySubI("Code",$zu(28,zzc9v1,5),zzc9v3,zzc9v4)=zzc9v2
+				set ^CBBasicDictionarySubI("ParRefCode",zzc9v3,zzc14v1,zzc9v4)=zzc9v2
+				if (useTransactions) { tcommit }
+			}
+			catch tInnerException {
+				set newerr=$lb(cnt,tInnerException.AsStatus())
+				if '($length(errs)+$length(newerr)>32767) { set numerrs=numerrs+1, errs=errs_newerr }
+				if (useTransactions) && ($Tlevel) trollback
+			}
+			lock:$Ascii($Extract(locku,1)) -^CBBasicDictionarySubI("ParRefCode",zzc9v3,zzc14v1)#"D"
+			if lock=1 lock -(^CBBasicDictionaryD(zzc9v3,"S",zzc9v4))
+		}
+	}
+	catch tException {
+		set newerr=$lb($g(cnt),tException.AsStatus())
+		if '($length(errs)+$length(newerr)>32767) { set numerrs=numerrs+1, errs=errs_newerr }
+	}
+	QUIT ($lb(numerrs))_errs }
+%JSONExportInternal() public {
+  Set sc=1
+  Write "{" Set sep=""
+  Set value=..Code
+  If value'="" {
+    Write sep_"""Code"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..Descripts
+  If value'="" {
+    Write sep_"""Descripts"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..Status
+  If value'="" {
+    Write sep_"""Status"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..UpdateDate
+  If value'="" {
+    Write sep_"""UpdateDate"":"""_$select(value="":"",1:$zdate(value,3,,,,,-672045))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..UpdateTime
+  If value'="" {
+    Write sep_"""UpdateTime"":"""_$select(value="":"",1:$ztime(value,1,$l($p(value,".",2)),,1)_"Z")_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..UpdateUserDr
+  If value'="" {
+    Write sep_"""UpdateUserDr"":"""_$zcvt(value.%Id(),"O","JSON")_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..DefaultValue
+  If value'="" {
+    Write sep_"""DefaultValue"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..SeqNo
+  If value'="" {
+    Write sep_"""SeqNo"":"_value
+    Set $extract(sep,1)=","
+  }
+  Set value=..Value
+  If value'="" {
+    Write sep_"""Value"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..ENDesc
+  If value'="" {
+    Write sep_"""ENDesc"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Write "}"
+%JSONExportExit Quit sc }
+%JSONExportToStringInternal() public {
+  Set sc=1
+  Set %export=%export_"{" Set sep=""
+  Set value=..Code
+  If value'="" {
+    Set %export=%export_sep_"""Code"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..Descripts
+  If value'="" {
+    Set %export=%export_sep_"""Descripts"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..Status
+  If value'="" {
+    Set %export=%export_sep_"""Status"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..UpdateDate
+  If value'="" {
+    Set %export=%export_sep_"""UpdateDate"":"""_$select(value="":"",1:$zdate(value,3,,,,,-672045))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..UpdateTime
+  If value'="" {
+    Set %export=%export_sep_"""UpdateTime"":"""_$select(value="":"",1:$ztime(value,1,$l($p(value,".",2)),,1)_"Z")_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..UpdateUserDr
+  If value'="" {
+    Set %export=%export_sep_"""UpdateUserDr"":"""_$zcvt(value.%Id(),"O","JSON")_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..DefaultValue
+  If value'="" {
+    Set %export=%export_sep_"""DefaultValue"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..SeqNo
+  If value'="" {
+    Set %export=%export_sep_"""SeqNo"":"_value
+    Set $extract(sep,1)=","
+  }
+  Set value=..Value
+  If value'="" {
+    Set %export=%export_sep_"""Value"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..ENDesc
+  If value'="" {
+    Set %export=%export_sep_"""ENDesc"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set %export=%export_"}"
+%JSONExportExitToString Quit sc }
+%JSONImportInternal() public {
+  Set sc=1
+  Set testInvalidField=1
+  Set proplist("Code")=""
+  Set field="Code" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Goto %JSONImportRequired
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.Code
+      If ('$s(($l(data)'>50):1,1:$$Error^%apiOBJ(7201,data,50))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..Code=data
+    }
+  } Else { Goto %JSONImportRequired }
+  Set proplist("Descripts")=""
+  Set field="Descripts" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Goto %JSONImportRequired
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.Descripts
+      If ('$s(($l(data)'>50):1,1:$$Error^%apiOBJ(7201,data,50))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..Descripts=data
+    }
+  } Else { Goto %JSONImportRequired }
+  Set proplist("Status")=""
+  Set field="Status" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..Status=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.Status
+      If ('$s(data'[","&&(",Y,N,"[(","_$select(data=$c(0):"",1:data)_",")):1,1:$$Error^%apiOBJ(7205,data,",Y,N"))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..Status=data
+    }
+  }
+  Set proplist("UpdateDate")=""
+  Set field="UpdateDate" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..UpdateDate=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.UpdateDate
+      Set data=$select(data="":"",1:$zdateh(data,3,,,,,-672045,,"")) Goto:data="" %JSONImportError If ('$s($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,0,0,2980013):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,2980013))) Goto %JSONImportError
+      Set ..UpdateDate=data
+    }
+  }
+  Set proplist("UpdateTime")=""
+  Set field="UpdateTime" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..UpdateTime=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.UpdateTime
+      Set data=..UpdateTimeXSDToLogical(data) Goto:data="" %JSONImportError If ('$select($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,,0,86400)&&(data'=86400):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,86400))) Goto %JSONImportError
+      Set ..UpdateTime=data
+    }
+  }
+  Set proplist("UpdateUserDr")=""
+  Set field="UpdateUserDr" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..UpdateUserDr=""
+    } Else {
+      If jsontype'="string",jsontype'="number" Goto %JSONImportError
+      Do ..UpdateUserDrSetObjectId(%JSONObject.UpdateUserDr)
+    }
+  }
+  Set proplist("DefaultValue")=""
+  Set field="DefaultValue" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..DefaultValue=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.DefaultValue
+      If ('$s(data'[","&&(",Y,N,"[(","_$select(data=$c(0):"",1:data)_",")):1,1:$$Error^%apiOBJ(7205,data,",Y,N"))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..DefaultValue=data
+    }
+  }
+  Set proplist("SeqNo")=""
+  Set field="SeqNo" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..SeqNo=""
+    } Else {
+      If jsontype'="number" Goto %JSONImportError
+      Set data=%JSONObject.SeqNo
+      Set data=$s($tr(data,"Ee(),.")'=data:"",1:$number(data,"I")) Goto:data="" %JSONImportError If ('$select(data=$c(0)&&$zu(115,13):1,$isvalidnum(data,0):1,1:$$Error^%apiOBJ(7207,data))) Goto %JSONImportError
+      Set ..SeqNo=data
+    }
+  }
+  Set proplist("Value")=""
+  Set field="Value" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..Value=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.Value
+      If ('$s(($l(data)'>1000):1,1:$$Error^%apiOBJ(7201,data,1000))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..Value=data
+    }
+  }
+  Set proplist("ENDesc")=""
+  Set field="ENDesc" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..ENDesc=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.ENDesc
+      If data="" Set data=$c(0)
+      Set ..ENDesc=data
+    }
+  }
+  If $get(testInvalidField) {
+    Set invalid=0,iterator=%JSONObject.%GetIterator()
+    While iterator.%GetNext(.key,.value) { If $data(proplist(key))=0 Set invalid=1 Quit  }
+    If invalid Quit $$Error^%apiOBJ(9404,key,$select(%mappingName="":"class base",1:%mappingName))
+  }
+%JSONImportExit Quit sc
+%JSONImportError Quit $$Error^%apiOBJ(9406,field,$select(%mappingName="":"class base",1:%mappingName))
+%JSONImportRequired Quit $$Error^%apiOBJ(9405,field,$select(%mappingName="":"class base",1:%mappingName)) }
+%JSONNew(dynamicObject,containerOref="") public {
+  Quit ##class(User.CBBasicDictionarySub).%New()
+}
+%KillExtentData(killstreams=0)
+	New atend,parent,query,row,sc
+	If killstreams Kill ^CBBasicDictionarySubS
+	Kill ^CBBasicDictionaryC("S")
+	If '$system.CLS.IsMthd("User.CBBasicDictionary","ExtentExecute") {
+		Quit $$Error^%apiOBJ(5653,"User.CBBasicDictionary")
+	}
+	Set sc=##class(User.CBBasicDictionary).ExtentExecute(.query)
+	Quit:('sc) sc
+	Do {
+		Set sc=##class(User.CBBasicDictionary).ExtentFetch(.query,.row,.atend)
+		Quit:$select(row="":1,('sc):1,1:0)
+		Set parent=$listget(row)
+		If parent'="" {
+		Kill ^CBBasicDictionaryD(parent,"S")
+		}
+	} While 'atend
+	Do ##class(User.CBBasicDictionary).ExtentClose(query)
+	Quit 1
+%LoadData(id) public {
+	New %s1
+	set $ZTrap="CatchError",locked=0,userze=$ze,$ze=""
+	Set i%BDParRef=$piece(id,"||",1),id1=$piece(id,"||",2)
+	If i%%Concurrency=4 {
+		Lock +(^CBBasicDictionaryD(i%BDParRef,"S",id1)):$zu(115,4)
+		if '$t do init s i%%Concurrency=0 s:$ze="" $ze=userze return $$Error^%apiOBJ(5803,$classname())
+	} ElseIf i%%Concurrency>1 {
+		Lock +(^CBBasicDictionaryD(i%BDParRef,"S",id1)#"S"):$zu(115,4)
+		if '$t do init s i%%Concurrency=0 s:$ze="" $ze=userze return $$Error^%apiOBJ(5803,$classname())
+		set locked = 1
+	}
+	If $d(^CBBasicDictionaryD(i%BDParRef,"S",id1),%s1)#2 {
+		If i%%Concurrency=2 { Lock -(^CBBasicDictionaryD(i%BDParRef,"S",id1)#"SI") }
+		S i%Code=$lg(%s1,2),i%Descripts=$lg(%s1,3),i%Status=$lg(%s1,4),i%UpdateDate=$lg(%s1,5),i%UpdateTime=$lg(%s1,6),i%UpdateUserDr=$lg(%s1,7),i%DefaultValue=$lg(%s1,8),i%SeqNo=$lg(%s1,9),i%Value=$lg(%s1,10),i%ENDesc=$lg(%s1,11)
+		s:$ze="" $ze=userze
+		Quit 1
+	} Else {
+		If i%%Concurrency=2 { Lock -(^CBBasicDictionaryD(i%BDParRef,"S",id1)#"SI") }
+		do init
+		set sc = $$Error^%apiOBJ(5809,$classname(),id) goto CatchError
+	}
+CatchError	set $ZTrap = "" if $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) }
+	If ($get(locked))&&(i%%Concurrency<3) { Lock -(^CBBasicDictionaryD(i%BDParRef,"S",id1)#"SI") }
+	if '('sc) { set sc=$$Error^%apiOBJ(5809,$classname(),id) }
+	s:$ze="" $ze=userze
+	return sc
+init	Set i%Code="",i%DefaultValue="",i%Descripts="",i%ENDesc="",i%SeqNo="",i%Status="",i%UpdateDate="",i%UpdateTime="",i%UpdateUserDr="",i%Value=""
+	quit }
+%LoadDataFromMemory(id,objstate,obj) public {
+	New %s1
+	Set i%BDParRef=$piece(id,"||",1),id1=$piece(id,"||",2)
+	If (i%BDParRef="")||(id1="") { Quit $$Error^%apiOBJ(5832,$classname(),id) }
+	If $d(objstate(i%BDParRef,"S",id1)) {
+		Set %s1=$g(objstate(i%BDParRef,"S",id1))
+		S i%Code=$lg(%s1,2),i%Descripts=$lg(%s1,3),i%Status=$lg(%s1,4),i%UpdateDate=$lg(%s1,5),i%UpdateTime=$lg(%s1,6),i%UpdateUserDr=$lg(%s1,7),i%DefaultValue=$lg(%s1,8),i%SeqNo=$lg(%s1,9),i%Value=$lg(%s1,10),i%ENDesc=$lg(%s1,11)
+		Quit 1
+	} Else {
+		Set i%Code="",i%DefaultValue="",i%Descripts="",i%ENDesc="",i%SeqNo="",i%Status="",i%UpdateDate="",i%UpdateTime="",i%UpdateUserDr="",i%Value=""
+		Quit $$Error^%apiOBJ(5809,$classname(),id)
+	} }
+%LoadInit(oid="",concurrency="",reset=0) public {
+	If concurrency'="" Set i%%Concurrency=concurrency
+	If reset {
+		Kill i%BDParRef,i%UpdateUserDr
+	}
+	Set r%BDParRef="",r%UpdateUserDr=""
+	If 'reset { Set gbl=..#DATALOCATIONGLOBAL If gbl="" { Set oref=$zobjoid("",$listget(oid)),sfn=$zu(40,0,41) } Else { Set oref=$zobjoid("",$listget(oid),@gbl,.sfn) } Set $zobjoid("",$listget(oid),,sfn)=$this,i%"%%OID"=oid }
+	Quit 1 }
+%LockExtent(shared=0) public {
+	If shared {
+		Lock +(^CBBasicDictionaryD#"S"):$zu(115,4) Quit:$t 1
+		Quit $$Error^%apiOBJ(5799,$classname())
+	}
+	Lock +(^CBBasicDictionaryD):$zu(115,4) Quit:$t 1
+	Quit $$Error^%apiOBJ(5798,$classname()) }
+%LockId(id,shared=0,timeout) public { s:'($d(timeout)#2) timeout=$zu(115,4)
+	If id="" { Quit $$Error^%apiOBJ(5812) }
+	Set sc=1
+	Set o1=$piece(id,"||",1),id1=$piece(id,"||",2)
+	If (o1="")||(id1="") { Quit $$Error^%apiOBJ(5832,$classname(),id) }
+	If 'shared {
+		Lock +(^CBBasicDictionaryD(o1,"S",id1)):timeout Quit:$t 1
+		Quit $$Error^%apiOBJ(5803,id_":"_$classname())
+	}
+	Lock +(^CBBasicDictionaryD(o1,"S",id1)#"S"):timeout Quit:$t 1
+	Quit $$Error^%apiOBJ(5804,id_":"_$classname()) }
+%NormalizeObject() public {
+	If '$system.CLS.GetModified() Quit 1
+	If m%Code Set:i%Code'="" i%Code=(..CodeNormalize(i%Code))
+	If m%DefaultValue Set:i%DefaultValue'="" i%DefaultValue=(..DefaultValueNormalize(i%DefaultValue))
+	If m%Descripts Set:i%Descripts'="" i%Descripts=(..DescriptsNormalize(i%Descripts))
+	If m%ENDesc Set:i%ENDesc'="" i%ENDesc=(..ENDescNormalize(i%ENDesc))
+	If m%SeqNo Set:i%SeqNo'="" i%SeqNo=(..SeqNoNormalize(i%SeqNo))
+	If m%Status Set:i%Status'="" i%Status=(..StatusNormalize(i%Status))
+	If m%UpdateDate Set:i%UpdateDate'="" i%UpdateDate=(..UpdateDateNormalize(i%UpdateDate))
+	If m%UpdateTime Set:i%UpdateTime'="" i%UpdateTime=(..UpdateTimeNormalize(i%UpdateTime))
+	If m%Value Set:i%Value'="" i%Value=(..ValueNormalize(i%Value))
+	Quit 1 }
+%OnDetermineClass(oid,class) public {
+	Set id=$listget($get(oid))
+	Quit:id="" $$Error^%apiOBJ(5812)
+	Set o1=$piece(id,"||",1),id1=$piece(id,"||",2)
+	If (o1="")||(id1="") { Quit $$Error^%apiOBJ(5832,$classname(),id) }
+	Set idclass=$lg($get(^CBBasicDictionaryD(o1,"S",id1)),1)
+	If idclass="" { Set class="User.CBBasicDictionarySub" Quit 1 }
+	Set class=$piece(idclass,$extract(idclass),*-1)
+	Set:class'["." class="User."_class
+	QUIT 1 }
+%PhysicalAddress(id,paddr)
+	if $Get(id)="" Quit $$Error^%apiOBJ(5813,$classname())
+	new bsv0N1,bsv0N2
+	Set bsv0N1=$p(id,"||",2)
+	Set bsv0N2=$p(id,"||",1)
+	if (bsv0N2="")||(bsv0N1="") { quit $$Error^%apiOBJ(5832,$classname(),id) }
+	s paddr(1)=$lb($Name(^CBBasicDictionaryD(bsv0N2,"S",bsv0N1)),$classname(),"IDKEY","listnode",id)
+	s paddr=1
+	Quit 1
+%PurgeIndices(idxlist="",lockExtent=0,pIgnoreIndexList="") public {
+	Set locked=0,sc=1
+	Try {
+		if ($listlength(idxlist)=1)&&($listget(idxlist,1)="") { return 1 }
+		Set tPtr=0
+		While $listnext(idxlist,tPtr,tIndex) {
+			continue:tIndex=""
+			If '($d(^oddCOM($classname(),"i",tIndex))) {
+				Set sc=$select(+sc:$$Error^%apiOBJ(5066,$classname()_"::"_tIndex),1:$$AppendStatus^%occSystem(sc,$$Error^%apiOBJ(5066,$classname()_"::"_tIndex)))
+			}
+		}
+		If ('sc) { Return sc }
+		If lockExtent {
+			Set sc=..%LockExtent(0)
+			If ('sc) { Return sc }
+			Set locked=1
+		}
+		If $system.CLS.IsMthd("%OnBeforePurgeIndices") {
+			Set sc=..%OnBeforePurgeIndices(.idxlist)
+			If (('sc))||(($listlength(idxlist)=1)&&($listget(idxlist,1)="")) {
+				If locked {
+					Do ..%SQLReleaseTableLock(0)
+				}
+				Return sc
+			}
+		}
+		if ((idxlist="")||($listfind(idxlist,"Code"))),'$listfind(pIgnoreIndexList,"Code") {
+			kill ^CBBasicDictionarySubI("Code")
+		}
+		if ((idxlist="")||($listfind(idxlist,"ParRefCode"))),'$listfind(pIgnoreIndexList,"ParRefCode") {
+			kill ^CBBasicDictionarySubI("ParRefCode")
+		}
+		Set sc=1
+		If $system.CLS.IsMthd("%OnAfterPurgeIndices") { Set sc=..%OnAfterPurgeIndices(.idxlist) }
+	} Catch tException {
+		Set sc=tException.AsStatus(),$ZE=""
+	}
+	If locked { Do ..%UnlockExtent(0) }
+	Quit sc }
+%SQLAcquireLock(%rowid,s=0,unlockref=0)
+	new %d,gotlock,subs
+	set %d(1)=%rowid,%d(0)=$p(%d(1),"||",1),%d(12)=$p(%d(1),"||",2),subs(16)=$p(%d(0),"||",1) set s=$e("S",s)
+	lock +^CBBasicDictionaryD(subs(16),"S",%d(12))#s:$zu(115,4) set gotlock=$t
+	set:gotlock&&unlockref unlockref=unlockref+1,unlockref(unlockref)=$lb($name(^CBBasicDictionaryD(subs(16),"S",%d(12))),"User.CBBasicDictionarySub",s_"D")
+	QUIT gotlock
+%SQLAcquireTableLock(s=0,SQLCODE,to="")
+	set s=$e("S",s) set:to="" to=$zu(115,4) lock +^CBBasicDictionaryD#s:to QUIT:$t 1 set SQLCODE=-110 if s="S" { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler35",,"SQLUser"_"."_"CB_BasicDictionarySub") } else { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler36",,"SQLUser"_"."_"CB_BasicDictionarySub") } QUIT 0
+	Quit
+%SQLBuildIndices(pIndices="",pLockFlag=0,pStartID="",pEndID="",pIgnoreIndexList="")
+	QUIT ..%BuildIndices(pIndices,,pLockFlag,,pStartID,pEndID,pIgnoreIndexList)
+%SQLBuildPurgeIndexForRow(pIndices="",pActions="BP",pLockRow=1,%d,%e,pIgnoreIndexList="")
+	// Purge and build index nodes for a single row using given values, return Status Code
+	new sn,tSC,tLock set tSC=1,pActions=$zcvt(pActions,"U")
+	try {
+		if $g(%d(1))="" { set tSC=$select(+tSC:$$Error^%apiOBJ(5521,-108,"RowID value must be specified in %d(1) when calling %SQLBuildPurgeIndexForRow for table 'SQLUser.CB_BasicDictionarySub'"),1:$$AppendStatus^%occSystem(tSC,$$Error^%apiOBJ(5521,-108,"RowID value must be specified in %d(1) when calling %SQLBuildPurgeIndexForRow for table 'SQLUser.CB_BasicDictionarySub'"))) RETURN tSC }
+		if pLockRow { if '..%SQLAcquireLock(%d(1)) { set tSC=$select(+tSC:$$Error^%apiOBJ(5521,-114,"Unable to lock row in table 'SQLUser.CB_BasicDictionarySub' with %ID = '"_%d(1)_"'"),1:$$AppendStatus^%occSystem(tSC,$$Error^%apiOBJ(5521,-114,"Unable to lock row in table 'SQLUser.CB_BasicDictionarySub' with %ID = '"_%d(1)_"'"))) RETURN tSC  } else { set tLock=1 }}
+		set %d(0)=$p(%d(1),"||",1),%d(12)=$p(%d(1),"||",2)
+		set subs(16)=$p(%d(0),"||",1)
+		if ((pIndices="")||($lf(pIndices,"Code"))),'$listfind(pIgnoreIndexList,"Code") {
+			if pActions["P" {
+				set sn(1)=$zu(28,%e(2),5) set sn(2)=subs(16) set sn(3)=%d(12) k ^CBBasicDictionarySubI("Code",sn(1),sn(2),sn(3))
+			}
+			if pActions["B" {
+				set sn(1)=$zu(28,%d(2),5) set sn(2)=subs(16) set sn(3)=%d(12) set ^CBBasicDictionarySubI("Code",sn(1),sn(2),sn(3))=%d(13)
+			}
+		}
+		if ((pIndices="")||($lf(pIndices,"ParRefCode"))),'$listfind(pIgnoreIndexList,"ParRefCode") {
+			if pActions["P" {
+				set sn(1)=subs(16) set sn(2)=$zu(28,%e(2),5) set sn(3)=%d(12) k ^CBBasicDictionarySubI("ParRefCode",sn(1),sn(2),sn(3))
+			}
+			if pActions["B" {
+				set sn(1)=subs(16) set sn(2)=$zu(28,%d(2),5) set sn(3)=%d(12) set ^CBBasicDictionarySubI("ParRefCode",sn(1),sn(2),sn(3))=%d(13)
+			}
+		}
+		if pLockRow { do ..%SQLReleaseLock(%d(1),0,0) set tLock=0 }
+	}
+	catch {
+		if $g(tLock) { do ..%SQLReleaseLock(%d(1),0,0) }
+		set tSC=$select(+tSC:$$Error^%apiOBJ(5594,$ze),1:$$AppendStatus^%occSystem(tSC,$$Error^%apiOBJ(5594,$ze)))
+	}
+	QUIT tSC
+%SQLCheckUnique(pFromOrig=0,%pID,%pVals...)
+	 ;---&sql(SELECT ID FROM SQLUser.CB_BasicDictionarySub WHERE  ID=:%pVals(1) AND (%ID <> :%pID OR :%pID IS NULL)) QUIT SQLCODE=100
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	do %0Ho QUIT SQLCODE=100
+ q
+%0Ho n sqldata8d,sqldata9d,sqldata10d,sqldata2d,sqldata3d,sqldata4d,sqldata1d,sqldata6d,sqldata7d
+ s $zt="%0Herr"
+ s sqldata8d=$zu(115,2)
+ s sqldata9d=0,sqldata10d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata2d=$g(%pVals(1)),sqldata3d=$g(%pID),sqldata4d=$g(%pID)
+ s SQLCODE=100
+ ; asl MOD# 2
+ s sqldata1d=sqldata2d
+ s sqldata6d=$p(sqldata1d,"||"),sqldata7d=$p(sqldata1d,"||",2,*)
+ i sqldata6d'="",sqldata7d'="",$d(^CBBasicDictionaryD(sqldata6d,"S",sqldata7d))
+ e  g %0HmBdun
+ i '(((sqldata3d'="")&&(sqldata1d'=sqldata3d))||(sqldata4d="")) g %0HmBdun
+ goto:sqldata8d'=1 %0HmBuncommitted
+ if sqldata8d=1 {
+ 	lock +^CBBasicDictionaryD($p(sqldata1d,"||",1),"S",$p(sqldata1d,"||",2))#"S":$zu(115,4)
+ 	if $t { set sqldata10d=$name(^CBBasicDictionaryD($p(sqldata1d,"||",1),"S",$p(sqldata1d,"||",2)))_"#""SI""",sqldata9d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_BasicDictionarySub for RowID value: "_sqldata1d ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata6d=$p(sqldata1d,"||"),sqldata7d=$p(sqldata1d,"||",2,*)
+ i sqldata6d'="",sqldata7d'="",$d(^CBBasicDictionaryD(sqldata6d,"S",sqldata7d))
+ e  g %0HmCdun
+%0HmBuncommitted ;
+ s SQLCODE=0 g %0Hc
+%0HmCdun if $g(sqldata8d)=1 { if $g(sqldata9d)=1 { l -@sqldata10d s sqldata9d=0 } elseif $g(sqldata9d)=2 { do $classmethod($li(sqldata10d),"%UnlockId",$li(sqldata10d,2),1,1)  s sqldata9d=0 }}
+%0HmBdun 
+%0HmAdun 
+%0Hc set %ROWCOUNT='SQLCODE
+ if $g(sqldata8d)=1 {
+ 	if $g(sqldata9d)=1 { l -@sqldata10d s sqldata9d=0 } elseif $g(sqldata9d)=2 { do $classmethod($li(sqldata10d),"%UnlockId",$li(sqldata10d,2),1,1)  s sqldata9d=0 }
+ }
+ q
+%0Herr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Hc
+%SQLCopyIcolIntoName()
+	if %oper="DELETE" {
+		set:$d(%d(0)) %f("BD_ParRef")=%d(0) set:$d(%d(1)) %f("ID")=%d(1) set:$d(%d(12)) %f("childsub")=%d(12)
+		QUIT
+	}
+	set:$d(%d(0)) %f("BD_ParRef")=%d(0) set:$d(%d(1)) %f("ID")=%d(1) set:$a(%e,2)&&$d(%d(2)) %f("Code")=%d(2) set:$a(%e,3)&&$d(%d(3)) %f("Descripts")=%d(3) set:$a(%e,4)&&$d(%d(4)) %f("Status")=%d(4) set:$a(%e,5)&&$d(%d(5)) %f("UpdateDate")=%d(5) set:$a(%e,6)&&$d(%d(6)) %f("UpdateTime")=%d(6) set:$a(%e,7)&&$d(%d(7)) %f("UpdateUser_Dr")=%d(7) set:$a(%e,8)&&$d(%d(8)) %f("DefaultValue")=%d(8) set:$a(%e,9)&&$d(%d(9)) %f("SeqNo")=%d(9) set:$a(%e,10)&&$d(%d(10)) %f("Value")=%d(10) set:$a(%e,11)&&$d(%d(11)) %f("ENDesc")=%d(11) set:$d(%d(12)) %f("childsub")=%d(12) set:$a(%e,13)&&$d(%d(13)) %f("x__classname")=%d(13)
+	QUIT
+%SQLDefineiDjVars(%d,subs,master)
+	QUIT
+%SQLDelete(%rowid,%check,%tstart=1,%mv=0,%polymorphic=0)
+	// SQL DELETE method for table SQLUser.CB_BasicDictionarySub
+	new bva,ce,%d,dc,%e,%ele,%itm,%key,%l,%nc,omcall,%oper,%pos,%s,sn,sqlcode,subs set %oper="DELETE",sqlcode=0,%ROWID=%rowid,%d(1)=%rowid,%e(1)=%rowid,%d(0)=$p(%d(1),"||",1),%d(12)=$p(%d(1),"||",2),subs(16)=$p(%d(0),"||",1),%l=$c(0)
+	if '$d(%0CacheSQLRA) { new %0CacheSQLRA set omcall=1 }
+	if '$a(%check,2) { new %ls if $tlevel,$i(%0CacheLock("User.CBBasicDictionarySub"))>$zu(156,50,1) { lock +^CBBasicDictionaryD:$zu(115,4) lock:$t -^CBBasicDictionaryD set %ls=$s($t:2,1:0) } else { lock +^CBBasicDictionaryD(subs(16),"S",%d(12)):$zu(115,4) set %ls=$t } set:%ls=2 $e(%check,2)=$c(1) set:%ls=1 $e(%l)=$c(1) if '%ls { set SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler40",,%oper,"SQLUser"_"."_"CB_BasicDictionarySub",$g(%d(1))) RETURN  }} if %tstart { TSTART:($zu(115,1)=1)||('$TLEVEL&&($zu(115,1)=2))  }
+	set $zt="ERRORDelete"
+	do ..%SQLGetOld(%rowid,.%d,.%e,.sqlcode) if sqlcode { set SQLCODE=-106 do ..%SQLEExit() QUIT  }
+	if %e(13)'="" { set sn=$p(%e(13),$e(%e(13)),$l(%e(13),$e(%e(13)))-1) if "CBBasicDictionarySub"'=sn { new %f do ..%SQLCopyIcolIntoName() do $classmethod(sn,"%SQLDelete",%rowid,%check,%tstart,%mv,1) QUIT  }}
+	if '$a(%check),'$zu(115,7) do  if sqlcode set SQLCODE=sqlcode do ..%SQLEExit() QUIT  
+	. new %fk,%k,%p,%st,%t,%z set %k="",%p("%1")="%d(1),",%p("IDKEY")="%d(0),%d(12),,",%p("ParRefCode")="%d(0),%e(2),,"
+	. for  quit:sqlcode<0  set %k=$o(^rINDEXEXT("F","User.CBBasicDictionarySub",%k)) quit:%k=""  set %t="" for  set %t=$o(^rINDEXEXT("F","User.CBBasicDictionarySub",%k,"f",%t)) quit:%t=""  set %st=(%t="User.CBBasicDictionarySub") set %fk="" for  set %fk=$o(^rINDEXEXT("F","User.CBBasicDictionarySub",%k,"f",%t,%fk)) quit:%fk=""  x "set %z=$classmethod(%t,%fk_""SQLFKeyRefAction"",%st,%k,$a(%check,2),"_%p(%k)_")" if %z set sqlcode=-124 quit  
+	if '($a(%check,2)#2),$g(%0CacheLock("User.CBBasicDictionarySub"))'>$zu(156,50,1) {
+		lock +^CBBasicDictionarySubI("ParRefCode",%d(0),%e(2)):$zu(115,4) if $t { lock -^CBBasicDictionarySubI("ParRefCode",%d(0),%e(2)) } else { do ..%SQLUnlockError("ParRefCode") set SQLCODE=sqlcode do ..%SQLEExit() QUIT }
+	}
+	set ce="" for  { set ce=$order(^oddSQL("SQLUser","CB_BasicDictionarySub","DC",ce)) quit:ce=""   do $classmethod(ce,"%SQLDeleteChildren",%d(1),%check,.sqlcode) quit:sqlcode<0  } if sqlcode<0 { set SQLCODE=sqlcode do ..%SQLEExit() QUIT } // Delete any children
+	if '$a(%check,3) {
+		set sn(1)=$zu(28,%e(2),5) set sn(2)=subs(16) set sn(3)=%d(12) k ^CBBasicDictionarySubI("Code",sn(1),sn(2),sn(3))
+		set sn(1)=subs(16) set sn(2)=$zu(28,%e(2),5) set sn(3)=%d(12) k ^CBBasicDictionarySubI("ParRefCode",sn(1),sn(2),sn(3))
+	}
+	k ^CBBasicDictionaryD(subs(16),"S",%d(12))
+	do ..%SQLUnlock() TCOMMIT:%tstart&&($zu(115,1)=1)
+	set SQLCODE=0 kill:$g(omcall) %0CacheSQLRA
+	QUIT
+ERRORDelete	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler51",,%oper,"SQLUser"_"."_"CB_BasicDictionarySub",$ze) if $ze["<FRAMESTACK>" { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler52",,$ze,%oper,"SQLUser"_"."_"CB_BasicDictionarySub") do ##Class(%SYS.System).WriteToConsoleLog(%msg) if ($zu(67,10,$j)=1)||($zu(67,10,$j)=3) { write !,%msg h 3 } HALT  } do ..%SQLEExit() QUIT
+	Quit
+%SQLDeleteChildren(%parent,%check,sqlcode)
+	// Delete all rows where BD_ParRef = :%parent
+	new %ROWCOUNT,%ROWID,SQLCODE
+	set:$a(%check,2)=2 $e(%check,2)=$c(0)
+	 ;---&sql(DELETE %USECHECKVARIABLE FROM SQLUser.CB_BasicDictionarySub WHERE BD_ParRef = :%parent)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	do %0Jo
+	set:SQLCODE<0 sqlcode=SQLCODE QUIT  
+ q
+%0Jo n sqldata8d,sqldata9d,sqldata10d,sqldata11d,sqldata12d,sqldata13d,sqldata20d,sqldata26d,sqldata2d,sqldata3d,sqldata1d,sqldata4d,sqldata6d,sqldata7d
+ s $zt="%0Jerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata8d=0,sqldata9d=$g(%0CacheRowLimit,9223372036854775807)
+ s sqldata10d=$zu(115,2)
+ s sqldata11d=""
+ s sqldata2d=$s($g(%parent)="":"",$isvalidnum(%parent):+%parent,1:%parent)
+ s SQLCODE=100
+ If $zu(115,1)=2,'$TLEVEL { s sqldata12d=1 TSTART } If $zu(115,1) { s sqldata13d=1 TSTART  }
+ ; asl MOD# 2
+ s sqldata1d=sqldata2d
+ i sqldata1d="" g %0JmBdun
+ s sqldata4d=""
+%0JmBk1 s sqldata4d=$o(^CBBasicDictionarySubI("ParRefCode",sqldata1d,sqldata4d))
+ i sqldata4d="" g %0JmBdun
+ s sqldata6d=""
+ s sqldata6d=$o(^CBBasicDictionarySubI("ParRefCode",sqldata1d,sqldata4d,sqldata6d))
+ i sqldata6d="" g %0JmBk1
+ s sqldata3d=(sqldata1d)_"||"_(sqldata6d)
+ if '$a($g(%check),2) { set sqldata20d=##class(User.CBBasicDictionarySub).%SQLGetLock(sqldata3d) i 'sqldata20d { s SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler40",,"DELETE","SQLUser"_"."_"CB_BasicDictionarySub",sqldata3d) g %0Jc } s:sqldata20d=2&&($g(%check)'="") $e(%check,2)=$c(1) } else { s sqldata20d=0 }
+ ; asl MOD# 3
+ s sqldata7d=$p(sqldata3d,"||"),sqldata6d=$p(sqldata3d,"||",2,*)
+ i sqldata7d'="",sqldata6d'="",$d(^CBBasicDictionaryD(sqldata7d,"S",sqldata6d))
+ e  g %0JmCdun
+ s sqldata1d=$p(sqldata3d,"||")
+ do ##class(User.CBBasicDictionarySub).%SQLDelete(sqldata3d,$g(%check),'$g(sqldata13d))
+ i 'SQLCODE { i $i(sqldata8d)'<sqldata9d { d:sqldata20d=1 ##class(User.CBBasicDictionarySub).%SQLReleaseLock(sqldata3d) g %0Jc }}
+%0JmCdun d:sqldata20d=1 ##class(User.CBBasicDictionarySub).%SQLReleaseLock(sqldata3d) g:SQLCODE<0 %0Jc
+ g %0JmBk1
+%0JmBdun 
+%0JmAdun 
+%0Jc set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(sqldata8d),1:0)
+ If $zu(115,1),$g(sqldata13d) { TCOMMIT:SQLCODE'<0  TROLLBACK:SQLCODE<0 1 } TCOMMIT:SQLCODE=100&&(%ROWCOUNT=0)&&($g(sqldata12d))&&($zu(115,1)=2) 
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata26d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"arzD8z3RkiaCzfEjJkvUB11LeAo="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"arzD8z3RkiaCzfEjJkvUB11LeAo=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Jerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ d:$g(sqldata20d)=1 ##class(User.CBBasicDictionarySub).%SQLReleaseLock(sqldata3d)
+ g %0Jc
+%SQLDeleteTempStreams()
+	// Delete all temporary streams
+	QUIT
+%SQLEExit()
+	do:%oper'="DELETE" ..%SQLUnlock2(),..%SQLUnlock() 
+	do ..%SQLUnlockRef()
+	if %tstart,$zu(115,1)=1,$TLEVEL { set %tstart=0 TROLLBACK 1 } kill:$g(omcall) %0CacheSQLRA QUIT  
+	Quit
+%SQLExists(pLockOnly=0,pUnlockRef,%pVal...)
+	// SQL Foreign Key validation entry point for Key %1.  Called by FKeys that reference this Key to see if the row is defined
+	new id set id=%pVal(1)
+	if pLockOnly>=0 { if '..%SQLGetLock(id,1,.pUnlockRef) { set sqlcode=-114,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler39",,"SQLUser"_"."_"CB_BasicDictionarySub"_":"_"%1") QUIT 0 } }
+	if pLockOnly<1 {
+		new qv set qv='..%SQLCheckUnique(0,,%pVal(1)) QUIT:pLockOnly=-1 qv
+		do:'$g(pUnlockRef) ..%SQLReleaseLock(id,1) quit qv
+	}
+	else { do:'$g(pUnlockRef) ..%SQLReleaseLock(id,1) QUIT 1 }
+	Quit
+%SQLGetLock(pRowId,pShared=0,pUnlockRef)
+	if $tlevel,$i(%0CacheLock("User.CBBasicDictionarySub"))>$zu(156,50,1) { new s set s=$e("S",pShared) lock +^CBBasicDictionaryD#s:$zu(115,4) lock:$t -^CBBasicDictionaryD#s QUIT $s($t:2,1:0) } 
+	QUIT ..%SQLAcquireLock(pRowId,pShared,.pUnlockRef)
+%SQLGetOld(%rowid,%d,%e,sqlcode)
+	new s set %d(1)=%rowid,%d(0)=$p(%d(1),"||",1),%d(12)=$p(%d(1),"||",2),subs(16)=$p(%d(0),"||",1),s="" if '$d(^CBBasicDictionaryD(subs(16),"S",%d(12)),s) { set sqlcode=100 quit  }
+	 S %e(13)=$lg(s),%e(2)=$lg(s,2)
+	QUIT
+%SQLGetOldAll()
+	new s set %d(1)=%rowid,%d(0)=$p(%d(1),"||",1),%d(12)=$p(%d(1),"||",2),subs(16)=$p(%d(0),"||",1),s="" if '$d(^CBBasicDictionaryD(subs(16),"S",%d(12)),s) { set sqlcode=100 quit  }
+	 S $lg(%e(13),%e(2),%e(3),%e(4),%e(5),%e(6),%e(7),%e(8),%e(9),%e(10),%e(11))=s
+	QUIT
+%SQLGetOldIndex(%rowid,%d,pF=0,sqlcode)
+	try {
+		new tClass,tF,tOid,tSC
+		set tOid=..%ComposeOid(%rowid)
+		if ''..%OnDetermineClass(tOid,.tClass),tClass'=$classname() {
+			set tF=1 do $classmethod(tClass,"%SQLGetOldIndex",%rowid,,.tF,.sqlcode)
+			set:$d(tF("Code")) %d(2)=tF("Code") set:$d(tF("x__classname")) %d(13)=tF("x__classname") set:$d(tF("BD_ParRef")) %d(0)=tF("BD_ParRef") set:$d(tF("childsub")) %d(12)=tF("childsub") 
+			RETURN
+		}
+	}
+	catch { }
+	new s set %d(1)=%rowid,%d(0)=$p(%d(1),"||",1),%d(12)=$p(%d(1),"||",2),subs(16)=$p(%d(0),"||",1),s="" if '$d(^CBBasicDictionaryD(subs(16),"S",%d(12)),s) { set sqlcode=100 quit  }
+	 S %e(13)=$lg(s),%e(2)=$lg(s,2)
+	if pF { set:$d(%d(2)) pF("Code")=%d(2) set:$d(%d(13)) pF("x__classname")=%d(13) set:$d(%d(0)) pF("BD_ParRef")=%d(0) set:$d(%d(12)) pF("childsub")=%d(12)  }
+	set sqlcode=0
+	QUIT
+%SQLInsert(%d,%check,%inssel,%vco,%tstart=1,%mv=0)
+	// SQL INSERT method for table SQLUser.CB_BasicDictionarySub
+	new bva,%ele,%itm,%key,%f,%l,%n,%nc,%oper,%pos,%s,sqlcode,sn,subs,unlockref,icol set %oper="INSERT",sqlcode=0,%l=$c(0,0,0,0),unlockref=1
+	if $a(%check,7) { new %diu merge %diu=%d }
+	if $d(%d(12)),'$zu(115,11) { if %d(12)'="" { set SQLCODE=-111,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler7",,"childsub","SQLUser"_"."_"CB_BasicDictionarySub") RETURN ""  } kill %d(12) } 
+	set:$d(%d(0)) subs(16)=$p(%d(0),"||",1)
+	if '$a(%check),'..%SQLValidateFields(.sqlcode) { set SQLCODE=sqlcode RETURN "" }
+	do ..%SQLNormalizeFields()
+	if %tstart { TSTART:($zu(115,1)=1)||('$TLEVEL&&($zu(115,1)=2))  } set $zt="ERRORInsert"
+	if '$a(%check),$g(%d(0))'="",'##class(User.CBBasicDictionary).%SQLExists($s($a(%check,2)=1:-1,1:0),.unlockref,%d(0)) {
+		if sqlcode<0 { set SQLCODE=sqlcode if SQLCODE=-114 { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler56",,%oper,"SQLUser"_"."_"CB_BasicDictionary",$g(%d(0))) } } else { set SQLCODE=-104,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler9",,"SQLUser"_"."_"CB_BasicDictionarySub") }
+		do ..%SQLEExit() RETURN ""
+	}
+	if '$a(%check) { if $g(%d(0))="" { do ..%SQLMissing("BD_ParRef") set SQLCODE=sqlcode do ..%SQLEExit() RETURN "" } }
+	if '$d(%d(12)) { set %d(12)=$i(^CBBasicDictionaryC("S")) } ElseIf %d(12)>$g(^CBBasicDictionaryC("S")) { if $i(^CBBasicDictionaryC("S"),$zabs(%d(1)-$g(^CBBasicDictionaryC("S")))) {}} ElseIf $d(^CBBasicDictionaryD(subs(16),"S",%d(12))) { set SQLCODE=-119,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler33",,"ID",%d(1),"SQLUser"_"."_"CB_BasicDictionarySub"_"."_"ID")  do ..%SQLEExit() RETURN "" } set %d(1)=%d(0)_"||"_%d(12),subs(16)=$p(%d(0),"||",1)
+	if '$a(%check) {
+		do {
+			if $g(%vco)'="" { d @%vco quit:sqlcode<0  }
+			do:$g(%d(2))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,3)) do:$g(%d(3))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,4)) 
+			quit:sqlcode<0		// A required field was missing
+				// Constraint ParRefCode
+				if '$a(%check,2) { lock +^CBBasicDictionarySubI("ParRefCode",%d(0),%d(2)):$zu(115,4) if $t { set $e(%l,3)=$c(1) } else { do ..%SQLUnlockError("ParRefCode") quit  } }
+				if '$a(%check,7) { if '..ParRefCodeSQLCheckUnique(0,,%d(0),%d(2)) { set sqlcode=-119,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler10",,"SQLUser"_"."_"CB_BasicDictionarySub","ParRefCode","BD_ParRef"_"="_$$quoter^%apiSQL($g(%d(0)))_","_"Code"_"="_$$quoter^%apiSQL($g(%d(2)))) quit  }}
+				else { new tID set tID=..ParRefCodeSQLFindRowIDByConstraint($lb(%d(0),%d(2)),1) if tID'="" { kill %d merge %d=%diu kill %diu do ..%SQLUpdate(tID,%check,.%d),..%SQLUnlock2(),..%SQLUnlockRef() set $e(%check,7)=$c(2) quit  }}
+		} while 0
+		QUIT:$a(%check,7)=2 $s('SQLCODE:tID,1:"")				// INSERT became UPDATE
+		if sqlcode<0 { set SQLCODE=sqlcode do ..%SQLEExit() RETURN "" }		// A constraint failed
+	}
+	set:'($d(%d(13))#2) %d(13)="" set:'($d(%d(2))#2) %d(2)=""
+	if '$a(%check,2) { new %ls if $tlevel,$i(%0CacheLock("User.CBBasicDictionarySub"))>$zu(156,50,1) { lock +^CBBasicDictionaryD:$zu(115,4) lock:$t -^CBBasicDictionaryD set %ls=$s($t:2,1:0) } else { lock +^CBBasicDictionaryD(subs(16),"S",%d(12)):$zu(115,4) set %ls=$t } set:%ls=2 $e(%check,2)=$c(1) set:%ls=1 $e(%l)=$c(1) if '%ls set SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler40",,%oper,"SQLUser"_"."_"CB_BasicDictionarySub",$g(%d(1))) do ..%SQLEExit() RETURN ""  }
+	set ^CBBasicDictionaryD(subs(16),"S",%d(12))=$lb(%d(13),%d(2),%d(3),%d(4),%d(5),%d(6),%d(7),%d(8),%d(9),%d(10),%d(11))
+	if '$a(%check,3) {
+		set sn(1)=$zu(28,%d(2),5) set sn(2)=subs(16) set sn(3)=%d(12) set ^CBBasicDictionarySubI("Code",sn(1),sn(2),sn(3))=%d(13)
+		set sn(1)=subs(16) set sn(2)=$zu(28,%d(2),5) set sn(3)=%d(12) set ^CBBasicDictionarySubI("ParRefCode",sn(1),sn(2),sn(3))=%d(13)
+	}
+	lock:$a(%l,3) -^CBBasicDictionarySubI("ParRefCode",%d(0),%d(2))#"D" 
+	lock:$a(%l) -^CBBasicDictionaryD(subs(16),"S",%d(12))
+	TCOMMIT:%tstart&&($zu(115,1)=1)
+	do ..%SQLUnlockRef()
+	set SQLCODE=0
+	QUIT %d(1) 			// %SQLInsert
+ERRORInsert	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler51",,%oper,"SQLUser"_"."_"CB_BasicDictionarySub",$ze)
+	if $ze["<FRAMESTACK>" { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler52",,$ze,%oper,"SQLUser"_"."_"CB_BasicDictionarySub") do ##Class(%SYS.System).WriteToConsoleLog(%msg) if ($zu(67,10,$j)=1)||($zu(67,10,$j)=3) { write !,%msg h 3 } HALT  }
+	do ..%SQLEExit()
+	RETURN ""
+	Quit
+%SQLInvalid(pIcol,pVal) public {
+	set:$l($g(pVal))>40 pVal=$e(pVal,1,40)_"..." do:'$d(%n) ..%SQLnBuild() set %msg=$s($g(%msg)'="":%msg_$c(13,10),1:"")_$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler37",,"SQLUser"_"."_"CB_BasicDictionarySub"_"."_$lg(%n,pIcol),$s($g(pVal)'="":$s(pVal="":"<NULL>",pVal=$c(0):"<EMPTY STRING>",1:"'"_pVal_"'"),1:"")),sqlcode=$s(%oper="INSERT":-104,1:-105)
+	QUIT sqlcode }
+%SQLMissing(fname)
+	set sqlcode=-108,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler47",,fname,"SQLUser"_"."_"CB_BasicDictionarySub") quit
+%SQLNormalizeFields()
+	set:$g(%d(11))'="" %d(11)=$e(%d(11),1,100)
+	new %f for %f=4,8 { set:$g(%d(%f))'="" %d(%f)=$e(%d(%f),1,50) }
+	set:$g(%d(5))'="" %d(5)=$s($zu(115,13)&&(%d(5)=$c(0)):"",1:%d(5)\1)
+	set:$g(%d(6))'="" %d(6)=$select($zu(115,13)&&(%d(6)=$c(0)):"",1:%d(6))
+	for %f=0,7,9 { set:$g(%d(%f))'="" %d(%f)=$select(%d(%f)=$c(0)&&$zu(115,13):"",1:%d(%f)\1) }
+	QUIT
+%SQLPurgeIndices(pIndices="",pLockExtent=0,pIgnoreIndexList="")
+	QUIT ..%PurgeIndices(pIndices,pLockExtent,pIgnoreIndexList)
+%SQLQuickLoad(%rowid,%nolock=0,pkey=0,qq=0)
+	// Get fields from row where SQLRowID=%rowid
+	new d,i,il,subs set:%nolock=2 %nolock=1
+	if %nolock=0 { if '..%SQLAcquireLock(%rowid) { set %qrc=114,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler45",,"SQLUser"_"."_"CB_BasicDictionarySub",%rowid),%ROWCOUNT=0 QUIT  } set:$zu(115,2) il=$zu(115,2,0) }
+	set d(1)=%rowid,d(0)=$p(d(1),"||",1),d(12)=$p(d(1),"||",2),subs(16)=$p(d(0),"||",1)
+	new s,ul set ul=0,d(1)=%rowid if $zu(115,2)=1 { lock +^CBBasicDictionaryD(subs(16),"S",d(12))#"S":$zu(115,4) if $t { set ul=1 } else { set %qrc=114,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler46",,"SQLUser"_"."_"CB_BasicDictionarySub",%rowid),%ROWCOUNT=0 quit  } }
+	if '$d(^CBBasicDictionaryD(subs(16),"S",d(12)),s) { set SQLCODE=100,%qrc=100 if %nolock=0 { do:$g(il) $zu(115,2,il) }} else { set SQLCODE=0
+	if qq { set d(13)=$lg(s) if d(13)'="" { new sn set sn=$p(d(13),$e(d(13)),$l(d(13),$e(d(13)))-1) if "CBBasicDictionarySub"'=sn { if %nolock=0 { do ..%SQLReleaseLock(%rowid,0,1) do:$g(il) $zu(115,2,il) } kill d set:sn'["." sn="User."_sn do $classmethod(sn,"%SQLQuickLoad",%rowid,%nolock,0,1) QUIT  }}}
+	set d(2)=$lg(s,2) set d(3)=$lg(s,3) set d(4)=$lg(s,4) set d(5)=$lg(s,5) set d(6)=$lg(s,6) set d(7)=$lg(s,7) set d(8)=$lg(s,8) set d(9)=$lg(s,9) set d(10)=$lg(s,10) set d(11)=$lg(s,11) set d(13)=$lg(s)  }
+	do ..%SQLQuickLogicalToOdbc(.d)
+	if SQLCODE set %ROWCOUNT=0 set:SQLCODE<0 SQLCODE=-SQLCODE lock:ul -^CBBasicDictionaryD(subs(16),"S",d(12))#"SI" set %qrc=SQLCODE QUIT
+	set:qq d=$zobjexport("User.CBBasicDictionarySub",18),d=$zobjexport(14,18) set i=-1 for  { set i=$o(d(i)) quit:i=""  set d=$zobjexport(d(i),18) } set %qrc=0,%ROWCOUNT=1 lock:ul -^CBBasicDictionaryD(subs(16),"S",d(12))#"SI" if %nolock=0 { do ..%SQLReleaseLock(%rowid,0,0) do:$g(il) $zu(115,2,il) } QUIT
+	Quit
+%SQLReleaseLock(%rowid,s=0,i=0,e="")
+	new %d,subs
+	set %d(1)=%rowid,%d(0)=$p(%d(1),"||",1),%d(12)=$p(%d(1),"||",2),subs(16)=$p(%d(0),"||",1) set s=$e("S",s)_$e("D",i)
+	lock -^CBBasicDictionaryD(subs(16),"S",%d(12))#s
+	set:i&&($g(%0CacheLock("User.CBBasicDictionarySub"))) %0CacheLock("User.CBBasicDictionarySub")=%0CacheLock("User.CBBasicDictionarySub")-1
+	QUIT
+%SQLReleaseTableLock(s=0,i=0)
+	set s=$e("S",s)_$e("D",i) lock -^CBBasicDictionaryD#s QUIT 1
+	Quit
+%SQLUnlock()
+	lock:$a(%l) -^CBBasicDictionaryD(subs(16),"S",%d(12))
+	QUIT
+%SQLUnlock2()
+	lock:$a(%l,3) -^CBBasicDictionarySubI("ParRefCode",%d(0),%d(2))#"D" QUIT
+%SQLUnlockError(cname)
+	set sqlcode=-110 if %oper="DELETE" { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler48",,"SQLUser"_"."_"CB_BasicDictionarySub",cname) } else { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler49",,"SQLUser"_"."_"CB_BasicDictionarySub",cname) } quit
+	Quit
+%SQLUnlockRef()
+	for %itm=2:1:$g(unlockref) {
+		if $lg(unlockref(%itm))'="%UnlockId" { lock -@$lg(unlockref(%itm))#$lg(unlockref(%itm),3) }
+		else { do $classmethod($lg(unlockref(%itm),2),$lg(unlockref(%itm)),$lg(unlockref(%itm),3),1,1) }
+		set:$g(%0CacheLock($lg(unlockref(%itm),2))) %0CacheLock($lg(unlockref(%itm),2))=%0CacheLock($lg(unlockref(%itm),2))-1
+	}
+	QUIT
+%SQLUpdate(%rowid,%check,%d,%vco,%tstart=1,%mv=0,%polymorphic=0,%soid)
+	// SQL UPDATE method for table SQLUser.CB_BasicDictionarySub
+	new %e,bva,%ele,%itm,%key,%f,%l,%n,%nc,%oper,%pos,%s,icol,omcall,s,sn,sqlcode,subs,t set %oper="UPDATE",sqlcode=0,%ROWID=%rowid,$e(%e,1)=$c(0),%l=$c(0,0,0,0)
+	if '$d(%0CacheSQLRA) { new %0CacheSQLRA set omcall=1 }
+	if '$a(%check,7) {
+		if '$a(%check),'..%SQLValidateFields(.sqlcode) { set SQLCODE=sqlcode QUIT  }
+		do ..%SQLNormalizeFields()
+	}
+	if ($d(%d(1))&&($g(%d(1))'=%rowid))||($d(%d(0))&&($g(%d(0))'=$p(%rowid,"||",1)))||($d(%d(12))&&($g(%d(12))'=$p(%rowid,"||",2))) { set SQLCODE=-107,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler17",,"'ID', 'BD_ParRef', or 'childsub'","SQLUser"_"."_"CB_BasicDictionarySub") QUIT  }
+	for icol=2:1:13 { set $e(%e,icol)=$c($d(%d(icol))) }
+	set %d(1)=%rowid,%e(1)=%rowid,%d(0)=$p(%d(1),"||",1),%d(12)=$p(%d(1),"||",2),subs(16)=$p(%d(0),"||",1)
+	if '$a(%check,2) { new %ls if $tlevel,$i(%0CacheLock("User.CBBasicDictionarySub"))>$zu(156,50,1) { lock +^CBBasicDictionaryD:$zu(115,4) lock:$t -^CBBasicDictionaryD set %ls=$s($t:2,1:0) } else { lock +^CBBasicDictionaryD(subs(16),"S",%d(12)):$zu(115,4) set %ls=$t } set:%ls=2 $e(%check,2)=$c(1) set:%ls=1 $e(%l)=$c(1) if '%ls { set SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler40",,%oper,"SQLUser"_"."_"CB_BasicDictionarySub",$g(%d(1))) RETURN  }} if %tstart { TSTART:($zu(115,1)=1)||('$TLEVEL&&($zu(115,1)=2))  }
+	set $zt="ERRORUpdate"
+	if $g(%vco)="" { do ..%SQLGetOld(%rowid,.%d,.%e,.sqlcode) i sqlcode { s SQLCODE=-109 do ..%SQLEExit() QUIT  } for icol=13,2 { set:'$d(%d(icol)) %d(icol)=%e(icol) set:%d(icol)=%e(icol) $e(%e,icol)=$c(0) }} else { do ..%SQLGetOldAll() if sqlcode { set SQLCODE=-109 do ..%SQLEExit() QUIT  } for icol=2,3,4,5,6,7,8,9,10,11,13 { set:'$d(%d(icol)) %d(icol)=%e(icol) set:%d(icol)=%e(icol) $e(%e,icol)=$c(0) }}
+	if %e(13)'="" set sn=$p(%e(13),$e(%e(13)),$l(%e(13),$e(%e(13)))-1) if "CBBasicDictionarySub"'=sn new %f do ..%SQLCopyIcolIntoName() do $classmethod(sn,"%SQLUpdate",%rowid,%check,.%d,$g(%vco),%tstart,%mv,1) QUIT
+	if '$a(%check) {
+		do {
+			if $g(%vco)'="" { d @%vco quit:sqlcode<0  }
+			if $a(%e,2),$g(%d(2))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,3)) }
+			if $a(%e,3),$g(%d(3))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,4)) }
+			quit:sqlcode
+			if ($a(%e,2)) {	// UNIQUE constraint ParRefCode
+				if '($a(%check,2)#2),$g(%0CacheLock("User.CBBasicDictionarySub"))'>$zu(156,50,1) {
+					lock +^CBBasicDictionarySubI("ParRefCode",%d(0),%d(2)):$zu(115,4) if $t { set $e(%l,3)=$c(1) } else { do ..%SQLUnlockError("ParRefCode") quit  } 
+					lock +^CBBasicDictionarySubI("ParRefCode",%d(0),%e(2)):$zu(115,4) if $t { lock -^CBBasicDictionarySubI("ParRefCode",%d(0),%e(2)) } else { do ..%SQLUnlockError("ParRefCode") quit  }
+				}
+				if '..ParRefCodeSQLCheckUnique(0,%d(1),%d(0),%d(2)) { set sqlcode=-120,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler10",,"SQLUser"_"."_"CB_BasicDictionarySub","ParRefCode","BD_ParRef"_"="_$$quoter^%apiSQL($g(%d(0)))_","_"Code"_"="_$$quoter^%apiSQL($g(%d(2)))) quit  }
+			}
+			new %fk,%st,%t,%y
+			if ($a(%e,2)),'$zu(115,7) {
+				set %t="" for  { set %t=$o(^rINDEXEXT("F","User.CBBasicDictionarySub","ParRefCode","f",%t)) quit:%t=""  set %st=(%t="User.CBBasicDictionarySub") s %fk="" for  { set %fk=$o(^rINDEXEXT("F","User.CBBasicDictionarySub","ParRefCode","f",%t,%fk)) quit:%fk=""  x "set %y=$classmethod(%t,%fk_""SQLFKeyRefAction"",%st,""ParRefCode"",$a(%check,2),,%e(2),,%d(2))" if %y { set sqlcode=-123 quit  }}}
+			}
+		} while 0
+		if sqlcode { set SQLCODE=sqlcode do ..%SQLEExit() QUIT  }
+	}
+	if $s($a(%e,2):1,$a(%e,3):1,$a(%e,4):1,$a(%e,5):1,$a(%e,6):1,$a(%e,7):1,$a(%e,8):1,$a(%e,9):1,$a(%e,10):1,$a(%e,11):1,1:$a(%e,13)) {
+		set ^CBBasicDictionaryD(subs(16),"S",%d(12))=$listupdate($g(^CBBasicDictionaryD(subs(16),"S",%d(12))),1,$a(%e,13):%d(13),$a(%e,2):%d(2),$a(%e,3):%d(3),$a(%e,4):%d(4),$a(%e,5):%d(5),$a(%e,6):%d(6),$a(%e,7):%d(7),$a(%e,8):%d(8),$a(%e,9):%d(9),$a(%e,10):%d(10),$a(%e,11):%d(11))
+	}
+	if '$a(%check,3) { 
+		if $a(%e,2)||$a(%e,13) {	// Code index map
+			if $a(%e,2) { set sn(1)=$zu(28,%e(2),5) set sn(2)=subs(16) set sn(3)=%d(12) k ^CBBasicDictionarySubI("Code",sn(1),sn(2),sn(3)) }
+			set sn(1)=$zu(28,%d(2),5) set sn(2)=subs(16) set sn(3)=%d(12) set ^CBBasicDictionarySubI("Code",sn(1),sn(2),sn(3))=%d(13)
+		}
+		if $a(%e,2)||$a(%e,13) {	// ParRefCode index map
+			if $a(%e,2) { set sn(1)=subs(16) set sn(2)=$zu(28,%e(2),5) set sn(3)=%d(12) k ^CBBasicDictionarySubI("ParRefCode",sn(1),sn(2),sn(3)) }
+			set sn(1)=subs(16) set sn(2)=$zu(28,%d(2),5) set sn(3)=%d(12) set ^CBBasicDictionarySubI("ParRefCode",sn(1),sn(2),sn(3))=%d(13)
+		}
+	}
+	do ..%SQLUnlock2()
+	do ..%SQLUnlock() TCOMMIT:%tstart&&($zu(115,1)=1)
+	set SQLCODE=0 kill:$g(omcall) %0CacheSQLRA
+	QUIT
+ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler51",,%oper,"SQLUser"_"."_"CB_BasicDictionarySub",$ze) if $ze["<FRAMESTACK>" { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler52",,$ze,%oper,"SQLUser"_"."_"CB_BasicDictionarySub") do ##Class(%SYS.System).WriteToConsoleLog(%msg) if ($zu(67,10,$j)=1)||($zu(67,10,$j)=3) { write !,%msg h 3 } HALT  } do ..%SQLEExit() QUIT  
+	Quit
+%SQLValidateFields(sqlcode)
+	if $g(%d(6))'="",'($select($zu(115,13)&&(%d(6)=$c(0)):1,$isvalidnum(%d(6),,0,86400)&&(%d(6)'=86400):1,'$isvalidnum(%d(6)):$$Error^%apiOBJ(7207,%d(6)),%d(6)<0:$$Error^%apiOBJ(7204,%d(6),0),1:$$Error^%apiOBJ(7203,%d(6),86400))) { set sqlcode=..%SQLInvalid(6+1,%d(6)) } 
+	if $g(%d(5))'="",'($s($zu(115,13)&&(%d(5)=$c(0)):1,$isvalidnum(%d(5),0,0,2980013):1,'$isvalidnum(%d(5)):$$Error^%apiOBJ(7207,%d(5)),%d(5)<0:$$Error^%apiOBJ(7204,%d(5),0),1:$$Error^%apiOBJ(7203,%d(5),2980013))) { set sqlcode=..%SQLInvalid(5+1,%d(5)) } 
+	new %f for %f=4,8 { if $g(%d(%f))'="",'($s(%d(%f)'[","&&(",Y,N,"[(","_$select(%d(%f)=$c(0):"",1:%d(%f))_",")):1,1:$$Error^%apiOBJ(7205,%d(%f),",Y,N"))) set sqlcode=..%SQLInvalid(%f+1,$g(%d(%f))) quit  } 
+	if $g(%d(9))'="",'($select(%d(9)=$c(0)&&$zu(115,13):1,$isvalidnum(%d(9),0):1,1:$$Error^%apiOBJ(7207,%d(9)))) { set sqlcode=..%SQLInvalid(9+1,%d(9)) } 
+	if $g(%d(10))'="",'(($l(%d(10))'>1000)) { set sqlcode=..%SQLInvalid(10+1,%d(10)) } 
+	for %f=2,3 { if $g(%d(%f))'="",'(($l(%d(%f))'>50)) set sqlcode=..%SQLInvalid(%f+1,$g(%d(%f))) quit  } 
+	QUIT 'sqlcode
+%SQLnBuild() public {
+	set %n=$lb("ID","ID","Code","Descripts","Status","UpdateDate","UpdateTime","UpdateUser_Dr","DefaultValue","SeqNo","Value","ENDesc","childsub","x__classname")
+	QUIT }
+%Save(related=1) public {
+	Set $ZTrap="%SaveERR"
+	New %objTX Set sc=1,traninit=0 If '$data(%objTX2) New %objTX2 Set %objTX2=1
+	If +$g(%objtxSTATUS)=0 { Set traninit=1 k %objtxSTATUS,%objtxLIST,%objtxOIDASSIGNED,%objtxOIDUNASSIGNED,%objtxMODIFIED,%objtxVERSION k:'$TLevel %objtxTID,%objtxID i '$zu(115,9) { s %objtxSTATUS=1 } else { TStart  s %objtxSTATUS=2 } }
+	If $get(%objTX2(+$this)) Set sc=..%BuildObjectGraph(1) Quit:('sc) sc Set intRef=+$this,objValue=$get(%objTX(1,+$g(%objTX(0,intRef)),1)),sc=..%SerializeObject(.objValue,1) Set:(''sc) %objTX(1,%objTX(0,intRef),1)=objValue Quit sc
+	Set sc=..%BuildObjectGraph(related+2) If ('sc) ZTrap "SG"
+	If '$data(%objTX(2)) s sc=1 GoTo %SaveCOMMIT
+	Set %objTX(3)=0,i="" For  Set i=$order(%objTX(2,i),1,data) Quit:i=""  Set intRef=$li(data) If '$data(%objTX(1,+$g(%objTX(0,intRef)),2)) Set %objTX(3,$increment(%objTX(3)))=%objTX(1,%objTX(0,intRef)) Kill %objTX(2,i),%objTX(11,intRef)
+	For ptr=1:1 Quit:ptr>%objTX(3)  Set objRef=%objTX(3,ptr),objValue=$get(%objTX(1,+$g(%objTX(0,+objRef)),1)),sc=objRef.%SerializeObject(.objValue) Do  Set %objTX(1,%objTX(0,+objRef),1)=objValue Kill %objTX(1,%objTX(0,+objRef),3) Do $system.CLS.SetModified(objRef,0)
+	. If ('sc) ZTrap "SG"
+	. i $g(%objtxSTATUS)=2 { Set %objtxMODIFIED(+objRef)=$system.CLS.GetModifiedBits(objRef) }
+	. Set intSucc="" For  Set intSucc=$order(%objTX(1,%objTX(0,+objRef),3,intSucc)) Quit:intSucc=""  Kill %objTX(1,%objTX(0,+objRef),3,intSucc),%objTX(1,intSucc,2,%objTX(0,+objRef)) If '$data(%objTX(1,intSucc,2)) Set %objTX(3,$increment(%objTX(3)))=%objTX(1,intSucc) Kill:$d(%objTX(11,+%objTX(1,intSucc))) %objTX(2,%objTX(11,+%objTX(1,intSucc))),%objTX(11,+%objTX(1,intSucc))
+	Kill %objTX(3) Set %objTX(3)=0 For  Set pserial=0 Do  Quit:'pserial
+	. Set i="" For  Set i=$order(%objTX(2,i),1,data) Quit:i=""  Set intPred="",intRef=$li(data) For  Set intPred=$order(%objTX(1,%objTX(0,intRef),2,intPred)) Quit:intPred=""  If $get(%objTX(1,intPred,6))=1 Set objValue=$get(%objTX(1,intPred,1)),sc=(%objTX(1,intPred)).%SerializeObject(.objValue,1) If ('sc) { If $d(%objTX(11,+%objTX(1,intPred))) { Set %objTX(2,%objTX(11,+%objTX(1,intPred)),1)=sc } Else { Set %objTX(2,$i(%objTX(2)),1)=sc,%objTX(11,+%objTX(1,intPred))=%objTX(2) } } If (''sc) Set pserial=1,%objTX(1,intPred,1)=objValue Do
+	. . Set intSucc="" For  Set intSucc=$order(%objTX(1,intPred,3,intSucc)) Quit:intSucc=""  Kill %objTX(1,intPred,3,intSucc),%objTX(1,intSucc,2,intPred) If '$data(%objTX(1,intSucc,2)) Set %objTX(3,$i(%objTX(3)))=%objTX(1,intSucc) Kill:$d(%objTX(11,+%objTX(1,intSucc))) %objTX(2,%objTX(11,+%objTX(1,intSucc))),%objTX(11,+%objTX(1,intSucc))
+	. . For ptr=1:1 Quit:ptr>%objTX(3)  Set objSerialize=%objTX(3,ptr),objValue=$get(%objTX(1,+$g(%objTX(0,+objSerialize)),1)),sc=objSerialize.%SerializeObject(.objValue) Do  Set %objTX(1,%objTX(0,+objSerialize),1)=objValue Kill %objTX(1,%objTX(0,+objSerialize),3) Do $system.CLS.SetModified(objSerialize,0)
+	. . . If ('sc) ZTrap "SG"
+	. . . i $g(%objtxSTATUS)=2 { Set %objtxMODIFIED(+objSerialize)=$system.CLS.GetModifiedBits(objSerialize) }
+	. . . Set intSucc="" For  Set intSucc=$order(%objTX(1,%objTX(0,+objSerialize),3,intSucc)) Quit:intSucc=""  Kill %objTX(1,%objTX(0,+objSerialize),3,intSucc),%objTX(1,intSucc,2,%objTX(0,+objSerialize)) If '$data(%objTX(1,intSucc,2)) Set %objTX(3,$i(%objTX(3)))=%objTX(1,intSucc) Kill:$d(%objTX(11,+%objTX(1,intSucc))) %objTX(2,%objTX(11,+%objTX(1,intSucc))),%objTX(11,+%objTX(1,intSucc))
+	. . Kill %objTX(3) Set %objTX(3)=0
+	If $data(%objTX(2))>2 {
+		Set sc=$$Error^%apiOBJ(5827,$classname())
+		set i="" for  set i=$order(%objTX(2,i)) quit:i=""  if ('$Get(%objTX(2,i,1),1)) set sc=$$EmbedStatus^%apiOBJ(sc,%objTX(2,i,1))
+	 	ZTrap "SG"
+	}
+	Set cmd="" For  Set cmd=$order(%objTX(9,cmd)) Quit:cmd=""  Xecute cmd
+%SaveCOMMIT	If traninit { i $g(%objtxSTATUS)=1 { k %objtxSTATUS } else { If $Tlevel { TCommit  } k %objtxSTATUS,%objtxLIST,%objtxOIDASSIGNED,%objtxOIDUNASSIGNED,%objtxMODIFIED,%objtxVERSION k:'$TLevel %objtxTID,%objtxID } }
+	Do $system.CLS.SetModified(0) Quit sc
+%SaveERR	Set $ZTrap="" If $extract($zerror,1,5)'="<ZSG>" Set sc=$$Error^%apiOBJ(5002,$ZE)
+	If $get(traninit) { i $g(%objtxSTATUS)=2 { s sc=$select(+sc:$$%TRollBack^%occTransaction(),1:$$AppendStatus^%occSystem(sc,$$%TRollBack^%occTransaction())) k %objtxTID,%objtxID } else { k %objtxSTATUS } }
+	Quit sc }
+%SaveData(id) public {
+	try {
+		set id=$listget(i%"%%OID") if id'="" { set insert=0,idassigned=1 } else { set insert=1,idassigned=0 }
+		set lock=0,lockok=0,tSharedLock=0,locku=$c(0)
+		if 'idassigned { set id1=$i(^CBBasicDictionaryC("S")),id=i%BDParRef_"||"_id1 do ..%IdSet(id) set:$g(%objtxSTATUS)=2 %objtxOIDASSIGNED(+$this)="" }
+		else { set id1=$p(id,"||",2) }
+		if (i%BDParRef'="")&&('##class(User.CBBasicDictionary).%ExistsId(i%BDParRef)) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5824,"User.CBBasicDictionarySub.BDParRef("_$zu(144,1,i%BDParRef)_")")) }
+		set zzc10v1=$zu(28,i%Code,5)
+		set zzc10v2=$zu(28,i%Code,5)
+		try {
+			set tInnerException = ""
+			;
+			if 'insert {
+				if (i%%Concurrency<4)&&(i%%Concurrency) { If $tlevel,$i(%0CacheLock($classname()))>$zu(156,50,1) { lock +(^CBBasicDictionaryD):$zu(115,4) Set lockok=$s($test:2,1:0) Lock:lockok -(^CBBasicDictionaryD) } else { lock +(^CBBasicDictionaryD(i%BDParRef,"S",id1)):$zu(115,4) Set lockok=$Select($test:1,1:0),lock=lockok } If 'lockok { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
+				if ('$Data(^CBBasicDictionaryD(i%BDParRef,"S",id1))) {
+					set insert=1
+					if lock { lock -(^CBBasicDictionaryD(i%BDParRef,"S",id1)) set (lock,lockok) = 0 }
+				}
+			}
+			if insert {
+				if ('lockok&&i%%Concurrency&&$tlevel)||(i%%Concurrency=4) { If i%%Concurrency < 4,$i(%0CacheLock($classname()))>$zu(156,50,1) { lock +(^CBBasicDictionaryD):$zu(115,4) Set lockok=$Select($test:2,1:0) Lock:lockok -(^CBBasicDictionaryD) } Else { lock +(^CBBasicDictionaryD(i%BDParRef,"S",id1)):$zu(115,4) set lockok=$Select($test:1,1:0) set:i%%Concurrency'=4 lock=lockok } if 'lockok { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
+				if i%%Concurrency=3 { lock +(^CBBasicDictionaryD(i%BDParRef,"S",id1)#"S") set tSharedLock=1 }
+				if (idassigned) && ((i%BDParRef'=$p(id,"||",1))) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5814,$classname(),id)) }
+				if (i%%Concurrency)&&($g(%0CacheLock($classname()))'>$zu(156,50,1)) { l +^CBBasicDictionarySubI("ParRefCode",i%BDParRef,zzc10v1):$zu(115,4) if $Test { Set $Extract(locku,1)=$c(1) } Else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } } If $data(^CBBasicDictionarySubI("ParRefCode",i%BDParRef,zzc10v1)) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5808,$classname()_":ParRefCode:"_$zreference)) }
+				set ^CBBasicDictionaryD(i%BDParRef,"S",id1)=$lb("",i%Code,i%Descripts,i%Status,i%UpdateDate,i%UpdateTime,i%UpdateUserDr,i%DefaultValue,i%SeqNo,i%Value,i%ENDesc)
+				set ^CBBasicDictionarySubI("Code",zzc10v2,i%BDParRef,id1)=""
+				set ^CBBasicDictionarySubI("ParRefCode",i%BDParRef,zzc10v1,id1)=""
+			}
+			else {
+				set zzc31v1=$listget(^CBBasicDictionaryD(i%BDParRef,"S",id1),2)
+				set zzc31v2=$zu(28,zzc31v1,5)
+				if i%Code'=zzc31v1 { if (i%%Concurrency)&&($g(%0CacheLock($classname()))'>$zu(156,50,1)) { lock +^CBBasicDictionarySubI("ParRefCode",i%BDParRef,zzc10v1):$zu(115,4) if $Test { Set $Extract(locku,1)=$c(1) } else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } l +^CBBasicDictionarySubI("ParRefCode",i%BDParRef,zzc31v2):$zu(115,4) if $t { l -^CBBasicDictionarySubI("ParRefCode",i%BDParRef,zzc31v2) } Else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) }} If ($data(^CBBasicDictionarySubI("ParRefCode",i%BDParRef,zzc10v1)))&&('$data(^CBBasicDictionarySubI("ParRefCode",i%BDParRef,zzc10v1,id1))) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5808,$classname()_":ParRefCode:"_$zreference)) } }
+				if (i%BDParRef'=$p(id,"||",1)) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5814,$classname(),id)) }
+				if (i%BDParRef'=i%BDParRef)||(i%Code'=zzc31v1) {
+					kill ^CBBasicDictionarySubI("Code",$zu(28,zzc31v1,5),i%BDParRef,id1)
+					set ^CBBasicDictionarySubI("Code",zzc10v2,i%BDParRef,id1)=""
+				}
+				if (i%BDParRef'=i%BDParRef)||(i%Code'=zzc31v1) {
+					kill ^CBBasicDictionarySubI("ParRefCode",i%BDParRef,zzc31v2,id1)
+					if i%Code'=zzc31v1{ n %fk,%fc s %fc="" f  s %fc=$o(^rINDEXEXT("F",$classname(),"ParRefCode","f",%fc)) q:%fc=""  s %fk="" f  s %fk=$o(^rINDEXEXT("F",$classname(),"ParRefCode","f",%fc,%fk)) q:%fk=""  s tStatus=$classmethod(%fc,%fk_"Update",i%BDParRef,zzc31v1,i%BDParRef,i%Code) i ('tStatus) Throw ##class(%Exception.StatusException).ThrowIfInterrupt(tStatus) }
+					set ^CBBasicDictionarySubI("ParRefCode",i%BDParRef,zzc10v1,id1)=""
+				}
+				set ^CBBasicDictionaryD(i%BDParRef,"S",id1)=$lb("",i%Code,i%Descripts,i%Status,i%UpdateDate,i%UpdateTime,i%UpdateUserDr,i%DefaultValue,i%SeqNo,i%Value,i%ENDesc)
+			}
+			set tStatus = 1
+		}
+		catch tInnerException {
+			if ('idassigned) { Set $zobjoid("",$listget(i%"%%OID"))="",i%"%%OID"="" kill:$g(%objtxSTATUS)=2 %objtxOIDASSIGNED(+$this) }
+			if (tSharedLock) {  lock -(^CBBasicDictionaryD(i%BDParRef,"S",id1)#"S") } elseif (lockok=1)&&(insert)&&(i%%Concurrency=4) {  lock -(^CBBasicDictionaryD(i%BDParRef,"S",id1)) }
+		}
+		lock:$Ascii($Extract(locku,1)) -^CBBasicDictionarySubI("ParRefCode",i%BDParRef,zzc10v1)#"D"
+		if lock lock -(^CBBasicDictionaryD(i%BDParRef,"S",id1))
+		if $Isobject(tInnerException) { throw tInnerException }
+	}
+	catch tException {
+		set tStatus = tException.AsStatus()
+	}
+	quit tStatus }
+%SaveDirect(id="",idList="",data,concurrency=-1) public {
+	try {
+		set zzc5v1=$li(idList,1)
+		set zzc5v2=$li(idList,2)
+		set zzc5v3=$listget(data,2)
+		set zzc5v4=$listget(data,1)
+		set zzc5v5=$li(idList,1)
+		set zzc5v6=$li(idList,2)
+		if concurrency=-1 { set concurrency=$zu(115,10) }
+		if id'="" { set insert=0,idassigned=1 } else { set insert=1,idassigned=0 }
+		set lock=0,tSharedLock=0,locku=$c(0)
+		if 'idassigned { set zzc5v6=$i(^CBBasicDictionaryC("S")),id=zzc5v5_"||"_zzc5v6 }
+		else { set zzc5v6=$p(id,"||",2) }
+		if (zzc5v5'="")&&('##class(User.CBBasicDictionary).%ExistsId(zzc5v5)) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5824,"User.CBBasicDictionarySub.BDParRef("_$zu(144,1,zzc5v5)_")")) }
+		set zzc10v1=$zu(28,zzc5v3,5)
+		set zzc10v2=$zu(28,zzc5v3,5)
+		try {
+			set tInnerException = ""
+			;
+			if 'insert {
+				if concurrency { if $tlevel,$i(%0CacheLock($classname()))>$zu(156,50,1) { lock +(^CBBasicDictionaryD):$zu(115,4) set lock=$Select($test:2,1:0) lock:lock -(^CBBasicDictionaryD) } else { lock +(^CBBasicDictionaryD(zzc5v5,"S",zzc5v6)):$zu(115,4) set lock=$Select($test:1,1:0) } if 'lock { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
+				if ('$Data(^CBBasicDictionaryD(zzc5v5,"S",zzc5v6))) {
+					set insert=1
+					if lock { lock -(^CBBasicDictionaryD(zzc5v5,"S",zzc5v6)) set (lock,lockok) = 0 }
+				}
+			}
+			if insert {
+				if concurrency { if $tlevel,$i(%0CacheLock($classname()))>$zu(156,50,1) { lock +(^CBBasicDictionaryD):$zu(115,4) set lock=$Select($test:2,1:0) lock:lock -(^CBBasicDictionaryD) } else { lock +(^CBBasicDictionaryD(zzc5v5,"S",zzc5v6)):$zu(115,4) set lock=$Select($test:1,1:0) } if 'lock { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
+				if (idassigned) && ((zzc5v5'=$p(id,"||",1))) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5814,$classname(),id)) }
+				if (concurrency)&&($g(%0CacheLock($classname()))'>$zu(156,50,1)) { l +^CBBasicDictionarySubI("ParRefCode",zzc5v5,zzc10v1):$zu(115,4) if $Test { Set $Extract(locku,1)=$c(1) } Else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } } If $data(^CBBasicDictionarySubI("ParRefCode",zzc5v5,zzc10v1)) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5808,$classname()_":ParRefCode:"_$zreference)) }
+				set ^CBBasicDictionaryD(zzc5v5,"S",zzc5v6)=data
+				set ^CBBasicDictionarySubI("Code",zzc10v2,zzc5v5,zzc5v6)=zzc5v4
+				set ^CBBasicDictionarySubI("ParRefCode",zzc5v5,zzc10v1,zzc5v6)=zzc5v4
+			}
+			else {
+				set zzc31v1=$listget(^CBBasicDictionaryD(zzc5v1,"S",zzc5v2),2)
+				set zzc31v2=$zu(28,zzc31v1,5)
+				if zzc5v3'=zzc31v1 { if (concurrency)&&($g(%0CacheLock($classname()))'>$zu(156,50,1)) { lock +^CBBasicDictionarySubI("ParRefCode",zzc5v5,zzc10v1):$zu(115,4) if $Test { Set $Extract(locku,1)=$c(1) } else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } l +^CBBasicDictionarySubI("ParRefCode",zzc5v1,zzc31v2):$zu(115,4) if $t { l -^CBBasicDictionarySubI("ParRefCode",zzc5v1,zzc31v2) } Else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) }} If ($data(^CBBasicDictionarySubI("ParRefCode",zzc5v5,zzc10v1)))&&('$data(^CBBasicDictionarySubI("ParRefCode",zzc5v5,zzc10v1,zzc5v6))) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5808,$classname()_":ParRefCode:"_$zreference)) } }
+				if (zzc5v5'=$p(id,"||",1)) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5814,$classname(),id)) }
+				if (zzc5v5'=zzc5v1)||(zzc5v3'=zzc31v1) {
+					kill ^CBBasicDictionarySubI("Code",$zu(28,zzc31v1,5),zzc5v1,zzc5v2)
+					set ^CBBasicDictionarySubI("Code",zzc10v2,zzc5v5,zzc5v6)=zzc5v4
+				}
+				if (zzc5v5'=zzc5v1)||(zzc5v3'=zzc31v1) {
+					kill ^CBBasicDictionarySubI("ParRefCode",zzc5v1,zzc31v2,zzc5v2)
+					if zzc5v3'=zzc31v1{ n %fk,%fc s %fc="" f  s %fc=$o(^rINDEXEXT("F",$classname(),"ParRefCode","f",%fc)) q:%fc=""  s %fk="" f  s %fk=$o(^rINDEXEXT("F",$classname(),"ParRefCode","f",%fc,%fk)) q:%fk=""  s tStatus=$classmethod(%fc,%fk_"Update",zzc5v1,zzc31v1,zzc5v5,zzc5v3) i ('tStatus) Throw ##class(%Exception.StatusException).ThrowIfInterrupt(tStatus) }
+					set ^CBBasicDictionarySubI("ParRefCode",zzc5v5,zzc10v1,zzc5v6)=zzc5v4
+				}
+				set ^CBBasicDictionaryD(zzc5v5,"S",zzc5v6)=data
+			}
+			set tStatus = 1
+		}
+		catch tInnerException {
+		}
+		lock:$Ascii($Extract(locku,1)) -^CBBasicDictionarySubI("ParRefCode",zzc5v5,zzc10v1)#"D"
+		if lock lock -(^CBBasicDictionaryD(zzc5v5,"S",zzc5v6))
+		if $Isobject(tInnerException) { throw tInnerException }
+	}
+	catch tException {
+		set tStatus = tException.AsStatus()
+	}
+	quit tStatus }
+%SaveIndices(pStartId="",pEndId="",lockExtent=0) public {
+	If lockExtent {
+		Set sc=..%LockExtent(0)
+		Quit:('sc) sc
+	}
+	s bsv4N1=""
+BSLoop1	s bsv4N1=$order(^CBBasicDictionaryD(bsv4N1)) g:bsv4N1="" BSLoopDun
+	s bsv4N2=""
+BSLoop3	s bsv4N2=$order(^CBBasicDictionaryD(bsv4N1,"S",bsv4N2)) g:bsv4N2="" BSLoop1
+		s id=bsv4N1_"||"_bsv4N2
+	Set bsv0N1=$p(id,"||",1)
+	Set bsv0N2=$Get(^CBBasicDictionaryD(bsv0N1,"S",bsv4N2))
+	Set bsv0N3=$zu(28,$listget(bsv0N2,2),5)
+	Set ^CBBasicDictionarySubI("Code",bsv0N3,bsv0N1,bsv4N2)=$listget(bsv0N2,1)
+	Set bsv0N4=$zu(28,$listget(bsv0N2,2),5)
+	Set ^CBBasicDictionarySubI("ParRefCode",bsv0N1,bsv0N4,bsv4N2)=$listget(bsv0N2,1)
+	g BSLoop3
+BSLoopDun
+	If lockExtent { Do ..%UnlockExtent(0) }
+	Quit 1
+CatchError	Set $ZTrap=""
+	If $ZE'="" {
+		Set sc = $$Error^%apiOBJ(5002,$ZE)
+	}
+	If lockExtent { Do ..%UnlockExtent(0) }
+	Quit sc }
+%SerializeObject(serial,partial=0) public {
+	try {
+		If $get(%objTX2(+$this)) { Set partial = 1 } ElseIf ('partial) { Set %objTX2(+$this) = 1 }
+		Set sc=..%ValidateObject(,0) Throw:('sc) ##class(%Exception.StatusException).ThrowIfInterrupt(sc)
+		Set sc=..%NormalizeObject() Throw:('sc) ##class(%Exception.StatusException).ThrowIfInterrupt(sc)
+		If r%BDParRef'="" { Set:'$data(%objTX(0,+r%BDParRef)) %objTX(0,+r%BDParRef)=$i(%objTX(1)),%objTX(1,%objTX(0,+r%BDParRef))=r%BDParRef,%objTX(1,%objTX(0,+r%BDParRef),1)=..BDParRefGetObject(1),%objTX(1,%objTX(0,+r%BDParRef),6)=1 Set M%BDParRef=1,i%BDParRef=$listget(%objTX(1,%objTX(0,+r%BDParRef),1)) }
+		If i%BDParRef="" Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5659,$classname()_"::"_"BDParRef"))
+		If r%UpdateUserDr'="" { Set:'$data(%objTX(0,+r%UpdateUserDr)) %objTX(0,+r%UpdateUserDr)=$i(%objTX(1)),%objTX(1,%objTX(0,+r%UpdateUserDr))=r%UpdateUserDr,%objTX(1,%objTX(0,+r%UpdateUserDr),1)=..UpdateUserDrGetObject(1),%objTX(1,%objTX(0,+r%UpdateUserDr),6)=1 Set M%UpdateUserDr=1,i%UpdateUserDr=$listget(%objTX(1,%objTX(0,+r%UpdateUserDr),1)) }
+		s:$g(%objtxSTATUS)=2 %objtxLIST(+$this)=$this
+		Set id=$listget(serial),sc=..%SaveData(.id) If ('sc) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt(sc) }
+		Set serial=(..%Oid())
+		if 'partial {
+			Set %objTX2(+$this) = 0
+		}
+		set sc=1
+	}
+	catch tException {
+		If 'partial { Set %objTX2(+$this) = 0 }
+		set sc = tException.AsStatus()
+	}
+	Quit sc }
+%AddToSaveSet(depth=3,refresh=0) public {
+	If $data(%objTX(0,+$this)) && ('refresh) Quit 1
+	Set sc=1,intOref=+$this
+	If refresh,$data(%objTX(0,intOref),index) Set intPoref="" For  Set intPoref=$order(%objTX(1,index,2,intPoref)) Quit:intPoref=""  Kill %objTX(1,%objTX(0,intPoref),3,index),%objTX(1,index,2,%objTX(0,intPoref))
+	Set serial=i%"%%OID",%objTX(0,intOref)=$i(%objTX(1)),%objTX(1,%objTX(1))=$this,%objTX(1,%objTX(1),1)=serial,%objTX(1,%objTX(1),6)=1 If (serial '= "") && (depth<2) { Quit 1 } Else { Set %objTX(7,%objTX(1))=$lb(intOref,1) }
+	Set Poref=r%BDParRef If Poref'="" Set:'$data(%objTX(0,+Poref)) %objTX(6,$i(%objTX(6)))=Poref Set %objTX(8,$i(%objTX(8)))=$lb(+Poref,intOref,2)
+	Set Poref=r%UpdateUserDr If Poref'="" Set:'$data(%objTX(0,+Poref)) %objTX(6,$i(%objTX(6)))=Poref Set %objTX(8,$i(%objTX(8)))=$lb(+Poref,intOref,2)
+exit	Quit sc }
+%SortBegin(idxlist="",excludeunique=0)
+	if $select(idxlist="":1,$listfind(idxlist,"Code"):1,1:0) If $SortBegin(^CBBasicDictionarySubI("Code"))
+	if 'excludeunique,$select(idxlist="":1,$listfind(idxlist,"ParRefCode"):1,1:0) If $SortBegin(^CBBasicDictionarySubI("ParRefCode"))
+	Quit 1
+%SortEnd(idxlist="",commit=1,excludeunique=0) public {
+	if $select(idxlist="":1,$listfind(idxlist,"Code"):1,1:0) If $SortEnd(^CBBasicDictionarySubI("Code"),commit)
+	if 'excludeunique,$select(idxlist="":1,$listfind(idxlist,"ParRefCode"):1,1:0) If $SortEnd(^CBBasicDictionarySubI("ParRefCode"),commit)
+	Quit 1 }
+%UnlockExtent(shared=0,immediate=0) public {
+	If 'shared {
+		If 'immediate {
+			Lock -^CBBasicDictionaryD
+			 Quit 1
+		}
+		Lock -^CBBasicDictionaryD#"I"
+		Quit 1
+	}
+	If 'immediate {
+		Lock -^CBBasicDictionaryD#"S"
+		Quit 1
+	}
+	Lock -^CBBasicDictionaryD#"SI"
+	Quit 1 }
+%UnlockId(id,shared=0,immediate=0) public {
+	Set o1=$piece(id,"||",1),id1=$piece(id,"||",2)
+	If (o1="")||(id1="") { Quit $$Error^%apiOBJ(5832,$classname(),id) }
+	If 'shared {
+		If 'immediate {
+			Lock -(^CBBasicDictionaryD(o1,"S",id1))
+			Quit 1
+		}
+		Lock -(^CBBasicDictionaryD(o1,"S",id1)#"I")
+		Quit 1
+	}
+	If 'immediate {
+		Lock -(^CBBasicDictionaryD(o1,"S",id1)#"S")
+		Quit 1
+	}
+	Lock -(^CBBasicDictionaryD(o1,"S",id1)#"SI")
+	Quit 1 }
+%ValidateIndices(idxList="",autoCorrect=0,lockOption=1,multiProcess=1)
+	if '$listvalid(idxList) { QUIT $$Error^%apiOBJ(5591,"##class(User.CBBasicDictionarySub).%ValidateIndices()","idxList",""""" or a $list of index names") }
+	if $case(autoCorrect,1:0,0:0,:1) { QUIT $$Error^%apiOBJ(5591,"##class(User.CBBasicDictionarySub).%ValidateIndices()","autoCorrect","'0' or '1'") }
+	if $case(lockOption,2:0,1:0,0:0,:1) { QUIT $$Error^%apiOBJ(5591,"##class(User.CBBasicDictionarySub).%ValidateIndices()","lockOption","'0', '1' or '2'") }
+	if $case(multiProcess,1:0,0:0,:1) { QUIT $$Error^%apiOBJ(5591,"##class(User.CBBasicDictionarySub).%ValidateIndices()","multiProcess","'0' or '1'") }
+	new mapList QUIT $$ValidateIndices^%SYS.SECURITY("User.CBBasicDictionarySub",idxList,autoCorrect,lockOption,multiProcess)
+%ValidateObject(force=0,checkserial=1) public {
+	set sc=1
+	If r%BDParRef="",i%BDParRef="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::BDParRef("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
+	If '$system.CLS.GetModified() Quit sc
+	Set iv=..Code If iv="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::Code("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
+	If m%Code Set rc=(..CodeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"Code",iv)
+	If m%DefaultValue Set iv=..DefaultValue If iv'="" Set rc=(..DefaultValueIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"DefaultValue",iv)
+	Set iv=..Descripts If iv="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::Descripts("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
+	If m%Descripts Set rc=(..DescriptsIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"Descripts",iv)
+	If m%ENDesc Set iv=..ENDesc If iv'="" Set rc=(..ENDescIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"ENDesc",iv)
+	If m%SeqNo Set iv=..SeqNo If iv'="" Set rc=(..SeqNoIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"SeqNo",iv)
+	If m%Status Set iv=..Status If iv'="" Set rc=(..StatusIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"Status",iv)
+	If m%UpdateDate Set iv=..UpdateDate If iv'="" Set rc=(..UpdateDateIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"UpdateDate",iv)
+	If m%UpdateTime Set iv=..UpdateTime If iv'="" Set rc=(..UpdateTimeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"UpdateTime",iv)
+	If m%Value Set iv=..Value If iv'="" Set rc=(..ValueIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"Value",iv)
+	Quit sc }
+zFromDynamicObj(pDynamicObject) public {
+	set sc=1
+	try {
+		if (pDynamicObject.%IsDefined("BDParRef")) {
+			try {
+				set newIdvalue=pDynamicObject."BDParRef"
+				set existingIdValue=..BDParRefGetObjectId()
+				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"BDParRef")=##class(User.CBBasicDictionary).%OpenId(newIdvalue)
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("Code")) && (..Code'=pDynamicObject."Code") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."Code"
+					set value=$METHOD($THIS,"CodeXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."Code"
+					set $ZERROR=""
+				}
+				set ..Code=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("DefaultValue")) && (..DefaultValue'=pDynamicObject."DefaultValue") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."DefaultValue"
+					set value=$METHOD($THIS,"DefaultValueXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."DefaultValue"
+					set $ZERROR=""
+				}
+				set ..DefaultValue=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("Descripts")) && (..Descripts'=pDynamicObject."Descripts") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."Descripts"
+					set value=$METHOD($THIS,"DescriptsXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."Descripts"
+					set $ZERROR=""
+				}
+				set ..Descripts=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("ENDesc")) && (..ENDesc'=pDynamicObject."ENDesc") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."ENDesc"
+					set value=$METHOD($THIS,"ENDescXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."ENDesc"
+					set $ZERROR=""
+				}
+				set ..ENDesc=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("SeqNo")) && (..SeqNo'=pDynamicObject."SeqNo") {
+			try {
+				set value=pDynamicObject."SeqNo"
+				set ..SeqNo=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("Status")) && (..Status'=pDynamicObject."Status") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."Status"
+					set value=$METHOD($THIS,"StatusXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."Status"
+					set $ZERROR=""
+				}
+				set ..Status=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("UpdateDate")) && (..UpdateDate'=pDynamicObject."UpdateDate") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."UpdateDate"
+					set value=$METHOD($THIS,"UpdateDateXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."UpdateDate"
+					set $ZERROR=""
+				}
+				set ..UpdateDate=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("UpdateTime")) && (..UpdateTime'=pDynamicObject."UpdateTime") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."UpdateTime"
+					set value=$METHOD($THIS,"UpdateTimeXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."UpdateTime"
+					set $ZERROR=""
+				}
+				set ..UpdateTime=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("UpdateUserDr")) {
+			try {
+				set newIdvalue=pDynamicObject."UpdateUserDr"
+				set existingIdValue=..UpdateUserDrGetObjectId()
+				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"UpdateUserDr")=##class(User.HBUser).%OpenId(newIdvalue)
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("Value")) && (..Value'=pDynamicObject."Value") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."Value"
+					set value=$METHOD($THIS,"ValueXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."Value"
+					set $ZERROR=""
+				}
+				set ..Value=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+	} catch(ex) {
+		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+	}
+	quit sc }
+zToDynamicObj(pDynamicObject) public {
+	set sc=1
+	try {
+		set pDynamicObject={"ID":(..%Id()),"BDParRef":($CASE($ISOBJECT(..BDParRef),1:..BDParRef.%Id(),:"")),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"DefaultValue":(..GetLogicalToXSDValue($This,"DefaultValue",..DefaultValue)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"ENDesc":(..GetLogicalToXSDValue($This,"ENDesc",..ENDesc)),"SeqNo":(..SeqNo),"Status":(..GetLogicalToXSDValue($This,"Status",..Status)),"UpdateDate":(..GetLogicalToXSDValue($This,"UpdateDate",..UpdateDate)),"UpdateTime":(..GetLogicalToXSDValue($This,"UpdateTime",..UpdateTime)),"UpdateUserDr":($CASE($ISOBJECT(..UpdateUserDr),1:..UpdateUserDr.%Id(),:"")),"Value":(..GetLogicalToXSDValue($This,"Value",..Value))}
+	} catch(ex) {
+		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+	}
+	quit sc }
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("User.CBBasicDictionarySub",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"User.CBBasicDictionarySub")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"User.CBBasicDictionarySub")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="User.CBBasicDictionarySub"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="CBBasicDictionarySub"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"CBBasicDictionarySub"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"CBBasicDictionarySub"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set val=..Code
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"Code"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"Code>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..Descripts
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"Descripts"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"Descripts>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..Status
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"Status"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"Status>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..UpdateDate
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"UpdateDate"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"date""",1:"")_">"_$select(val="":"",1:$zdate(val,3,,,,,-672045))_endprefix_"UpdateDate>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..UpdateTime
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"UpdateTime"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"time""",1:"")_">"_$select(val="":"",1:$ztime(val,1,$l($p(val,".",2)),,1)_"Z")_endprefix_"UpdateTime>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..UpdateUserDr
+ If $IsObject(val) , deepFlag {
+   Set id=""
+   If encoded,'inlineFlag {
+     Set temp=$select($parameter("User.HBUser","XMLSUMMARY")'="":-1,1:1)
+     Set id=+$get(idlist(temp*val))
+     If 'soap12 , (id=0) Set id=$increment(idlist),oreflist(temp*id)=val,idlist(temp*val)=id
+   }
+   If +id'=0 {
+     Set %xmlmsg=currentIndent_beginprefix_"UpdateUserDr "_$select(soap12:soapPrefix_"ref=""",1:"href=""#")_"id"_id_""" />" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+   } Else { if id=0 Set id=$increment(idlist)
+     Set topArg="UpdateUserDr",summaryArg=1,group=0,createId=$get(id),typeAttr=$select(encoded||xsitype:"*",1:"User.HBUser"),local=1,savexsiAttrs=xsiAttrs
+     Set sc=val.XMLExportInternal() Goto:'sc XMLExportExit Set xsiAttrs=savexsiAttrs
+   }
+ }
+ Set val=..DefaultValue
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"DefaultValue"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"DefaultValue>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..SeqNo
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"SeqNo"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"long""",1:"")_">"_val_endprefix_"SeqNo>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..Value
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"Value"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"Value>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..ENDesc
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"ENDesc"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"ENDesc>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ If indentFlag { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ } ElseIf $get(oreflist)'=1 {
+   Set oreflist=1
+   Set id=$order(oreflist(""))
+   While id'="" {
+     Set val=oreflist(id)
+     Kill oreflist(id)
+     Set group=0,createId=$zabs(id),typeAttr="*",local=savelocal,xsiAttrs=initialxsiAttrs
+     If $classname(val)="User.CBBasicDictionarySub" {
+       Set attrsArg=attrsVal
+       Set topArg=tag,summaryArg=0
+       Set sc=val.XMLExportInternal()
+     } Else {
+       Set topArg="",summaryArg=(id<0)
+       Set sc=val.XMLExportInternal()
+     }
+     If 'sc Quit
+     Set id=$order(oreflist(""))
+   }
+   Kill oreflist
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("User.CBBasicDictionarySub",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"User.CBBasicDictionarySub")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+ If $get(checkRequired),(''sc) { Set nodelist=""
+   If '$data(exists("Code")) Set nodelist=nodelist_"Code, "
+   If '$data(exists("Descripts")) Set nodelist=nodelist_"Descripts, "
+   If nodelist'="" Set sc=$$Error^%apiOBJ(6318,$extract(nodelist,1,*-2))
+ }
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ If tag="Code" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   Set exists("Code")=1
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(($l(data)'>50):1,1:$$Error^%apiOBJ(7201,data,50))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..Code=data
+   Goto XMLLOOP } }
+ If tag="Descripts" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   Set exists("Descripts")=1
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(($l(data)'>50):1,1:$$Error^%apiOBJ(7201,data,50))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..Descripts=data
+   Goto XMLLOOP } }
+ If tag="Status" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(data'[","&&(",Y,N,"[(","_$select(data=$c(0):"",1:data)_",")):1,1:$$Error^%apiOBJ(7205,data,",Y,N"))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..Status=data
+   Goto XMLLOOP } }
+ If tag="UpdateDate" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             Set data=$zstrip(data,"<>W",$c(13,10)) If data'="" Set data=..UpdateDateXSDToLogical(data) Goto:data="" XMLImportErrchild Goto:('$s($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,0,0,2980013):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,2980013))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..UpdateDate=data
+   Goto XMLLOOP } }
+ If tag="UpdateTime" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             Set data=$zstrip(data,"<>W",$c(13,10)) If data'="" Set data=..UpdateTimeXSDToLogical(data) Goto:data="" XMLImportErrchild Goto:('$select($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,,0,86400)&&(data'=86400):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,86400))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..UpdateTime=data
+   Goto XMLLOOP } }
+ If tag="UpdateUserDr" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     Do XMLImportAttrchild()
+     Set class=$select(($zwascii($get(attributeList("type")),9)=1):$case($data(@(tree)@("d",$zlascii(attributeList("type"),13))),1:@(tree)@("d",$zlascii(attributeList("type"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("type"))),1:"")
+     If (class="") || (class="HBUser") {
+       Set class="User.HBUser"
+     } Else {
+       If $length(class,":")=2 Set class=$piece(class,":",2)
+       Set class=$get(^oddCOM("User.HBUser",85,"s",class))_$get(^oddXML("User.HBUser","s",class)) If class="" Set class=0
+       Set tmp=$get(@(tree)@("n",$zwascii(attributeList("type"),11)))
+       If (class=0)||(($listlength(class)>1)&&(tmp="")) Set class=$case($data(@(tree)@("d",$zlascii(attributeList("type"),13))),1:@(tree)@("d",$zlascii(attributeList("type"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("type"))) Goto XMLImportBadTypechild
+       If $listlength(class)>1 {
+         For tmpi=1:1:$listlength(class) {
+           If tmp=$parameter($list(class,tmpi),"NAMESPACE") Set class=$list(class,tmpi),tmpi=0 Quit
+         }
+         If tmpi Set class=$case($data(@(tree)@("d",$zlascii(attributeList("type"),13))),1:@(tree)@("d",$zlascii(attributeList("type"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("type"))) Goto XMLImportBadTypechild
+       } Else { Set class=$list(class) }
+     }
+     Set data=$classmethod(class,"XMLNew",handler,child,$this)
+     If $isobject(data) Set tag=@(tree)@("d",$zlascii(childlist,9)),nodeArg=child,nodeArgChildlist=childlist,bareProjection=0,summaryArg=1,keynameattr="",sc=data.XMLImportInternal() Goto:('sc) XMLImportExit
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   If data'="" Set ..UpdateUserDr=data
+   Goto XMLLOOP } }
+ If tag="DefaultValue" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(data'[","&&(",Y,N,"[(","_$select(data=$c(0):"",1:data)_",")):1,1:$$Error^%apiOBJ(7205,data,",Y,N"))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..DefaultValue=data
+   Goto XMLLOOP } }
+ If tag="SeqNo" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             Set data=$zstrip(data,"<>W",$c(13,10)) If data'="" Set data=$s($tr(data,"Ee(),.")'=data:"",1:$number(data,"I")) Goto:data="" XMLImportErrchild Goto:('$select(data=$c(0)&&$zu(115,13):1,$isvalidnum(data,0):1,1:$$Error^%apiOBJ(7207,data))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..SeqNo=data
+   Goto XMLLOOP } }
+ If tag="Value" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(($l(data)'>1000):1,1:$$Error^%apiOBJ(7201,data,1000))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..Value=data
+   Goto XMLLOOP } }
+ If tag="ENDesc" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..ENDesc=data
+   Goto XMLLOOP } }
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLIsObjectEmpty(ignoreNull)
+ If ..Code'="" Quit 0
+ If ..Descripts'="" Quit 0
+ If ..Status'="" Quit 0
+ If ..UpdateDate'="" Quit 0
+ If ..UpdateTime'="" Quit 0
+ If $IsObject(..UpdateUserDr) Quit 0
+ If ..DefaultValue'="" Quit 0
+ If ..SeqNo'="" Quit 0
+ If ..Value'="" Quit 0
+ If ..ENDesc'="" Quit 0
+ Quit 1
+zXMLNew(document,node,containerOref="")
+	Quit (##class(User.CBBasicDictionarySub).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("User.CBBasicDictionarySub",top,format,namespacePrefix,input,refOnly,.schema)
+zBDParRefGetObject(force=0) public {
+	Quit $select(r%BDParRef=""||(i%BDParRef'=""):$select(i%BDParRef="":"",1:$listbuild(i%BDParRef_"")),(''..BDParRef.%GetSwizzleObject(force,.oid)):oid,1:"") }
+zBDParRefGetObjectId(force=0) public {
+	Quit $listget(..BDParRefGetObject(force)) }
+zBDParRefGetStored(id) public {
+	Quit $Select(id'="":$p(id,"||",1),1:"") }
+zBDParRefGetSwizzled(noswizzle=0) public {
+	If r%BDParRef'="" Quit r%BDParRef
+	If i%BDParRef="" Quit ""
+	Set oid=$select(i%BDParRef="":"",1:$listbuild(i%BDParRef_""))
+	Set oref=##class("User.CBBasicDictionary").%Open(oid,,.sc) If ('sc)||(oref="") Do:$get(^%SYS("ThrowSwizzleError"),0) $zutil(96,3,19,1) Quit ""
+	Set modstate=$system.CLS.GetModifiedBits() Set r%BDParRef=oref Do $system.CLS.SetModifiedBits(modstate)
+	Do oref.ChildBDRelate($this)
+	Quit oref }
+zBDParRefNewObject() public {
+	Set newobject=##class("User.CBBasicDictionary").%New() If newobject="" Quit ""
+	Set ..BDParRef=newobject
+	Do ..BDParRef.ChildBDRelate($this)
+	Quit newobject }
+zBDParRefOnDelete(id="",concurrency=-1) public {
+	new %updcas Set %updcas="%1"
+	set sc=..BDParRefRExec(.qh,id) quit:('sc) sc
+	for  set sc=..BDParRefRFetch(.qh,0,.robjs,.fc,.end) Do  Quit:('sc)||(end)
+	. for ptr=1:1:fc set sc=..%Delete($select($list(robjs,ptr)="":"",1:$listbuild($list(robjs,ptr)_"")),concurrency) Quit:('sc)
+	Do ..BDParRefRClose(.qh)
+	quit sc }
+zBDParRefRExec(%qHandle,inverse) [ SQLCODE,inverse ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	Set %qHandle=$increment(%objcn)
+	 ;---&sql(DECLARE Q2 CURSOR FOR
+ 	 ;---		SELECT ID FROM SQLUser.CB_BasicDictionarySub where BD_ParRef=:inverse)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, inverse
+	
+	 ;---&sql(OPEN Q2)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	do %Q20o
+	If SQLCODE Quit $$Error^%apiOBJ(5821,"SQLCODE = "_SQLCODE)
+	Quit 1 }
+zBDParRefRClose(%qHandle) [ SQLCODE,inverse ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE,inverse 
+	New SQLCODE
+	 ;---&sql(CLOSE Q2)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	do %Q20c
+	Kill %objcsc(%qHandle),%objcsp(%qHandle),%objcss(%qHandle),%objcst(%qHandle),%objcsl(%qHandle),%objcsR(%qHandle),%objcsZ(%qHandle),%objcsd(%qHandle)
+	Quit 1 }
+zBDParRefRFetch(%qHandle,FetchCount=0,RowSet,ReturnCount,AtEnd) [ SQLCODE,inverse ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE,inverse 
+	Set RowSet="",ReturnCount=0,AtEnd=0
+	For {
+		 ;---&sql(FETCH Q2 INTO :c1)
+ 		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+		try { do %Q20f if SQLCODE'=0 { quit } s c1=%objcsd(%qHandle,11) } catch { do %0Lerr }
+		If 'SQLCODE { Set RowSet=RowSet_$lb(c1),ReturnCount=ReturnCount+1 Quit:ReturnCount=FetchCount||(($length(RowSet)+($length(RowSet)\ReturnCount))>24000) } Else { Set AtEnd=1 Quit }
+	}
+	Quit 1 }
+ q
+%Q20o 
+ try { s SQLCODE=$s($g(%objcsd(%qHandle,0)):-101,1:0) q:SQLCODE'=0 
+ n %sqltime s %sqltime=$zh
+ s %objcsd(%qHandle,1)=0,%objcsd(%qHandle,2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %objcsd(%qHandle,3)=$zu(115,2)
+ s %objcsd(%qHandle,4)=0,%objcsd(%qHandle,5)=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s %objcsd(%qHandle,6)=$s($g(inverse)="":"",$isvalidnum(inverse):+inverse,1:inverse)
+ s %objcsd(%qHandle,0)=1,SQLCODE=0
+ s:$d(%sqltime) %objcsd(%qHandle,7)=$g(%objcsd(%qHandle,7))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %objcsd(%qHandle) }
+ q
+%0Lfirst 
+ ; asl MOD# 2
+ s %objcsd(%qHandle,8)=%objcsd(%qHandle,6)
+ i %objcsd(%qHandle,8)="" g %0LmBdun
+ s %objcsd(%qHandle,9)=""
+%0LmBk1 s %objcsd(%qHandle,9)=$o(^CBBasicDictionarySubI("ParRefCode",%objcsd(%qHandle,8),%objcsd(%qHandle,9)))
+ i %objcsd(%qHandle,9)="" g %0LmBdun
+ s %objcsd(%qHandle,10)=""
+ s %objcsd(%qHandle,10)=$o(^CBBasicDictionarySubI("ParRefCode",%objcsd(%qHandle,8),%objcsd(%qHandle,9),%objcsd(%qHandle,10)))
+ i %objcsd(%qHandle,10)="" g %0LmBk1
+ s %objcsd(%qHandle,11)=(%objcsd(%qHandle,8))_"||"_(%objcsd(%qHandle,10))
+ goto:%objcsd(%qHandle,3)'=1 %0LmBuncommitted
+ if %objcsd(%qHandle,3)=1 {
+ 	lock +^CBBasicDictionaryD($p(%objcsd(%qHandle,11),"||",1),"S",$p(%objcsd(%qHandle,11),"||",2))#"S":$zu(115,4)
+ 	if $t { set %objcsd(%qHandle,5)=$name(^CBBasicDictionaryD($p(%objcsd(%qHandle,11),"||",1),"S",$p(%objcsd(%qHandle,11),"||",2)))_"#""SI""",%objcsd(%qHandle,4)=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_BasicDictionarySub for RowID value: "_%objcsd(%qHandle,11) ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s %objcsd(%qHandle,12)=$p(%objcsd(%qHandle,11),"||"),%objcsd(%qHandle,10)=$p(%objcsd(%qHandle,11),"||",2,*)
+ i %objcsd(%qHandle,12)'="",%objcsd(%qHandle,10)'="",$d(^CBBasicDictionaryD(%objcsd(%qHandle,12),"S",%objcsd(%qHandle,10)))
+ e  g %0LmCdun
+ s %objcsd(%qHandle,8)=$p(%objcsd(%qHandle,11),"||")
+%0LmBuncommitted ;
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%objcsd(%qHandle,1)),%ROWID=%objcsd(%qHandle,11),%objcsd(%qHandle,0)=10
+ //-- FETCH Output
+ s:$d(%sqltime) %objcsd(%qHandle,7)=$g(%objcsd(%qHandle,7))+$zh-%sqltime
+ quit
+%Q20f //-- FETCH tag
+ i '$g(%objcsd(%qHandle,0)) { s SQLCODE=-102 q  } i %objcsd(%qHandle,0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %objcsd(%qHandle,2),%objcsd(%qHandle,1)'<%objcsd(%qHandle,2) { s SQLCODE=100,%ROWCOUNT=%objcsd(%qHandle,1),%objcsd(%qHandle,0)=100 q }
+ n %sqltime s %sqltime=$zh
+ g %0Lfirst:%objcsd(%qHandle,0)=1
+%0LmCdun if $g(%objcsd(%qHandle,3))=1 { if $g(%objcsd(%qHandle,4))=1 { l -@%objcsd(%qHandle,5) s %objcsd(%qHandle,4)=0 } elseif $g(%objcsd(%qHandle,4))=2 { do $classmethod($li(%objcsd(%qHandle,5)),"%UnlockId",$li(%objcsd(%qHandle,5),2),1,1)  s %objcsd(%qHandle,4)=0 }}
+ g %0LmBk1
+%0LmBdun 
+%0LmAdun 
+ s %ROWCOUNT=%objcsd(%qHandle,1),SQLCODE=100,%objcsd(%qHandle,0)=100
+ s:$d(%sqltime) %objcsd(%qHandle,7)=$g(%objcsd(%qHandle,7))+$zh-%sqltime
+ //-- no [more] data
+ quit
+%Q20c i '$g(%objcsd(%qHandle,0)) { s SQLCODE=-102 q  }
+ n %sqltime s %sqltime=$zh
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%objcsd(%qHandle,1)),1:0)
+ if $g(%objcsd(%qHandle,3))=1 {
+ 	if $g(%objcsd(%qHandle,4))=1 { l -@%objcsd(%qHandle,5) s %objcsd(%qHandle,4)=0 } elseif $g(%objcsd(%qHandle,4))=2 { do $classmethod($li(%objcsd(%qHandle,5)),"%UnlockId",$li(%objcsd(%qHandle,5),2),1,1)  s %objcsd(%qHandle,4)=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(%objcsd(%qHandle,7))+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"cqHzp7jnFl71v2GIQ1bBd7WknYI="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"cqHzp7jnFl71v2GIQ1bBd7WknYI=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ k %objcsd(%qHandle)
+ s SQLCODE=0
+ s:$g(SQLCODE)'<0 SQLCODE=0
+ kill %objcsd(%qHandle,13)
+ quit  // close
+%0Lerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ s %objcsd(%qHandle,0)=100
+ quit  // error
+zBDParRefRelate(oref) public {
+	If r%BDParRef=oref Quit 1
+	If i%BDParRef'="",$listget(oref."%%OID")=i%BDParRef Set modstate=$system.CLS.GetModifiedBits() Set r%BDParRef=oref Do $system.CLS.SetModifiedBits(modstate) Quit 1
+	If r%BDParRef'="" Do ..BDParRefUnRelate(r%BDParRef)
+	Set tmp=i%BDParRef Kill i%BDParRef,r%BDParRef Set r%BDParRef=oref,i%BDParRef=tmp
+	Quit 1 }
+zBDParRefSet(newvalue) public {
+	If newvalue="" {
+		If r%BDParRef="",i%BDParRef="" Quit 1
+	} Else {
+		If '$isobject(newvalue) Quit $$Error^%apiOBJ(5807,newvalue)
+		If r%BDParRef=newvalue Quit 1
+		If r%BDParRef="",i%BDParRef'="",i%BDParRef=$listget(newvalue."%%OID") Set modstate=$system.CLS.GetModifiedBits() Set r%BDParRef=newvalue Do newvalue.ChildBDRelate($this),$system.CLS.SetModifiedBits(modstate) Quit 1
+	}
+	If r%BDParRef'="" Do r%BDParRef.ChildBDUnRelate($this)
+	Set r%BDParRef=newvalue,i%BDParRef=0,i%BDParRef=""
+	If newvalue'="" Do newvalue.ChildBDRelate($this)
+	Quit 1 }
+zBDParRefSetObject(newvalue) public {
+	If r%BDParRef="" Set i%BDParRef=$listget(newvalue) Quit 1
+	If newvalue'="",i%BDParRef=$listget(newvalue) Quit 1
+	Set sc=..BDParRef.%GetSwizzleObject(0,.oid) Quit:('sc) sc
+	If newvalue'="",$listget(oid)=$listget(newvalue) Quit 1
+	Do ..BDParRef.ChildBDUnRelate($this) Set r%BDParRef="",i%BDParRef=0,i%BDParRef=$listget(newvalue) Quit 1 }
+zBDParRefSetObjectId(newid) public {
+	Quit ..BDParRefSetObject($select(newid="":"",1:$listbuild(newid_""))) }
+zBDParRefUnRelate(oref) public {
+	If r%BDParRef=oref Set r%BDParRef="",i%BDParRef=0,i%BDParRef="" Quit 1
+	If r%BDParRef'="" Quit $$Error^%apiOBJ(5499)
+	Set i%BDParRef=0,i%BDParRef=""
+	Quit 1 }
+zBDParRefUnSwizzle(force=0) public {
+ Quit:r%BDParRef="" 1
+	Set sc=..BDParRef.%GetSwizzleObject(force,.newvalue) Quit:('sc) sc
+	Set modstate=$system.CLS.GetModifiedBits() Set r%BDParRef="" Do $system.CLS.SetModifiedBits(modstate)
+ Set i%BDParRef=$listget(newvalue)
+ Quit 1 }
+zCodeGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))),2),1:"") }
+zDefaultValueDisplayToLogical(%val) public {
+ Q $case(%val,"Yes":"Y","No":"N",:"") }
+zDefaultValueGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))),8),1:"") }
+zDefaultValueIsValid(%val) public {
+	Q $s(%val'[","&&(",Y,N,"[(","_$select(%val=$c(0):"",1:%val)_",")):1,1:$$Error^%apiOBJ(7205,%val,",Y,N")) }
+zDefaultValueLogicalToDisplay(%val) public {
+ Q $case(%val,"Y":"Yes","N":"No",:"") }
+zDefaultValueNormalize(%val) public {
+	Q $e(%val,1,50) }
+zDescriptsGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))),3),1:"") }
+zENDescGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))),11),1:"") }
+zENDescNormalize(%val) public {
+	Q $e(%val,1,100) }
+zSeqNoDisplayToLogical(%val) public {
+	Q $select(%val="":"",%val=$c(0)&&$zu(115,13):"",1:$s($in(%val,"","")'="":+$in(%val,"",%val),1:%val)) }
+zSeqNoGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))),9),1:"") }
+zSeqNoIsValid(%val) public {
+	Quit $select(%val=$c(0)&&$zu(115,13):1,$isvalidnum(%val,0):1,1:$$Error^%apiOBJ(7207,%val)) }
+zSeqNoNormalize(%val) public {
+	Quit $select(%val=$c(0)&&$zu(115,13):"",1:%val\1) }
+zSeqNoXSDToLogical(%val) public {
+	Q $s($tr(%val,"Ee(),.")'=%val:"",1:$number(%val,"I")) }
+zStatusGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))),4),1:"") }
+zUpdateDateDisplayToLogical(%val) public {
+ q:%val="" "" set %val=$zdateh(%val,,,5,80,20,,,"Error: '"_%val_"' is an invalid DISPLAY Date value") q:%val||(%val=0) %val s %msg=%val ZTRAP "ODAT" }
+zUpdateDateGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))),5),1:"") }
+zUpdateDateIsValid(%val) public {
+	Q $s($zu(115,13)&&(%val=$c(0)):1,$isvalidnum(%val,0,0,2980013):1,'$isvalidnum(%val):$$Error^%apiOBJ(7207,%val),%val<0:$$Error^%apiOBJ(7204,%val,0),1:$$Error^%apiOBJ(7203,%val,2980013)) }
+zUpdateDateJSONToLogical(%val) public {
+   Quit $select(%val="":"",1:$zdateh(%val,3,,,,,-672045,,"")) }
+zUpdateDateLogicalToDisplay(%val) public {
+	Quit $select(%val="":"",%val'?0.1"-"4N1"-"2N1"-"2N.1(1" "2N1":"2N1":"2N.1(1"."0.9N)):$zdate(%val,-1,,4,,,-672045),1:$$FormatJulian^%qarfunc(%val,-1)) }
+zUpdateDateLogicalToJSON(%val) public {
+   quit $select(%val="":"",1:$zdate(%val,3,,,,,-672045)) }
+zUpdateDateLogicalToOdbc(%val="") public {
+	Quit $select(%val="":"",%val'?0.1"-"4N1"-"2N1"-"2N.1(1" "2N1":"2N1":"2N.1(1"."0.9N)):$zdate(%val,3,,,,,-672045),1:$piece(%val," ",1)) }
+zUpdateDateLogicalToXSD(%val) public {
+   quit $select(%val="":"",1:$zdate(%val,3,,,,,-672045)) }
+zUpdateDateNormalize(%val) public {
+   Quit $s($zu(115,13)&&(%val=$c(0)):"",1:%val\1) }
+zUpdateDateOdbcToLogical(%val="") public {
+ quit:%val=""||($zu(115,13)&&(%val=$c(0))) "" quit:$isvalidnum(%val) %val set %val=$zdateh(%val,3,,,,,,,"Error: '"_%val_"' is an invalid ODBC/JDBC Date value") q:%val||(%val=0) %val s %msg=%val ZTRAP "ODAT" }
+zUpdateDateXSDToLogical(%val) public {
+   Set len=$length(%val)
+   If len'=10 {
+       If $extract(%val,len)="Z" {
+           Set %val=$extract(%val,1,len-1),len=len-1
+       } ElseIf $case($extract(%val,len-5),"+":1,"-":1,:0) {
+           Set %val=$extract(%val,1,len-6),len=len-6
+       }
+   }
+   If $extract(%val,11,19)="T00:00:00" {
+       If (len=19)||(($extract(%val,20,21)=".0")&&($translate($extract(%val,22,len),"0","")="")) {
+           Set %val=$extract(%val,1,10)
+       }
+   }
+   Quit $select(%val="":"",1:$zdateh(%val,3,,,,,-672045,,"")) }
+zUpdateTimeDisplayToLogical(%val) public {
+ quit:%val="" "" s %val=$ztimeh(%val,,"Error: '"_%val_"' is an invalid DISPLAY Time value") q:%val||(%val=0) %val s %msg=%val ZTRAP "OTIM" }
+zUpdateTimeGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))),6),1:"") }
+zUpdateTimeIsValid(%val) public {
+	Quit $select($zu(115,13)&&(%val=$c(0)):1,$isvalidnum(%val,,0,86400)&&(%val'=86400):1,'$isvalidnum(%val):$$Error^%apiOBJ(7207,%val),%val<0:$$Error^%apiOBJ(7204,%val,0),1:$$Error^%apiOBJ(7203,%val,86400)) }
+zUpdateTimeLogicalToDisplay(%val) public {
+	Quit $select(%val="":"",1:$ztime(%val,,$l($p(%val,".",2)))) }
+zUpdateTimeLogicalToOdbc(%val="") public {
+	Quit $select(%val="":"",1:$ztime(%val,,$l($p(%val,".",2)),,1)) }
+zUpdateTimeLogicalToXSD(%val) public {
+	Quit $select(%val="":"",1:$ztime(%val,1,$l($p(%val,".",2)),,1)_"Z") }
+zUpdateTimeNormalize(%val) public {
+	Quit $select($zu(115,13)&&(%val=$c(0)):"",1:%val) }
+zUpdateTimeOdbcToLogical(%val="") public {
+	quit:%val=""||($zu(115,13)&&(%val=$c(0))) ""  quit:$isvalidnum(%val) %val s %val=$ztimeh(%val,,"Error: '"_%val_"' is an invalid ODBC/JDBC Time value",1) q:%val||(%val=0) %val s %msg=%val ZTRAP "OTIM" }
+zUpdateTimeXSDToLogical(%val) public {
+ If $get(%val)="" Quit ""
+ If $length(%val,"T")=2 Set %val=$piece(%val,"T",2)
+ Set len=$length(%val)
+ If $extract(%val,len)="Z" {
+   Set %val=$extract(%val,1,len-1)
+ } ElseIf $case($extract(%val,len-5),"+":1,"-":1,:0) {
+   If $extract(%val,len-2)'=":" Quit ""
+   Set s=$ztimeh($extract(%val,1,len-6),1,"",1) If s="" Quit ""
+   Set z=($extract(%val,len-4,len-3)*60+$extract(%val,len-1,len))*60
+   If $extract(%val,len-5)="-" {
+     Set s=s+z
+   } Else {
+     Set s=s-z
+   }
+   Quit s#86400
+ }
+ Quit $ztimeh(%val,1,"",1) }
+zUpdateUserDrGetObject(force=0) public {
+	Quit $select(r%UpdateUserDr=""||(i%UpdateUserDr'=""):$select(i%UpdateUserDr="":"",1:$listbuild(i%UpdateUserDr_"")),(''..UpdateUserDr.%GetSwizzleObject(force,.oid)):oid,1:"") }
+zUpdateUserDrGetObjectId(force=0) public {
+	Quit $listget(..UpdateUserDrGetObject(force)) }
+zUpdateUserDrGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))),7),1:"") }
+zUpdateUserDrGetSwizzled(noswizzle=0) public {
+	If noswizzle Quit r%UpdateUserDr
+	If i%UpdateUserDr="" Quit ""
+	Set oref=##class(User.HBUser).%Open($select(i%UpdateUserDr="":"",1:$listbuild(i%UpdateUserDr_"")),,.sc) If ('sc) Do:$get(^%SYS("ThrowSwizzleError"),0) $zutil(96,3,19,1) Quit ""
+	Set modstate=$system.CLS.GetModifiedBits() Set r%UpdateUserDr=oref Do $system.CLS.SetModifiedBits(modstate)
+	Quit oref }
+zUpdateUserDrNewObject() public {
+	Set newobject=##class(User.HBUser).%New() If newobject="" Quit ""
+	Set ..UpdateUserDr=newobject
+	Quit newobject }
+zUpdateUserDrSetObject(newvalue) public {
+	If newvalue'="",$data(i%UpdateUserDr,tmp),tmp=$listget(newvalue) Quit 1
+	Set i%UpdateUserDr=$listget(newvalue),r%UpdateUserDr=0,r%UpdateUserDr=""
+	Quit 1 }
+zUpdateUserDrSetObjectId(newid) public {
+	Quit ..UpdateUserDrSetObject($select(newid="":"",1:$listbuild(newid_""))) }
+zUpdateUserDrUnSwizzle(force=0) public {
+	If r%UpdateUserDr="" Quit 1
+	Set sc=..UpdateUserDr.%GetSwizzleObject(force,.newvalue) Quit:('sc) sc
+	Set modstate=$system.CLS.GetModifiedBits() Set r%UpdateUserDr="" Do $system.CLS.SetModifiedBits(modstate)
+	Set i%UpdateUserDr=$listget(newvalue)
+	Quit 1 }
+zValueGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))),10),1:"") }
+zExtentExecute(%qHandle) [ SQLCODE ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	Set sc=1
+	s %qHandle=$i(%objcn)
+	 ;---&sql(DECLARE QExtent CURSOR FOR
+ 	 ;---		 SELECT ID FROM SQLUser.CB_BasicDictionarySub)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	
+	 ;---&sql(OPEN QExtent)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	do %QExtent0o
+	If SQLCODE { Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.%Message=$g(%msg) Set sc=$$Error^%apiOBJ(5821,"SQLCODE = "_SQLCODE) } Else { Set sc=1 }
+	Quit sc }
+zExtentClose(%qHandle) [ SQLCODE ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	 ;---&sql(CLOSE QExtent)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	do %QExtent0c
+	If SQLCODE { Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.%Message=$g(%msg) Set sc=$$Error^%apiOBJ(5540,SQLCODE,$get(%msg)) } Else { Set sc=1 }
+	Kill %objcsc(%qHandle),%objcsp(%qHandle),%objcss(%qHandle),%objcst(%qHandle),%objcsl(%qHandle),%objcsR(%qHandle),%objcsZ(%qHandle),%objcsd(%qHandle)
+	Quit sc }
+zExtentFetch(%qHandle,Row,AtEnd=0) [ SQLCODE ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	Set Row="",AtEnd=0
+	 ;---&sql(FETCH QExtent INTO :c1)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	try { do %QExtent0f if SQLCODE'=0 { quit } s c1=%objcsd(%qHandle,11) } catch { do %0Qerr }
+	If 'SQLCODE { Set Row=$lb(c1) Set sc=1 }
+	ElseIf SQLCODE=100 { Set AtEnd=1,sc=1 Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.%ROWCOUNT=$g(%ROWCOUNT) }
+	Else { Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.Message=$g(%msg) Set AtEnd=1,sc=$$Error^%apiOBJ(5540,SQLCODE,$get(%msg)) }
+	QUIT sc }
+zExtentFetchRows(%qHandle,FetchCount=0,RowSet,ReturnCount,AtEnd) [ SQLCODE ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	Set RowSet="",ReturnCount=0,AtEnd=0
+	For {
+		 ;---&sql(FETCH QExtent INTO :c1)
+ 		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+		try { do %QExtent0f if SQLCODE'=0 { quit } s c1=%objcsd(%qHandle,11) } catch { do %0Qerr }
+		If 'SQLCODE { Set RowSet=RowSet_$lb(c1),ReturnCount=ReturnCount+1 Quit:(ReturnCount=FetchCount)||(($l(RowSet)+($l(RowSet)\ReturnCount))>24000) } Else { Set AtEnd=1 Quit }
+	}
+	If 'SQLCODE { Set sc=1 } ElseIf SQLCODE=100 { Set sc=1 Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.%ROWCOUNT=$g(%ROWCOUNT) } Else { Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.Message=$g(%msg) Set sc=$$Error^%apiOBJ(5540,SQLCODE,$get(%msg)) }
+	Quit sc }
+zExtentSendODBC(%qHandle,array,qacn,%qrc,piece,ColumnCount) [ SQLCODE ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	set %qrc=0,piece=0
+	for {
+		set rc=..ExtentFetch(.%qHandle,.row,.atend)
+		if ('rc) { set %qrc=-400 set:$isobject($get(%sqlcontext)) %sqlcontext.SQLCode=-400,%sqlcontext.Message=$g(%msg) do ProcessError^%ourProcedure(rc,$get(%sqlcontext),.%qrc,.%msg),Logerr^%SYS.SQLSRV(%qrc,"","SP",.%msg) RETURN  }
+		if row="" { set %qrc=100 set:$isobject($get(%sqlcontext)) %sqlcontext.SQLCode=100 RETURN  }
+		if $g(%protocol)>50 { RETURN:$zobjexport(row,60) }
+		else {
+			if %protocol>46 { for piece=1:1:ColumnCount { goto:$zobjexport($lg(row,piece),50) SPDone } }
+			else { for piece=1:1:ColumnCount { goto:$zobjexport($lg(row,piece),7) SPDone } }
+		}
+	}
+	QUIT
+SPDone	set:%protocol>46 piece=piece+1
+	kill array(qacn)
+	for i=piece:1:ColumnCount { set array(qacn,i)=$lg(row,i) }
+	QUIT }
+ q
+%QExtent0o 
+ try { s SQLCODE=$s($g(%objcsd(%qHandle,0)):-101,1:0) q:SQLCODE'=0 
+ n %sqltime s %sqltime=$zh
+ s %objcsd(%qHandle,1)=0,%objcsd(%qHandle,2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %objcsd(%qHandle,3)=$zu(115,2)
+ s %objcsd(%qHandle,4)=0,%objcsd(%qHandle,5)=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s %objcsd(%qHandle,0)=1,SQLCODE=0
+ s:$d(%sqltime) %objcsd(%qHandle,6)=$g(%objcsd(%qHandle,6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %objcsd(%qHandle) }
+ q
+%0Qfirst 
+ ; asl MOD# 2
+ s %objcsd(%qHandle,7)=""
+%0QmBk1 s %objcsd(%qHandle,7)=$o(^CBBasicDictionarySubI("Code",%objcsd(%qHandle,7)))
+ i %objcsd(%qHandle,7)="" g %0QmBdun
+ s %objcsd(%qHandle,8)=""
+%0QmBk2 s %objcsd(%qHandle,8)=$o(^CBBasicDictionarySubI("Code",%objcsd(%qHandle,7),%objcsd(%qHandle,8)))
+ i %objcsd(%qHandle,8)="" g %0QmBk1
+ s %objcsd(%qHandle,9)=""
+ s %objcsd(%qHandle,9)=$o(^CBBasicDictionarySubI("Code",%objcsd(%qHandle,7),%objcsd(%qHandle,8),%objcsd(%qHandle,9)))
+ i %objcsd(%qHandle,9)="" g %0QmBk2
+ s %objcsd(%qHandle,10)=(%objcsd(%qHandle,8))_"||"_(%objcsd(%qHandle,9)),%objcsd(%qHandle,11)=$s($zu(115,5)=2:$tr(%objcsd(%qHandle,10),$c(0),""),1:%objcsd(%qHandle,10))
+ goto:%objcsd(%qHandle,3)'=1 %0QmBuncommitted
+ if %objcsd(%qHandle,3)=1 {
+ 	lock +^CBBasicDictionaryD($p(%objcsd(%qHandle,10),"||",1),"S",$p(%objcsd(%qHandle,10),"||",2))#"S":$zu(115,4)
+ 	if $t { set %objcsd(%qHandle,5)=$name(^CBBasicDictionaryD($p(%objcsd(%qHandle,10),"||",1),"S",$p(%objcsd(%qHandle,10),"||",2)))_"#""SI""",%objcsd(%qHandle,4)=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_BasicDictionarySub for RowID value: "_%objcsd(%qHandle,10) ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s %objcsd(%qHandle,12)=$p(%objcsd(%qHandle,10),"||"),%objcsd(%qHandle,9)=$p(%objcsd(%qHandle,10),"||",2,*)
+ i %objcsd(%qHandle,12)'="",%objcsd(%qHandle,9)'="",$d(^CBBasicDictionaryD(%objcsd(%qHandle,12),"S",%objcsd(%qHandle,9)))
+ e  g %0QmCdun
+ s %objcsd(%qHandle,11)=$s($zu(115,5)=2:$tr(%objcsd(%qHandle,10),$c(0),""),1:%objcsd(%qHandle,10))
+%0QmBuncommitted ;
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%objcsd(%qHandle,1)),%ROWID=%objcsd(%qHandle,10),%objcsd(%qHandle,0)=10
+ //-- FETCH Output
+ s:$d(%sqltime) %objcsd(%qHandle,6)=$g(%objcsd(%qHandle,6))+$zh-%sqltime
+ quit
+%QExtent0f //-- FETCH tag
+ i '$g(%objcsd(%qHandle,0)) { s SQLCODE=-102 q  } i %objcsd(%qHandle,0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %objcsd(%qHandle,2),%objcsd(%qHandle,1)'<%objcsd(%qHandle,2) { s SQLCODE=100,%ROWCOUNT=%objcsd(%qHandle,1),%objcsd(%qHandle,0)=100 q }
+ n %sqltime s %sqltime=$zh
+ g %0Qfirst:%objcsd(%qHandle,0)=1
+%0QmCdun if $g(%objcsd(%qHandle,3))=1 { if $g(%objcsd(%qHandle,4))=1 { l -@%objcsd(%qHandle,5) s %objcsd(%qHandle,4)=0 } elseif $g(%objcsd(%qHandle,4))=2 { do $classmethod($li(%objcsd(%qHandle,5)),"%UnlockId",$li(%objcsd(%qHandle,5),2),1,1)  s %objcsd(%qHandle,4)=0 }}
+ g %0QmBk2
+%0QmBdun 
+%0QmAdun 
+ s %ROWCOUNT=%objcsd(%qHandle,1),SQLCODE=100,%objcsd(%qHandle,0)=100
+ s:$d(%sqltime) %objcsd(%qHandle,6)=$g(%objcsd(%qHandle,6))+$zh-%sqltime
+ //-- no [more] data
+ quit
+%QExtent0c i '$g(%objcsd(%qHandle,0)) { s SQLCODE=-102 q  }
+ n %sqltime s %sqltime=$zh
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%objcsd(%qHandle,1)),1:0)
+ if $g(%objcsd(%qHandle,3))=1 {
+ 	if $g(%objcsd(%qHandle,4))=1 { l -@%objcsd(%qHandle,5) s %objcsd(%qHandle,4)=0 } elseif $g(%objcsd(%qHandle,4))=2 { do $classmethod($li(%objcsd(%qHandle,5)),"%UnlockId",$li(%objcsd(%qHandle,5),2),1,1)  s %objcsd(%qHandle,4)=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(%objcsd(%qHandle,6))+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"Y3fjDh/c+CFglvcERclNZf3pJow="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"Y3fjDh/c+CFglvcERclNZf3pJow=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ k %objcsd(%qHandle)
+ s SQLCODE=0
+ s:$g(SQLCODE)'<0 SQLCODE=0
+ kill %objcsd(%qHandle,13)
+ quit  // close
+%0Qerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ s %objcsd(%qHandle,0)=100
+ quit  // error
+zExtentFunc() public {
+	try {
+		set tSchemaPath = ##class(%SQL.Statement).%ClassPath($classname())
+			set tStatement = ##class(%SQL.Statement).%New(,tSchemaPath)
+			do tStatement.prepare(" SELECT ID FROM SQLUser . CB_BasicDictionarySub")
+		set tResult = tStatement.%Execute()
+	}
+	catch tException { if '$Isobject($Get(tResult)) { set tResult = ##class(%SQL.StatementResult).%New() } set tResult.%SQLCODE=tException.AsSQLCODE(),tResult.%Message=tException.AsSQLMessage() }
+	Quit tResult }
+zExtentGetInfo(colinfo,parminfo,idinfo,%qHandle,extoption=0,extinfo) public {
+ s parminfo=""
+	s:'($d(^oddCOM($classname(),"q","Extent",21),clientinfo)#2)&&'$s($d(^(2),clientinfo)#2&&(clientinfo'=$classname()):$d(^oddCOM(clientinfo,"q","Extent",21),clientinfo)#2||($d(^oddDEF(clientinfo,"q","Extent",21),clientinfo)#2),1:$d(^oddDEF($classname(),"q","Extent",21),clientinfo)#2) clientinfo=""
+	Set:extoption extinfo=$s($d(^oddCOM($classname(),"q","Extent",38))#2:^(38),$d(^oddCOM($g(^(2),$classname()),"q","Extent",38))#2:^(38),1:$s($d(^oddDEF($g(^oddCOM($classname(),"q","Extent",2),$classname()),"q","Extent",38))#2:^(38),1:""))
+	If clientinfo'="" Set colinfo=$listget(clientinfo,1),parminfo=$listget(clientinfo,2),idinfo=$listget(clientinfo,3) Quit 1
+	Set colinfo="",parminfo="",idinfo=$listbuild(0)
+	Set sc=$$externaltype^%apiOLE("%Library.RawString",.exttypes,"0")
+	Quit:('sc) sc
+	s:'($d(^oddCOM($classname(),"q","Extent",23),names)#2)&&'$s($d(^(2),names)#2&&(names'=$classname()):$d(^oddCOM(names,"q","Extent",23),names)#2||($d(^oddDEF(names,"q","Extent",23),names)#2),1:$d(^oddDEF($classname(),"q","Extent",23),names)#2) names=""
+	s:'($d(^oddCOM($classname(),"q","Extent",22),captions)#2)&&'$s($d(^(2),captions)#2&&(captions'=$classname()):$d(^oddCOM(captions,"q","Extent",22),captions)#2||($d(^oddDEF(captions,"q","Extent",22),captions)#2),1:$d(^oddDEF($classname(),"q","Extent",22),captions)#2) captions=""
+	For i=1:1:1 Set colinfo=colinfo_$listbuild($listbuild($listget(names,i),$piece(exttypes,",",i),$listget(captions,i)))
+	Set idinfo=$listbuild(1,$classname())
+	s ^oddCOM($classname(),"q","Extent",21)=$listbuild(colinfo,parminfo,idinfo)
+	Quit 1 }
+zExtentGetODBCInfo(colinfo,parminfo,qHandle) public {
+	set version = $Select($Get(%protocol,41)>40:4,1:3)
+	Set metadata=$lb(1,1,"ID",12,4096,0,2,"ID","CB_BasicDictionarySub","SQLUser","",$c(0,0,0,0,0,0,0,0,0,0,0,1),0)
+	Set colcount=$li(metadata,2),cmdlen=colcount*10,parmcount=$li(metadata,3+cmdlen),pmdlen=parmcount*6,parminfo=$li(metadata,cmdlen+3,cmdlen+pmdlen+3)
+	If version=4 {
+		Set colinfo=$li(metadata,2,2+cmdlen)
+	} Else {
+		Set colinfo=$li(metadata,2,2)
+		For i=0:1:colcount-1 Set colinfo=colinfo_$list(metadata,3+(i*10),11+(i*10))
+	}
+	Quit 1 }
+zBDParRefCheck(id="",lockonly=0) public {
+	Quit ##class(User.CBBasicDictionary).%1Check(id,lockonly)
+}
+zBDParRefDelete(id="",concurrency=-1) public {
+	quit ..BDParRefOnDelete(.id,.concurrency) }
+zParRefCodeCheckUnique(id="",pValue...) [ SQLCODE,id,pValue ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	 ;---&sql(SELECT 1 as _PassFail FROM SQLUser.CB_BasicDictionarySub WHERE BD_ParRef = :pValue(1) AND Code = :pValue(2) AND %ID <> :id)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, id, pValue
+	do %0Wo
+	Quit SQLCODE=100 }
+ q
+%0Wo n sqldata16d,sqldata17d,sqldata18d,sqldata30d,sqldata1d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata3d,sqldata12d,sqldata7d,sqldata13d,sqldata14d,sqldata5d,sqldata15d
+ s $zt="%0Werr"
+ s sqldata16d=$zu(115,2)
+ s sqldata17d=0,sqldata18d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata1d=$s(1="":"",$isvalidnum(1):+1,1:1),sqldata4d=$s($g(pValue(1))="":"",$isvalidnum(pValue(1)):+pValue(1),1:pValue(1)),sqldata6d=$g(pValue(2)),sqldata8d=$g(id)
+ s SQLCODE=100
+ s sqldata11d=$zu(28,sqldata6d,5)
+ i '(sqldata8d'="") g %0WmAdun
+ ; asl MOD# 2
+ s sqldata10d=sqldata11d
+ s sqldata3d=sqldata4d
+ i sqldata10d="" g %0WmBdun
+ i sqldata3d="" g %0WmBdun
+ s sqldata12d=""
+ s sqldata12d=$o(^CBBasicDictionarySubI("Code",sqldata10d,sqldata3d,sqldata12d))
+ i sqldata12d="" g %0WmBdun
+ s sqldata7d=(sqldata3d)_"||"_(sqldata12d)
+ i '(sqldata7d'=sqldata8d) g %0WmBdun
+ goto:sqldata16d'=1 %0WmBuncommitted
+ if sqldata16d=1 {
+ 	lock +^CBBasicDictionaryD($p(sqldata7d,"||",1),"S",$p(sqldata7d,"||",2))#"S":$zu(115,4)
+ 	if $t { set sqldata18d=$name(^CBBasicDictionaryD($p(sqldata7d,"||",1),"S",$p(sqldata7d,"||",2)))_"#""SI""",sqldata17d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_BasicDictionarySub for RowID value: "_sqldata7d ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata13d=$zlist(sqldata10d)
+ s sqldata14d=$p(sqldata7d,"||"),sqldata12d=$p(sqldata7d,"||",2,*)
+ i sqldata14d'="",sqldata12d'="" s sqldata30d="" i $d(^CBBasicDictionaryD(sqldata14d,"S",sqldata12d),sqldata30d)
+ e  g %0WmCdun
+ S sqldata5d=$lg(sqldata30d,2)
+ s sqldata10d=$zu(28,sqldata5d,5)
+ s sqldata3d=$p(sqldata7d,"||")
+ s sqldata15d=$zlist(sqldata10d)
+ g:sqldata13d'=sqldata15d %0WmCdun
+%0WmBuncommitted ;
+ s SQLCODE=0 g %0Wc
+%0WmCdun if $g(sqldata16d)=1 { if $g(sqldata17d)=1 { l -@sqldata18d s sqldata17d=0 } elseif $g(sqldata17d)=2 { do $classmethod($li(sqldata18d),"%UnlockId",$li(sqldata18d,2),1,1)  s sqldata17d=0 }}
+%0WmBdun 
+%0WmAdun 
+%0Wc set %ROWCOUNT='SQLCODE
+ if $g(sqldata16d)=1 {
+ 	if $g(sqldata17d)=1 { l -@sqldata18d s sqldata17d=0 } elseif $g(sqldata17d)=2 { do $classmethod($li(sqldata18d),"%UnlockId",$li(sqldata18d,2),1,1)  s sqldata17d=0 }
+ }
+ q
+%0Werr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Wc
+zCodeExists(K1,id="") [ K1,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	 ;---&sql(SELECT %ID INTO :id FROM SQLUser.CB_BasicDictionarySub WHERE (:K1 is not null and Code = :K1) OR (:K1 IS NULL AND Code IS NULL))
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, K1, SQLCODE, id
+	do %0Yo
+	Quit $select('SQLCODE:1,1:0) }
+ q
+%0Yo n sqldata15d,sqldata16d,sqldata17d,sqldata29d,sqldata30d,sqldata3d,sqldata5d,sqldata6d,sqldata8d,sqldata9d,sqldata10d,sqldata11d,sqldata12d,sqldata13d,sqldata4d,sqldata14d
+ s $zt="%0Yerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata15d=$zu(115,2)
+ s sqldata16d=0,sqldata17d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata3d=$g(K1),sqldata5d=$g(K1),sqldata6d=$g(K1)
+ s SQLCODE=100
+ s sqldata9d=$zu(28,sqldata5d,5)
+ i '(sqldata3d'="") g %0YmAdun
+ ; asl MOD# 2
+ s sqldata8d=sqldata9d
+ i sqldata8d="" g %0YmBdun
+ s sqldata10d=""
+%0YmBk1 s sqldata10d=$o(^CBBasicDictionarySubI("Code",sqldata8d,sqldata10d))
+ i sqldata10d="" g %0YmBdun
+ s sqldata11d=""
+ s sqldata11d=$o(^CBBasicDictionarySubI("Code",sqldata8d,sqldata10d,sqldata11d))
+ i sqldata11d="" g %0YmBk1
+ s id=(sqldata10d)_"||"_(sqldata11d)
+ goto:sqldata15d'=1 %0YmBuncommitted
+ if sqldata15d=1 {
+ 	lock +^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))#"S":$zu(115,4)
+ 	if $t { set sqldata17d=$name(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2)))_"#""SI""",sqldata16d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_BasicDictionarySub for RowID value: "_id ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata12d=$zlist(sqldata8d)
+ s sqldata13d=$p(id,"||"),sqldata11d=$p(id,"||",2,*)
+ i sqldata13d'="",sqldata11d'="" s sqldata29d="" i $d(^CBBasicDictionaryD(sqldata13d,"S",sqldata11d),sqldata29d)
+ e  g %0YmCdun
+ S sqldata4d=$lg(sqldata29d,2)
+ s sqldata8d=$zu(28,sqldata4d,5)
+ s sqldata14d=$zlist(sqldata8d)
+ g:sqldata12d'=sqldata14d %0YmCdun
+%0YmBuncommitted ;
+ s SQLCODE=0 g %0Yc
+%0YmCdun if $g(sqldata15d)=1 { if $g(sqldata16d)=1 { l -@sqldata17d s sqldata16d=0 } elseif $g(sqldata16d)=2 { do $classmethod($li(sqldata17d),"%UnlockId",$li(sqldata17d,2),1,1)  s sqldata16d=0 }}
+ g %0YmBk1
+%0YmBdun 
+%0YmAdun 
+%0Yc set %ROWCOUNT='SQLCODE
+ if $g(sqldata15d)=1 {
+ 	if $g(sqldata16d)=1 { l -@sqldata17d s sqldata16d=0 } elseif $g(sqldata16d)=2 { do $classmethod($li(sqldata17d),"%UnlockId",$li(sqldata17d,2),1,1)  s sqldata16d=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata30d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"9EGTDMHdyBRENlRhJb3i/S2p6yQ="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"9EGTDMHdyBRENlRhJb3i/S2p6yQ=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Yerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Yc
+zIDKEYCheck(K1,K2,lockonly=0,concurrency=-1) public {
+	s id=K1_"||"_K2,exists=..%ExistsId(id) q:'exists $s('lockonly:$$Error^%apiOBJ(5797,$classname(),"IDKEY",id),1:1) s:concurrency=-1 concurrency=$select(..#DEFAULTCONCURRENCY="$zu(115,10)":$zu(115,10),1:$xecute("q "_..#DEFAULTCONCURRENCY)) if concurrency { s status=..%LockId(id,1) q:('status) status } if 'lockonly { s exists=..%ExistsId(id) d:concurrency ..%UnlockId(id,1,0) quit $s('exists:$$Error^%apiOBJ(5797,$classname(),"IDKEY",id),1:1) } else { d:concurrency ..%UnlockId(id,1,0) q 1 }
+}
+zIDKEYDelete(K1,K2,concurrency=-1) public {
+	Quit ..%DeleteId(K1_"||"_K2,concurrency) }
+zIDKEYExists(K1,K2,id="") public {
+	s id=K1_"||"_K2 q ..%ExistsId(K1_"||"_K2) }
+zIDKEYOpen(K1,K2,concurrency=-1,sc) public { s:'($d(sc)#2) sc=1
+	Quit ..%OpenId(K1_"||"_K2,concurrency,.sc) }
+zIDKEYSQLCheckUnique(pFromOrig=0,%pID,%pVals...)
+	 ;---&sql(SELECT BD_ParRef,childsub FROM SQLUser.CB_BasicDictionarySub WHERE  BD_ParRef=:%pVals(1) AND childsub=:%pVals(2) AND (%ID <> :%pID OR :%pID IS NULL)) QUIT SQLCODE=100
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	do %00o QUIT SQLCODE=100
+ q
+%00o n sqldata10d,sqldata11d,sqldata12d,sqldata3d,sqldata4d,sqldata6d,sqldata7d,sqldata1d,sqldata2d,sqldata5d,sqldata9d
+ s $zt="%00err"
+ s sqldata10d=$zu(115,2)
+ s sqldata11d=0,sqldata12d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata3d=$s($g(%pVals(1))="":"",$isvalidnum(%pVals(1)):+%pVals(1),1:%pVals(1)),sqldata4d=$s($g(%pVals(2))="":"",$isvalidnum(%pVals(2)):+%pVals(2),1:%pVals(2)),sqldata6d=$g(%pID),sqldata7d=$g(%pID)
+ s SQLCODE=100
+ ; asl MOD# 2
+ s sqldata1d=sqldata3d
+ s sqldata2d=sqldata4d
+ i sqldata1d="" g %00mBdun
+ i sqldata2d="" g %00mBdun
+ i '$d(^CBBasicDictionaryD(sqldata1d,"S",sqldata2d)) g %00mBdun
+ s sqldata5d=(sqldata1d)_"||"_(sqldata2d)
+ i '(((sqldata6d'="")&&(sqldata5d'=sqldata6d))||(sqldata7d="")) g %00mBdun
+ goto:sqldata10d'=1 %00mBuncommitted
+ if sqldata10d=1 {
+ 	lock +^CBBasicDictionaryD($p(sqldata5d,"||",1),"S",$p(sqldata5d,"||",2))#"S":$zu(115,4)
+ 	if $t { set sqldata12d=$name(^CBBasicDictionaryD($p(sqldata5d,"||",1),"S",$p(sqldata5d,"||",2)))_"#""SI""",sqldata11d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_BasicDictionarySub for RowID value: "_sqldata5d ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata9d=$p(sqldata5d,"||"),sqldata2d=$p(sqldata5d,"||",2,*)
+ i sqldata9d'="",sqldata2d'="",$d(^CBBasicDictionaryD(sqldata9d,"S",sqldata2d))
+ e  g %00mCdun
+ s sqldata1d=$p(sqldata5d,"||")
+%00mBuncommitted ;
+ s SQLCODE=0 g %00c
+%00mCdun if $g(sqldata10d)=1 { if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }}
+%00mBdun 
+%00mAdun 
+%00c set %ROWCOUNT='SQLCODE
+ if $g(sqldata10d)=1 {
+ 	if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }
+ }
+ q
+%00err s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %00c
+zIDKEYSQLExists(pLockOnly=0,pUnlockRef,%pVal...)
+	// SQL Foreign Key validation entry point for Key IDKEY.  Called by FKeys that reference this Key to see if the row is defined
+	if pLockOnly>=0 { if '..%SQLGetLock(id,1,.pUnlockRef) { set sqlcode=-114,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler39",,"SQLUser"_"."_"CB_BasicDictionarySub"_":"_"IDKEY") QUIT 0 } }
+	if pLockOnly<1 {
+		new qv set qv='..IDKEYSQLCheckUnique(0,,%pVal(1),%pVal(2)) QUIT:pLockOnly=-1 qv
+		do:'$g(pUnlockRef) ..%SQLReleaseLock(id,1) quit qv
+	}
+	else { do:'$g(pUnlockRef) ..%SQLReleaseLock(id,1) QUIT 1 }
+	Quit
+zIDKEYSQLFindPKeyByConstraint(%con)
+ QUIT $$Error^%apiOBJ(5758,"%Persistent::IDKEYSQLFindPKeyByConstraint")
+zIDKEYSQLFindRowIDByConstraint(%con,pInternal=0)
+ QUIT $$Error^%apiOBJ(5758,"%Persistent::IDKEYSQLFindRowIDByConstraint")
+zParRefCodeCheck(K1,K2,lockonly=0,concurrency=-1) public {
+	s exists=..ParRefCodeExists(K1,K2,.id) q:'exists $s('lockonly:$$Error^%apiOBJ(5797,$classname(),"ParRefCode",K1_"||"_K2),1:1) s:concurrency=-1 concurrency=$select(..#DEFAULTCONCURRENCY="$zu(115,10)":$zu(115,10),1:$xecute("q "_..#DEFAULTCONCURRENCY)) if concurrency { s status=..%LockId(id,1) q:('status) status } if 'lockonly { s exists=..ParRefCodeExists(K1,K2,.idcheck) d:concurrency ..%UnlockId(id,1,0) quit $s(('exists)||(id'=idcheck):$$Error^%apiOBJ(5797,$classname(),"ParRefCode",K1_"||"_K2),1:1) } else { d:concurrency ..%UnlockId(id,1,0) q 1 }
+}
+zParRefCodeDelete(K1,K2,concurrency=-1) public {
+	i ..ParRefCodeExists(K1,K2,.id){ s sc=..%DeleteId(id,concurrency) } Else { s sc=$$Error^%apiOBJ(5771,"ParRefCode",K1_":"_K2) }
+	QUIT sc }
+zParRefCodeExists(K1,K2,id="") [ K1,K2,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	 ;---&sql(SELECT %ID INTO :id FROM SQLUser.CB_BasicDictionarySub WHERE (BD_ParRef = :K1) AND (Code = :K2))
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, K1, K2, SQLCODE, id
+	do %02o
+	Quit $select('SQLCODE:1,1:0) }
+ q
+%02o n sqldata14d,sqldata15d,sqldata16d,sqldata28d,sqldata4d,sqldata6d,sqldata8d,sqldata9d,sqldata3d,sqldata10d,sqldata11d,sqldata12d,sqldata5d,sqldata13d
+ s $zt="%02err"
+ s sqldata14d=$zu(115,2)
+ s sqldata15d=0,sqldata16d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$s($g(K1)="":"",$isvalidnum(K1):+K1,1:K1),sqldata6d=$g(K2)
+ s SQLCODE=100
+ s sqldata9d=$zu(28,sqldata6d,5)
+ ; asl MOD# 2
+ s sqldata8d=sqldata9d
+ s sqldata3d=sqldata4d
+ i sqldata8d="" g %02mBdun
+ i sqldata3d="" g %02mBdun
+ s sqldata10d=""
+ s sqldata10d=$o(^CBBasicDictionarySubI("Code",sqldata8d,sqldata3d,sqldata10d))
+ i sqldata10d="" g %02mBdun
+ s id=(sqldata3d)_"||"_(sqldata10d)
+ goto:sqldata14d'=1 %02mBuncommitted
+ if sqldata14d=1 {
+ 	lock +^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))#"S":$zu(115,4)
+ 	if $t { set sqldata16d=$name(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2)))_"#""SI""",sqldata15d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_BasicDictionarySub for RowID value: "_id ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata11d=$zlist(sqldata8d)
+ s sqldata12d=$p(id,"||"),sqldata10d=$p(id,"||",2,*)
+ i sqldata12d'="",sqldata10d'="" s sqldata28d="" i $d(^CBBasicDictionaryD(sqldata12d,"S",sqldata10d),sqldata28d)
+ e  g %02mCdun
+ S sqldata5d=$lg(sqldata28d,2)
+ s sqldata8d=$zu(28,sqldata5d,5)
+ s sqldata3d=$p(id,"||")
+ s sqldata13d=$zlist(sqldata8d)
+ g:sqldata11d'=sqldata13d %02mCdun
+%02mBuncommitted ;
+ s SQLCODE=0 g %02c
+%02mCdun if $g(sqldata14d)=1 { if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }}
+%02mBdun 
+%02mAdun 
+%02c set %ROWCOUNT='SQLCODE
+ if $g(sqldata14d)=1 {
+ 	if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }
+ }
+ q
+%02err s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %02c
+zParRefCodeOpen(K1,K2,concurrency=-1,sc) public { s:'($d(sc)#2) sc=1
+ i ..ParRefCodeExists(K1,K2,.id){ s return=..%OpenId(id,concurrency,.sc) } Else { s sc=$$Error^%apiOBJ(5770,"ParRefCode",K1_":"_K2),return="" }
+ QUIT return }
+zParRefCodeSQLCheckUnique(pFromOrig=0,%pID,%pVals...)
+	 ;---&sql(SELECT BD_ParRef,Code FROM SQLUser.CB_BasicDictionarySub WHERE  BD_ParRef=:%pVals(1) AND Code=:%pVals(2) AND (%ID <> :%pID OR :%pID IS NULL)) QUIT SQLCODE=100
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	do %04o QUIT SQLCODE=100
+ q
+%04o n sqldata16d,sqldata17d,sqldata18d,sqldata30d,sqldata36d,sqldata3d,sqldata4d,sqldata6d,sqldata7d,sqldata9d,sqldata10d,sqldata1d,sqldata11d,sqldata5d,sqldata12d,sqldata2d,sqldata13d,sqldata14d,sqldata15d
+ s $zt="%04err"
+ s sqldata16d=$zu(115,2)
+ s sqldata17d=0,sqldata18d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata3d=$s($g(%pVals(1))="":"",$isvalidnum(%pVals(1)):+%pVals(1),1:%pVals(1)),sqldata4d=$g(%pVals(2)),sqldata6d=$g(%pID),sqldata7d=$g(%pID)
+ s SQLCODE=100
+ s sqldata10d=$zu(28,sqldata4d,5)
+ ; asl MOD# 2
+ s sqldata9d=sqldata10d
+ s sqldata1d=sqldata3d
+ i sqldata9d="" g %04mBdun
+ i sqldata1d="" g %04mBdun
+ s sqldata11d=""
+ s sqldata11d=$o(^CBBasicDictionarySubI("Code",sqldata9d,sqldata1d,sqldata11d))
+ i sqldata11d="" g %04mBdun
+ s sqldata5d=(sqldata1d)_"||"_(sqldata11d)
+ i '(((sqldata6d'="")&&(sqldata5d'=sqldata6d))||(sqldata7d="")) g %04mBdun
+ s sqldata12d=$p(sqldata5d,"||"),sqldata11d=$p(sqldata5d,"||",2,*)
+ i sqldata12d'="" s sqldata30d="" i $d(^CBBasicDictionaryD(sqldata12d,"S",sqldata11d),sqldata30d)
+ e  g %04mBdun
+ S sqldata2d=$lg(sqldata30d,2)
+ i sqldata16d=3 {
+ s sqldata13d=$zu(28,sqldata2d,5)
+ i '(sqldata13d=sqldata10d) g %04mBdun
+ }
+ goto:sqldata16d'=1 %04mBuncommitted
+ if sqldata16d=1 {
+ 	lock +^CBBasicDictionaryD($p(sqldata5d,"||",1),"S",$p(sqldata5d,"||",2))#"S":$zu(115,4)
+ 	if $t { set sqldata18d=$name(^CBBasicDictionaryD($p(sqldata5d,"||",1),"S",$p(sqldata5d,"||",2)))_"#""SI""",sqldata17d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_BasicDictionarySub for RowID value: "_sqldata5d ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata14d=$zlist(sqldata9d)
+ s sqldata12d=$p(sqldata5d,"||"),sqldata11d=$p(sqldata5d,"||",2,*)
+ i sqldata12d'="",sqldata11d'="" s sqldata36d="" i $d(^CBBasicDictionaryD(sqldata12d,"S",sqldata11d),sqldata36d)
+ e  g %04mCdun
+ S sqldata2d=$lg(sqldata36d,2)
+ s sqldata9d=$zu(28,sqldata2d,5)
+ s sqldata1d=$p(sqldata5d,"||")
+ s sqldata15d=$zlist(sqldata9d)
+ g:sqldata14d'=sqldata15d %04mCdun
+%04mBuncommitted ;
+ s SQLCODE=0 g %04c
+%04mCdun if $g(sqldata16d)=1 { if $g(sqldata17d)=1 { l -@sqldata18d s sqldata17d=0 } elseif $g(sqldata17d)=2 { do $classmethod($li(sqldata18d),"%UnlockId",$li(sqldata18d,2),1,1)  s sqldata17d=0 }}
+%04mBdun 
+%04mAdun 
+%04c set %ROWCOUNT='SQLCODE
+ if $g(sqldata16d)=1 {
+ 	if $g(sqldata17d)=1 { l -@sqldata18d s sqldata17d=0 } elseif $g(sqldata17d)=2 { do $classmethod($li(sqldata18d),"%UnlockId",$li(sqldata18d,2),1,1)  s sqldata17d=0 }
+ }
+ q
+%04err s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %04c
+zParRefCodeSQLExists(pLockOnly=0,pUnlockRef,%pVal...)
+	// SQL Foreign Key validation entry point for Key ParRefCode.  Called by FKeys that reference this Key to see if the row is defined
+	new id set id=..ParRefCodeSQLFindRowIDByConstraint($lb(%pVal(1),%pVal(2)),1) QUIT:SQLCODE $s('pLockOnly:0,1:1)
+	if pLockOnly>=0 { if '..%SQLGetLock(id,1,.pUnlockRef) { set sqlcode=-114,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler39",,"SQLUser"_"."_"CB_BasicDictionarySub"_":"_"ParRefCode") QUIT 0 } }
+	if pLockOnly<1 {
+		new qv set qv='..ParRefCodeSQLCheckUnique(0,,%pVal(1),%pVal(2)) QUIT:pLockOnly=-1 qv
+		do:'$g(pUnlockRef) ..%SQLReleaseLock(id,1) quit qv
+	}
+	else { do:'$g(pUnlockRef) ..%SQLReleaseLock(id,1) QUIT 1 }
+	Quit
+zParRefCodeSQLFindPKeyByConstra(%con)
+ QUIT $$Error^%apiOBJ(5758,"%Persistent::ParRefCodeSQLFindPKeyByConstraint")
+zParRefCodeSQLFindRowIDByConstr(%con,pInternal=0)
+	// Get ROWID value for UNIQUE Key ParRefCode value given in %con
+	new %d,id,rtm set rtm=$zu(115,5,$s(pInternal:0,1:1)) set %d(0)=$lg(%con,1) set %d(2)=$lg(%con,2)
+	set %ROWCOUNT=0 set:'pInternal %qrc=0
+	 ;---&sql(SELECT %ID INTO :id FROM SQLUser.CB_BasicDictionarySub WHERE BD_ParRef = :%d(0) AND Code = :%d(2))
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, id
+	do %06o
+	do $zu(115,5,rtm)
+	if pInternal { QUIT:'SQLCODE $g(id) RETURN "" }
+	if SQLCODE { set:SQLCODE<0 %qrc=-SQLCODE set:'%ROWCOUNT&&(SQLCODE=100) id="",%qrc=0 } set d=$zobjexport(id,18) QUIT
+	Quit
+ q
+%06o n sqldata15d,sqldata16d,sqldata17d,sqldata29d,sqldata4d,sqldata6d,sqldata8d,sqldata9d,sqldata3d,sqldata10d,sqldata1d,sqldata11d,sqldata12d,sqldata5d,sqldata13d
+ s $zt="%06err"
+ s sqldata15d=$zu(115,2)
+ s sqldata16d=0,sqldata17d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$s($zu(115,5)=2:$select($g(%d(0))="":"",$g(%d(0))=$c(0)&&$zu(115,13):"",1:$s($in($g(%d(0)),"","")'="":+$in($g(%d(0)),"",$g(%d(0))),1:$g(%d(0)))),1:$g(%d(0))),sqldata4d=$s(sqldata4d="":"",$isvalidnum(sqldata4d):+sqldata4d,1:sqldata4d),sqldata6d=$g(%d(2))
+ s SQLCODE=100
+ s sqldata9d=$zu(28,sqldata6d,5)
+ ; asl MOD# 2
+ s sqldata8d=sqldata9d
+ s sqldata3d=sqldata4d
+ i sqldata8d="" g %06mBdun
+ i sqldata3d="" g %06mBdun
+ s sqldata10d=""
+ s sqldata10d=$o(^CBBasicDictionarySubI("Code",sqldata8d,sqldata3d,sqldata10d))
+ i sqldata10d="" g %06mBdun
+ s sqldata1d=(sqldata3d)_"||"_(sqldata10d),id=$s($zu(115,5)=2:$tr(sqldata1d,$c(0),""),1:sqldata1d)
+ goto:sqldata15d'=1 %06mBuncommitted
+ if sqldata15d=1 {
+ 	lock +^CBBasicDictionaryD($p(sqldata1d,"||",1),"S",$p(sqldata1d,"||",2))#"S":$zu(115,4)
+ 	if $t { set sqldata17d=$name(^CBBasicDictionaryD($p(sqldata1d,"||",1),"S",$p(sqldata1d,"||",2)))_"#""SI""",sqldata16d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_BasicDictionarySub for RowID value: "_sqldata1d ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata11d=$zlist(sqldata8d)
+ s sqldata12d=$p(sqldata1d,"||"),sqldata10d=$p(sqldata1d,"||",2,*)
+ i sqldata12d'="",sqldata10d'="" s sqldata29d="" i $d(^CBBasicDictionaryD(sqldata12d,"S",sqldata10d),sqldata29d)
+ e  g %06mCdun
+ s id=$s($zu(115,5)=2:$tr(sqldata1d,$c(0),""),1:sqldata1d)
+ S sqldata5d=$lg(sqldata29d,2)
+ s sqldata8d=$zu(28,sqldata5d,5)
+ s sqldata3d=$p(sqldata1d,"||")
+ s sqldata13d=$zlist(sqldata8d)
+ g:sqldata11d'=sqldata13d %06mCdun
+%06mBuncommitted ;
+ s SQLCODE=0 g %06c
+%06mCdun if $g(sqldata15d)=1 { if $g(sqldata16d)=1 { l -@sqldata17d s sqldata16d=0 } elseif $g(sqldata16d)=2 { do $classmethod($li(sqldata17d),"%UnlockId",$li(sqldata17d,2),1,1)  s sqldata16d=0 }}
+%06mBdun 
+%06mAdun 
+%06c set %ROWCOUNT='SQLCODE
+ if $g(sqldata15d)=1 {
+ 	if $g(sqldata16d)=1 { l -@sqldata17d s sqldata16d=0 } elseif $g(sqldata16d)=2 { do $classmethod($li(sqldata17d),"%UnlockId",$li(sqldata17d,2),1,1)  s sqldata16d=0 }
+ }
+ q
+%06err s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %06c

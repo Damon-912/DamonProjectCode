@@ -1,0 +1,729 @@
+ROUTINE src.util.operatetable.1 [Type=INT,Generated]
+ ;src.util.operatetable.1
+ ;Generated for class src.util.operatetable.  Do NOT edit. 12/24/2025 10:04:04AM
+ ;;31706241;src.util.operatetable
+ ;
+zDelete(delObj,sessionObj) s:'($d(sessionObj)#2) sessionObj={}
+	new (delObj,sessionObj)
+	set resultObj={}
+	set resultObj.errorCode="0"
+	set resultObj.errorMessage="成功"
+	set errorCode="0"
+	set errorMessage="成功"
+	set className=delObj.className
+	set updateUserID=delObj.updateUserID
+	if updateUserID=""
+	{
+		set resultObj.errorCode="-1"
+		set resultObj.errorMessage="删除人不能为空"
+		quit 
+	}
+	set existFlag=##class(%Library.ClassDefinition).%ExistsId(className)
+	if existFlag=0 {
+		; 实体类不存在
+		set errorCode="01040001"
+		set errorMessage=##class(src.Interface.Message).GetErrorMessage(errorCode)
+		set resultObj.errorCode=errorCode
+		set resultObj.errorMessage=errorMessage
+	}
+	quit:existFlag=0 resultObj
+	set rowIDInfo=[]
+	set data=delObj.data
+	set iter = data.%GetIterator()
+	while iter.%GetNext(.key , .value ) {
+		quit:errorCode'="0"
+		set rowID=data.%Get(key).ID
+		set oldObj={},oldData=[],oldjson={}
+		set oldObj.className=className
+		try{
+			set tbObj=$CLASSMETHOD(className,"%OpenId",rowID)
+			if (tbObj'=""){
+				; 修改前信息
+				; 修改前信息
+				set sc2=tbObj.ToDynamicObj(.oldjson)
+				If ($System.Status.IsError(sc2)) {
+					set errorCode="01040030"
+					set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(sc2,"cn"),"^"," ")
+				}
+				if errorCode'="0" do tbObj.%Close()
+				quit:errorCode'="0"
+				b ;23232323
+				set oldjson=..Remove(oldjson)
+				do oldData.%Push(oldjson)
+				set oldObj.data=oldData
+				b ;oldObj2
+				; 修改前信息
+				set sc=tbObj.%DeleteId(rowID)	;  删除
+				If ($System.Status.IsError(sc)) {
+					set errorCode="01040031"
+					set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(sc,"cn"),"^"," ")
+				}else{
+					do rowIDInfo.%Push(rowID)
+				}
+			}else{
+				set errorCode="01040003"
+				set errorMessage=##class(src.Interface.Message).GetErrorMessage(errorCode)
+				set errorMessage=className_" ID="_$g(rowID)_errorMessage
+			}
+		}catch (e) {
+			Set status=e.AsStatus()
+		    set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+    	}  
+		if errorCode="0" {
+			set:sessionObj.userID="" sessionObj.userID=updateUserID
+			set logObj={"type":"Delete","oldDataObj":(oldjson),"className":(className),"rowID":(rowID),"sessionObj":(sessionObj),"remark":""}
+			do ..SaveLogNew(logObj)
+		}
+	}
+	set resultObj.errorCode=errorCode
+	set resultObj.errorMessage=errorMessage
+	if errorCode=0{
+		set resultObj.rowIDArr=rowIDInfo
+	}
+	quit resultObj
+zDeleteLog(oldDataObj,className,rowID,sessionObj)
+	new (oldDataObj,className,rowID,sessionObj)
+	b ;2q3
+	set ^TMP("DeleteLog")=className_":"_rowID_":"_oldDataObj.%ToJSON()_"^"_sessionObj.%ToJSON()
+	try {
+		set errorCode=0,errorMessage="保存日志成功"
+		set userID=sessionObj.userID
+		set locID=sessionObj.locID
+		set groupID=sessionObj.groupID
+		set hospID=sessionObj.hospID
+		set ipAddress=sessionObj.ipv4
+		set macAddress=sessionObj.mac
+		kill PLIST
+		set PLIST(2)=+$h
+		set PLIST(3)=$p($h,",",2)
+		set PLIST(4)=userID
+		set PLIST(5)=ipAddress
+		set PLIST(6)=macAddress
+		set PLIST(7)=hospID
+		set PLIST(8)=groupID
+		set PLIST(9)=locID
+		set PLIST(10)=className
+		set PLIST(11)=rowID
+		if oldDataObj'=""{
+			set PLIST(12)=oldDataObj.%ToJSON()	
+		}
+		 ;---&sql(INSERT INTO SQLUser.BS_BaseDataModifyLog Values PLIST())
+ 		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, PLIST, SQLCODE
+		do %0Ao
+		if SQLCODE'=0 {
+			set errorCode=SQLCODE
+			set errorMessage=$g(%msg)
+			quit
+		}
+	}catch(e){
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(e.AsStatus()),",")
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(e.AsStatus(),"cn"),"^"," ")
+	}
+	set retObj={
+		"errorCode":(errorCode),
+		"errorMessage":(errorMessage)
+	}
+	quit retObj
+ q
+%0Ao try { n sqldata3d,sqldata4d
+ 	n %sqltime s %sqltime=$zh
+ 	if $zu(115,1)=1||('$TLEVEL&&($zu(115,1)=2)) { TSTART  s sqldata3d=1 }
+ 	n %i,icol,ir
+ 	f icol=0:1:14 i $d(PLIST(icol)) s %i(icol)=PLIST(icol)
+ 	set %ROWID=##class(User.BSBaseDataModifyLog).%SQLInsert(.%i,$c(0,0,0,0,0,0,0),,,'$g(sqldata3d)),%ROWCOUNT='SQLCODE
+ 	if $zu(115,1)=1,$g(sqldata3d) { TCOMMIT:SQLCODE'<0  TROLLBACK:SQLCODE<0 1 }
+ }
+ catch { do SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) if $zu(115,1)=1,$g(sqldata3d) { TROLLBACK 1 } }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata4d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"iZ7HOAvrd8xKmVd4EdGZurFNEwg="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"iZ7HOAvrd8xKmVd4EdGZurFNEwg=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ quit  // From %0Ao
+zInsert(insObj,sessionObj) s:'($d(sessionObj)#2) sessionObj={}
+	new (insObj,sessionObj)
+	set errorCode="0"
+	set errorMessage="成功"
+	set resultObj={}
+	set resultObj.errorCode="0"
+	set resultObj.errorMessage="成功"
+	set className=insObj.className
+	set updateUserID=insObj.updateUserID
+	set existFlag=##class(%Library.ClassDefinition).%ExistsId(className)
+	if existFlag=0 {
+		; 实体类不存在
+		set errorCode="01040001"
+		set errorMessage=##class(src.Interface.Message).GetErrorMessage(errorCode)
+		set resultObj.errorCode=errorCode
+		set resultObj.errorMessage=errorMessage
+	}
+	quit:existFlag=0 resultObj
+	set data=insObj.data
+	set iter = data.%GetIterator()
+	set rowIDInfo=[]
+	while iter.%GetNext(.key , .value ) {
+		quit:errorCode'="0"
+		try{
+			set tbObj=$CLASSMETHOD(className,"%New")	; 插表实例化
+			set sc1=tbObj.FromDynamicObj(value)
+			If ($System.Status.IsError(sc1)) {
+				set errorCode="01040029"
+				set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(sc1,"cn"),"^"," ")
+			}
+			if errorCode'="0" do tbObj.%Close()
+			quit:errorCode'="0"
+			set sc=tbObj.%Save(0)
+			If ($System.Status.IsError(sc)) {
+				set errorCode="01040031"
+				set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(sc,"cn"),"^"," ")
+			}
+			if errorCode'="0" do tbObj.%Close()
+			quit:errorCode'="0"
+			set rowID=tbObj.%Id()
+			do tbObj.%Close()
+			do rowIDInfo.%Push(rowID)
+		}catch (e) {
+	 		set status=e.AsStatus()
+	    	set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+    		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+    	}  
+		if errorCode="0" {
+			set:sessionObj.userID="" sessionObj.userID=updateUserID
+			set logObj={"type":"Insert","oldDataObj":{},"className":(className),"rowID":(rowID),"sessionObj":(sessionObj),"remark":""}
+			do ..SaveLogNew(logObj)
+		}
+	}
+	set resultObj.errorCode=errorCode
+	set resultObj.errorMessage=errorMessage
+	if errorCode=0{
+		set resultObj.rowIDArr=rowIDInfo
+	}
+	quit resultObj
+zInsertTXT()
+	set insObj={},data=[]
+	set insObj.className="User.CBModifyLogConfig"
+	set insObj.updateUserID=1
+	set PayMentRecordObj={}
+	set PayMentRecordObj.TableName=""
+	set PayMentRecordObj.CreateDate="2202-10-21"
+	set PayMentRecordObj.CreateTime="12:12:1"
+	set PayMentRecordObj.CreateUserDr="1"
+	do data.%Push(PayMentRecordObj)
+	set insObj.data=data
+	set insrtn=##class(src.util.operatetable).Insert(.insObj)
+	b ;????
+	set rtn=$p($p(insrtn,"!",1),"^",1)
+	set errorMessage=$p($p(insrtn,"!",1),"^",2)
+	set id=$p($p(insrtn,"!",2),"^",1)		
+	quit rtn_$c(2)_id_$c(2)_insrtn
+zRemove(reJson)
+	new (reJson)
+	set iter = reJson.%GetIterator()
+	while iter.%GetNext(.key , .value ) {
+		if (($zcvt(key,"U")["CHILD")&(value["%Library.DynamicArray")) d reJson.%Remove(key)
+	}
+	quit reJson
+zSaveLog(oldDataObj,className,rowID,sessionObj)
+	new (oldDataObj,className,rowID,sessionObj)
+	try {
+		set errorCode=0,errorMessage="保存日志成功"
+		 ;---&sql(select ID into :configID from CB_ModifyLogConfig where TableName=:className)
+ 		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, className, configID
+		do %0Co
+		if SQLCODE'=0 {
+			set errorCode=-1
+			set errorMessage="未配置修改日志表,不需保存日志"
+			quit
+		}
+		set newTbObj=$CLASSMETHOD(className,"%OpenId",rowID)
+		if newTbObj'="" {
+			set sc=newTbObj.ToDynamicObj(.newDataObj)
+			if ($System.Status.IsError(sc)) {
+				set errorCode=-1
+				set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(sc,"cn"),"^"," ")
+				quit
+			}
+			set i=0
+			set insOldDataObj={},insNewDataObj={}
+			set iter = newDataObj.%GetIterator()
+			while iter.%GetNext(.key , .value ) {
+				set oldValue=oldDataObj.%Get(key)
+				continue:value=oldValue
+				do insOldDataObj.%Set(key,oldValue)
+				do insNewDataObj.%Set(key,value)
+				set i=i+1
+			}
+			if i=0 {
+				set errorCode=-1
+				set errorMessage="数据未发生改变,不需保存日志"
+				quit
+			}
+			set userID=sessionObj.userID
+			set locID=sessionObj.locID
+			set groupID=sessionObj.groupID
+			set hospID=sessionObj.hospID
+			set ipAddress=sessionObj.ipv4
+			set macAddress=sessionObj.mac
+			kill PLIST
+			set PLIST(2)=+$h
+			set PLIST(3)=$p($h,",",2)
+			set PLIST(4)=userID
+			set PLIST(5)=ipAddress
+			set PLIST(6)=macAddress
+			set PLIST(7)=hospID
+			set PLIST(8)=groupID
+			set PLIST(9)=locID
+			set PLIST(10)=className
+			set PLIST(11)=rowID
+			if insOldDataObj'=""{
+				set PLIST(12)=insOldDataObj.%ToJSON()	
+			}
+			if insNewDataObj'=""{
+				set PLIST(13)=insNewDataObj.%ToJSON()	
+			}
+			 ;---&sql(INSERT INTO SQLUser.BS_BaseDataModifyLog Values PLIST())
+ 			 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, PLIST, SQLCODE
+			do %0Eo
+			if SQLCODE'=0 {
+				set errorCode=SQLCODE
+				set errorMessage=$g(%msg)
+				quit
+			}
+		}else {
+			set errorCode=-1
+			set errorMessage="表实例化失败"
+			quit
+		}
+	}catch(e){
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(e.AsStatus()),",")
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(e.AsStatus(),"cn"),"^"," ")
+	}
+	set retObj={
+		"errorCode":(errorCode),
+		"errorMessage":(errorMessage)
+	}
+	quit retObj
+ q
+%0Co n sqldata10d,sqldata11d,sqldata12d,sqldata13d,sqldata21d,sqldata22d,sqldata4d,sqldata6d,sqldata7d,sqldata8d,sqldata3d,sqldata9d
+ s $zt="%0Cerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata10d=$zu(115,2)
+ s sqldata11d=0,sqldata12d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(className)
+ s SQLCODE=100
+ s sqldata7d=$zu(28,sqldata4d,5)
+ ; asl MOD# 2
+ s sqldata6d=sqldata7d s sqldata13d=$s(sqldata6d="":-1E14,1:sqldata6d)
+ i '(sqldata6d'="") g %0CmBdun
+ s configID=""
+%0CmBk1 s configID=$o(^CBModifyLogConfigI("TableName",sqldata13d,configID))
+ i configID="" g %0CmBdun
+ goto:sqldata10d'=1 %0CmBuncommitted
+ if sqldata10d=1 {
+ 	lock +^CBModifyLogConfigD($p(configID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata12d=$name(^CBModifyLogConfigD($p(configID,"||",1)))_"#""SI""",sqldata11d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_ModifyLogConfig for RowID value: "_configID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata8d=$zlist(sqldata6d)
+ i configID'="" s sqldata21d="" i $d(^CBModifyLogConfigD(configID),sqldata21d)
+ e  g %0CmCdun
+ S sqldata3d=$lg(sqldata21d,2)
+ s sqldata6d=$zu(28,sqldata3d,5)
+ s sqldata9d=$zlist(sqldata6d)
+ g:sqldata8d'=sqldata9d %0CmCdun
+%0CmBuncommitted ;
+ s SQLCODE=0 g %0Cc
+%0CmCdun if $g(sqldata10d)=1 { if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }}
+ g %0CmBk1
+%0CmBdun 
+%0CmAdun 
+%0Cc set %ROWCOUNT='SQLCODE
+ if $g(sqldata10d)=1 {
+ 	if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata22d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"Lqch6hAiula8gkOV8gEhZhYCxn8="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"Lqch6hAiula8gkOV8gEhZhYCxn8=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Cerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Cc
+%0Eo try { n sqldata3d,sqldata4d
+ 	n %sqltime s %sqltime=$zh
+ 	if $zu(115,1)=1||('$TLEVEL&&($zu(115,1)=2)) { TSTART  s sqldata3d=1 }
+ 	n %i,icol,ir
+ 	f icol=0:1:14 i $d(PLIST(icol)) s %i(icol)=PLIST(icol)
+ 	set %ROWID=##class(User.BSBaseDataModifyLog).%SQLInsert(.%i,$c(0,0,0,0,0,0,0),,,'$g(sqldata3d)),%ROWCOUNT='SQLCODE
+ 	if $zu(115,1)=1,$g(sqldata3d) { TCOMMIT:SQLCODE'<0  TROLLBACK:SQLCODE<0 1 }
+ }
+ catch { do SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) if $zu(115,1)=1,$g(sqldata3d) { TROLLBACK 1 } }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata4d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"iZ7HOAvrd8xKmVd4EdGZurFNEwg="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"iZ7HOAvrd8xKmVd4EdGZurFNEwg=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ quit  // From %0Eo
+zSaveLogNew(logObj)
+	new (logObj)
+	try {
+		set errorCode=0,errorMessage="保存日志成功"
+		set type=logObj.type
+		set oldDataObj=logObj.oldDataObj
+		set className=logObj.className
+		set rowID=logObj.rowID
+		set sessionObj=logObj.sessionObj
+		set remark=logObj.remark
+		if type="delete" {
+			set newDataObj={}
+		}else {
+			set newTbObj=$CLASSMETHOD(className,"%OpenId",rowID)
+			if newTbObj'="" {
+				set sc=newTbObj.ToDynamicObj(.newDataObj)
+				if ($System.Status.IsError(sc)) {
+					set errorCode=-1
+					set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(sc,"cn"),"^"," ")
+					quit
+				}
+				set newDataObj=..Remove(newDataObj)
+				set i=0
+				set insOldDataObj={},insNewDataObj={}
+				set iter = newDataObj.%GetIterator()
+				while iter.%GetNext(.key , .value ) {
+					set oldValue=oldDataObj.%Get(key)
+					continue:value=oldValue
+					do insOldDataObj.%Set(key,oldValue)
+					do insNewDataObj.%Set(key,value)
+					set i=i+1
+				}
+				if i=0 {
+					set errorCode=-1
+					set errorMessage="数据未发生改变,不需保存日志"
+					quit
+				}
+			}else {
+				set errorCode=-1
+				set errorMessage="表实例化失败"
+				quit
+			}
+		}
+		set userID=sessionObj.userID
+		set ipAddress=sessionObj.ipv4
+		set macAddress=sessionObj.mac
+		kill PLIST
+		set PLIST(2)=type
+		set PLIST(3)=className
+		set PLIST(4)=rowID
+		set PLIST(5)=oldDataObj.%ToJSON()		//insOldDataObj.%ToJSON()
+		set PLIST(6)=newDataObj.%ToJSON()		//insNewDataObj.%ToJSON()
+		set PLIST(7)=+$h
+		set PLIST(8)=$p($h,",",2)
+		set PLIST(9)=userID
+		set PLIST(10)=ipAddress
+		set PLIST(11)=macAddress
+		set PLIST(12)=remark
+		 ;---&sql(INSERT INTO SQLUser.BS_DataModifyRecord Values PLIST())
+ 		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, PLIST, SQLCODE
+		do %0Go
+		if SQLCODE'=0 {
+			set errorCode=SQLCODE
+			set errorMessage=$g(%msg)
+			quit
+		}
+	}catch(e){
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(e.AsStatus()),",")
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(e.AsStatus(),"cn"),"^"," ")
+	}
+	set retObj={
+		"errorCode":(errorCode),
+		"errorMessage":(errorMessage)
+	}
+	quit retObj
+ q
+%0Go try { n sqldata3d,sqldata4d
+ 	n %sqltime s %sqltime=$zh
+ 	if $zu(115,1)=1||('$TLEVEL&&($zu(115,1)=2)) { TSTART  s sqldata3d=1 }
+ 	n %i,icol,ir
+ 	f icol=0:1:13 i $d(PLIST(icol)) s %i(icol)=PLIST(icol)
+ 	set %ROWID=##class(User.BSDataModifyRecord).%SQLInsert(.%i,$c(0,0,0,0,0,0,0),,,'$g(sqldata3d)),%ROWCOUNT='SQLCODE
+ 	if $zu(115,1)=1,$g(sqldata3d) { TCOMMIT:SQLCODE'<0  TROLLBACK:SQLCODE<0 1 }
+ }
+ catch { do SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) if $zu(115,1)=1,$g(sqldata3d) { TROLLBACK 1 } }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata4d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"LkAz3cVGgMUdgy91ehFJwnl2k64="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"LkAz3cVGgMUdgy91ehFJwnl2k64=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ quit  // From %0Go
+zUpdate(updObj,sessionObj) s:'($d(sessionObj)#2) sessionObj={}
+	new (updObj,sessionObj)
+	set resultObj={}
+	set resultObj.errorCode="0"
+	set resultObj.errorMessage="成功"
+	set errorCode="0"
+	set errorMessage="成功"
+	set className=updObj.className
+	set updateUserID=updObj.updateUserID
+	set existFlag=##class(%Library.ClassDefinition).%ExistsId(className)
+	if existFlag=0 {
+		; 实体类不存在
+		set errorCode="01040001"
+		set errorMessage=##class(src.Interface.Message).GetErrorMessage(errorCode)
+		set resultObj.errorCode=errorCode
+		set resultObj.errorMessage=errorMessage
+	}
+	quit:existFlag=0 resultObj
+	set logFlag=updObj.logFlag
+	set data=updObj.data
+	set iter = data.%GetIterator()
+	set rowIDStr=""
+	set rowIDInfo=[]
+	while iter.%GetNext(.key , .value ) {
+		quit:errorCode'="0"
+		set rowID=data.%Get(key).ID
+		set oldObj={},oldData=[],oldjson={}
+		set Stream=##class(%Library.GlobalCharacterStream).%New()
+		set oldObj.className=className
+		try{
+			set tbObj=$CLASSMETHOD(className,"%OpenId",rowID)	; 插表实例化
+			if tbObj'="" {
+				; 修改前信息
+				set sc2=tbObj.ToDynamicObj(.oldjson)
+				If ($System.Status.IsError(sc2)) {
+					set errorCode="01040030"
+					set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(sc2,"cn"),"^"," ")
+				}
+				if errorCode'="0" do tbObj.%Close()
+				quit:errorCode'="0"
+				set oldjson=..Remove(oldjson)
+				do oldData.%Push(oldjson)
+				set oldObj.data=oldData
+				set sc1=tbObj.FromDynamicObj(.value)
+				If ($System.Status.IsError(sc1)) {
+					set errorCode="01040029"
+					set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(sc1,"cn"),"^"," ")
+				}
+				if errorCode'="0" do tbObj.%Close()
+				quit:errorCode'="0"
+				set sc=tbObj.%Save(0)
+				If ($System.Status.IsError(sc)) {
+					set errorCode="01040031"
+					set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(sc,"cn"),"^"," ")
+				}else{
+					set rowID=tbObj.%Id()
+					do rowIDInfo.%Push(rowID)
+				}	
+				do tbObj.%Close()
+			}else{
+				set errorCode="01040003"
+				set errorMessage=##class(src.Interface.Message).GetErrorMessage(errorCode)
+				set errorMessage=className_" ID="_$g(rowID)_errorMessage
+			}
+		}catch (e) {
+			Set status=e.AsStatus()
+		    set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+    	}
+    	if errorCode="0" {
+	    	set:sessionObj.userID="" sessionObj.userID=updateUserID
+			set logObj={"type":"Update","oldDataObj":(oldjson),"className":(className),"rowID":(rowID),"sessionObj":(sessionObj),"remark":""}
+			do ..SaveLogNew(logObj)
+		}
+	}
+	set resultObj.errorCode=errorCode
+	set resultObj.errorMessage=errorMessage
+	if errorCode=0{
+		set resultObj.rowIDArr=rowIDInfo
+	}
+	quit resultObj
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("src.util.operatetable",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"src.util.operatetable")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"src.util.operatetable")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="src.util.operatetable"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="operatetable"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"operatetable"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"operatetable"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If encoded Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ If indentFlag,encoded { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("src.util.operatetable",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"src.util.operatetable")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLNew(document,node,containerOref="")
+	Quit (##class(src.util.operatetable).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("src.util.operatetable",top,format,namespacePrefix,input,refOnly,.schema)

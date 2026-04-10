@@ -9,6 +9,7 @@ import {
   queryDipDiseases, saveDipDisease, deleteDipDisease,
   type DipDiseaseItem, type SaveDipDiseaseParams
 } from '../../api/basicData';
+import CustomPagination from '../../components/CustomPagination';
 
 const { Option } = Select;
 
@@ -264,24 +265,20 @@ const DIPDisease: React.FC = () => {
           loading={loading}
           scroll={{ x: 1200 }}
           size="small"
-          pagination={{
-            current: currentPage,
-            pageSize,
-            total,
-            showSizeChanger: true,
-            showTotal: (t) => `共 ${t} 条`,
-            onChange: (page, size) => {
+          pagination={false}
+        />
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <CustomPagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={total}
+            onChange={(page, size) => {
               setCurrentPage(page);
               setPageSize(size);
               fetchData(page, size);
-            },
-            locale: {
-              items_per_page: '/页',
-              jump_to: '跳至',
-              page: '页',
-            }
-          }}
-        />
+            }}
+          />
+        </div>
       </Card>
 
       {/* 新增/编辑弹窗 */}
@@ -290,6 +287,8 @@ const DIPDisease: React.FC = () => {
         open={modalOpen}
         onOk={handleSave}
         onCancel={() => setModalOpen(false)}
+        okText="确定"
+        cancelText="取消"
         confirmLoading={saving}
         width={720}
         destroyOnClose

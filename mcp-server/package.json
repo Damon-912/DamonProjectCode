@@ -1,0 +1,37 @@
+{
+  "name": "drg-mcp-server",
+  "version": "1.0.0",
+  "description": "DRG医保控费预警系统MCP服务器 - 连接到腾讯云IRIS数据库",
+  "main": "mcp-drg-server.js",
+  "scripts": {
+    "start": "node mcp-drg-server.js",
+    "dev": "node mcp-drg-server.js",
+    "test": "node test-connection.js",
+    "install-deps": "npm install @modelcontextprotocol/sdk axios"
+  },
+  "keywords": [
+    "mcp",
+    "iris",
+    "drg",
+    "healthcare",
+    "database"
+  ],
+  "author": "DRG开发团队",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "axios": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "mcp": {
+    "name": "drg-mcp-server",
+    "version": "1.0.0",
+    "description": "DRG医保控费预警系统MCP服务器",
+    "capabilities": {
+      "tools": true,
+      "resources": true
+    }
+  }
+}

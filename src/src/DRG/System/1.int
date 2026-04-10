@@ -1,0 +1,968 @@
+ROUTINE src.DRG.System.1 [Type=INT,Generated]
+ ;src.DRG.System.1
+ ;Generated for class src.DRG.System.  Do NOT edit. 03/29/2026 09:30:56PM
+ ;;36506441;src.DRG.System
+ ;
+zDeleteInterfaceService(postObj)
+    new (postObj)
+    set result = ##class(%Library.DynamicObject).%New()
+    set params = postObj.params.%Get(0)
+    set interfaceId = $lg(params,1)
+    if (interfaceId = "") {
+        set result.errorCode = "1001"
+        set result.errorMessage = "接口ID不能为空"
+        quit result
+    }
+    // 检查是否存在
+    if '##class(User.CBMapInterface).%ExistsId(interfaceId) {
+        set result.errorCode = "2001"
+        set result.errorMessage = "接口不存在"
+        quit result
+    }
+    // 删除
+    set sc = ##class(User.CBMapInterface).%DeleteId(interfaceId)
+    if ((''sc)) {
+        set result.errorCode = "0"
+        set result.errorMessage = ""
+    } else {
+        set result.errorCode = "3001"
+        set result.errorMessage = "删除失败"
+    }
+    quit result
+zGetUserMenus(postObj)
+    new (postObj)
+    set result = ##class(%Library.DynamicObject).%New()
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
+    set userId = $lg(session,1)
+    if (userId = "") {
+        set result.errorCode = "1001"
+        set result.errorMessage = "用户未登录"
+        quit result
+    }
+    // 获取用户角色
+    set roleSql = "SELECT RoleDr FROM BS_DRGUserRole WHERE UserDr = " _ userId
+    set roleRs = ##class(%Library.ResultSet).%New()
+    set roleRs.Query = roleSql
+    do roleRs.Execute()
+    set roleList = ##class(%Library.ListOfDataTypes).%New()
+    while (roleRs.Next()) {
+        do roleList.Insert(roleRs.Data("RoleDr"))
+    }
+    // 获取角色关联的菜单
+    set menuList = ##class(%Library.DynamicArray).%New()
+    set menuSql = "SELECT DISTINCT m.ID, m.MenuCode, m.MenuName, m.ParentID, m.MenuPath, "_ 
+                  "m.MenuIcon, m.Component, m.SeqNo, m.MenuLevel, m.IsLeaf "_ 
+                  "FROM BS_DRGRoleMenu rm "_ 
+                  "JOIN BS_DRGSystemMenu m ON rm.Menu_Dr = m.ID "_ 
+                  "WHERE rm.Role_Dr IN ("_roleList.ToString()_") "_ 
+                  "AND rm.CanView = 'Y' AND m.IsActive = 'Y' "_ 
+                  "ORDER BY m.SeqNo"
+    set menuRs = ##class(%Library.ResultSet).%New()
+    set menuRs.Query = menuSql
+    do menuRs.Execute()
+    while (menuRs.Next()) {
+        set item = ##class(%Library.DynamicObject).%New()
+        set item.id = menuRs.Data("ID")
+        set item.menuCode = menuRs.Data("MenuCode")
+        set item.menuName = menuRs.Data("MenuName")
+        set item.parentID = menuRs.Data("ParentID")
+        set item.menuPath = menuRs.Data("MenuPath")
+        set item.menuIcon = menuRs.Data("MenuIcon")
+        set item.component = menuRs.Data("Component")
+        set item.menuLevel = menuRs.Data("MenuLevel")
+        set item.isLeaf = menuRs.Data("IsLeaf")
+        do menuList.%Push(item)
+    }
+    set result.errorCode = "0"
+    set result.errorMessage = ""
+    set result.result = menuList
+    quit result
+zQueryInterfaceDropdownData(postObj)
+    new (postObj)
+    set result = ##class(%Library.DynamicObject).%New()
+    set resultObj = ##class(%Library.DynamicObject).%New()
+    // 产品分类列表 - 传空
+    set productCats = ##class(%Library.DynamicArray).%New()
+    // 产品模块列表 - 传空  
+    set productModules = ##class(%Library.DynamicArray).%New()
+    // 服务类型列表
+    set serviceTypes = ##class(%Library.DynamicArray).%New()
+    set item1 = ##class(%Library.DynamicObject).%New()
+    set item1.code = "S"
+    set item1.name = "查询(S)"
+    do serviceTypes.%Push(item1)
+    set item2 = ##class(%Library.DynamicObject).%New()
+    set item2.code = "A"
+    set item2.name = "新增(A)"
+    do serviceTypes.%Push(item2)
+    set item3 = ##class(%Library.DynamicObject).%New()
+    set item3.code = "U"
+    set item3.name = "修改(U)"
+    do serviceTypes.%Push(item3)
+    set item4 = ##class(%Library.DynamicObject).%New()
+    set item4.code = "D"
+    set item4.name = "删除(D)"
+    do serviceTypes.%Push(item4)
+    set resultObj.productCats = productCats
+    set resultObj.productModules = productModules
+    set resultObj.serviceTypes = serviceTypes
+    set result.errorCode = "0"
+    set result.errorMessage = ""
+    set result.result = resultObj
+    quit result
+zQueryInterfaceLogs(postObj)
+    new (postObj)
+    set result = ##class(%Library.DynamicObject).%New()
+    set params = postObj.params.%Get(0)
+    set interfaceId = $lg(params,1)
+    set callType = $lg(params,2)
+    set callStatus = $lg(params,3)
+    set startDate = $lg(params,4)
+    set endDate = $lg(params,5)
+    set page = $lg(params,6)
+    set limit = $lg(params,7)
+    if (page = "") set page = 1
+    if (limit = "") set limit = 20
+    set dataList = ##class(%Library.DynamicArray).%New()
+    set sql = "SELECT l.ID, l.Interface_Dr, i.Code as InterfaceCode, i.Descripts as InterfaceName, "_ 
+              "l.CallDate, l.CallTime, l.CallUserDr, l.CallType, l.CallParams, "_ 
+              "l.ResponseData, l.CallStatus, l.ResponseTime, l.ErrorMessage "_ 
+              "FROM CB_MapInterfaceLog l "_ 
+              "LEFT JOIN CB_MapInterface i ON l.Interface_Dr = i.ID WHERE 1=1"
+    if (interfaceId '= "") {
+        set sql = sql _ " AND l.Interface_Dr = '" _ interfaceId _ "'"
+    }
+    if (callType '= "") {
+        set sql = sql _ " AND l.CallType = '" _ callType _ "'"
+    }
+    if (callStatus '= "") {
+        set sql = sql _ " AND l.CallStatus = '" _ callStatus _ "'"
+    }
+    if (startDate '= "") {
+        set sql = sql _ " AND l.CallDate >= '" _ startDate _ "'"
+    }
+    if (endDate '= "") {
+        set sql = sql _ " AND l.CallDate <= '" _ endDate _ "'"
+    }
+    set sql = sql _ " ORDER BY l.CallDate DESC, l.CallTime DESC"
+    set rs = ##class(%Library.ResultSet).%New()
+    set rs.Query = sql
+    do rs.Execute()
+    set count = 0
+    while (rs.Next()) {
+        set count = count + 1
+        if ((count > ((page - 1) * limit)) && (count <= (page * limit))) {
+            set item = ##class(%Library.DynamicObject).%New()
+            set item.id = rs.Data("ID")
+            set item.interfaceDr = rs.Data("Interface_Dr")
+            set item.interfaceCode = rs.Data("InterfaceCode")
+            set item.interfaceName = rs.Data("InterfaceName")
+            set item.callDate = $zd(rs.Data("CallDate"), 3)
+            set item.callTime = $zt(rs.Data("CallTime"))
+            set item.callUserDr = rs.Data("CallUserDr")
+            set item.callType = rs.Data("CallType")
+            set item.callParams = rs.Data("CallParams")
+            set item.responseData = rs.Data("ResponseData")
+            set item.callStatus = rs.Data("CallStatus")
+            set item.responseTime = rs.Data("ResponseTime")
+            set item.errorMessage = rs.Data("ErrorMessage")
+            do dataList.%Push(item)
+        }
+    }
+    set result.errorCode = "0"
+    set result.errorMessage = ""
+    set result.result = dataList
+    quit result
+zQueryInterfaceServices(jsonObj)
+ 	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try{
+		if (jsonObj.%IsDefined("pagination")'=0) {
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		set params=jsonObj.params.%Get(0)		
+		set compareCode=params.code
+		set compareDescripts=params.descripts
+		set compareClassName=params.className
+		set compareMethodName=params.methodName
+		set status=params.status
+		set tStatement = ##class(%SQL.Statement).%New(1)  
+		set sql="SELECT ProductCat_Dr->Descripts AS productCatDesc,ProductModule_Dr -> Descripts AS productModuleDesc,RWServiceType_Dr -> Descripts AS rwServiceTypeDesc,* FROM CB_MapInterface"		
+		set sql=sql_" WHERE 1=1"
+		set:(compareCode'="") sql=sql_" and Code LIKE '%"_compareCode_"%'"
+		set:(compareDescripts'="") sql=sql_" AND Descripts LIKE '%"_compareDescripts_"%'"
+		set:(compareClassName'="") sql=sql_" AND ClassName LIKE '%"_compareClassName_"%'"
+		set:(compareMethodName'="") sql=sql_" AND MethodName LIKE '%"_compareMethodName_"%'"
+		if (status'="") {
+			set:status="1" sql=sql_" AND StartDate <"_(+$h+1)_" and (StopDate is NULL or StopDate >"_+$h_")"
+			set:status="0" sql=sql_" AND StartDate >"_(+$h)_" and (StopDate is NULL or StopDate <"_+$h_")"
+		}
+		b	;111
+		set sc=tStatement.%Prepare(sql)
+		set result=tStatement.%Execute()		
+		while result.%Next(.sc){
+			set dataObj={}
+			set dataObj.key=result.%Get("ID")
+			set dataObj.id=result.%Get("ID")
+			set dataObj.code=result.%Get("Code")
+			set dataObj.descripts=result.%Get("Descripts")
+			set dataObj.className=result.%Get("ClassName")
+			set dataObj.methodName=result.%Get("MethodName")
+			set dataObj.startDate=result.%Get("StartDate")			
+			set dataObj.stopDate=result.%Get("StopDate")
+			set dataObj.serviceType=result.%Get("ServiceType")
+			set dataObj.productCatID=result.%Get("ProductCat_Dr")
+			set dataObj.productCatDesc=result.%Get("productCatDesc")
+			set dataObj.productModuleID=result.%Get("ProductModule_Dr")
+			set dataObj.productModuleDesc=result.%Get("productModuleDesc")
+			set dataObj.seqNo=result.%Get("SeqNo")
+			set dataObj.sessionFlag=result.%Get("SessionFlag")
+			set dataObj.tokenFlag=result.%Get("TokenFlag")			
+			set dataObj.tokenOverTime=result.%Get("TokenOverTime")
+			set dataObj.rwServiceTypeID=result.%Get("RWServiceType_Dr")
+			set dataObj.rwServiceTypeDesc=result.%Get("rwServiceTypeDesc")
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count		
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="获取接口服务配置出错:w ##class("_$ClassName()_").GetInterfaceServiceConfig("_jsonObj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")	
+	}
+	quit resultObj
+zQuerySystemMenus(postObj)
+    new (postObj)
+    set result = ##class(%Library.DynamicObject).%New()
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
+    // 获取参数
+    set menuCode = $lg(params,1)
+    set menuName = $lg(params,2)
+    set parentID = $lg(params,3)
+    set menuType = $lg(params,4)
+    set isActive = $lg(params,5)
+    set dataList = ##class(%Library.DynamicArray).%New()
+    set sql = "SELECT ID, MenuCode, MenuName, ParentID, MenuPath, MenuIcon, "_ 
+              "Component, SeqNo, MenuLevel, IsLeaf, IsActive, IsVisible, MenuType "_ 
+              "FROM BS_DRGSystemMenu WHERE 1=1"
+    if (menuCode '= "") {
+        set sql = sql _ " AND MenuCode LIKE '%" _ menuCode _ "%'"
+    }
+    if (menuName '= "") {
+        set sql = sql _ " AND MenuName LIKE '%" _ menuName _ "%'"
+    }
+    if (parentID '= "") {
+        set sql = sql _ " AND ParentID = '" _ parentID _ "'"
+    }
+    if (menuType '= "") {
+        set sql = sql _ " AND MenuType = '" _ menuType _ "'"
+    }
+    if (isActive '= "") {
+        set sql = sql _ " AND IsActive = '" _ isActive _ "'"
+    }
+    set sql = sql _ " ORDER BY SeqNo, ID"
+    set rs = ##class(%Library.ResultSet).%New()
+    set rs.Query = sql
+    do rs.Execute()
+    while (rs.Next()) {
+        set item = ##class(%Library.DynamicObject).%New()
+        set item.id = rs.Data("ID")
+        set item.menuCode = rs.Data("MenuCode")
+        set item.menuName = rs.Data("MenuName")
+        set item.parentID = rs.Data("ParentID")
+        set item.menuPath = rs.Data("MenuPath")
+        set item.menuIcon = rs.Data("MenuIcon")
+        set item.component = rs.Data("Component")
+        set item.seqNo = rs.Data("SeqNo")
+        set item.menuLevel = rs.Data("MenuLevel")
+        set item.isLeaf = rs.Data("IsLeaf")
+        set item.isActive = rs.Data("IsActive")
+        set item.isVisible = rs.Data("IsVisible")
+        set item.menuType = rs.Data("MenuType")
+        do dataList.%Push(item)
+    }
+    set result.errorCode = "0"
+    set result.errorMessage = ""
+    set result.result = dataList
+    quit result
+zQuerySystemRoles(postObj)
+    new (postObj)
+    set result = ##class(%Library.DynamicObject).%New()
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
+    set roleCode = $lg(params,1)
+    set roleName = $lg(params,2)
+    set roleType = $lg(params,3)
+    set isActive = $lg(params,4)
+    set dataList = ##class(%Library.DynamicArray).%New()
+    set sql = "SELECT ID, RoleCode, RoleName, RoleDesc, RoleType, IsActive, SeqNo "_ 
+              "FROM BS_DRGSystemRole WHERE 1=1"
+    if (roleCode '= "") {
+        set sql = sql _ " AND RoleCode LIKE '%" _ roleCode _ "%'"
+    }
+    if (roleName '= "") {
+        set sql = sql _ " AND RoleName LIKE '%" _ roleName _ "%'"
+    }
+    if (roleType '= "") {
+        set sql = sql _ " AND RoleType = '" _ roleType _ "'"
+    }
+    if (isActive '= "") {
+        set sql = sql _ " AND IsActive = '" _ isActive _ "'"
+    }
+    set sql = sql _ " ORDER BY SeqNo, ID"
+    set rs = ##class(%Library.ResultSet).%New()
+    set rs.Query = sql
+    do rs.Execute()
+    while (rs.Next()) {
+        set item = ##class(%Library.DynamicObject).%New()
+        set item.id = rs.Data("ID")
+        set item.roleCode = rs.Data("RoleCode")
+        set item.roleName = rs.Data("RoleName")
+        set item.roleDesc = rs.Data("RoleDesc")
+        set item.roleType = rs.Data("RoleType")
+        set item.isActive = rs.Data("IsActive")
+        set item.seqNo = rs.Data("SeqNo")
+        do dataList.%Push(item)
+    }
+    set result.errorCode = "0"
+    set result.errorMessage = ""
+    set result.result = dataList
+    quit result
+zQuerySystemUsers(postObj)
+    new (postObj)
+    set result = ##class(%Library.DynamicObject).%New()
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
+    // 获取参数
+    set userCode = $lg(params,1)
+    set userName = $lg(params,2)
+    set userType = $lg(params,3)
+    set deptCode = $lg(params,4)
+    set isActive = $lg(params,5)
+    set page = $lg(params,6)
+    set limit = $lg(params,7)
+    if (page = "") set page = 1
+    if (limit = "") set limit = 20
+    set dataList = ##class(%Library.DynamicArray).%New()
+    set sql = "SELECT ID, UserCode, UserName, UserType, DeptDr, DeptName, "_ 
+              "Mobile, Email, IsActive, LastLoginDate, LastLoginTime "_ 
+              "FROM BS_DRGSystemUser WHERE 1=1"
+    if (userCode '= "") {
+        set sql = sql _ " AND UserCode LIKE '%" _ userCode _ "%'"
+    }
+    if (userName '= "") {
+        set sql = sql _ " AND UserName LIKE '%" _ userName _ "%'"
+    }
+    if (userType '= "") {
+        set sql = sql _ " AND UserType = '" _ userType _ "'"
+    }
+    if (deptCode '= "") {
+        set sql = sql _ " AND DeptDr = '" _ deptCode _ "'"
+    }
+    if (isActive '= "") {
+        set sql = sql _ " AND IsActive = '" _ isActive _ "'"
+    }
+    set sql = sql _ " ORDER BY SeqNo, ID"
+    set rs = ##class(%Library.ResultSet).%New()
+    set rs.Query = sql
+    do rs.Execute()
+    set count = 0
+    while (rs.Next()) {
+        set count = count + 1
+        if ((count > ((page - 1) * limit)) && (count <= (page * limit))) {
+            set item = ##class(%Library.DynamicObject).%New()
+            set item.id = rs.Data("ID")
+            set item.userCode = rs.Data("UserCode")
+            set item.userName = rs.Data("UserName")
+            set item.userType = rs.Data("UserType")
+            set item.deptDr = rs.Data("DeptDr")
+            set item.deptName = rs.Data("DeptName")
+            set item.mobile = rs.Data("Mobile")
+            set item.email = rs.Data("Email")
+            set item.isActive = rs.Data("IsActive")
+            set item.lastLoginDate = $zd(rs.Data("LastLoginDate"), 3)
+            do dataList.%Push(item)
+        }
+    }
+    set result.errorCode = "0"
+    set result.errorMessage = ""
+    set result.result = dataList
+    quit result
+zSaveInterfaceService(postObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	try{
+		set params=jsonObj.params.%Get(0)
+		set session=jsonObj.session.%Get(0)
+		set dataObj={},dataArr=[]
+		set dataObj.ID=params.id
+		set dataObj.Key=params.key
+		set dataObj.Code=params.code
+		set dataObj.Descripts=params.descripts
+		set dataObj.ClassName=params.className
+		set dataObj.MethodName=params.methodName
+		set dataObj.StartDate=params.startDate		
+		set dataObj.StopDate=params.stopDate
+		set dataObj.ServiceType=params.serviceType
+		set dataObj.ProductCatDr=params.productCatID
+		set dataObj.ProductModuleDr=params.productModuleID		
+		set dataObj.SeqNo=params.seqNo
+		set dataObj.ServiceIP=params.serviceIP
+		set dataObj.SessionFlag=params.sessionFlag
+		set dataObj.TokenFlag=params.tokenFlag		
+		set dataObj.TokenOverTime=params.tokenOverTime
+		set dataObj.RWServiceTypeDr=params.rwServiceTypeID
+		do dataArr.%Push(dataObj)
+		;b	;12121
+		set operateObj={}
+		set operateObj.updateUserID=session.userID
+		set operateObj.className="User.CBMapInterface"			
+		set operateObj.data=dataArr		
+		if params.id=""{
+			set rtn=##class(src.util.operatetable).Insert(.operateObj) ;调用公共类方法记录修改日记
+		}else{				
+			set rtn=##class(src.util.operatetable).Update(.operateObj) ;调用公共类方法记录修改日记
+		}
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+		if errorCode'="0"{
+			set resultObj.errorCode=errorCode
+			set resultObj.errorMessage=errorMessage
+			quit
+		}
+	}catch(e){
+		set status=e.AsStatus()
+		set resultObj.errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set resultObj.errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	}
+	quit resultObj
+zSaveRoleMenu(postObj)
+    new (postObj)
+    set result = ##class(%Library.DynamicObject).%New()
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
+    set roleId = $lg(params,1)
+    set menuList = $lg(params,2)  // JSON数组
+    set userId = $lg(session,1)
+    if (roleId = "") {
+        set result.errorCode = "1001"
+        set result.errorMessage = "角色ID不能为空"
+        quit result
+    }
+    // 先删除该角色的所有菜单权限
+     ;---&sql(DELETE FROM SQLUser.BS_DRGRoleMenu WHERE Role_Dr = :roleId)
+      ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, roleId
+    do %0Ao
+    // 重新插入菜单权限
+    set count = 0
+    if ($isobject(menuList)) {
+        for i = 0:1:(menuList.%Size() - 1) {
+            set menuItem = menuList.%Get(i)
+            set menuId = menuItem.menuId
+            set canView = $s(menuItem.canView="Y":"Y", 1:"N")
+            set canAdd = $s(menuItem.canAdd="Y":"Y", 1:"N")
+            set canEdit = $s(menuItem.canEdit="Y":"Y", 1:"N")
+            set canDelete = $s(menuItem.canDelete="Y":"Y", 1:"N")
+            set canExport = $s(menuItem.canExport="Y":"Y", 1:"N")
+            set rm = ##class(User.BSDRGRoleMenu).%New()
+            set rm.RoleDr = roleId
+            set rm.MenuDr = menuId
+            set rm.CanView = canView
+            set rm.CanAdd = canAdd
+            set rm.CanEdit = canEdit
+            set rm.CanDelete = canDelete
+            set rm.CanExport = canExport
+            set rm.CreateDate = +$h
+            set rm.CreateTime = $p($h,",",2)
+            set rm.CreateUserDr = userId
+            do rm.%Save()
+            set count = count + 1
+        }
+    }
+    set result.errorCode = "0"
+    set result.errorMessage = ""
+    set jo={}
+    set jo.savedCount=count
+    set result.result = jo
+    quit result
+ q
+%0Ao n sqldata6d,sqldata7d,sqldata8d,sqldata9d,sqldata10d,sqldata11d,sqldata17d,sqldata20d,sqldata21d,sqldata2d,sqldata3d,sqldata1d,sqldata4d,sqldata5d
+ s $zt="%0Aerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata6d=0,sqldata7d=$g(%0CacheRowLimit,9223372036854775807)
+ s sqldata8d=$zu(115,2)
+ s sqldata9d=""
+ s sqldata2d=$s($g(roleId)="":"",$isvalidnum(roleId):+roleId,1:roleId)
+ s SQLCODE=100
+ If $zu(115,1)=2,'$TLEVEL { s sqldata10d=1 TSTART } If $zu(115,1) { s sqldata11d=1 TSTART  }
+ ; asl MOD# 2
+ s sqldata1d=sqldata2d
+ i sqldata1d="" g %0AmBdun
+ s sqldata3d=""
+%0AmBk1 s sqldata3d=$o(^User.BSDRGRoleMenuI("idxRole",sqldata1d,sqldata3d))
+ i sqldata3d="" g %0AmBdun
+ set sqldata17d=##class(User.BSDRGRoleMenu).%SQLGetLock(sqldata3d) i 'sqldata17d s SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler40",,"DELETE","SQLUser"_"."_"BS_DRGRoleMenu",sqldata3d) g %0Ac
+ ; asl MOD# 3
+ s sqldata4d=$zlist(sqldata1d)
+ i sqldata3d'="" s sqldata20d="" i $d(^User.BSDRGRoleMenuD(sqldata3d),sqldata20d)
+ e  g %0AmCdun
+ S sqldata1d=$lg(sqldata20d,2)
+ s sqldata5d=$zlist(sqldata1d)
+ g:sqldata4d'=sqldata5d %0AmCdun
+ do ##class(User.BSDRGRoleMenu).%SQLDelete(sqldata3d,$c(0,2,0,0,0,0,0),'$g(sqldata11d))
+ i 'SQLCODE { i $i(sqldata6d)'<sqldata7d { d:sqldata17d=1 ##class(User.BSDRGRoleMenu).%SQLReleaseLock(sqldata3d) g %0Ac }}
+%0AmCdun d:sqldata17d=1 ##class(User.BSDRGRoleMenu).%SQLReleaseLock(sqldata3d) g:SQLCODE<0 %0Ac
+ g %0AmBk1
+%0AmBdun 
+%0AmAdun 
+%0Ac set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(sqldata6d),1:0)
+ If $zu(115,1),$g(sqldata11d) { TCOMMIT:SQLCODE'<0  TROLLBACK:SQLCODE<0 1 } TCOMMIT:SQLCODE=100&&(%ROWCOUNT=0)&&($g(sqldata10d))&&($zu(115,1)=2) 
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata21d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"bGqT7kE7yPHFy7aJYHnusI8n52A="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"bGqT7kE7yPHFy7aJYHnusI8n52A=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Aerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ d:$g(sqldata17d)=1 ##class(User.BSDRGRoleMenu).%SQLReleaseLock(sqldata3d)
+ g %0Ac
+zSaveSystemRole(postObj)
+    new (postObj)
+    set result = ##class(%Library.DynamicObject).%New()
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
+    set roleId = $lg(params,1)
+    set roleCode = $lg(params,2)
+    set roleName = $lg(params,3)
+    set roleDesc = $lg(params,4)
+    set roleType = $lg(params,5)
+    set isActive = $lg(params,6)
+    set seqNo = $lg(params,7)
+    set userId = $lg(session,1)
+    // 验证必填参数
+    if (roleCode = "") {
+        set result.errorCode = "1001"
+        set result.errorMessage = "角色编码不能为空"
+        quit result
+    }
+    if (roleName = "") {
+        set result.errorCode = "1001"
+        set result.errorMessage = "角色名称不能为空"
+        quit result
+    }
+    // 保存数据
+    if (roleId = "") {
+        set obj = ##class(User.BSDRGSystemRole).%New()
+        set obj.CreateDate = +$h
+        set obj.CreateTime = $p($h,",",2)
+        set obj.CreateUserDr = userId
+    } else {
+        set obj = ##class(User.BSDRGSystemRole).%OpenId(roleId)
+    }
+    set obj.RoleCode = roleCode
+    set obj.RoleName = roleName
+    set obj.RoleDesc = roleDesc
+    set obj.RoleType = roleType
+    set obj.IsActive = isActive
+    set obj.SeqNo = seqNo
+    set sc = obj.%Save()
+    if ((''sc)) {
+        set result.errorCode = "0"
+        set result.errorMessage = ""
+        set result.result = {"id": (obj.%Id())}
+    } else {
+        set result.errorCode = "3001"
+        set result.errorMessage = "保存失败"
+    }
+    quit result
+zSaveSystemUser(postObj)
+    new (postObj)
+    set result = ##class(%Library.DynamicObject).%New()
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
+    // 获取参数
+    set userId = $lg(params,1)
+    set userCode = $lg(params,2)
+    set userName = $lg(params,3)
+    set password = $lg(params,4)
+    set userType = $lg(params,5)
+    set deptDr = $lg(params,6)
+    set deptName = $lg(params,7)
+    set mobile = $lg(params,8)
+    set email = $lg(params,9)
+    set isActive = $lg(params,10)
+    set seqNo = $lg(params,11)
+    set userIdSession = $lg(session,1)
+    // 验证必填参数
+    if (userCode = "") {
+        set result.errorCode = "1001"
+        set result.errorMessage = "用户账号不能为空"
+        quit result
+    }
+    if (userName = "") {
+        set result.errorCode = "1001"
+        set result.errorMessage = "用户姓名不能为空"
+        quit result
+    }
+    // 检查账号是否已存在
+    if (userId = "") {
+        set existSql = "SELECT ID FROM BS_DRGSystemUser WHERE UserCode = '" _ userCode _ "'"
+        set existRs = ##class(%Library.ResultSet).%New()
+        set existRs.Query = existSql
+        do existRs.Execute()
+        if (existRs.Next()) {
+            set result.errorCode = "2002"
+            set result.errorMessage = "用户账号已存在"
+            quit result
+        }
+    }
+    // 保存数据
+    if (userId = "") {
+        // 新增
+        set obj = ##class(User.BSDRGSystemUser).%New()
+        set obj.CreateDate = +$h
+        set obj.CreateTime = $p($h,",",2)
+        set obj.CreateUserDr = userIdSession
+    } else {
+        // 修改
+        set obj = ##class(User.BSDRGSystemUser).%OpenId(userId)
+    }
+    set obj.UserCode = userCode
+    set obj.UserName = userName
+    if (password '= "") {
+        set obj.Password = password  // 实际应加密存储
+    }
+    set obj.UserType = userType
+    set obj.DeptDr = deptDr
+    set obj.DeptName = deptName
+    set obj.Mobile = mobile
+    set obj.Email = email
+    set obj.IsActive = isActive
+    set obj.SeqNo = seqNo
+    set sc = obj.%Save()
+    if ((''sc)) {
+        set result.errorCode = "0"
+        set result.errorMessage = ""
+        set result.result = {"id": (obj.%Id())}
+    } else {
+        set result.errorCode = "3001"
+        set result.errorMessage = "保存失败"
+    }
+    quit result
+zTestInterfaceCall(postObj)
+    new (postObj)
+    set result = ##class(%Library.DynamicObject).%New()
+    set params = postObj.params.%Get(0)
+    set session = postObj.session.%Get(0)
+    set interfaceId = $lg(params,1)
+    set testParams = $lg(params,2)  // JSON格式的测试参数
+    if (interfaceId = "") {
+        set result.errorCode = "1001"
+        set result.errorMessage = "接口ID不能为空"
+        quit result
+    }
+    // 获取接口信息
+    set interfaceObj = ##class(User.CBMapInterface).%OpenId(interfaceId)
+    if (interfaceObj = "") {
+        set result.errorCode = "2001"
+        set result.errorMessage = "接口不存在"
+        quit result
+    }
+    set className = interfaceObj.ClassName
+    set methodName = interfaceObj.MethodName
+    // 记录日志
+    set logObj = ##class(User.CBMapInterfaceLog).%New()
+    set logObj.InterfaceDr = interfaceId
+    set logObj.CallDate = +$h
+    set logObj.CallTime = $p($h,",",2)
+    set logObj.CallUserDr = $lg(session,1)
+    set logObj.CallParams = testParams
+    set logObj.CallType = "TEST"
+    // 调用接口
+    set startTime = $p($h,",",2)
+    try {
+        // 构建调用字符串
+        set callStr = "##class("_className_")."_methodName_"(postObj)"
+        set responseObj = @callStr
+        set endTime = $p($h,",",2)
+        set duration = endTime - startTime
+        // 记录成功日志
+        set logObj.ResponseData = responseObj.%ToJSON()
+        set logObj.CallStatus = "SUCCESS"
+        set logObj.ResponseTime = duration
+        set result.errorCode = "0"
+        set result.errorMessage = ""
+        set result.result = responseObj
+    } catch (e) {
+        // 记录失败日志
+        set logObj.CallStatus = "FAIL"
+        set logObj.ErrorMessage = e.Name
+        set result.errorCode = "3001"
+        set result.errorMessage = "接口调用失败: " _ e.Name
+    }
+    do logObj.%Save()
+    quit result
+zUserLogin(postObj)
+    new (postObj)
+    set result = ##class(%Library.DynamicObject).%New()
+    set params = postObj.params.%Get(0)
+    set userCode = $lg(params,1)
+    set password = $lg(params,2)
+    if (userCode = "") {
+        set result.errorCode = "1001"
+        set result.errorMessage = "用户名不能为空"
+        quit result
+    }
+    if (password = "") {
+        set result.errorCode = "1001"
+        set result.errorMessage = "密码不能为空"
+        quit result
+    }
+    // 查询用户
+    set sql = "SELECT ID, UserCode, UserName, Password, UserType, DeptDr, DeptName, IsActive "_ 
+              "FROM BS_DRGSystemUser WHERE UserCode = '" _ userCode _ "'"
+    set rs = ##class(%Library.ResultSet).%New()
+    set rs.Query = sql
+    do rs.Execute()
+    if ('rs.Next()) {
+        set result.errorCode = "2001"
+        set result.errorMessage = "用户不存在"
+        quit result
+    }
+    set userId = rs.Data("ID")
+    set storedPassword = rs.Data("Password")
+    set isActive = rs.Data("IsActive")
+    if (isActive '= "Y") {
+        set result.errorCode = "1003"
+        set result.errorMessage = "用户已被禁用"
+        quit result
+    }
+    // 验证密码（实际应该加密比较）
+    if (password '= storedPassword) {
+        set result.errorCode = "1001"
+        set result.errorMessage = "密码错误"
+        quit result
+    }
+    // 生成会话ID
+    set sessionId = $r(16)
+    // 更新登录信息
+    set user = ##class(User.BSDRGSystemUser).%OpenId(userId)
+    set user.LastLoginDate = +$h
+    set user.LastLoginTime = $p($h,",",2)
+    // set user.LastLoginIP = clientIP
+    do user.%Save()
+    // 返回用户信息和菜单
+    set userInfo = ##class(%Library.DynamicObject).%New()
+    set userInfo.userId = userId
+    set userInfo.userCode = rs.Data("UserCode")
+    set userInfo.userName = rs.Data("UserName")
+    set userInfo.userType = rs.Data("UserType")
+    set userInfo.deptDr = rs.Data("DeptDr")
+    set userInfo.deptName = rs.Data("DeptName")
+    set userInfo.sessionId = sessionId
+    set result.errorCode = "0"
+    set result.errorMessage = ""
+    set result.result = userInfo
+    quit result
+zUserLogout(postObj)
+    new (postObj)
+    set result = ##class(%Library.DynamicObject).%New()
+    set result.errorCode = "0"
+    set result.errorMessage = ""
+    set result.result = {}
+    quit result
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("src.DRG.System",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"src.DRG.System")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"src.DRG.System")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="src.DRG.System"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="System"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"System"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"System"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If encoded Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ If indentFlag,encoded { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("src.DRG.System",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"src.DRG.System")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLNew(document,node,containerOref="")
+	Quit (##class(src.DRG.System).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("src.DRG.System",top,format,namespacePrefix,input,refOnly,.schema)

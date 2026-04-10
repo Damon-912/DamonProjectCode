@@ -1,0 +1,18 @@
+ROUTINE src.util.DynamicObject.AdapterFromDynamicObj.G1 [Type=INT,Generated]
+	;src.util.DynamicObject.AdapterFromDynamicObj.G1
+	;(C)InterSystems, method generator for class src.util.DynamicObject.AdapterFromDynamicObj.  Do NOT edit.
+	Quit
+	;
+FromDynamicObj(%class,%code,%method,%compiledclass,%compiledmethod,%parameter) public {
+	set sc=1
+	set tCodeGeneratorUtility=##class(src.util.DynamicObject.FromDynamicObjSourceGenerator).%New()
+	set tDynamicObjectToCurrentObjectCode=tCodeGeneratorUtility.Generate(%compiledclass)
+	do %code.WriteLine("	set sc=$$$OK")
+   	do %code.WriteLine("	try {")
+   	do %code.WriteLine(tDynamicObjectToCurrentObjectCode)
+   	do %code.WriteLine("	} catch(ex) {")
+   	do %code.WriteLine("		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)")
+   	do %code.WriteLine("	}")
+   	do %code.WriteLine("	quit sc") //Ends Of code line
+   	quit sc
+ Quit 1 }

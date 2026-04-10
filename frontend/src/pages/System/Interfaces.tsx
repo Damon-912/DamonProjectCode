@@ -9,6 +9,7 @@ import {
   queryInterfaceServices, saveInterfaceService,
   type InterfaceServiceItem, type SaveInterfaceServiceParams
 } from '../../api/system';
+import CustomPagination from '../../components/CustomPagination';
 
 const { Option } = Select;
 
@@ -214,13 +215,13 @@ const Interfaces: React.FC = () => {
       render: (v: string) => v || '-',
     },
     {
-      title: 'Session',
+      title: '会话验证',
       dataIndex: 'sessionFlag',
       width: 80,
       render: (v: string) => <Tag color={v === 'Y' ? 'green' : 'default'}>{v}</Tag>,
     },
     {
-      title: 'Token',
+      title: '令牌验证',
       dataIndex: 'tokenFlag',
       width: 70,
       render: (v: string) => <Tag color={v === 'Y' ? 'green' : 'default'}>{v}</Tag>,
@@ -348,24 +349,20 @@ const Interfaces: React.FC = () => {
           loading={loading}
           scroll={{ x: 1700 }}
           size="small"
-          pagination={{
-            current: currentPage,
-            pageSize,
-            total,
-            showSizeChanger: true,
-            showTotal: (t) => `共 ${t} 条`,
-            onChange: (page, size) => {
+          pagination={false}
+        />
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <CustomPagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={total}
+            onChange={(page, size) => {
               setCurrentPage(page);
               setPageSize(size);
               fetchData(page, size);
-            },
-            locale: {
-              items_per_page: '/页',
-              jump_to: '跳至',
-              page: '页',
-            }
-          }}
-        />
+            }}
+          />
+        </div>
       </Card>
 
       {/* 新增/编辑弹窗 */}
@@ -374,6 +371,8 @@ const Interfaces: React.FC = () => {
         open={modalOpen}
         onOk={handleSave}
         onCancel={() => setModalOpen(false)}
+        okText="确定"
+        cancelText="取消"
         confirmLoading={saving}
         width={600}
         destroyOnClose

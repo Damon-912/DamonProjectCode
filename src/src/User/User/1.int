@@ -1,0 +1,743 @@
+ROUTINE src.User.User.1 [Type=INT,Generated]
+ ;src.User.User.1
+ ;Generated for class src.User.User.  Do NOT edit. 12/24/2025 03:42:53PM
+ ;;75553575;src.User.User
+ ;
+zAddUserConf(postObj)
+	//set ^TMP("AddUserConf",0)=postObj.%ToJSON()
+	new (postObj)
+	Set jsonObj=postObj.params.%Get(0)
+	Set session=postObj.session.%Get(0)
+	Set resultJson={}
+	Set resultJson.errorCode=0
+	Set resultJson.errorMessage=""
+	set userDr=jsonObj.userDr
+	Set userID=session.userID
+	set mobile=+jsonObj.mobile
+	if $l(mobile)'=11
+	{
+		set resultJson={}
+		set resultJson.errorCode="-1"
+		set resultJson.errorMessage="私人电话不正确"
+		quit resultJson
+	}
+	set Code=""
+	if userDr=""
+	{
+		set tmpuserID=$o(^HBUserI("jsonObj.mobile",mobile,""))
+		if tmpuserID'=""
+		{
+			set resultJson={}
+			set resultJson.errorCode="-1"
+			set resultJson.errorMessage="此电话"_mobile_"已注册用户"
+			quit resultJson
+		}
+		set userName=jsonObj.userName
+		set Code=##class(src.Interface.ChineseCharacter).GetQPLinkCodeByDesc(jsonObj.userName)
+		set tmpUserDr=$o(^HBUserI("Code",Code,""))
+		if tmpUserDr'=""
+		{
+			set Code=$zcvt(Code,"L")_$e(mobile,7,11)
+		}
+		else{
+			set Code=$zcvt(Code,"L")
+		}
+		//set mobile
+	}
+	set password=""
+	if userDr=""
+	{
+		;//新添加用户默认密码
+		set passwordname="PRyk123!"
+		set passwordinfo=##class(src.Encryption.HBUser).FromatPassword(passwordname)
+		if (+passwordinfo'="0"){
+			set resultJson={}
+			set resultJson.errorCode=+passwordinfo
+			set resultJson.errorMessage=$p(passwordinfo,"^",2)
+			quit resultJson
+		}else{
+			set password=$p(passwordinfo,"^",2)
+		}
+	}
+	Try{
+		TSTART
+		set userID=jsonObj.userID
+		Set json={}
+		Set json.className="User.HBUser"
+		set json.updateUserID=session.userID //userID
+		Set data=[]
+		Set newJsonObj={}
+		Set newJsonObj.ID=userDr
+		Set newJsonObj.CreatedDate=$zd($h,3)
+		Set newJsonObj.CreatedTime=$zt($p($h,",",2))
+		Set:userDr="" newJsonObj.Code=Code
+		Set newJsonObj.Nickname=jsonObj.nickname      ;昵称
+		Set newJsonObj.Email=jsonObj.mail         ;电子邮箱
+		Set newJsonObj.WorkMobile=jsonObj.workMobile    ;工作手机
+		Set newJsonObj.Introduce=jsonObj.introduce
+		Set newJsonObj.Image=jsonObj.image
+		Set newJsonObj.Descripts=jsonObj.userName
+		Set:userDr="" newJsonObj.Password=password
+		Set newJsonObj.SexDr=jsonObj.sexID
+		Set newJsonObj.Mobile=jsonObj.mobile
+		Set newJsonObj.CredNo=jsonObj.credNo
+		Set newJsonObj.CredTypeDr=jsonObj.credTypeID
+		Set newJsonObj.Active=jsonObj.statusFlag
+		Set newJsonObj.CreatedByDr=session.userID
+		Set:jsonObj.birthDate newJsonObj.BirthDate=$zdh(jsonObj.birthDate,3)
+		Set newJsonObj.StartDate=$zdh(jsonObj.startDate,3)
+		Set:jsonObj.stopDate newJsonObj.StopDate=$zdh(jsonObj.stopDate,3)
+		Set:jsonObj.createdDate'="" newJsonObj.CreatedDate=jsonObj.createdDate
+		Set:jsonObj.createdTime'="" newJsonObj.CreatedTime=jsonObj.createdTime
+		do data.%Push(newJsonObj)
+		Set json.data=data
+		b ;11112323232232323
+		if userDr=""
+		{
+			Set rtn=##class(src.util.operatetable).Insert(json)
+		}else{
+			Set rtn=##class(src.util.operatetable).Update(json)
+		}
+		if rtn.errorCode'=0{
+			TROLLBACK
+			Set resultJson.errorCode=rtn.errorCode
+			Set resultJson.errorMessage=rtn.errorMessage
+			Return resultJson
+		}
+		Set saveUserID=rtn.rowIDArr.%Get(0)
+		set extData=[]
+		if jsonObj.hospID'=""
+		{
+			//所属医院
+			set hospitalID=jsonObj.hospID
+			set LinkHospDr=$o(^HBUserLinkHospI("HospUser",hospitalID,saveUserID,""))
+			if LinkHospDr=""
+			{
+				Set json={}
+				Set json.className="User.HBUserLinkHosp"
+				set json.updateUserID=session.userID //userID
+				Set data=[]
+				Set newJsonObj={}
+				Set newJsonObj.UserDr=saveUserID
+				Set newJsonObj.HospDr=hospitalID
+				Set newJsonObj.StartDate=+$h
+				Set newJsonObj.CreatedByDr=session.userID
+				Set newJsonObj.CreatedDate=+$h
+				Set newJsonObj.CreatedTime=$p($h,",",2)
+				do data.%Push(newJsonObj)
+				Set json.data=data
+				Set rtn=##class(src.util.operatetable).Insert(json)
+				if rtn.errorCode'=0{
+					TROLLBACK
+					Set resultJson.errorCode=rtn.errorCode
+					Set resultJson.errorMessage=rtn.errorMessage
+					Return resultJson
+				}
+			}
+		}
+		if jsonObj.wxOPENID'=""
+		{
+			set item={}
+			set item.fieldCode="wxOPENID"  //微信openid
+			set item.fieldValue=jsonObj.wxOPENID
+			do extData.%Push(item)
+		}
+		if jsonObj.hrUSERID'=""
+		{
+			set item={}
+			set item.fieldCode="hrUSERID"  //hr系统中的用户ID
+			set item.fieldValue=jsonObj.hrUSERID
+			do extData.%Push(item)
+		}
+		if jsonObj.approveID'=""
+		{
+			set item={}
+			set item.fieldCode="approveID" //审批流程表ID
+			set item.fieldValue=jsonObj.approveID
+			do extData.%Push(item)
+		}
+		b 
+		if extData.%Size()>0
+		{
+			set paraObj={}
+			set paraObj.userID=saveUserID
+			set paraObj.updateUserID=session.userID
+			set paraObj.extData=extData
+			set retObj=..SaveUserExtData(paraObj)
+			set resultJson={}
+			set resultJson.errorCode=retObj.errorCode
+			set resultJson.errorMessage=retObj.errorMessage
+			if resultJson.errorCode'=0
+			{
+				TROLLBACK
+				quit
+			}
+		}
+		TCOMMIT
+		Return rtn
+	}Catch(e){
+		TROLLBACK
+		set status=e.AsStatus()
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    b
+	    set errorInfo="新增用户出现异常:w ##class("_$ClassName()_").AddUserConf("")"
+		do ##class(src.Interface.Message).InsErrRecord("05000001",errorInfo,errorMessage)
+		set resultJson={}
+		set resultJson.errorCode="05000001"
+		set resultJson.errorMessage=##class(src.Interface.Message).GetErrorMessage("05000001")
+	}
+	Return resultJson
+	Quit
+zFindUserDetail(postObj)
+	new (postObj)
+	Set params=postObj.params.%Get(0)
+	Set pagination=postObj.pagination.%Get(0)
+	Set code=params.code
+	Set hospID=params.hospID
+	Set groupID=params.groupID
+	Set active=params.status
+	Set desc=params.descripts
+	if postObj.session'=""
+	{
+		Set session=postObj.session.%Get(0)
+		Set:groupID="" groupID=session.groupID
+	}
+	if (pagination'=""){
+		set pageSize=pagination.pageSize
+		set currentPage=pagination.currentPage
+		if ((pageSize<=0)||(pageSize="")||(currentPage<=0)||(currentPage="")){
+			quit ##class(src.util.ResultSet).FailInfoByCode("03000004")
+		}
+		set start=((currentPage-1)*pageSize)+1
+		set end=currentPage*pageSize
+	}
+	set hospInfo=""
+	Set sqlString="select User_Dr as userDr, User_Dr->Code userCode, User_Dr->Descripts userName, User_Dr->Sex_Dr,User_Dr->Sex_Dr->Descripts sexDesc, Hosp_Dr,Hosp_Dr->Descripts hospDesc, User_Dr->Mobile, User_Dr->CredType_Dr,User_Dr->CredType_Dr->Descripts ceadTypeDesc, User_Dr->CredNo, User_Dr->Image, User_Dr->Introduce, User_Dr->CreatedBy_Dr,User_Dr->CreatedBy_Dr->descripts creatUserDesc, User_Dr->CreatedDate, User_Dr->CreatedTime,User_Dr->StartDate startDate,User_Dr->StopDate stopDate,User_Dr->Active statusFlag"
+				  _",User_Dr->Image, User_Dr->Nickname, User_Dr->Email mail, User_Dr->WorkMobile, User_Dr->BirthDate"
+				  _" from HB_UserLinkHosp where 1=1"
+	if hospID=""
+	{
+		if postObj.session'=""
+		{
+			Set hospID=session.hospID
+		}
+		if hospID'=""
+		{
+			set hospStr=##class(src.CBTable.CBTableData).GetHosptialAuth(groupID,hospID,"User.CBHospital")
+			if hospStr="" set hospStr=hospID
+			if hospStr'=""{
+				for i=1:1:$l(hospStr,"^"){
+					set hospId=$p(hospStr,"^",i)
+					continue:hospId=""
+					if hospInfo=""
+					{
+						set hospInfo=hospId
+					}else{
+						set hospInfo=hospInfo_","_hospId
+					}
+				}
+			}
+		}
+	}else{
+		set hospInfo=hospID
+	}
+	if hospInfo=""
+	{
+		quit {"errorCode":0,"errorMessage":"成功","result":{"total":0,"rows":[]}}
+	}
+	Set sqlString=sqlString_" AND Hosp_Dr in ("_hospInfo_")"
+	Set:code'="" sqlString=sqlString_" AND User_Dr->Code like '%"_code_"%'"
+	Set:(active'="")&(active'="all") sqlString=sqlString_" AND User_Dr->Active = '"_active_"'"
+	Set:desc'="" sqlString=sqlString_" AND User_Dr->Descripts like '%"_desc_"%'"
+	b 
+	set st = ##class(%SQL.Statement).%New(1)
+	set status = st.%Prepare(sqlString)
+	if status'=1 {
+		quit ##class(src.util.ResultSet).StatusFail(status)
+	}
+	set rset = st.%Execute()
+	set rsmeta=rset.%GetMetadata()
+	set count=0,rows=[]
+	//获取列名，并对字段进行修改
+	set colArr=[""],index=1
+	while rsmeta.columns.GetAt(index) {
+		set colName=rsmeta.columns.GetAt(index).colName
+		//ID 字段处理为表名加ID
+		if (colName'="ID"){
+			if ($find(colName,"_")'=0){
+				set colName=$p(colName,"_",1)_"ID"
+			}
+			set colName=$zcvt($e(colName,1),"L")_$e(colName,2,*)
+		}else{
+			set tabNameID=rsmeta.columns.GetAt(index).tableName
+			set colName=$p(tabNameID,"_",2)_"ID"
+			set colName=$zcvt($e(colName,1),"L")_$e(colName,2,*)
+		}
+		set index=index+1 
+		do colArr.%Push(colName)
+	}
+	while rset.%Next(){
+		set dataObj={}
+		for i=1:1:colArr.%Size()-1{
+			set colName=colArr.%Get(i)
+			set colData=rset.%GetData(i)
+			do dataObj.%Set(colName,colData)
+		}
+		set count=count+1
+		if (pagination'=""){
+			continue:count<start
+			continue:count>end
+		}
+		set userDr=dataObj.userDr
+		set userExtDr=""
+		for
+		{
+			set userExtDr=$o(^HBUserExtI("User",userDr,userExtDr))
+			quit:userExtDr=""
+			set userExtobj=##class(User.HBUserExt).%OpenId(userExtDr)
+			set ExtCode=userExtobj.Code
+			set ExtCode=$zcvt($e(ExtCode,1),"L")_$e(ExtCode,2,*)
+			set ExtValue=userExtobj.ExtValue
+			do dataObj.%Set(ExtCode,ExtValue)
+		}
+		do rows.%Push(dataObj)
+	}
+	Return {"errorCode":0,"errorMessage":"成功","result":{"total":(count),"rows":(rows)}}
+	Quit
+zGetUserDetail(postObj)
+	new (postObj)
+	Set outputobj={}
+	set outputobj.errorCode="0"
+	set outputobj.errorMessage="成功"
+	Set params=postObj.params.%Get(0)
+	Set userID=params.userID
+	Set sqlString="select ID, Code, Descripts, Password, Sex_Dr,Sex_Dr->Descripts sexDesc, Active, Hospital_Dr,Hospital_Dr->Descripts hospDesc, "_
+				  " Mobile, CredType_Dr,CredType_Dr->Descripts credTypeDesc, CredNo, Image, Introduce, CreatedBy_Dr,CreatedBy_Dr->descripts creatUserDesc, CreatedDate, CreatedTime "_
+				  " from HB_User where ID="_userID
+				  //w sqlString,!
+	Set st = ##class(%SQL.Statement).%New(1)
+	Set sc = st.%Prepare(sqlString)
+	Set rs = st.%Execute()
+	Set obj={}
+	While rs.%Next(){
+		Set obj.userLogonLocID=rs.%Get("ID")
+		Set obj.code=rs.%Get("Code")
+		Set obj.password=rs.%Get("Password")
+		Set obj.descripts=rs.%Get("Descripts")
+		Set obj.sexID=rs.%Get("Sex_Dr")
+		Set obj.sexDesc=rs.%Get("sexDesc")
+		Set obj.active=rs.%Get("Active")
+		Set obj.hospitalID=rs.%Get("Hospital_Dr")
+		Set obj.hospDesc=rs.%Get("hospDesc")
+		Set obj.mobile=rs.%Get("Mobile")
+		Set obj.credTypeID=rs.%Get("CredType_Dr")
+		Set obj.credTypeDesc=rs.%Get("credTypeDesc")
+		Set obj.credNo=rs.%Get("CredNo")
+		Set obj.image=rs.%Get("Image")
+		Set obj.introduce=rs.%Get("Introduce")
+		Set obj.createdByID=rs.%Get("CreatedBy_Dr")
+		Set obj.creatUserDesc=rs.%Get("creatUserDesc")
+		Set obj.createdDate=rs.%Get("CreatedDate")
+		Set obj.createdTime=rs.%Get("CreatedTime")
+		Set obj.userLogonLoc=[]
+		Set logonObj=##Class(src.User.UserLogonLoc).GetLogonGroupByUserId(postObj).result.rows
+		Set obj.userLogonLoc=logonObj
+	}
+	Set outputobj.result={}
+	Set outputobj.result=obj
+	Return outputobj
+	Quit
+zSaveUserExtData(paraObj)
+	new (paraObj)
+	set ^TMP("SaveUserExtData")=paraObj.%ToJSON()
+	set tranLevel=0
+	try{
+		set userID=paraObj.userID
+		if userID=""{
+			set resultObj={}
+			set resultObj.errorCode="-1"	
+			set resultObj.errorMessage="请选择记录"
+			Quit 
+		}
+		set updateUserID=paraObj.updateUserID
+		set extData=paraObj.extData
+		if extData.%Size()=0{
+			set resultObj={}
+			set resultObj.errorCode="0"	
+			set resultObj.errorMessage=""
+			Quit 	
+		}
+		TStart
+		set tranLevel=1
+		set errorCode="0"
+		set errorMessage=""
+		for i=0:1:extData.%Size()-1{
+			set itemObj=extData.%Get(i)
+			set fieldCode=itemObj.fieldCode
+			set fieldValue=itemObj.fieldValue
+			set fieldID=""
+			 ;---&sql(select top 1 ID,Descripts into :fieldID,:fieldDesc from SQLUSER.CB_UserFieldConfig where Code=:fieldCode )
+ 			 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, fieldCode, fieldDesc, fieldID
+			do %0Ao
+			if SQLCODE'=0 set fieldID=""
+			if fieldID=""{
+				set errorCode="-1"
+				set errorMessage=fieldCode_"不是 CB_UserFieldConfig 字段"
+				Quit 
+			}
+			set userExtID="",extCreateDate="",extCreateTime="",extCreateUserDr=""
+			 ;---&sql(select ID,CreateDate,CreateTime,CreateUser_Dr into :userExtID,:extCreateDate,:extCreateTime,:extCreateUserDr from SQLUSER.HB_UserExt where User_Dr=:userID and UserField_Dr=:fieldID)
+ 			 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, extCreateDate, extCreateTime, extCreateUserDr, fieldID, userExtID, userID
+			do %0Co
+			if SQLCODE'=0 set userExtID=""
+			set extObj={}
+			set extObj.ID=userExtID
+			set extObj.UserDr=userID
+			set extObj.UserFieldDr=fieldID
+			set extObj.Code=fieldCode
+			set extObj.Descripts=fieldDesc
+			set extObj.ExtValue=fieldValue
+			if userExtID=""{
+				set extObj.CreateDate=$zd(+$h,3)
+				set extObj.CreateTime=$zt($p($h,",",2))
+				set extObj.CreateUserDr=updateUserID
+			}Else{ //补充之前未赋值数据
+				Set extObj.CreateDate = extCreateDate
+				Set extObj.CreateTime = extCreateTime
+				Set extObj.CreateUserDr = updateUserID
+				Set:(extCreateDate=$C(0))||(extCreateDate="") extObj.CreateDate = $zd(+$h,3)
+				Set:(extCreateTime=$C(0))||(extCreateTime="") extObj.CreateTime = $zt($p($h,",",2))
+				Set:(extCreateUserDr=$C(0))||(extCreateUserDr="") extObj.CreateUserDr = 1
+			}
+			set data=[]
+			do data.%Push(extObj)
+			set dataObj={}
+			set dataObj.className="User.HBUserExt"
+			set dataObj.updateUserID=updateUserID
+			set dataObj.data=data
+			set dataObj.logFlag=1
+			if userExtID=""{
+				set ret=##class(src.util.operatetable).Insert(.dataObj)
+			}else{
+				set ret=##class(src.util.operatetable).Update(.dataObj)	
+			}
+			set errorCode=ret.errorCode
+			set errorMessage=ret.errorMessage
+			if errorCode'=0
+			{
+				set resultObj={}
+				set resultObj.errorCode=errorCode
+				set resultObj.errorMessage=errorMessage
+				quit 
+			}
+		}
+		if errorCode'="0"{
+			set resultObj={}
+			set resultObj.errorCode=errorCode
+			set resultObj.errorMessage=errorMessage
+			Quit	
+		}
+		TCommit 
+		set tranLevel=0
+		set resultObj={}
+		set resultObj.errorCode="0"
+		set resultObj.errorMessage=""
+	}catch(e){
+		if tranLevel=1 TRollBack 1
+		set status=e.AsStatus()
+		set resultObj={}
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+    	B ;BBB
+	    set errorInfo="保存就诊扩展数据:w ##class("_$ClassName()_").SaveAdmExtData("_paraObj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")
+	}
+	if resultObj.errorCode'=0{
+		if tranLevel=1
+		{
+			TRollBack 1
+		}	
+	}
+	Quit resultObj
+ q
+%0Ao n sqldata14d,sqldata15d,sqldata16d,sqldata24d,sqldata27d,sqldata7d,sqldata13d,sqldata9d,sqldata10d,sqldata11d,sqldata6d,sqldata12d
+ s $zt="%0Aerr"
+ s sqldata14d=$zu(115,2)
+ s sqldata15d=0,sqldata16d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata7d=$g(fieldCode)
+ s SQLCODE=100
+ s sqldata10d=$zu(28,sqldata7d,5)
+ s sqldata13d=0
+ ; asl MOD# 2
+ s sqldata9d=sqldata10d
+ i sqldata9d="" g %0AmBdun
+ s fieldID=""
+ s fieldID=$o(^CBUserFieldConfigI("Code",sqldata9d,fieldID))
+ i fieldID="" g %0AmBdun
+ s sqldata24d="" i $d(^CBUserFieldConfigD(fieldID),sqldata24d)
+ e  g %0AmBdun
+ S fieldDesc=$lg(sqldata24d,3)
+ goto:sqldata14d'=1 %0AmBuncommitted
+ if sqldata14d=1 {
+ 	lock +^CBUserFieldConfigD($p(fieldID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata16d=$name(^CBUserFieldConfigD($p(fieldID,"||",1)))_"#""SI""",sqldata15d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_UserFieldConfig for RowID value: "_fieldID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata11d=$zlist(sqldata9d)
+ i fieldID'="" s sqldata27d="" i $d(^CBUserFieldConfigD(fieldID),sqldata27d)
+ e  g %0AmCdun
+ S sqldata6d=$lg(sqldata27d,2),fieldDesc=$lg(sqldata27d,3)
+ s sqldata9d=$zu(28,sqldata6d,5)
+ s sqldata12d=$zlist(sqldata9d)
+ g:sqldata11d'=sqldata12d %0AmCdun
+%0AmBuncommitted ;
+ s sqldata13d=sqldata13d+1
+ s SQLCODE=0 g %0Ac
+%0AmCdun if $g(sqldata14d)=1 { if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }}
+%0AmBdun 
+%0AmAdun 
+%0Ac set %ROWCOUNT='SQLCODE
+ if $g(sqldata14d)=1 {
+ 	if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }
+ }
+ q
+%0Aerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Ac
+%0Co n sqldata16d,sqldata17d,sqldata18d,sqldata20d,sqldata24d,sqldata25d,sqldata10d,sqldata12d,sqldata9d,sqldata11d,sqldata14d,sqldata15d
+ s $zt="%0Cerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata16d=$zu(115,2)
+ s sqldata17d=0,sqldata18d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata10d=$s($g(userID)="":"",$isvalidnum(userID):+userID,1:userID),sqldata12d=$s($g(fieldID)="":"",$isvalidnum(fieldID):+fieldID,1:fieldID)
+ s SQLCODE=100
+ ; asl MOD# 2
+ s userExtID=""
+%0CmBk1 s sqldata20d="" s userExtID=$o(^HBUserExtD(userExtID),1,sqldata20d)
+ i userExtID="" g %0CmBdun
+ S sqldata9d=$lg(sqldata20d,2)
+ g:'(sqldata9d=sqldata10d) %0CmBk1
+ S sqldata11d=$lg(sqldata20d,3)
+ g:'(sqldata11d=sqldata12d) %0CmBk1
+ S $lg(,,,,,,,extCreateDate,extCreateTime,extCreateUserDr)=sqldata20d
+ goto:sqldata16d'=1 %0CmBuncommitted
+ if sqldata16d=1 {
+ 	lock +^HBUserExtD($p(userExtID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata18d=$name(^HBUserExtD($p(userExtID,"||",1)))_"#""SI""",sqldata17d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_UserExt for RowID value: "_userExtID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata14d=$zlist(sqldata11d,sqldata9d)
+ i userExtID'="" s sqldata24d="" i $d(^HBUserExtD(userExtID),sqldata24d)
+ e  g %0CmCdun
+ S $lg(,sqldata9d,sqldata11d,,,,,extCreateDate,extCreateTime,extCreateUserDr)=sqldata24d
+ s sqldata15d=$zlist(sqldata11d,sqldata9d)
+ g:sqldata14d'=sqldata15d %0CmCdun
+%0CmBuncommitted ;
+ s SQLCODE=0 g %0Cc
+%0CmCdun if $g(sqldata16d)=1 { if $g(sqldata17d)=1 { l -@sqldata18d s sqldata17d=0 } elseif $g(sqldata17d)=2 { do $classmethod($li(sqldata18d),"%UnlockId",$li(sqldata18d,2),1,1)  s sqldata17d=0 }}
+ g %0CmBk1
+%0CmBdun 
+%0CmAdun 
+%0Cc set %ROWCOUNT='SQLCODE
+ if $g(sqldata16d)=1 {
+ 	if $g(sqldata17d)=1 { l -@sqldata18d s sqldata17d=0 } elseif $g(sqldata17d)=2 { do $classmethod($li(sqldata18d),"%UnlockId",$li(sqldata18d,2),1,1)  s sqldata17d=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata25d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"G1ECIk8Mt0aQMI4fmh70CRgVb9A="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"G1ECIk8Mt0aQMI4fmh70CRgVb9A=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Cerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Cc
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("src.User.User",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"src.User.User")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"src.User.User")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="src.User.User"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="User"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"User"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"User"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If encoded Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ If indentFlag,encoded { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("src.User.User",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"src.User.User")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLNew(document,node,containerOref="")
+	Quit (##class(src.User.User).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("src.User.User",top,format,namespacePrefix,input,refOnly,.schema)

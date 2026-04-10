@@ -737,3 +737,179 @@ export const confirmIcdImport = (
 ): Promise<ApiResponse<IcdImportResult>> => {
   return invoke('02010039', [params]);
 };
+
+// ========== DRG目录信息 (02010041, 02010042, 02010043, 02010044, 02010045, 02010046) ==========
+
+/** DRG目录信息记录 */
+export interface HBDRGCataLogItem {
+  id: string;
+  code: string;
+  descripts: string;
+  provinceID: string;
+  provinceDesc: string;
+  cityID: string;
+  cityDesc: string;
+}
+
+/** 查询DRG目录信息参数 */
+export interface QueryHBDRGCataLogParams {
+  code?: string;
+  descripts?: string;
+  provinceID?: string;
+  cityID?: string;
+}
+
+/** 保存DRG目录信息参数 */
+export interface SaveHBDRGCataLogParams {
+  id?: string;
+  code: string;
+  descripts: string;
+  provinceDr: string;
+  cityDr: string;
+  admvs: string;
+}
+
+/** 查询DRG目录信息 (02010041) */
+export const queryHBDRGCataLog = (
+  params: QueryHBDRGCataLogParams,
+  pagination: Pagination
+): Promise<ApiResponse<PageResult<HBDRGCataLogItem>>> => {
+  return invoke('02010041', [params], undefined, pagination);
+};
+
+/** 保存DRG目录信息 (02010042) */
+export const saveHBDRGCataLog = (
+  params: SaveHBDRGCataLogParams
+): Promise<ApiResponse> => {
+  return invoke('02010042', [params]);
+};
+
+/** 删除DRG目录信息 (02010043) */
+export const deleteHBDRGCataLog = (
+  id: string
+): Promise<ApiResponse> => {
+  return invoke('02010043', [{ id }]);
+};
+
+// ========== DRG目录导入 (02010047, 02010048, 02010049) ==========
+
+/** DRG目录导入预览数据项 */
+export interface DrgImportPreviewItem {
+  rowNum: number;
+  code: string;
+  descripts: string;
+  admvs: string;
+  status: 'valid' | 'duplicate' | 'invalid';
+  errorMsg?: string;
+}
+
+/** DRG目录导入预览结果 */
+export interface DrgImportPreviewResult {
+  totalCount: number;
+  validCount: number;
+  invalidCount: number;
+  duplicateCount: number;
+  previewList: DrgImportPreviewItem[];
+}
+
+/** DRG目录导入结果 */
+export interface DrgImportResult {
+  totalCount: number;
+  successCount: number;
+  failCount: number;
+  duplicateCount: number;
+  newCount: number;
+  failList: Array<{
+    rowNum: number;
+    code: string;
+    errorMsg: string;
+  }>;
+  reportUrl?: string;
+}
+
+/** DRG目录导入参数 */
+export interface DrgImportParams {
+  provinceID: string;
+  cityID: string;
+  fileData: string;
+  fileName: string;
+}
+
+/** 下载DRG目录导入模板 (02010049) */
+export const downloadDrgTemplate = (): Promise<ApiResponse<{ fileName: string; fileData: string; contentType: string }>> => {
+  return invoke('02010049', []);
+};
+
+/** DRG目录导入预览 (02010047) */
+export const previewDrgImport = (
+  params: DrgImportParams
+): Promise<ApiResponse<DrgImportPreviewResult>> => {
+  return invoke('02010047', [params]);
+};
+
+/** DRG目录确认导入 (02010048) */
+export const confirmDrgImport = (
+  params: DrgImportParams
+): Promise<ApiResponse<DrgImportResult>> => {
+  return invoke('02010048', [params]);
+};
+
+// ========== ADRG细分规则 (02010044, 02010045, 02010046) ==========
+
+/** ADRG细分规则记录 */
+export interface HBDRGSegmentationRulesItem {
+  id: string;
+  adrg: string;
+  adrgDesc: string;
+  admvs: string;
+  unionFlag: string;
+  segmentationFlag: string;
+  selectionCriteria: string;
+  provinceID: string;
+  provinceDesc: string;
+  cityID: string;
+  cityDesc: string;
+}
+
+/** 查询ADRG细分规则参数 */
+export interface QueryHBDRGSegmentationRulesParams {
+  adrg?: string;
+  adrgDesc?: string;
+  provinceID?: string;
+  cityID?: string;
+}
+
+/** 保存ADRG细分规则参数 */
+export interface SaveHBDRGSegmentationRulesParams {
+  id?: string;
+  adrg: string;
+  adrgDesc: string;
+  provinceDr: string;
+  cityDr: string;
+  admvs: string;
+  unionFlag: string;
+  segmentationFlag: string;
+  selectionCriteria?: string;
+}
+
+/** 查询ADRG细分规则 (02010044) */
+export const queryHBDRGSegmentationRules = (
+  params: QueryHBDRGSegmentationRulesParams,
+  pagination: Pagination
+): Promise<ApiResponse<PageResult<HBDRGSegmentationRulesItem>>> => {
+  return invoke('02010044', [params], undefined, pagination);
+};
+
+/** 保存ADRG细分规则 (02010045) */
+export const saveHBDRGSegmentationRules = (
+  params: SaveHBDRGSegmentationRulesParams
+): Promise<ApiResponse> => {
+  return invoke('02010045', [params]);
+};
+
+/** 删除ADRG细分规则 (02010046) */
+export const deleteHBDRGSegmentationRules = (
+  id: string
+): Promise<ApiResponse> => {
+  return invoke('02010046', [{ id }]);
+};

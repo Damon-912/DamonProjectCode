@@ -58,7 +58,7 @@ const DRGCustomQuery: React.FC = () => {
 
   // 医疗机构查询相关状态
   const [hospitals, setHospitals] = useState<HospitalItem[]>([
-    { hospitalID: 0, code: '', descripts: '', hospTypeID: 0, hospNatureID: 0, provIDID: 0, cityIDID: 0, areaIDID: 0, active: 'Y', organizationCode: '', businesslicense: '' }
+    { ID: '', hospitalID: '', code: '', descripts: '', hospTypeID: '', hospNatureID: '', provIDID: 0, cityIDID: 0, areaIDID: 0, active: 'Y', organizationCode: '', businesslicense: '', policyTypeID: '', policyTypeDesc: '' }
   ]);
   const [hospitalModalOpen, setHospitalModalOpen] = useState(false);
   const [hospitalLoading, setHospitalLoading] = useState(false);
@@ -127,11 +127,10 @@ const DRGCustomQuery: React.FC = () => {
       const newbornFlag = values.AgeGroupDays && values.AgeGroupDays > 0 ? '1' : '0';
       form.setFieldValue('NewbornFlag', newbornFlag);
 
-      // 构建医疗机构信息数组，从已选中的医疗机构中提取hisHospCode
+      // 构建医疗机构信息数组，从已选中的医疗机构中提取code和descripts
       const hospInfo = hospitals
-        .filter(h => h.hisCode) // 只选择有hisCode的医疗机构
+        .filter(h => h.code) // 只选择有code的医疗机构
         .map(h => ({
-          hisHospCode: h.hisCode!,
           code: h.code,
           name: h.descripts,
         }));
@@ -187,7 +186,7 @@ const DRGCustomQuery: React.FC = () => {
     form.resetFields();
     setDiagnoses([{ mainFlag: 1, diagSn: 1, diagCode: '', diagName: '' }]);
     setOperations([{ mainFlag: '1', oprnSn: 1, oprnCode: '', oprnName: '' }]);
-    setHospitals([{ hospitalID: 0, code: '', descripts: '', hospTypeID: 0, hospNatureID: 0, provIDID: 0, cityIDID: 0, areaIDID: 0, active: 'Y', organizationCode: '', businesslicense: '' }]);
+    setHospitals([{ ID: '', hospitalID: '', code: '', descripts: '', hospTypeID: '', hospNatureID: '', provIDID: 0, cityIDID: 0, areaIDID: 0, active: 'Y', organizationCode: '', businesslicense: '', policyTypeID: '', policyTypeDesc: '' }]);
     setResult(null);
   };
 
@@ -358,7 +357,7 @@ const DRGCustomQuery: React.FC = () => {
 
   // 添加医疗机构
   const addHospital = () => {
-    setHospitals([...hospitals, { hospitalID: 0, code: '', descripts: '', hospTypeID: 0, hospNatureID: 0, provIDID: 0, cityIDID: 0, areaIDID: 0, active: 'Y', organizationCode: '', businesslicense: '' }]);
+    setHospitals([...hospitals, { ID: '', hospitalID: '', code: '', descripts: '', hospTypeID: '', hospNatureID: '', provIDID: 0, cityIDID: 0, areaIDID: 0, active: 'Y', organizationCode: '', businesslicense: '', policyTypeID: '', policyTypeDesc: '' }]);
   };
 
   // 删除医疗机构
@@ -393,7 +392,6 @@ const DRGCustomQuery: React.FC = () => {
     try {
       const res = await queryHospitals(
         {
-          code: code || undefined,
           desc: desc || undefined,
           active: 'Y',
         },
@@ -1228,7 +1226,7 @@ const DRGCustomQuery: React.FC = () => {
                   </Col>
                   <Col span={8}>
                     <div>
-                      <Text type="secondary" style={{ display: 'block', marginBottom: 4, fontSize: 12 }}>MDC</Text>
+                      <Text type="secondary" style={{ display: 'block', marginBottom: 4, fontSize: 12 }}>MDC编码</Text>
                       <Tag color="purple" style={{ fontSize: 12, whiteSpace: 'normal', height: 'auto' }}>
                         {result.mdc || '-'}{result.mdcDesc ? ` ${result.mdcDesc}` : ''}
                       </Tag>

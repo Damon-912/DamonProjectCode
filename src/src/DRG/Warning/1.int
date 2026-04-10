@@ -1,0 +1,1147 @@
+ROUTINE src.DRG.Warning.1 [Type=INT,Generated]
+ ;src.DRG.Warning.1
+ ;Generated for class src.DRG.Warning.  Do NOT edit. 04/05/2026 04:22:52PM
+ ;;5A58366B;src.DRG.Warning
+ ;
+zAddWarningRecord(jsonObj)
+	new (jsonObj)
+	set params = ##class(%Library.DynamicArray).%New()
+	try
+	{
+        set resultObj = ..SetSuccessResult("0","")
+        if (jsonObj = "") || (jsonObj.params = "") 
+        {
+            set resultObj = ..SetErrorResult("-1", "入参异常：缺少params参数或参数为空")
+            quit 
+        }
+        // 获取参数
+        set params = jsonObj.params.%Get(0)
+        set hisAdmId = params.hisAdmId
+        set patientName = params.patientName
+        set deptCode = params.deptCode
+        set deptName = params.deptName
+        set doctorCode = params.doctorCode
+        set doctorName = params.doctorName
+        set totalFee = params.totalFee
+        set drgCode = params.drgCode
+        set drgPayStandard = params.drgPayStandard
+        set drgName = params.drgName
+        set medicalRecordDr = params.medicalRecordDr
+        set insuranceFee = params.insuranceFee
+        set fixmedinsCode = params.fixmedinsCode
+        set fixmedinsName = params.fixmedinsName
+        set ruleType = params.ruleType
+        // 验证必填参数
+        if (hisAdmId = "") {
+            set resultObj = ..SetErrorResult("-1", "HIS就诊ID不能为空")
+            quit 
+        }
+        if (patientName = "") {
+            set resultObj = ..SetErrorResult("-1", "患者姓名不能为空")
+            quit 
+        }
+        if (totalFee = "") {
+            set resultObj = ..SetErrorResult("-1", "医疗总费用不能为空")
+            quit 
+        }
+        if (drgCode = "") {
+            set resultObj = ..SetErrorResult("-1", "DRG编码不能为空")
+            quit 
+        }        
+        if (deptCode = "") {
+            set resultObj = ..SetErrorResult("-1", "科室编码不能为空")
+            quit 
+        }
+        if (doctorCode = "") {
+            set resultObj = ..SetErrorResult("-1", "医生编码不能为空")
+            quit 
+        }
+        if (fixmedinsCode = "") {
+            set resultObj = ..SetErrorResult("-1", "医疗机构代码不能为空")
+            quit 
+        }                
+        //判断DRG支付标准
+        set getPayStandard=0
+         ;---&sql(Select PayStandard into :getPayStandard from HB_DRGCoreAlgorithmData Where DRG=:drgCode and FixmedinsCode=:fixmedinsCode) 
+          ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, drgCode, fixmedinsCode, getPayStandard
+        do %0Ao 
+        if (SQLCODE '= 0)||(getPayStandard = 0)
+        {
+            set resultObj = ..SetErrorResult("-1", "DRG支付标准金额为0,请检查DRG平台算法配置是否维护！")
+            quit 	        
+	    }   
+	    else
+	    {
+		    set drgPayStandard = getPayStandard    
+		}                           
+        // 计算费用差异
+        if (drgPayStandard '= 0) && (drgPayStandard '= "") 
+        {
+            set diffAmount = totalFee - drgPayStandard
+            set diffRate = $s(drgPayStandard '= 0:(diffAmount / drgPayStandard * 100), 1:0)
+        } 
+        else 
+        {
+            set diffAmount = 0
+            set diffRate = 0
+        }
+        // 查询匹配的预警规则
+        set warningList = []
+        // 使用%SQL.Statement执行查询
+        set tStatement = ##class(%SQL.Statement).%New()
+        set tStatement.%SelectMode = 1
+        set rulesSql = "SELECT ID, RuleCode, RuleName, RuleType, ThresholdType, ThresholdValue, WarningLevel, DRGCode FROM BS_DRGWarningRule WHERE IsActive = 'Y' OR IsActive = '1'"
+        set tStatus = tStatement.%Prepare(rulesSql)
+        if ((''tStatus)) {
+            set rs = tStatement.%Execute()
+            while (rs.%Next()) {
+                set ruleId = rs.ID
+                set ruleCode = rs.RuleCode
+                set ruleName = rs.RuleName
+                set ruleTypeVal = rs.RuleType
+                set thresholdType = rs.ThresholdType
+                set thresholdValue = rs.ThresholdValue
+                set warningLevel = rs.WarningLevel
+                set ruleDrgCode = rs.DRGCode
+                // DRG范围检查
+                if ((ruleDrgCode '= "") && (ruleDrgCode '= drgCode)) {
+                    continue
+                }
+                // ruleType过滤
+                if (ruleType '= "") && (ruleTypeVal '= ruleType) {
+                    continue
+                }
+                // 判断是否触发预警
+                set isTrigger = ..CheckWarningTrigger(ruleTypeVal, thresholdType, thresholdValue, totalFee, drgPayStandard)
+                if (isTrigger) {
+                    // 创建预警记录
+                    set wr = ##class(User.BSDRGWarningRecord).%New()
+                    set wr.WarningNo = ..GenerateWarningNo()
+                    set wr.RuleDr = ruleId
+                    set wr.RuleCode = ruleCode
+                    set wr.RuleName = ruleName
+                    set wr.WarningType = ruleTypeVal
+                    set wr.WarningLevel = warningLevel
+                    set wr.MedicalRecordDr = medicalRecordDr
+                    set wr.HISAdmID = hisAdmId
+                    set wr.PatientName = patientName
+                    set wr.DeptCode = deptCode
+                    set wr.DeptName = deptName
+                    set wr.DoctorCode = doctorCode
+                    set wr.DoctorName = doctorName
+                    set wr.TotalFee = totalFee
+                    set wr.DRGCode = drgCode
+                    set wr.DRGName = drgName
+                    set wr.InsuranceFee = insuranceFee
+                    set wr.DRGPayStandard = drgPayStandard
+                    set wr.DiffAmount = diffAmount
+                    set wr.DiffRate = diffRate
+                    set wr.WarningStatus = "01"
+                    set wr.WarningDate = +$h
+                    set wr.WarningTime = $p($h,",",2)
+                    set wr.FixmedinsCode = fixmedinsCode
+                    set wr.FixmedinsName = fixmedinsName
+                    // 生成预警消息
+                    set warningMsg = ..GenerateWarningMessage(ruleName, totalFee, drgPayStandard, diffAmount, diffRate)
+                    set wr.WarningMessage = warningMsg
+                    set sc = wr.%Save()
+                    if ((''sc)) {
+                        set item={}
+                        set item.warningId = wr.%Id()
+                        set item.warningNo = wr.WarningNo
+                        set item.ruleCode = ruleCode
+                        set item.ruleName = ruleName
+                        set item.warningLevel = warningLevel
+                        set item.warningMessage = warningMsg
+                        do warningList.%Push(item)
+                    }
+                }
+            }
+        }
+        set resultObj.errorCode = "0"
+        set resultObj.errorMessage = ""
+        set resultObj.result = warningList
+        set resultObj.count = warningList.%Size()
+	}
+    catch(e) 
+    {
+        set status = e.AsStatus()
+        set errorCode = $piece(##class(%SYSTEM.Status).GetErrorCodes(status), ",")
+        set errorMsg = $replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"), "^", " ")
+        set errorInfo = "AddWarningRecord异常：类=" _ $ClassName() _ "，入参=" _ jsonObj.%ToJSON() _ "，错误：" _ errorMsg
+        set errorLogID = ##class(src.Interface.Message).InsErrRecord("02010107", errorInfo, errorMsg)
+        set resultObj = ..SetErrorResult("-99", "AddWarningRecord异常（日志ID："_errorLogID_")："_errorMsg)
+    }
+    quit resultObj
+ q
+%0Ao n sqldata15d,sqldata16d,sqldata17d,sqldata26d,sqldata27d,sqldata28d,sqldata29d,sqldata30d,sqldata33d,sqldata36d,sqldata37d,sqldata4d,sqldata6d,sqldata8d,sqldata9d,sqldata10d,sqldata11d,sqldata13d,sqldata14d,sqldata12d,sqldata3d,sqldata5d
+ s $zt="%0Aerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata15d=$zu(115,2)
+ s sqldata16d=0,sqldata17d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(drgCode),sqldata6d=$g(fixmedinsCode)
+ s SQLCODE=100
+ s sqldata11d=$zu(28,sqldata6d,7)
+ s sqldata9d=$zu(28,sqldata4d,7)
+ k sqldata26d
+ ; asl MOD# 3
+ d %0AmBMod
+ s sqldata27d="",sqldata28d="",sqldata30d=1
+%0AmCk1 f  s sqldata30d=$bitfind(sqldata28d,1,sqldata30d+1) i sqldata30d { s sqldata12d=sqldata29d+sqldata30d-1 q } s sqldata27d=$o(sqldata26d(sqldata27d),1,sqldata28d) q:sqldata27d=""  s sqldata29d=sqldata27d-1*64000
+ i sqldata27d="" g %0AmCdun
+ s sqldata33d="" i $d(^User.HBDRGCoreAlgorithmDataD(sqldata12d),sqldata33d)
+ e  g %0AmCk1
+ S $lg(,sqldata3d,,,,,getPayStandard,,,,,,,,,sqldata5d)=sqldata33d
+ s sqldata8d=$zu(28,sqldata3d,7)
+ s sqldata10d=$zu(28,sqldata5d,7)
+ goto:sqldata15d'=1 %0AmCuncommitted
+ if sqldata15d=1 {
+ 	lock +^User.HBDRGCoreAlgorithmDataD($p(sqldata12d,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata17d=$name(^User.HBDRGCoreAlgorithmDataD($p(sqldata12d,"||",1)))_"#""SI""",sqldata16d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGCoreAlgorithmData for RowID value: "_sqldata12d ztrap "LOCK"  }
+ }
+ ; asl MOD# 4
+ i sqldata12d'="" s sqldata36d="" i $d(^User.HBDRGCoreAlgorithmDataD(sqldata12d),sqldata36d)
+ e  g %0AmDdun
+ S sqldata3d=$lg(sqldata36d,2)
+ s sqldata8d=$zu(28,sqldata3d,7)
+ g:'(sqldata8d=sqldata9d) %0AmDdun
+ g:'(sqldata8d'=" ") %0AmDdun
+ S sqldata5d=$lg(sqldata36d,16)
+ s sqldata10d=$zu(28,sqldata5d,7)
+ g:'(sqldata10d=sqldata11d) %0AmDdun
+ S getPayStandard=$lg(sqldata36d,7)
+%0AmCuncommitted ;
+ s SQLCODE=0 g %0Ac
+%0AmDdun if $g(sqldata15d)=1 { if $g(sqldata16d)=1 { l -@sqldata17d s sqldata16d=0 } elseif $g(sqldata16d)=2 { do $classmethod($li(sqldata17d),"%UnlockId",$li(sqldata17d,2),1,1)  s sqldata16d=0 }}
+ g %0AmCk1
+%0AmCdun 
+%0AmAdun 
+%0Ac set %ROWCOUNT='SQLCODE
+ if $g(sqldata15d)=1 {
+ 	if $g(sqldata16d)=1 { l -@sqldata17d s sqldata16d=0 } elseif $g(sqldata16d)=2 { do $classmethod($li(sqldata17d),"%UnlockId",$li(sqldata17d,2),1,1)  s sqldata16d=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata37d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"3g7BuDT9ilaWMCOWd/O7cTM933Y="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"3g7BuDT9ilaWMCOWd/O7cTM933Y=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Aerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Ac
+%0AmBMod ; asl MOD# 2
+ s sqldata8d=sqldata9d
+ s sqldata10d=sqldata11d
+ i sqldata8d="" g %0AmBdun
+ i '(sqldata8d'=" ") g %0AmBdun
+ s sqldata13d=""
+%0AmBk1 s sqldata13d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata8d,sqldata13d))
+ i sqldata13d="" g %0AmBdun
+ s sqldata14d=""
+%0AmBk2 s sqldata14d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata8d,sqldata13d,sqldata14d))
+ i sqldata14d="" g %0AmBk1
+ i sqldata10d="" g %0AmBk2
+ s sqldata12d=""
+%0AmBk3 s sqldata12d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata8d,sqldata13d,sqldata14d,sqldata10d,sqldata12d))
+ i sqldata12d="" g %0AmBk2
+ s $bit(sqldata26d(sqldata12d\64000+1),sqldata12d#64000+1)=1
+ g %0AmBk3
+%0AmBdun q
+zCheckWarningTrigger(ruleType,thresholdType,thresholdValue,totalFee,drgPayStandard)
+    new (ruleType, thresholdType, thresholdValue, totalFee, drgPayStandard)
+    set result = 0
+    // ruleType: 01=费用超支, 02=低倍率, 03=高倍率, 04=编码异常, 05=分解住院
+    if (ruleType = "01") {
+        // 费用超支预警
+        if (drgPayStandard '= "") && (thresholdValue '= "") {
+            set threshold = drgPayStandard * thresholdValue / 100
+            if (totalFee > threshold) {
+                set result = 1
+            }
+        }
+    }
+    elseif (ruleType = "02") {
+        // 低倍率预警
+        if (drgPayStandard '= "") && (thresholdValue '= "") {
+            set threshold = drgPayStandard * (100 - thresholdValue) / 100
+            if (totalFee < threshold) {
+                set result = 1
+            }
+        }
+    }
+    elseif (ruleType = "03") {
+        // 高倍率预警
+        if (drgPayStandard '= "") && (thresholdValue '= "") {
+            set threshold = drgPayStandard * (100 + thresholdValue) / 100
+            if (totalFee > threshold) {
+                set result = 1
+            }
+        }
+    }
+    quit result
+zDeleteWarningRule(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"删除成功","result":{}}
+	try
+	{
+        set params=jsonObj.params.%Get(0)
+        set ruleId=params.ruleId
+        if (ruleId="") 
+        {
+            set resultObj.errorCode="-1"
+            set resultObj.errorMessage="规则ID不能为空"
+            quit 
+        }
+        // 检查是否存在关联的预警记录
+         ;---&sql(SELECT COUNT(*) INTO :cnt FROM BS_DRGWarningRecord WHERE Rule_Dr = :ruleId)
+          ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, cnt, ruleId
+        do %0Co
+        if (cnt>0) 
+        {
+            set resultObj.errorCode="-2"
+            set resultObj.errorMessage="该规则存在关联的预警记录，无法删除"
+            quit 
+        }
+         ;---&sql(DELETE FROM BS_DRGWarningRule WHERE ID = :ruleId)
+          ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, ruleId
+        do %0Eo
+        if (SQLCODE=0) 
+        {
+            set resultObj.errorCode="0"
+            set resultObj.errorMessage="删除成功"
+        } 
+        else 
+        {
+            set resultObj.errorCode="-3"
+            set resultObj.errorMessage="删除失败"
+        }
+	}
+    catch(e) 
+    {
+        set status=e.AsStatus()
+        set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+        set errorInfo="删除预警规则异常：类="_$ClassName()_"，入参="_jsonObj.%ToJSON()_""
+        set errorLogID=##class(src.Interface.Message).InsErrRecord("02010105",errorInfo,errorMessage)
+        set resultObj={}
+        set resultObj.errorCode="02010105"
+        set resultObj.errorMessage="删除预警规则异常（日志ID："_errorLogID_"）："_errorMessage
+    }
+    quit resultObj
+ q
+%0Co n sqldata7d,sqldata8d,sqldata14d,sqldata4d,sqldata3d,sqldata6d
+ s $zt="%0Cerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata7d=$zu(115,2)
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$s($g(ruleId)="":"",$isvalidnum(ruleId):+ruleId,1:ruleId)
+ s SQLCODE=100
+ s cnt=0
+ d %0CmBMod
+ ; asl MOD# 4
+ s SQLCODE=0 g %0Cc
+%0CmDdun 
+%0CmAdun 
+%0Cc set %ROWCOUNT='SQLCODE
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata14d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"l32ZdSHr6etjJ3KifjW+54y/ulw="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"l32ZdSHr6etjJ3KifjW+54y/ulw=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Cerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Cc
+%0CmBMod ; asl MOD# 2
+ s sqldata3d=sqldata4d s sqldata8d=$s(sqldata3d="":-1E14,1:sqldata3d)
+ i '(sqldata3d'="") g %0CmBdun
+ s sqldata6d=""
+%0CmBk1 s sqldata6d=$o(^User.BSDRGWarningRecordI("RuleDr",sqldata8d,sqldata6d))
+ i sqldata6d="" g %0CmBdun
+ ; asl MOD# 3
+%0CmCdun d $i(cnt)
+ g %0CmBk1
+%0CmBdun q
+%0Eo n sqldata3d,sqldata4d,sqldata5d,sqldata6d,sqldata7d,sqldata8d,sqldata11d,sqldata14d,sqldata2d,sqldata1d
+ s $zt="%0Eerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata3d=0,sqldata4d=$g(%0CacheRowLimit,9223372036854775807)
+ s sqldata5d=$zu(115,2)
+ s sqldata6d=""
+ s sqldata2d=$s($g(ruleId)="":"",$isvalidnum(ruleId):+ruleId,1:ruleId)
+ s SQLCODE=100
+ If $zu(115,1)=2,'$TLEVEL { s sqldata7d=1 TSTART } If $zu(115,1) { s sqldata8d=1 TSTART  }
+ ; asl MOD# 2
+ s sqldata1d=sqldata2d
+ i sqldata1d'="",$d(^User.BSDRGWarningRuleD(sqldata1d))
+ e  g %0EmBdun
+ set sqldata11d=##class(User.BSDRGWarningRule).%SQLGetLock(sqldata1d) i 'sqldata11d s SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler40",,"DELETE","SQLUser"_"."_"BS_DRGWarningRule",sqldata1d) g %0Ec
+ ; asl MOD# 3
+ i sqldata1d'="",$d(^User.BSDRGWarningRuleD(sqldata1d))
+ e  g %0EmCdun
+ do ##class(User.BSDRGWarningRule).%SQLDelete(sqldata1d,$c(0,2,0,0,0,0,0),'$g(sqldata8d))
+ i 'SQLCODE { i $i(sqldata3d)'<sqldata4d { d:sqldata11d=1 ##class(User.BSDRGWarningRule).%SQLReleaseLock(sqldata1d) g %0Ec }}
+%0EmCdun d:sqldata11d=1 ##class(User.BSDRGWarningRule).%SQLReleaseLock(sqldata1d) g:SQLCODE<0 %0Ec
+%0EmBdun 
+%0EmAdun 
+%0Ec set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(sqldata3d),1:0)
+ If $zu(115,1),$g(sqldata8d) { TCOMMIT:SQLCODE'<0  TROLLBACK:SQLCODE<0 1 } TCOMMIT:SQLCODE=100&&(%ROWCOUNT=0)&&($g(sqldata7d))&&($zu(115,1)=2) 
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata14d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"8GgR/c9d74FPkB7z5H3jzPF8Fsc="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"8GgR/c9d74FPkB7z5H3jzPF8Fsc=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Eerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ d:$g(sqldata11d)=1 ##class(User.BSDRGWarningRule).%SQLReleaseLock(sqldata1d)
+ g %0Ec
+zGenerateWarningMessage(ruleName,totalFee,drgPayStandard,diffAmount,diffRate)
+    new (ruleName, totalFee, drgPayStandard, diffAmount, diffRate)
+    set msg = ruleName _ "：患者费用总额" _ $fn(totalFee,2) _ "元"
+    if (drgPayStandard '= "") {
+        set msg = msg _ "，DRG支付标准" _ $fn(drgPayStandard,2) _ "元"
+    }
+    if (diffAmount > 0) {
+        set msg = msg _ "，超出" _ $fn(diffAmount,2) _ "元"
+    } elseif (diffAmount < 0) {
+        set msg = msg _ "，低于" _ $fn(-diffAmount,2) _ "元"
+    }
+    if (diffRate '= 0) {
+        if (diffRate > 0) {
+            set msg = msg _ "（+" _ $fn(diffRate,2) _ "%）"
+        } else {
+            set msg = msg _ "（" _ $fn(diffRate,2) _ "%）"
+        }
+    }
+    quit msg
+zGenerateWarningNo()
+    quit "W"_$zd(+$h,"YYYYMMDD")_$tr($zt($p($h,",",2)),":","")_$r(6)
+zProcessWarning(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"处理成功","result":{}}
+	try
+	{
+        set params=jsonObj.params.%Get(0)
+        set warningId=params.warningId
+        set processStatus=params.processStatus
+        set processRemark=params.processRemark
+        if (warningId="") 
+        {
+            set resultObj.errorCode="-1"
+            set resultObj.errorMessage="预警记录ID不能为空"
+            quit 
+        }
+        // 更新预警记录处理状态
+        set obj=##class(User.BSDRGWarningRecord).%OpenId(warningId)
+        if (obj="") 
+        {
+            set resultObj.errorCode="-2"
+            set resultObj.errorMessage="预警记录不存在"
+            quit 
+        }
+        // 状态映射
+        set statusMap=$s(processStatus="processed":"02",processStatus="ignored":"03",processStatus="已确认":"02",processStatus="已忽略":"03",1:processStatus)
+        set obj.WarningStatus=statusMap
+        set obj.ProcessUserDr=""
+        set obj.ProcessDate=+$h
+        set obj.ProcessTime=$p($h,",",2)
+        set obj.ProcessRemark=processRemark
+        set sc=obj.%Save()
+        if ((''sc)) 
+        {
+            set resultObj.errorCode="0"
+            set resultObj.errorMessage="处理成功"
+        } 
+        else 
+        {
+            set resultObj.errorCode="-3"
+            set resultObj.errorMessage="处理失败"
+        }
+	}
+    catch(e) 
+    {
+        set status=e.AsStatus()
+        set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+        set errorInfo="处理预警异常：类="_$ClassName()_"，入参="_jsonObj.%ToJSON()_""
+        set errorLogID=##class(src.Interface.Message).InsErrRecord("02010104",errorInfo,errorMessage)
+        set resultObj={}
+        set resultObj.errorCode="02010104"
+        set resultObj.errorMessage="处理预警异常（日志ID："_errorLogID_"）："_errorMessage
+    }
+    quit resultObj
+zQueryWarningRecords(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try
+	{
+        // 1. 获取分页参数
+        if (jsonObj.%IsDefined("pagination")'=0) 
+        {
+            set pagationObj=jsonObj.pagination.%Get(0)
+            set pageSize=pagationObj.pageSize
+            set currentPage=pagationObj.currentPage
+        }
+        // 2. 获取查询条件
+        set params=jsonObj.params.%Get(0)
+        set warningNo=params.warningNo
+        set ruleCode=params.ruleCode
+        set warningType=params.warningType
+        set warningStatus=params.warningStatus
+        set startDate=params.startDate
+        set endDate=params.endDate
+        set deptCode=params.deptCode
+        set doctorCode=params.doctorCode
+        set patientName=params.patientName
+        set hisAdmId=params.hisAdmId
+        // 3. 构建查询SQL
+        set sql =" SELECT ID,WarningNo,RuleCode,RuleName,WarningType,WarningLevel,"
+                _" HISAdmID,PatientName,DeptCode,DeptName,DoctorCode,DoctorName,"
+                _" DRGCode,DRGName,TotalFee,InsuranceFee,DRGPayStandard,"
+                _" DiffAmount,DiffRate,WarningMessage,WarningStatus,"
+                _" WarningDate,WarningTime,ProcessUser_Dr,ProcessDate,ProcessTime,"
+                _" ProcessRemark FROM BS_DRGWarningRecord WHERE 1=1"
+        if (warningNo'="")
+        {
+            set sql=sql_" AND WarningNo LIKE '%"_warningNo_"%'" 
+        }
+        if (ruleCode'="")
+        {
+            set sql=sql_" AND RuleCode = '"_ruleCode_"'" 
+        }
+        if (warningType'="")
+        {
+            set sql=sql_" AND WarningType = '"_warningType_"'" 
+        }
+        if (warningStatus'="")
+        {
+            set sql=sql_" AND WarningStatus = '"_warningStatus_"'" 
+        }
+        if (startDate'="")
+        {
+            set sql=sql_" AND WarningDate >= '"_startDate_"'" 
+        }
+        if (endDate'="")
+        {
+            set sql=sql_" AND WarningDate <= '"_endDate_"'" 
+        }
+        if (deptCode'="")
+        {
+            set sql=sql_" AND DeptCode = '"_deptCode_"'" 
+        }
+        if (doctorCode'="")
+        {
+            set sql=sql_" AND DoctorCode = '"_doctorCode_"'" 
+        }
+        if (patientName'="")
+        {
+            set sql=sql_" AND PatientName LIKE '%"_patientName_"%'" 
+        }
+        if (hisAdmId'="")
+        {
+            set sql=sql_" AND HISAdmID LIKE '%"_hisAdmId_"%'" 
+        }
+        set sql=sql_" ORDER BY WarningDate DESC, WarningTime DESC, ID DESC"
+        // 4. 执行查询
+        set sqlObj=##class(%SQL.Statement).%New(1)
+        set sc=sqlObj.%Prepare(sql)
+        set result=sqlObj.%Execute()
+        while result.%Next()	
+        {
+            set dataObj={}
+            set dataObj.id=result.%Get("ID")
+            set dataObj.warningNo=result.%Get("WarningNo")
+            set dataObj.ruleCode=result.%Get("RuleCode")
+            set dataObj.ruleName=result.%Get("RuleName")
+            set dataObj.warningType=result.%Get("WarningType")
+            set dataObj.warningLevel=result.%Get("WarningLevel")
+            set dataObj.hisAdmId=result.%Get("HISAdmID")
+            set dataObj.patientName=result.%Get("PatientName")
+            set dataObj.deptCode=result.%Get("DeptCode")
+            set dataObj.deptName=result.%Get("DeptName")
+            set dataObj.doctorCode=result.%Get("DoctorCode")
+            set dataObj.doctorName=result.%Get("DoctorName")
+            set dataObj.drgCode=result.%Get("DRGCode")
+            set dataObj.drgName=result.%Get("DRGName")
+            set dataObj.totalFee=result.%Get("TotalFee")
+            set dataObj.insuranceFee=result.%Get("InsuranceFee")
+            set dataObj.drgPayStandard=result.%Get("DRGPayStandard")
+            set dataObj.diffAmount=result.%Get("DiffAmount")
+            set dataObj.diffRate=result.%Get("DiffRate")
+            set dataObj.warningMessage=result.%Get("WarningMessage")
+            set dataObj.warningStatus=result.%Get("WarningStatus")
+            set dataObj.warningDate=$zd(result.%Get("WarningDate"),3)
+            set dataObj.warningTime=$zt(result.%Get("WarningTime"),1)
+            set dataObj.processUser=result.%Get("ProcessUser_Dr")
+            set dataObj.processDate=$zd(result.%Get("ProcessDate"),3)
+            set dataObj.processTime=$zt(result.%Get("ProcessTime"),1)
+            set dataObj.processRemark=result.%Get("ProcessRemark")
+            set count=count+1
+            // 分页处理：使用 continue 语句
+            if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+            do dataArr.%Push(dataObj)
+        }
+        set resultObj.result.rows=dataArr
+        set resultObj.result.total=count		
+	}
+    catch(e) 
+    {
+        set status=e.AsStatus()
+        set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+        set errorInfo="查询预警记录列表异常：类="_$ClassName()_"，入参="_jsonObj.%ToJSON()_""
+        set errorLogID=##class(src.Interface.Message).InsErrRecord("02010103",errorInfo,errorMessage)
+        set resultObj={}
+        set resultObj.errorCode="02010103"
+        set resultObj.errorMessage="查询预警记录列表异常（日志ID："_errorLogID_"）："_errorMessage
+    }
+    quit resultObj
+zQueryWarningRules(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try
+	{
+        // 1. 获取分页参数
+        if (jsonObj.%IsDefined("pagination")'=0) 
+        {
+            set pagationObj=jsonObj.pagination.%Get(0)
+            set pageSize=pagationObj.pageSize
+            set currentPage=pagationObj.currentPage
+        }
+        // 2. 获取查询条件
+        set params=jsonObj.params.%Get(0)
+        set ruleCode=params.ruleCode
+        set ruleName=params.ruleName
+        set ruleType=params.ruleType
+        set isActive=params.isActive
+        // 3. 构建查询SQL
+        set sql =" SELECT ID,RuleCode,RuleName,RuleDesc,RuleType,ThresholdType,ThresholdValue,"
+                _" MDCCode,ADRGCode,DRGCode,WarningLevel,IsActive,SeqNo,"
+                _" CreateDate,CreateTime,Remark "
+                _" FROM BS_DRGWarningRule WHERE 1=1"
+        if (ruleCode'="")
+        {
+            set sql=sql_" AND RuleCode LIKE '%"_ruleCode_"%'" 
+        }
+        if (ruleName'="")
+        {
+            set sql=sql_" AND RuleName LIKE '%"_ruleName_"%'" 
+        }
+        if (ruleType'="")
+        {
+            set sql=sql_" AND RuleType = '"_ruleType_"'" 
+        }
+        if (isActive'="")
+        {
+            set sql=sql_" AND IsActive = '"_isActive_"'" 
+        }
+        set sql=sql_" ORDER BY SeqNo, ID"
+        // 4. 执行查询
+        set sqlObj=##class(%SQL.Statement).%New(1)
+        set sc=sqlObj.%Prepare(sql)
+        set result=sqlObj.%Execute()
+        while result.%Next()	
+        {
+            set dataObj={}
+            set dataObj.id=result.%Get("ID")
+            set dataObj.ruleCode=result.%Get("RuleCode")
+            set dataObj.ruleName=result.%Get("RuleName")
+            set dataObj.ruleDesc=result.%Get("RuleDesc")
+            set dataObj.ruleType=result.%Get("RuleType")
+            set dataObj.thresholdType=result.%Get("ThresholdType")
+            set dataObj.thresholdValue=result.%Get("ThresholdValue")
+            set dataObj.mdcCode=result.%Get("MDCCode")
+            set dataObj.adrgCode=result.%Get("ADRGCode")
+            set dataObj.drgCode=result.%Get("DRGCode")
+            set dataObj.warningLevel=result.%Get("WarningLevel")
+            set dataObj.isActive=result.%Get("IsActive")
+            set dataObj.seqNo=result.%Get("SeqNo")
+            set dataObj.createDate=result.%Get("CreateDate") //$zd(result.%Get("CreateDate"),3)
+            set dataObj.createTime=result.%Get("CreateTime") //$zt(result.%Get("CreateTime"),1)
+            set dataObj.remark=result.%Get("Remark")
+            set count=count+1
+            // 分页处理：使用 continue 语句
+            if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+            do dataArr.%Push(dataObj)
+        }
+        set resultObj.result.rows=dataArr
+        set resultObj.result.total=count		
+	}
+    catch(e) 
+    {
+        set status=e.AsStatus()
+        set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+        set errorInfo="查询预警规则列表异常：类="_$ClassName()_"，入参="_jsonObj.%ToJSON()_""
+        set errorLogID=##class(src.Interface.Message).InsErrRecord("02010101",errorInfo,errorMessage)
+        set resultObj={}
+        set resultObj.errorCode="02010101"
+        set resultObj.errorMessage="查询预警规则列表异常（日志ID："_errorLogID_"）："_errorMessage
+    }
+    quit resultObj
+zQueryWarningStats(jsonObj)
+	new (jsonObj)
+	set params = ##class(%Library.DynamicArray).%New()
+	try
+	{
+        set resultObj = ..SetSuccessResult("0","")
+        if (jsonObj = "") || (jsonObj.params = "") 
+        {
+            set resultObj = ..SetErrorResult("-1", "入参异常：缺少params参数或参数为空")
+            quit 
+        }
+        set params = jsonObj.params.%Get(0)
+        set startDate = $GET(params.startDate,"")
+        set endDate = $GET(params.endDate,"")
+        // 构建日期条件
+        set dateWhere = ""
+        if (startDate '= "") {
+            set dateWhere = dateWhere _ " AND WarningDate >= '" _ startDate _ "'"
+        }
+        if (endDate '= "") {
+            set dateWhere = dateWhere _ " AND WarningDate <= '" _ endDate _ "'"
+        }
+        // 初始化统计对象
+        set stats={}
+        set stats.totalCount = 0
+        set stats.pendingCount = 0
+        set stats.processedCount = 0
+        // 使用%SQL.Statement执行查询
+        set tStatement = ##class(%SQL.Statement).%New()
+        set tStatement.%SelectMode = 1
+        // 统计总数
+        set totalSql = "SELECT COUNT(*) As Total FROM BS_DRGWarningRecord WHERE 1=1" _ dateWhere
+        set tStatus = tStatement.%Prepare(totalSql)
+        if ((''tStatus)) {
+            set rs = tStatement.%Execute()
+            if (rs.%Next()) {
+                set stats.totalCount = rs.Total
+            }
+        }
+        // 待处理数
+        set pendingSql = "SELECT COUNT(*) As Cnt FROM BS_DRGWarningRecord WHERE WarningStatus = '01'" _ dateWhere
+        set tStatus = tStatement.%Prepare(pendingSql)
+        if ((''tStatus)) {
+            set rs = tStatement.%Execute()
+            if (rs.%Next()) {
+                set stats.pendingCount = rs.Cnt
+            }
+        }
+        // 已处理数
+        set processedSql = "SELECT COUNT(*) As Cnt FROM BS_DRGWarningRecord WHERE WarningStatus IN ('02','03','04','05')" _ dateWhere
+        set tStatus = tStatement.%Prepare(processedSql)
+        if ((''tStatus)) {
+            set rs = tStatement.%Execute()
+            if (rs.%Next()) {
+                set stats.processedCount = rs.Cnt
+            }
+        }
+        // 按类型统计
+        set typeStatsArr = []
+        set typeSql = "SELECT WarningType, COUNT(*) As Cnt FROM BS_DRGWarningRecord WHERE 1=1" _ dateWhere _ " GROUP BY WarningType"
+        set tStatus = tStatement.%Prepare(typeSql)
+        if ((''tStatus)) {
+            set rs = tStatement.%Execute()
+            while (rs.%Next()) {
+                set typeItem={}
+                set typeItem.type = $s(rs.WarningType="01":"费用超支", rs.WarningType="02":"低倍率", rs.WarningType="03":"高倍率", rs.WarningType="04":"编码异常", rs.WarningType="05":"分解住院", 1:rs.WarningType)
+                set typeItem.count = rs.Cnt
+                do typeStatsArr.%Push(typeItem)
+            }
+        }
+        set stats.typeStats = typeStatsArr
+        // 按级别统计
+        set levelStatsArr = []
+        set levelSql = "SELECT WarningLevel, COUNT(*) As Cnt FROM BS_DRGWarningRecord WHERE 1=1" _ dateWhere _ " GROUP BY WarningLevel"
+        set tStatus = tStatement.%Prepare(levelSql)
+        if ((''tStatus)) {
+            set rs = tStatement.%Execute()
+            while (rs.%Next()) {
+                set levelItem={}
+                set levelItem.level = $s(rs.WarningLevel=3:"高", rs.WarningLevel=2:"中", rs.WarningLevel=1:"低", 1:"other")
+                set levelItem.count = rs.Cnt
+                do levelStatsArr.%Push(levelItem)
+            }
+        }
+        set stats.levelStats = levelStatsArr
+        // 费用统计
+        set feeSql = "SELECT SUM(DiffAmount) As TotalDiff, SUM(TotalFee) As TotalFee FROM BS_DRGWarningRecord WHERE 1=1" _ dateWhere
+        set tStatus = tStatement.%Prepare(feeSql)
+        if ((''tStatus)) {
+            set rs = tStatement.%Execute()
+            if (rs.%Next()) {
+                set stats.totalDiff = rs.TotalDiff
+                set stats.totalFee = rs.TotalFee
+            }
+        }
+        set resultObj.result = stats
+	}
+    catch(e) 
+    {
+        set status = e.AsStatus()
+        set errorCode = $piece(##class(%SYSTEM.Status).GetErrorCodes(status), ",")
+        set errorMsg = $replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"), "^", " ")
+        set errorInfo = "QueryWarningStats异常：类=" _ $ClassName() _ "，入参=" _ jsonObj.%ToJSON() _ "，错误：" _ errorMsg
+        set errorLogID = ##class(src.Interface.Message).InsErrRecord("02010106", errorInfo, errorMsg)
+        set resultObj = ..SetErrorResult("-99", "QueryWarningStats异常（日志ID："_errorLogID_")："_errorMsg)
+    }
+    quit resultObj
+zSaveWarningRule(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"保存成功","result":{}}
+	try
+	{
+        // 1. 获取参数
+        set params=jsonObj.params.%Get(0)
+        set ruleId=params.ruleId
+        set ruleCode=params.ruleCode
+        set ruleName=params.ruleName
+        set ruleDesc=params.ruleDesc
+        set ruleType=params.ruleType
+        set thresholdType=params.thresholdType
+        set thresholdValue=params.thresholdValue
+        set mdcCode=params.mdcCode
+        set adrgCode=params.adrgCode
+        set drgCode=params.drgCode
+        set warningLevel=params.warningLevel
+        set isActive=params.isActive
+        set seqNo=params.seqNo
+        set remark=params.remark
+        // 2. 必填参数校验
+        if (ruleCode="") 
+        {
+            set resultObj.errorCode="-1"
+            set resultObj.errorMessage="规则编码不能为空"
+            quit 
+        }
+        if (ruleName="") 
+        {
+            set resultObj.errorCode="-1"
+            set resultObj.errorMessage="规则名称不能为空"
+            quit 
+        }
+        if (ruleType="") 
+        {
+            set resultObj.errorCode="-1"
+            set resultObj.errorMessage="规则类型不能为空"
+            quit 
+        }
+        // 3. 检查编码唯一性
+        if (ruleId="") 
+        {
+             ;---&sql(SELECT ID INTO :existId FROM BS_DRGWarningRule WHERE RuleCode = :ruleCode)
+              ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, existId, ruleCode
+            do %0Go
+            if (SQLCODE = 0) && (existId '= "") 
+            {
+                set resultObj.errorCode="-2"
+                set resultObj.errorMessage="规则编码已存在"
+                quit 
+            }
+        }
+        // 4. 保存数据
+        if (ruleId="") 
+        {
+            // 新增
+            set obj=##class(User.BSDRGWarningRule).%New()
+            set obj.CreateDate=+$h
+            set obj.CreateTime=$p($h,",",2)
+        } 
+        else 
+        {
+            // 修改
+            set obj=##class(User.BSDRGWarningRule).%OpenId(ruleId)
+            if (obj="") 
+            {
+                set resultObj.errorCode="-3"
+                set resultObj.errorMessage="规则不存在"
+                quit 
+            }
+        }
+        set obj.RuleCode=ruleCode
+        set obj.RuleName=ruleName
+        set obj.RuleDesc=ruleDesc
+        set obj.RuleType=ruleType
+        set obj.ThresholdType=thresholdType
+        set obj.ThresholdValue=thresholdValue
+        set obj.MDCCode=mdcCode
+        set obj.ADRGCode=adrgCode
+        set obj.DRGCode=drgCode
+        set obj.WarningLevel=warningLevel
+        set obj.IsActive=isActive //$s(isActive="Y":1,isActive="1":1,isActive="是":1,1:0)
+        set obj.SeqNo=seqNo
+        set obj.UpdateDate=+$h
+        set obj.UpdateTime=$p($h,",",2)
+        set obj.Remark=remark
+        set sc=obj.%Save()
+        if ((''sc)) 
+        {
+            set resultObj.errorCode="0"
+            set resultObj.errorMessage="保存成功"
+        } 
+        else 
+        {
+            set resultObj.errorCode="-4"
+            set resultObj.errorMessage="保存失败"
+        }
+	}
+    catch(e) 
+    {
+        set status=e.AsStatus()
+        set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+        set errorInfo="保存预警规则异常：类="_$ClassName()_"，入参="_jsonObj.%ToJSON()_""
+        set errorLogID=##class(src.Interface.Message).InsErrRecord("02010102",errorInfo,errorMessage)
+        set resultObj={}
+        set resultObj.errorCode="02010102"
+        set resultObj.errorMessage="保存预警规则异常（日志ID："_errorLogID_"）："_errorMessage
+    }
+    quit resultObj
+ q
+%0Go n sqldata10d,sqldata11d,sqldata12d,sqldata20d,sqldata4d,sqldata6d,sqldata7d,sqldata8d,sqldata3d,sqldata9d
+ s $zt="%0Gerr"
+ s sqldata10d=$zu(115,2)
+ s sqldata11d=0,sqldata12d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(ruleCode)
+ s SQLCODE=100
+ s sqldata7d=$zu(28,sqldata4d,7)
+ ; asl MOD# 2
+ s sqldata6d=sqldata7d
+ i sqldata6d="" g %0GmBdun
+ s existId=""
+ s existId=$o(^User.BSDRGWarningRuleI("RuleCode",sqldata6d,existId))
+ i existId="" g %0GmBdun
+ goto:sqldata10d'=1 %0GmBuncommitted
+ if sqldata10d=1 {
+ 	lock +^User.BSDRGWarningRuleD($p(existId,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata12d=$name(^User.BSDRGWarningRuleD($p(existId,"||",1)))_"#""SI""",sqldata11d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_DRGWarningRule for RowID value: "_existId ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata8d=$zlist(sqldata6d)
+ i existId'="" s sqldata20d="" i $d(^User.BSDRGWarningRuleD(existId),sqldata20d)
+ e  g %0GmCdun
+ S sqldata3d=$lg(sqldata20d,2)
+ s sqldata6d=$zu(28,sqldata3d,7)
+ s sqldata9d=$zlist(sqldata6d)
+ g:sqldata8d'=sqldata9d %0GmCdun
+%0GmBuncommitted ;
+ s SQLCODE=0 g %0Gc
+%0GmCdun if $g(sqldata10d)=1 { if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }}
+%0GmBdun 
+%0GmAdun 
+%0Gc set %ROWCOUNT='SQLCODE
+ if $g(sqldata10d)=1 {
+ 	if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }
+ }
+ q
+%0Gerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Gc
+zSetErrorResult(errorCode,errorMsg)
+	set resultObj={}
+	set resultObj.errorCode= errorCode
+	set resultObj.errorMessage= errorMsg
+	set result={}
+	set result.code=""
+	set result.desc=""
+	set result.checkTime= $ZDATETIME($HOROLOG,3)
+    set resultObj.result= result
+    quit resultObj
+zSetSuccessResult(code,message)
+	set resultObj={}
+	set resultObj.errorCode="0"
+	set resultObj.errorMessage=message
+	set result={}
+	set result.code=code
+	set result.desc=message
+	set result.checkTime=$ZDATETIME($HOROLOG,3)
+    set resultObj.result=result
+    quit resultObj
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("src.DRG.Warning",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"src.DRG.Warning")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"src.DRG.Warning")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="src.DRG.Warning"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="Warning"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"Warning"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"Warning"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If encoded Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ If indentFlag,encoded { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("src.DRG.Warning",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"src.DRG.Warning")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLNew(document,node,containerOref="")
+	Quit (##class(src.DRG.Warning).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("src.DRG.Warning",top,format,namespacePrefix,input,refOnly,.schema)

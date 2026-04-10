@@ -735,6 +735,7 @@ ClassMethod GetDRGCoreGroupsList(jsonObj) As %Library.DynamicObject
 		}
 		
 		set params=jsonObj.params.%Get(0)
+		set adrg=params.adrg
 		set adrgDesc=params.adrgDesc
 		set status=params.status
 		set sql =" SELECT ID,ADRG,ADRGDesc,Province_Dr as ProvinceID,"
@@ -745,7 +746,11 @@ ClassMethod GetDRGCoreGroupsList(jsonObj) As %Library.DynamicObject
 		        _" StartDate,StopDate,ThirdlyDiagnosis,ThirdlyDiagnosisName,"
 		        _" ThirdlyProcedure,ThirdlyProcedureName,UnionFlag,SegmentationFlag "
 			    _" FROM CB_DRGCoreGroupsList where 1=1"
-			    
+		
+		if adrg'=""
+		{
+			set sql=sql_" and ADRG like '%"_adrg_"%'" 
+		}			    
 		if adrgDesc'=""
 		{
 			set sql=sql_" and ADRGDesc like '%"_adrgDesc_"%'" 

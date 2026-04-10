@@ -215,7 +215,7 @@ const Results: React.FC = () => {
     { title: '主诊断', dataIndex: 'mainDiagnosis', key: 'mainDiagnosis', width: 100 },
     { title: '诊断名称', dataIndex: 'mainDiagnosisName', key: 'mainDiagnosisName', ellipsis: true },
     { 
-      title: 'DRG', 
+      title: 'DRG编码', 
       key: 'drg', 
       width: 150,
       render: (_, record) => (

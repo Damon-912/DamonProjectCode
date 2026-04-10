@@ -14,6 +14,7 @@ import {
   IcdMappingItem, MedInsuIcdItem, IcdInfoItem, QueryIcdMappingParams, SaveIcdMappingParams,
   ProvinceItem, CityItem
 } from '@/api/basicData';
+import CustomPagination from '../../components/CustomPagination';
 
 const { Option } = Select;
 
@@ -569,22 +570,16 @@ const ICDMapping: React.FC = () => {
             selectedRowKeys,
             onChange: (keys) => setSelectedRowKeys(keys as string[]),
           }}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (t) => `共 ${t} 条`,
-            onChange: (page, size) => loadData(page, size),
-            style: { marginBottom: 0, marginTop: 12 },
-            locale: {
-              items_per_page: '/页',
-              jump_to: '跳至',
-              page: '页',
-            }
-          }}
+          pagination={false}
         />
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <CustomPagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={total}
+            onChange={(page, size) => loadData(page, size)}
+          />
+        </div>
       </Card>
 
       {/* 新增/编辑弹窗 */}
@@ -593,6 +588,8 @@ const ICDMapping: React.FC = () => {
         open={editVisible}
         onOk={handleSave}
         onCancel={() => setEditVisible(false)}
+        okText="确定"
+        cancelText="取消"
         confirmLoading={saving}
         width={720}
         destroyOnClose

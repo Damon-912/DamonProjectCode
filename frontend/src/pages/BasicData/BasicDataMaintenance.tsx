@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, Table, Button, Input, Select, Space, Modal, Form, Row, Col,
-  Tag, message, Popconfirm, DatePicker, ConfigProvider
+  Tag, message, Popconfirm, DatePicker
 } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
 import dayjs, { type Dayjs } from 'dayjs';
 import { 
   PlusOutlined, SearchOutlined, ReloadOutlined, DeleteOutlined, EditOutlined,
@@ -462,8 +461,7 @@ const BasicDataMaintenance: React.FC = () => {
   ];
 
   return (
-    <ConfigProvider locale={zhCN}>
-      <div style={{ padding: 16, width: '100%', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ padding: 16, width: '100%', height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}>
       {/* 左右两栏布局 */}
       <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'row', gap: 16 }}>
         {/* 左侧：主表数据 */}
@@ -756,6 +754,8 @@ const BasicDataMaintenance: React.FC = () => {
         open={modalOpen}
         onOk={handleSave}
         onCancel={() => setModalOpen(false)}
+        okText="确定"
+        cancelText="取消"
         confirmLoading={saving}
         width={600}
         destroyOnClose
@@ -881,7 +881,6 @@ const BasicDataMaintenance: React.FC = () => {
         </Form>
       </Modal>
     </div>
-    </ConfigProvider>
   );
 };
 

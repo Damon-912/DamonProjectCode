@@ -1,0 +1,1059 @@
+ROUTINE src.Group.Group.1 [Type=INT,Generated]
+ ;src.Group.Group.1
+ ;Generated for class src.Group.Group.  Do NOT edit. 12/23/2025 05:06:13PM
+ ;;584C5966;src.Group.Group
+ ;
+zDeleteGroupMenu(inputobj)
+	new (inputobj)
+	try{
+		set errorCode=0,errorMessage=""
+		set jsonObj=inputobj.params.%Get(0)
+		set userID=jsonObj.userID
+		set IDArr=jsonObj.IDs
+		if IDArr.%Size()<=0{
+			set errorCode="05100128"
+			set errorMessage=##class(src.Interface.Message).GetErrorMessage("05100128")
+			quit
+		}		
+		TStart
+		for i=0:1:(IDArr.%Size()-1){
+			set rowId=IDArr.%Get(i)
+			set errorCode=..DeleteGroupMenuAndSubMenu(rowId,userID)		
+			quit:errorCode'=0
+		}		
+		if errorCode'=0{
+			TRollback 1
+			set errorMessage="删除失败"
+		}
+		else{
+			TCommit
+			set errorMessage="删除成功"
+		}
+	}catch(e){
+		Trollback 1
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="删除角色菜单列表:w ##class("_$ClassName()_").DeleteGroupMenu("_inputobj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set errorCode="01040044"
+	    set errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")
+	}
+	set resultJson={}
+	set resultJson.errorCode=errorCode
+	set resultJson.errorMessage=errorMessage
+	quit resultJson
+zDeleteGroupMenuAndSubMenu(groupMenuID,userID)
+	new (groupMenuID,userID)
+	set errorCode=0
+	quit:'$d(^CBGroupMenuD(groupMenuID)) errorCode
+	set groupMenuSubID=""
+	for  
+	{
+		set groupMenuSubID=$o(^CBGroupMenuI("PreMenu",groupMenuID,groupMenuSubID))
+		quit:groupMenuSubID="" 
+		set errorCode=..DeleteGroupMenuAndSubMenu(groupMenuSubID,userID)
+		quit:errorCode'=0
+	}
+	if errorCode=0{
+		set delObj={},data=[]
+		set delObj.className="User.CBGroupMenu"
+		set delObj.updateUserID=userID
+		set dataObj={}
+		set dataObj.ID=groupMenuID
+		do data.%Push(dataObj)
+		set delObj.data=data
+		;b ;0
+		set rtn=##class(src.util.operatetable).Delete(.delObj) ;调用公共类方法记录修改日记
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage	
+	}
+	quit errorCode
+zGetChildMenu(preMenuID,desc)
+	new (preMenuID,desc)
+	set childarr=[]
+	kill childItemArr
+	set sub=0
+	kill menuSortArr
+	set groupMenuID=""
+	for{
+		set groupMenuID=$o(^CBGroupMenuI("PreMenu",preMenuID,groupMenuID))
+		quit:groupMenuID=""	
+		continue:$g(^CBGroupMenuD(groupMenuID))=""
+		set groupMenuobj=##class(User.CBGroupMenu).%OpenId(groupMenuID)
+		set menuType=groupMenuobj.Type
+		set menuDetailobj=groupMenuobj.MenuDetailDr
+		continue:menuDetailobj=""
+		set seqNo=groupMenuobj.SeqNo
+		set subJson={}
+		set subJson.id=groupMenuID
+		set subJson.key=groupMenuID
+		set subJson.menuDetailDrDesc=menuDetailobj.Descripts
+		set subJson.menuDetailDr=menuDetailobj.%Id()
+		set subJson.seqNo=seqNo
+		set menuGroupFlag=menuDetailobj.MenuGroup
+		if menuGroupFlag="Y"{
+			set subJson.menuGroup="是"	
+		}else{
+			set subJson.menuGroup=""	
+		}
+		if menuGroupFlag="Y"{
+			set retJson=..GetChildMenu(groupMenuID,desc)
+			b	;??
+			if desc'=""{
+				if retJson.%Size()>0{
+					if (desc'="")&&((subJson.menuDetailDrDesc[desc)){
+						set subJson.children=retJson						
+					}else{
+						set subJson.children=[]
+					}					
+				}else{
+					set subJson.children=[]		
+				}	
+			}else{
+				set subJson.children=retJson		
+			}
+		}else{
+			continue:(desc'="")&&(menuDetailobj.Descripts'[desc)
+		}
+		set:seqNo="" seqNo=0
+		set menuSortArr(seqNo,groupMenuID)=subJson
+	}
+	set seqNo="" 
+	for{
+		set seqNo=$o(menuSortArr(seqNo))
+		quit:seqNo=""
+		set id=0
+		for{
+			set id=$o(menuSortArr(seqNo,id))
+			quit:id=""
+			do childarr.%Push(menuSortArr(seqNo,id))		
+		}
+	}
+	quit childarr
+zGetGroupChildMenu(preMenuID,linkPathStr)
+	new (preMenuID,linkPathStr)
+	set childarr=[]
+	kill childItemArr
+	set sub=0
+	kill menuSortArr
+	set groupMenuID=""
+	for{
+		s groupMenuID=$o(^CBGroupMenuI("PreMenu",preMenuID,groupMenuID))
+		Quit:groupMenuID=""	
+		continue:$g(^CBGroupMenuD(groupMenuID))=""
+		;b
+		set groupMenuobj=##class(User.CBGroupMenu).%OpenId(groupMenuID)
+		s menuType=groupMenuobj.Type
+		set menuDetailobj=groupMenuobj.MenuDetailDr
+		continue:menuDetailobj=""
+		set code=menuDetailobj.Code
+		set menuDetailDrDesc=menuDetailobj.Descripts
+		set enDesc=menuDetailobj.ENDesc
+		set linkAddress=menuDetailobj.LinkAddress
+		set linkPath=menuDetailobj.LinkPath
+		set image=menuDetailobj.Image
+		set winPosition=menuDetailobj.WinPosition
+		set backMethod=menuDetailobj.BackMethod
+		set paras=menuDetailobj.Paras
+		set condExpress=menuDetailobj.CondExpress
+		set JSMethod=menuDetailobj.JSMethod
+		set tooltip=menuDetailobj.Tooltip
+		set seqNo=groupMenuobj.SeqNo
+		;b	;qwq seq
+		if seqNo="" s seqNo=9999
+		set subJson={}
+		set subJson.id=groupMenuID
+		set subJson.title=menuDetailDrDesc
+		set subJson.enDesc=enDesc
+		if linkAddress["../"{
+			s linkAddress=$p(linkAddress,"../",2)	
+		}
+		s linkPath="/"_code
+		if linkPath'["/" s linkPath="/"_linkPath
+		if linkPathStr'=""{
+			s subJson.path=linkPathStr_linkPath	
+		}else{
+			s subJson.path=linkPath
+		}
+		set subJson.code=code
+		set subJson.component=linkAddress
+		set subJson.icon=image
+		set subJson.winPosition=winPosition
+		set subJson.backMethod=backMethod
+		set paraJson={}
+		if paras'=""{
+			for i=1:1:$l(paras,","){
+				set itemPara=$p(paras,",",i)	
+				continue:itemPara=""
+				set $PROPERTY(paraJson,$p(itemPara,"=",1))=$p(itemPara,"=",2)
+			}		
+		}
+		set subJson.paras=paraJson
+		set subJson.condExpress=condExpress
+		set subJson.backMethod=backMethod
+		set subJson.JSMethod=JSMethod
+		set subJson.tooltip=tooltip
+		set menuGroupFlag=menuDetailobj.MenuGroup
+		;b ;?qwq
+		if menuGroupFlag="Y"{
+			set jsonret=..GetGroupChildMenu(groupMenuID,linkPathStr_linkPath)	
+			set subJson.subs=jsonret
+		}else{
+		}
+		set:seqNo="" seqNo=0
+		set menuSortArr(seqNo,groupMenuID)=subJson
+	}
+	b	;qwq2
+	set seqNo="" 
+	for{
+		set seqNo=$o(menuSortArr(seqNo))
+		quit:seqNo=""
+		set id=0
+		for{
+			set id=$o(menuSortArr(seqNo,id))
+			Quit:id=""
+			do childarr.%Push(menuSortArr(seqNo,id))		
+		}
+	}
+	Quit childarr
+zGetGroupChildRouter(preMenuID,breadCrumbStr,routerArr,linkPathStr)
+	new (preMenuID,breadCrumbStr,routerArr,linkPathStr)
+	set sub=0
+	set groupMenuID=""
+	for{
+		set groupMenuID=$o(^CBGroupMenuI("PreMenu",preMenuID,groupMenuID))
+		quit:groupMenuID=""	
+		continue:$g(^CBGroupMenuD(groupMenuID))=""
+		set groupMenuobj=##class(User.CBGroupMenu).%OpenId(groupMenuID)
+		set menuType=groupMenuobj.Type
+		set menuDetailobj=groupMenuobj.MenuDetailDr
+		continue:menuDetailobj=""
+		set code=menuDetailobj.Code
+		set menuDetailDrDesc=menuDetailobj.Descripts
+		set enDesc=menuDetailobj.ENDesc
+		set linkAddress=menuDetailobj.LinkAddress
+		set linkPath=menuDetailobj.LinkPath
+		set image=menuDetailobj.Image
+		set winPosition=menuDetailobj.WinPosition
+		set backMethod=menuDetailobj.BackMethod
+		set paras=menuDetailobj.Paras
+		set condExpress=menuDetailobj.CondExpress
+		set JSMethod=menuDetailobj.JSMethod
+		set tooltip=menuDetailobj.Tooltip
+		set seqNo=menuDetailobj.SeqNo
+		if seqNo="" set seqNo=9999
+		set subJson={}
+		set subJson.id=groupMenuID
+		set subJson.title=menuDetailDrDesc
+		set subJson.enDesc=enDesc
+		if linkAddress["../"{
+			set linkAddress=$p(linkAddress,"../",2)	
+		}
+		set linkPath="/"_code
+		if linkPath'["/" s linkPath="/"_linkPath
+		if linkPathStr'=""{
+			set subJson.path=linkPathStr_linkPath	
+		}else{
+			set subJson.path=linkPath	
+		}
+		set subJson.component=linkAddress
+		set breadCrumb=##class(%Library.DynamicObject).%FromJSON(breadCrumbStr)
+		do breadCrumb.%Push(menuDetailDrDesc)
+		set subJson.breadcrumbName=breadCrumb
+		set menuGroupFlag=menuDetailobj.MenuGroup
+		if menuGroupFlag="Y"{
+			set jsonret=##class(src.Group.Group).GetGroupChildRouter(groupMenuID,breadCrumb.%ToJSON(),.routerArr,linkPathStr_linkPath)	
+		}else{
+			do routerArr.%Push(subJson)
+		}	
+	}
+	quit routerArr
+zGetGroupList(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try{
+		if (jsonObj.%IsDefined("pagination")'=0) {
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		set params=jsonObj.params.%Get(0)
+		set compareCode=params.code
+		set compareDescripts=params.descripts
+		set tStatement = ##class(%SQL.Statement).%New(1)
+		set sql="SELECT * FROM CB_Group"		
+		if (compareCode'="")||(compareDescripts'="") 
+		{
+			set sql=sql_" WHERE 1=1"
+			set:(compareCode'="") sql=" AND Code LIKE '%"_compareCode_"%'"
+			set:(compareDescripts'="") sql=sql_" AND Descripts LIKE '%"_compareDescripts_"%'"
+		}
+		b	;111
+		do tStatement.%Prepare(sql)
+		set result=tStatement.%Execute()		
+		while result.%Next(.sc){
+			set dataObj={}
+			set dataObj.id=result.%Get("ID")
+			set dataObj.code=result.%Get("Code")
+			set dataObj.descripts=result.%Get("Descripts")
+			set dataObj.enDesc=result.%Get("ENDesc")			
+			set dataObj.mainInterface=result.%Get("MainInterface")
+			set dataObj.mainInterfaceDesc=result.%Get("MainInterface")
+			set dataObj.operCodeTable=result.%Get("OperCodeTable")
+			set dataObj.sendMsgToAllUser=result.%Get("SendMsgToAllUser")
+			set dataObj.safeClassificat=result.%Get("SafeClassificat")
+			set dataObj.columnEdit=result.%Get("ColumnEdit")
+			set dataObj.layoutEdit=result.%Get("LayoutEdit")
+			set dataObj.defaultMenuType=result.%Get("DefaultMenuType")
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count		
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="获取角色列表出错:w ##class("_$ClassName()_").GetGroupList("_jsonObj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")
+	}
+	quit resultObj
+zGetGroupMenuDetail(inputobj)
+	new (inputobj)
+	try{
+		set resultObj={}
+		set params=inputobj.params.%Get(0)
+		set type=params.type
+		set groupID=params.groupID
+		set desc=params.descripts
+		if groupID=""{
+			set resultObj.errorCode="01040102"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040102")
+			quit		
+		}
+		set resultObj={}
+		set dataArr=[]
+		set menuId=0
+		set totalCount=0
+		set child=0
+		set subJsonArr=[]
+		kill menuSortArr
+		set groupMenuID=""
+		for{
+			set groupMenuID=$o(^CBGroupMenuI("Group",groupID,groupMenuID))
+			quit:groupMenuID=""	
+			continue:$g(^CBGroupMenuD(groupMenuID))=""
+			set groupMenuobj=##class(User.CBGroupMenu).%OpenId(groupMenuID)
+			set menuType=groupMenuobj.Type
+			continue:(menuType'=type)&&(type'="")
+			set preMenuGroupID=groupMenuobj.PreGroupMenuDr	
+			continue:preMenuGroupID'=""
+			set menuDetailobj=groupMenuobj.MenuDetailDr
+			continue:menuDetailobj=""
+			set seqNo=groupMenuobj.SeqNo
+			set subJson={}
+			set subJson.id=groupMenuID
+			set subJson.key=groupMenuID
+			set subJson.menuDetailDrDesc=menuDetailobj.Descripts
+			set subJson.menuDetailID=menuDetailobj.%Id()
+			set subJson.seqNo=seqNo
+			set menuGroupFlag=menuDetailobj.MenuGroup
+			if menuGroupFlag="Y"{
+				set subJson.menuGroup="是"	
+			}else{
+				set subJson.menuGroup=""	
+			}
+			b	;??	
+			if menuGroupFlag="Y"{
+				set retJson=..GetChildMenu(groupMenuID,desc)
+				if desc'=""{
+					if retJson.%Size()>0{
+						set subJson.children=retJson
+					}else{
+						set subJson.children=[]
+					}	
+				}else{
+					set subJson.children=retJson		
+				}
+			}else{
+				continue:(desc'="")&&(menuDetailobj.Descripts'[desc)
+			}
+			set:seqNo="" seqNo=0
+			set menuSortArr(seqNo,groupMenuID)=subJson
+			set totalCount=totalCount+1
+		}
+		set seqNo=""
+		for {
+			set seqNo=$o(menuSortArr(seqNo))
+			quit:seqNo=""
+			set id=0
+			for{
+				set id=$o(menuSortArr(seqNo,id))
+				quit:id=""
+				do subJsonArr.%Push(menuSortArr(seqNo,id))		
+			}
+		}
+		set resultObj.errorCode=0
+		set resultObj.errorMessage=""
+		set resultData={}
+		set resultData.total=totalCount
+		set resultData.rows=subJsonArr
+		set resultObj.result=resultData
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="根据角色查询菜单:w ##class("_$ClassName()_").GetGroupMenuDetail("_inputobj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")
+	}
+	quit resultObj
+zGetGroupRouter(inputobj)
+	new (inputobj)
+	set resultJson={}
+	set groupID=inputobj.params.%Get(0).groupID
+	set type=inputobj.params.%Get(0).type
+	set child=0
+	set routerArr=[]
+	set groupMenuID=""
+	set subJsonArr=[]
+	for{
+		s groupMenuID=$o(^CBGroupMenuI("Group",groupID,groupMenuID))
+		Quit:groupMenuID=""	
+		continue:$g(^CBGroupMenuD(groupMenuID))=""
+		set groupMenuobj=##class(User.CBGroupMenu).%OpenId(groupMenuID)
+		s menuType=groupMenuobj.Type
+		continue:(menuType'=type)&&(type'="")
+		set preMenuGroupID=groupMenuobj.PreGroupMenuDr	
+		continue:preMenuGroupID'=""
+		set menuDetailobj=groupMenuobj.MenuDetailDr
+		continue:menuDetailobj=""
+		set code=menuDetailobj.Code
+		set menuDetailDrDesc=menuDetailobj.Descripts
+		set enDesc=menuDetailobj.ENDesc
+		set linkAddress=menuDetailobj.LinkAddress
+		set linkPath=menuDetailobj.LinkPath
+		set image=menuDetailobj.Image
+		set winPosition=menuDetailobj.WinPosition
+		set backMethod=menuDetailobj.BackMethod
+		set paras=menuDetailobj.Paras
+		set condExpress=menuDetailobj.CondExpress
+		set JSMethod=menuDetailobj.JSMethod
+		set tooltip=menuDetailobj.Tooltip
+		set seqNo=menuDetailobj.SeqNo
+		if seqNo="" set seqNo=9999
+		set subJson={}
+		set subJson.id=groupMenuID
+		set subJson.title=menuDetailDrDesc
+		set subJson.enDesc=enDesc
+		set component=""
+		if linkAddress["../"{
+			set linkAddress=$p(linkAddress,"../",2)	
+		}
+		if image["../"{
+			set image=$p(image,"../",2)	
+		}
+		set linkPath="/"_code
+		set subJson.path=linkPath
+		set subJson.component=linkAddress
+		set subJson.image=image
+		set breadCrumb=[]
+		do breadCrumb.%Push(menuDetailDrDesc)
+		set subJson.breadcrumbName=breadCrumb
+		set menuGroupFlag=menuDetailobj.MenuGroup
+		if menuGroupFlag="Y"{
+			set retJson=##class(src.Group.Group).GetGroupChildRouter(groupMenuID,breadCrumb.%ToJSON(),.routerArr,linkPath)	
+		}else{
+			do routerArr.%Push(subJson)	
+		}
+	}
+	set resultObj={}
+	set resultObj.errorCode=0
+	set resultObj.errorMessage=""
+	set resultData=[]
+	set resultData=subJsonArr
+	set resultObj.result=routerArr
+	quit resultObj
+zGetMenuByGroup(inputobj)
+	new (inputobj)
+	set resultJson={}
+	set groupID=inputobj.params.%Get(0).groupID
+	set type=inputobj.params.%Get(0).type
+	set child=0
+	//s GroupMenuId=""
+	b ;1212
+	set subJsonArr=[]
+	kill subArr
+	kill menuSortArr
+	set menuSortStr=""
+	set groupMenuID=""
+	for{
+		set groupMenuID=$o(^CBGroupMenuI("Group",groupID,groupMenuID))
+		quit:groupMenuID=""	
+		continue:$g(^CBGroupMenuD(groupMenuID))=""
+		set groupMenuobj=##class(User.CBGroupMenu).%OpenId(groupMenuID)
+		set menuType=groupMenuobj.Type
+		continue:(menuType'=type)&&(type'="")
+		set preMenuGroupID=groupMenuobj.PreGroupMenuDr	
+		continue:preMenuGroupID'=""
+		set menuDetailobj=groupMenuobj.MenuDetailDr
+		continue:menuDetailobj=""
+		set code=menuDetailobj.Code
+		set menuDetailDrDesc=menuDetailobj.Descripts
+		set enDesc=menuDetailobj.ENDesc
+		set linkAddress=menuDetailobj.LinkAddress
+		set linkPath=menuDetailobj.LinkPath
+		set image=menuDetailobj.Image
+		set winPosition=menuDetailobj.WinPosition
+		set backMethod=menuDetailobj.BackMethod
+		set paras=menuDetailobj.Paras
+		set condExpress=menuDetailobj.CondExpress
+		set JSMethod=menuDetailobj.JSMethod
+		set tooltip=menuDetailobj.Tooltip
+		set seqNo=groupMenuobj.SeqNo
+		set:seqNo="" seqNo=9999
+		set subJson={}
+		set subJson.id=groupMenuID
+		set subJson.title=menuDetailDrDesc
+		set subJson.enDesc=enDesc
+		if linkAddress["../"{
+			set linkAddress=$p(linkAddress,"../",2)	
+		}
+		set linkPath="/"_code
+		set subJson.path="/"_code    //LinkPath
+		set subJson.code=code
+		set subJson.component=linkAddress
+		set subJson.icon=image
+		set subJson.winPosition=winPosition
+		set subJson.backMethod=backMethod
+		set paraJson={}
+		if paras'=""{
+			for i=1:1:$l(paras,","){
+				set itemPara=$p(paras,",",i)	
+				continue:itemPara=""
+				set $PROPERTY(paraJson,$p(itemPara,"=",1))=$p(itemPara,"=",2)
+			}		
+		}
+		set subJson.paras=paraJson
+		set subJson.condExpress=condExpress
+		set subJson.JSMethod=JSMethod
+		set subJson.tooltip=tooltip
+		set menuGroupFlag=menuDetailobj.MenuGroup
+		if menuGroupFlag="Y"{
+			s retJson=..GetGroupChildMenu(groupMenuID,linkPath )	
+			s subJson.subs=retJson
+		}
+		set:seqNo="" seqNo=0
+		set menuSortArr(seqNo,groupMenuID)=subJson
+	}
+	b	;qwq1
+	set seqNo=""
+	for {
+		set seqNo=$o(menuSortArr(seqNo))
+		quit:seqNo=""
+		set id=0
+		for{
+			set id=$o(menuSortArr(seqNo,id))
+			Quit:id=""
+			do subJsonArr.%Push(menuSortArr(seqNo,id))		
+		}
+	}
+	s resultObj={}
+	s resultObj.errorCode=0
+	s resultObj.errorMessage=""
+	s resultData=[]
+	s resultData=subJsonArr
+	s resultObj.result=resultData
+	Quit resultObj
+zGetUnaddData(inputobj)
+	new (inputobj)
+	set params=inputobj.params.%Get(0)
+	set resultJson={"errorCode":0,"errorMessage":""}
+	try{
+		set type=params.type
+		set groupID=params.groupID		
+		if groupID=""{
+			set resultJson.errorCode="01040001"
+			set resultJson.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040001")
+			quit		
+		}		
+		set groupMenuID=""
+		set menuDetailStr=""
+		for{
+			set groupMenuID=$o(^CBGroupMenuI("Group",groupID,groupMenuID))
+			quit:groupMenuID=""
+			set groupMenuInfo=$g(^CBGroupMenuD(groupMenuID))
+			set menuType=$lg(groupMenuInfo,4)
+			continue:type'=menuType
+			set menuDetailID=$lg(groupMenuInfo,5)	
+			if menuDetailStr="" set menuDetailStr=menuDetailID
+			else  set menuDetailStr=menuDetailStr_"^"_menuDetailID
+		}
+		set menuDetail=[]
+		set menuDetailID=""
+		for{
+			set menuDetailID=$o(^CBMenuDetailD(menuDetailID))
+			quit:menuDetailID=""
+			continue:("^"_menuDetailStr_"^")[("^"_menuDetailID_"^")
+			set menuDetailObj={}
+			set menuDetailObj.id=menuDetailID
+			set menuDetailInfo=$g(^CBMenuDetailD(menuDetailID))
+			set menuDetailObj.descripts=$lg(menuDetailInfo,3)	
+			set menuGroupFlag=$lg(menuDetailInfo,8)	
+			if menuGroupFlag="Y"{
+				set menuDetailObj.menuGroup="是" 		
+			}else{
+				set menuDetailObj.menuGroup="" 		
+			}
+			do menuDetail.%Push(menuDetailObj)
+		}
+		set result={}
+		set result.menuDetail=menuDetail
+		set resultJson.result=result
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="获取角色未添加的菜单:w ##class("_$ClassName()_").GetUnaddData("_inputobj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultJson.errorCode="01040044"
+	    set resultJson.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")
+	}
+	quit resultJson
+zMenuSubUpgrade(inputobj)
+	new (inputobj)
+	set jsonObj=inputobj.params.%Get(0)
+	set menuSubs=jsonObj.MenuSubs
+	if menuSubs.%Size()<=0{
+		s resultJson={}
+		s resultJson.errorCode="-1"
+		s resultJson.errorMessage="角色授权菜单不能为空"
+		Quit resultJson		
+	}
+	set resultJson={}
+	s resultJson.errorCode="0"
+	s resultJson.errorMessage="" 
+	TStart
+	set errorCode=0,errorMessage=""
+	for i=0:1:menuSubs.%Size()-1{
+		quit:errorCode'=0
+		set itemObj=menuSubs.%Get(i)
+		set groupMenuID=itemObj.id
+		set updateUser=itemObj.UpdateUser
+		if groupMenuID=""{
+			continue
+		}
+		set preMenuGroupID=$lg(^CBGroupMenuD(+GroupMenuID),6)
+		if preMenuGroupID=""{
+			s resultJson={}
+			s resultJson.errorCode="-1"
+			s resultJson.errorMessage="该菜单已经是顶级,不能再升级!"
+			Quit 
+		}
+		set newPreMenuGroupID=$lg(^CBGroupMenuD(+preMenuGroupID),6)
+		set groupMenuObj=##class(User.CBGroupMenu).%OpenId(groupMenuID)
+		set groupMenuObj.PreGroupMenuDr=newPreMenuGroupID
+		if newPreMenuGroupID'="" set groupMenuObj.PreGroupMenuDr=##class(User.CBGroupMenu).%OpenId(newPreMenuGroupID)
+		set tSC = groupMenuObj.%Save() 
+		if ($System.Status.IsError(tSC)) {
+			set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(tSC,"cn"),"^"," ")
+			set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(tSC),",")
+			set errorMessage="User.CBGroupMenu Save:"_errorMessage
+		}
+		else{
+			set id=GroupMenuObj.%Id()
+		}
+		do GroupMenuObj.%Close()
+	}
+	if errorCode'=0{
+		TRollback 1
+	}
+	else{
+		TCommit
+	}
+	set resultJson={}
+	set resultJson.errorCode=errorCode
+	set resultJson.errorMessage=errorMessage
+	Quit resultJson
+zSaveGroup(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	try{
+		set params=jsonObj.params.%Get(0)
+		set session=jsonObj.session.%Get(0)
+		set dataObj={},dataArr=[]
+		set dataObj.ID=params.id
+		set dataObj.Code=params.code
+		set groupID=$o(^CBGroupI("Code",$ZCVT(params.code,"U"),0)) 
+		b ;???
+		if (params.id="")&&(groupID'=""){
+			set resultObj.errorCode="-118"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("-118")
+			quit
+		}  
+		set dataObj.Descripts=params.descripts
+		set groupID=$o(^CBGroupI("Desc",$ZCVT(params.descripts,"U"),0)) 
+		if (params.id="")&&(groupID'=""){
+			set resultObj.errorCode="-118"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("-118")
+			quit
+		}  
+		set dataObj.MainInterface=params.mainInterface
+		set dataObj.OperCodeTable=params.operCodeTable
+		set dataObj.SendMsgToAllUser=params.sendMsgToAllUser
+		set dataObj.SafeClassificat=params.safeClassificat
+		set dataObj.ColumnEdit=params.columnEdit
+		set dataObj.LayoutEdit=params.layoutEdit
+		set dataObj.DefaultMenuType=params.defaultMenuType
+		set dataObj.ENDesc=params.enDesc
+		if params.id=""{
+			set dataObj.CreateDate=+$h
+			set dataObj.CreateUserDr=session.userID
+		}
+		do dataArr.%Push(dataObj)
+		;b	;12121
+		set operateObj={}
+		set operateObj.updateUserID=session.userID
+		set operateObj.className="User.CBGroup"			
+		set operateObj.data=dataArr		
+		if params.id=""{
+			set rtn=##class(src.util.operatetable).Insert(.operateObj,session) ;调用公共类方法记录修改日记
+		}else{				
+			set rtn=##class(src.util.operatetable).Update(.operateObj,session) ;调用公共类方法记录修改日记
+		}
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+		if errorCode'="0"{
+			set resultObj.errorCode=errorCode
+			set resultObj.errorMessage=errorMessage
+			quit
+		}
+		set resultObj.result.groupID=rtn.rowIDArr.%Get(0)
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="增加角色数据出错:w ##class("_$ClassName()_").SaveGroup("_jsonObj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")
+	}
+	quit resultObj
+zSaveGroupMenu(inputobj)
+	new (inputobj)
+	try{
+		set errorCode=0,errorMessage=""
+		set jsonObj=inputobj.params.%Get(0)
+		set session=inputobj.session.%Get(0)
+		set resultJson={}
+		set resultJson.errorCode=0
+		set type=jsonObj.type
+		set groupID=jsonObj.groupID
+		set seqNo=jsonObj.seqNo
+		set preGroupMenuID=jsonObj.preMenuGroupID
+		set userID=session.userID
+		if preGroupMenuID'=""{
+			set preMenuID=$lg(^CBGroupMenuD(preGroupMenuID),5)	
+			if preMenuID'=""{
+				set menuGroupFlag=$lg(^CBMenuDetailD(preMenuID),8)	
+				if menuGroupFlag'="Y"{
+					set errorCode="01040009"
+					set errorMessage=##class(src.Interface.Message).GetErrorMessage("01040009")
+					quit 		
+				}
+			}
+		}
+		if type=""{
+			set errorCode="01040008"
+			set errorMessage=##class(src.Interface.Message).GetErrorMessage("01040008")
+			quit
+		}
+		if groupID=""{
+			set errorCode="01040001"
+			set errorMessage=##class(src.Interface.Message).GetErrorMessage("01040001")
+			quit
+		}
+	    Tstart
+	    set dataArr=[]
+		set menuDetailArr=jsonObj.menuDetail
+		for i=0:1:menuDetailArr.%Size()-1{
+			quit:errorCode'=0
+			set itemDataObj=menuDetailArr.%Get(i)	
+			set menuDetailID=itemDataObj.menuDetailID
+			if menuDetailID=""{
+				set errorCode="01040010"
+				set errorMessage=##class(src.Interface.Message).GetErrorMessage("01040010")
+				quit
+			}
+			set dataObj={}
+			set dataObj.SeqNo=""
+			set dataObj.GroupDr=groupID
+			set dataObj.Type=type
+			set dataObj.MenuDetailDr=menuDetailID
+			set dataObj.PreGroupMenuDr=preGroupMenuID
+			set dataObj.CreateDate=+$h
+			set dataObj.CreateUserDr=userID
+			do dataArr.%Push(dataObj)
+		}
+		b	;12121
+		set operateObj={}
+		set operateObj.updateUserID=userID
+		set operateObj.className="User.CBGroupMenu"
+		set operateObj.data=dataArr		
+		set rtn=##class(src.util.operatetable).Insert(.operateObj) ;调用公共类方法记录修改日记
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+		if errorCode'=0{
+			Trollback 1
+		}else{
+			Tcommit
+		}
+	}catch(e){
+		Trollback 1
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="保存角色菜单:w ##class("_$ClassName()_").SaveGroupMenu("_inputobj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set errorCode="01040044"
+	    set errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")
+	}
+	set resultJson.errorCode=errorCode
+	set resultJson.errorMessage=errorMessage
+	Quit resultJson
+zSaveMenuSort(jsonObj)
+	new (jsonObj)
+	set params=jsonObj.params.%Get(0)
+	set data=params.data
+	set sortStr=""
+	set errorCode=0,errorMessage=""
+	set len=data.%Size()
+	for i=0:1:len-1{
+		set item=data.%Get(i)
+		set id=item.id
+		if item.%IsDefined("children"){
+			do ..SaveNextMenuSort(item)	
+		}
+		set obj=##class(User.CBGroupMenu).%OpenId(id)
+		set obj.SeqNo=i+1
+		set sc=obj.%Save()
+		If ($System.Status.IsError(sc)) {
+			set errorCode="01040031"
+			set errorMessage=##class(src.Interface.Message).GetErrorMessage("01040031")
+			Quit  
+		}
+	}
+	b ;12222	
+	set resultObj={}
+	set resultObj.errorCode=errorCode
+	set resultObj.errorMessage=errorMessage
+	Quit resultObj
+zSaveNextMenuSort(menuData)
+	new (menuData)
+	set errorCode=0,errorMessage=""
+	set menuSubId=menuData.id
+	set childrens=menuData.children
+	set len=childrens.%Size()
+	set sortStr=""
+	for i=0:1:len-1{
+		set item=childrens.%Get(i)	
+		set id=item.id
+		if item.%IsDefined("children"){
+			do ..SaveNextMenuSort(item)	
+		}
+		set obj=##class(User.CBGroupMenu).%OpenId(id)
+		set obj.SeqNo=i+1
+		set sc=obj.%Save()
+		If ($System.Status.IsError(sc)) {
+			set errorCode="01040031"
+			set errorMessage=##class(src.Interface.Message).GetErrorMessage("01040031")
+			Quit  
+		}
+	}	
+	set resultObj={}
+	set resultObj.errorCode=errorCode
+	set resultObj.errorMessage=errorMessage
+	Quit resultObj
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("src.Group.Group",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"src.Group.Group")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"src.Group.Group")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="src.Group.Group"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="Group"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"Group"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"Group"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If encoded Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ If indentFlag,encoded { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("src.Group.Group",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"src.Group.Group")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLNew(document,node,containerOref="")
+	Quit (##class(src.Group.Group).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("src.Group.Group",top,format,namespacePrefix,input,refOnly,.schema)

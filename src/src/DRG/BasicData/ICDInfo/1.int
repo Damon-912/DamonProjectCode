@@ -1,0 +1,1267 @@
+ROUTINE src.DRG.BasicData.ICDInfo.1 [Type=INT,Generated]
+ ;src.DRG.BasicData.ICDInfo.1
+ ;Generated for class src.DRG.BasicData.ICDInfo.  Do NOT edit. 03/28/2026 01:00:54AM
+ ;;41347054;src.DRG.BasicData.ICDInfo
+ ;
+zConfirmImportICD(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{"totalCount":0,"successCount":0,"failCount":0,"duplicateCount":0,"newCount":0,"failList":[]}}
+	set (totalCount,successCount,failCount,duplicateCount,newCount)=0
+	set failList=[]
+	try {
+		set params=jsonObj.params.%Get(0)
+		// 检查必需参数
+		if '$isobject(params) {
+			set resultObj.errorCode="02010001"
+			set resultObj.errorMessage="参数错误：缺少params参数"
+			quit
+		}
+		set fileData=params.fileData
+		set fileName=params.fileName
+		// 设置默认值或从params获取
+		set provinceID=params.provinceID
+		set cityID=params.cityID
+		if (provinceID="")||(cityID="")
+		{
+			set resultObj.errorCode="-1"
+			set resultObj.errorMessage="接口入参省、市代码不能为空！"
+			quit	
+		}
+		// 创建用户ID（如果没有session参数，使用默认值）
+		set createUserDr=""
+		if $isobject(jsonObj.session) 
+		{
+			set session=jsonObj.session.%Get(0)
+			set:session'="" createUserDr=session.userID
+		}
+		set:createUserDr="" createUserDr="158"  // 默认值
+		// Base64解码 - 尝试多种方法（与PreviewImportICD保持一致）
+		set csvContent = ""
+		// 方法1: 使用$zcvt函数
+		try {
+			set csvContent = $zcvt(fileData, "I", "BASE64")
+		} catch e1 {
+			// 不输出调试信息，避免Web响应冲突
+		}
+		// 如果方法1失败，尝试方法2: 使用%SYSTEM.Encryption.Base64Decode并尝试多种编码
+		if csvContent="" {
+			try {
+				set binaryData = ##class(%SYSTEM.Encryption).Base64Decode(fileData)
+				// 尝试不同的编码方式
+				// 1. 先尝试UTF-8
+				set csvContent = $zcvt(binaryData, "I", "UTF8")
+				// 2. 如果包含问号，尝试GB18030（中文标准编码）
+				if csvContent["?" {
+					try {
+						set csvContent = $zcvt(binaryData, "I", "GB18030")
+					} catch gbError {
+						// 如果GB18030失败，尝试其他编码或直接使用二进制数据
+						set csvContent = binaryData
+					}
+				}
+				// 3. 如果仍然有问题，直接使用二进制数据
+				if csvContent["?" {
+					set csvContent = binaryData
+				}
+			} catch e2 {
+				// 不输出调试信息，避免Web响应冲突
+			}
+		}
+		if csvContent="" {
+			set resultObj.errorCode="02010003"
+			set resultObj.errorMessage="文件解码失败，请提供有效的CSV文件"
+			quit
+		}
+		// 解析CSV并执行导入
+		set lineNum=0
+		set ptr=1
+		for 
+		{
+			set line=$piece(csvContent,$c(10),ptr)
+			quit:line=""
+			set ptr=ptr+1
+			set lineNum=lineNum+1
+			continue:lineNum=1  // 跳过表头
+			set line=$replace(line,$c(13),"")
+			continue:line=""
+			set totalCount=totalCount+1
+			set rowNum=lineNum-1
+			// 解析CSV列 - 使用安全的解析方法
+			set errorMsg=""
+			try 
+			{
+				set code=$piece(line,",",1)
+			} 
+			catch codeError 
+			{
+				set code=""
+				set errorMsg="字段解析错误: " _ codeError.Name
+			}
+			try 
+			{
+				set desc=$piece(line,",",2)
+			} 
+			catch descError 
+			{
+				set desc=""
+				set:'$data(errorMsg) errorMsg="字段解析错误: " _ descError.Name
+			}
+			try 
+			{
+				set version=$piece(line,",",3)
+			} 
+			catch versionError 
+			{
+				set version=""
+				set:'$data(errorMsg) errorMsg="字段解析错误: " _ versionError.Name
+			}
+			try 
+			{
+				set remark=$piece(line,",",4)
+			} 
+			catch remarkError 
+			{
+				set remark=""
+				set:'$data(errorMsg) errorMsg="字段解析错误: " _ remarkError.Name
+			}
+			// 跳过校验失败的行
+			if (errorMsg '="")
+			{
+				// 字段解析错误
+				set failCount=failCount+1
+				set failObj={}
+				set failObj.rowNum=rowNum
+				set failObj.code=code
+				set failObj.desc=desc
+				set failObj.version=version
+				set failObj.errorMsg=errorMsg
+				do failList.%Push(failObj)
+				continue
+			} 			
+			elseif (code="")||(desc="")||(version="")
+		    {
+				set failCount=failCount+1
+				set failObj={}
+				set failObj.rowNum=rowNum
+				set failObj.code=code
+				set failObj.desc=desc
+				set failObj.version=version
+				// 更详细的错误信息
+				set errorDetail="必填字段为空: "
+				if code="" set errorDetail=errorDetail_"code "
+				if desc="" set errorDetail=errorDetail_"desc "
+				if version="" set errorDetail=errorDetail_"version "
+				set failObj.errorMsg=errorDetail
+				do failList.%Push(failObj)
+				continue
+			}
+			// 检查是否已存在
+			set existingID=""
+			 ;---&sql(SELECT ID INTO :existingID FROM BS_DRGICDInfo 
+ 			 ;---			     WHERE Code=:code AND Province_Dr=:provinceID AND City_Dr=:cityID And Version=:version)
+ 			 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, cityID, code, existingID, provinceID, version
+			do %0Ao
+			// 构建数据对象
+			set dataObj={}
+			set dataObj.Code=code
+			set dataObj.Descripts=desc
+			set dataObj.Version=version
+			set dataObj.ProvinceDr=provinceID
+			set dataObj.CityDr=cityID
+			set dataObj.StartDate=$zd($h,3)
+			set dataObj.StopDate=""
+			set dataObj.CreateDate=$zd($h,3)
+			set dataObj.CreateTime=$zt($p($h,",",2),1)
+			set dataObj.CreateUserDr=createUserDr
+			set dataObj.Remark=remark
+			set insObj={},data=[]
+			set insObj.className="User.BSDRGICDInfo"
+			do data.%Push(dataObj)
+			set insObj.data=data
+			set operationType=""
+			if existingID'="" 
+			{
+				// 更新
+				set dataObj.ID=existingID
+				set rtn=##class(src.util.operatetable).Update(.insObj)
+				set operationType="更新"
+				set duplicateCount=duplicateCount+1
+			} 
+			else 
+			{
+				// 新增
+				set rtn=##class(src.util.operatetable).Insert(.insObj)
+				set operationType="新增"
+				set newCount=newCount+1
+			}
+			if rtn.errorCode'=0 
+			{
+				set failCount=failCount+1
+				set failObj={}
+				set failObj.rowNum=rowNum
+				set failObj.code=code
+				set failObj.errorMsg=rtn.errorMessage
+				do failList.%Push(failObj)
+			} 
+			else 
+			{
+				set successCount=successCount+1
+			}
+		}
+		set resultObj.result.totalCount=totalCount
+		set resultObj.result.successCount=successCount
+		set resultObj.result.failCount=failCount
+		set resultObj.result.duplicateCount=duplicateCount
+		set resultObj.result.newCount=newCount
+		set resultObj.result.failList=failList
+		if failCount>0 
+		{
+			set resultObj.errorCode="02010002"
+			set resultObj.errorMessage="导入完成，部分数据导入失败，请查看失败列表"
+		}
+	} catch(e) {
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="导入ICD编码信息出现问题:w ##class("_$ClassName()_").ConfirmImportICD("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+ q
+%0Ao n sqldata18d,sqldata19d,sqldata20d,sqldata30d,sqldata33d,sqldata34d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata12d,sqldata13d,sqldata5d,sqldata7d,sqldata9d,sqldata14d,sqldata15d,sqldata16d,sqldata3d,sqldata17d
+ s $zt="%0Aerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata18d=$zu(115,2)
+ s sqldata19d=0,sqldata20d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(code),sqldata6d=$s($g(provinceID)="":"",$isvalidnum(provinceID):+provinceID,1:provinceID),sqldata8d=$s($g(cityID)="":"",$isvalidnum(cityID):+cityID,1:cityID),sqldata10d=$g(version)
+ s SQLCODE=100
+ s sqldata15d=$zu(28,sqldata10d,7)
+ s sqldata13d=$zu(28,sqldata4d,5)
+ ; asl MOD# 2
+ s sqldata12d=sqldata13d
+ s sqldata5d=sqldata6d
+ s sqldata7d=sqldata8d
+ i sqldata12d="" g %0AmBdun
+ i sqldata5d="" g %0AmBdun
+ i sqldata7d="" g %0AmBdun
+ s existingID=""
+%0AmBk1 s existingID=$o(^User.BSDRGICDInfoI("DataIndex",sqldata12d,sqldata5d,sqldata7d,existingID))
+ i existingID="" g %0AmBdun
+ s sqldata30d="" i $d(^User.BSDRGICDInfoD(existingID),sqldata30d)
+ e  g %0AmBk1
+ S sqldata9d=$lg(sqldata30d,13)
+ s sqldata14d=$zu(28,sqldata9d,7)
+ g:'(sqldata14d=sqldata15d) %0AmBk1
+ g:'(sqldata14d'=" ") %0AmBk1
+ goto:sqldata18d'=1 %0AmBuncommitted
+ if sqldata18d=1 {
+ 	lock +^User.BSDRGICDInfoD($p(existingID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata20d=$name(^User.BSDRGICDInfoD($p(existingID,"||",1)))_"#""SI""",sqldata19d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_DRGICDInfo for RowID value: "_existingID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata16d=$zlist(sqldata12d,sqldata7d,sqldata5d,sqldata14d)
+ i existingID'="" s sqldata33d="" i $d(^User.BSDRGICDInfoD(existingID),sqldata33d)
+ e  g %0AmCdun
+ S $lg(,sqldata3d,,,sqldata5d,sqldata7d,,,,,,,sqldata9d)=sqldata33d
+ s sqldata12d=$zu(28,sqldata3d,5)
+ s sqldata14d=$zu(28,sqldata9d,7)
+ s sqldata17d=$zlist(sqldata12d,sqldata7d,sqldata5d,sqldata14d)
+ g:sqldata16d'=sqldata17d %0AmCdun
+%0AmBuncommitted ;
+ s SQLCODE=0 g %0Ac
+%0AmCdun if $g(sqldata18d)=1 { if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }}
+ g %0AmBk1
+%0AmBdun 
+%0AmAdun 
+%0Ac set %ROWCOUNT='SQLCODE
+ if $g(sqldata18d)=1 {
+ 	if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata34d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"yry75i78GuH7Wwg7n1b/9KWLxuA="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"yry75i78GuH7Wwg7n1b/9KWLxuA=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Aerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Ac
+zDeleteMappingInfo(postObj)
+ new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	try{
+		set params=jsonObj.params.%Get(0)
+		set session=jsonObj.session.%Get(0)
+		set userID=session.userID
+		if params.id="" 
+		{
+			set resultObj.errorCode="05100128"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("05100128")  ///请选择一条数据
+			quit
+		}
+		set delObj={},data=[]
+		set delObj.className="User.HBDRGICDVersionMapping"
+		set delObj.updateUserID=userID
+		set dataObj={}
+		set dataObj.ID=params.id
+		do data.%Push(dataObj)
+		set delObj.data=data
+		;b ;0
+		set rtn=##class(src.util.operatetable).Delete(.delObj) ;调用公共类方法记录修改日记
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+		set resultObj.errorCode=errorCode
+		set resultObj.errorMessage=errorMessage		
+	}catch(e){
+		set status=e.AsStatus()
+		set resultObj.errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set resultObj.errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorInfo="删除ICD映射关系数据出现问题:w ##class("_$ClassName()_").DeleteDRGICDVersionMapping("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+zDownloadImportTemplate(jsonObj)
+    new (jsonObj)
+    set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+    try {
+        // 生成CSV内容 - 先使用纯ASCII字符测试
+        set csvContent = "ICDCode,ICDDesc,Version,Remark"_$c(13,10)
+        set csvContent = csvContent_"A01.001,Typhoid,ICD-10,National"_$c(13,10)
+        set csvContent = csvContent_"A01.002,Paratyphoid,ICD-10,Standard"_$c(13,10)
+        // Base64编码 - 使用%SYSTEM.Encryption.Base64Encode
+        set base64Data = ##class(%SYSTEM.Encryption).Base64Encode(csvContent)
+        set resultObj.result.fileName = "ICD编码导入模板.csv"
+        set resultObj.result.fileData = base64Data
+        set resultObj.result.contentType = "text/csv"
+    } catch e {
+        set status = e.AsStatus()
+        set resultObj.errorCode = "04000007"
+        set resultObj.errorMessage = "下载模板失败: "_$system.Status.GetErrorText(status)
+    }
+    quit resultObj
+zGetICDInfo(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try{
+		if (jsonObj.%IsDefined("pagination")'=0) {
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		set params=jsonObj.params.%Get(0)		
+		set dictID=params.dictID
+		set version=params.version //ICD-9;ICD-10
+		set code=params.code
+		set descripts=params.descripts
+		set status=params.status
+		set provinceID=params.provinceID
+		set cityID=params.cityID
+		//查询ICD编码类型不能为空
+		if version=""
+		{
+			set resultObj.errorCode="01040015"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040015")   
+			quit			
+		}
+		//省级代码不能为空
+		if provinceID=""
+		{
+			set resultObj.errorCode="01000007"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000007")   
+			quit			
+		}
+		//市级代码不能为空
+		if cityID=""
+		{
+			set resultObj.errorCode="01000008"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000008")   
+			quit			
+		}				
+		set sql=" SELECT ID,Code,Descripts,StopDate,Province_Dr as ProvinceID,StartDate,Version, "				       
+		       _" Province_Dr->Descripts as ProvinceDesc,City_Dr as CityID,City_Dr->Descripts as CityDesc "		       
+               _" FROM BS_DRGICDInfo Where Province_Dr= '"_provinceID_"'"     
+               _" and City_Dr= '"_cityID_"' and Version= '"_version_"'"
+		if code'=""
+		{
+			set sql=sql_" and Code like '%"_code_"%'" 
+		}				
+		if descripts'=""
+		{
+			set sql=sql_" and Descripts like '%"_descripts_"%'" 
+		}	
+		set sqlObj=##class(%SQL.Statement).%New(1)
+		set sc=sqlObj.%Prepare(sql)
+		set result=sqlObj.%Execute()
+		while result.%Next(sc)	
+		{
+			set id=result.%Get("ID")		
+			set code=result.%Get("Code")
+			set descripts=result.%Get("Descripts")
+			set version=result.%Get("Version")
+			set startDate=result.%Get("startDate")
+			set stopDate=result.%Get("stopDate")			
+			set provinceID=result.%Get("provinceID")
+			set provinceDesc=result.%Get("provinceDesc")
+			set cityID=result.%Get("cityID")
+			set cityDesc=result.%Get("cityDesc")
+			set dataObj={}
+			set dataObj.id=id	
+			set dataObj.code=code
+			set dataObj.descripts=descripts
+			set dataObj.startDate=startDate
+			set dataObj.stopDate=stopDate			
+			set dataObj.provinceID=provinceID
+			set dataObj.provinceDesc=provinceDesc
+			set dataObj.cityID=cityID
+			set dataObj.cityDesc=cityDesc			
+			set dataObj.version=version
+			if startDate'=""{
+				set startDate=$zdh(startDate,3)
+			}
+			if stopDate'=""{
+				set stopDate=$zdh(stopDate,3)
+			}			
+			set iStatus=##class(src.DRG.Interface).IsRecordActive(startDate,stopDate)
+			if (iStatus)
+			{
+		    	set statusDesc="有效"
+		     	set statusFlag="Y"				
+			}
+			else
+			{
+		    	set statusDesc="无效"
+		     	set statusFlag="N"				
+			}
+			if status="Y"
+			{
+				continue:statusFlag="N"
+			}
+			elseif status="N"
+			{
+			    continue:statusFlag="Y"	
+			}			
+			set dataObj.statusDesc=statusDesc
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询ICD编码信息出现问题:w ##class("_$ClassName()_")GetMedInsuICDInfo("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+zGetMedInsuICDInfo(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try
+	{
+		if (jsonObj.%IsDefined("pagination")'=0) 
+		{
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		set params=jsonObj.params.%Get(0)		
+		set dictID=params.dictID
+		set versionNo=params.versionNo //ICD-9;ICD-10
+		set code=params.code
+		set desc=params.desc
+		set status=params.status
+		set provinceID=params.provinceID
+		set cityID=params.cityID
+		if (provinceID="")||(cityID="")
+		{
+			set provinceID="36"
+			set cityID="371"
+		}
+		//查询ICD编码类型不能为空
+		if versionNo=""
+		{
+			set resultObj.errorCode="01040015"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040015")   
+			quit			
+		}
+		//省级代码不能为空
+		if provinceID=""
+		{
+			set resultObj.errorCode="01000007"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000007")   
+			quit			
+		}
+		//市级代码不能为空
+		if cityID=""
+		{
+			set resultObj.errorCode="01000008"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000008")   
+			quit			
+		}				
+		set sql=" SELECT Top 200 b.ID,b.HBDictionaries_Dr as dictID,"
+		       _" b.Code,b.Descripts,b.identification,b.StopDate as stopDate, "	
+		       _" Province_Dr as provinceID,a.StartDate as startDate,"
+		       _" Province_Dr->Descripts as provinceDesc,"
+		       _" City_Dr as cityID,City_Dr->Descripts as cityDesc "	
+               _" FROM HB_DRGBasicData a, HB_DRGBasicDataSub b "
+               _" Where a.ID=b.HBDictionaries_Dr "
+               _" and a.Province_Dr= '"_provinceID_"'"
+               _" and a.City_Dr= '"_cityID_"'"
+               _" and a.InsuCode= '"_versionNo_"'"
+		if dictID='""
+		{
+			set sql=sql_" and b.HBDictionaries_Dr= "_dictID
+		}
+		if code'=""
+		{
+			set sql=sql_" and b.Code like '%"_code_"%'" 
+		}				
+		if desc'=""
+		{
+			set sql=sql_" and b.Descripts like '%"_desc_"%'" 
+		}	
+		set sqlObj=##class(%SQL.Statement).%New(1)
+		set sc=sqlObj.%Prepare(sql)
+		set result=sqlObj.%Execute()
+		while result.%Next(sc)	
+		{
+			set id=result.%Get("ID")
+			set dictID=result.%Get("dictID")
+			set code=result.%Get("Code")
+			set desc=result.%Get("Descripts")
+			set identification=result.%Get("identification")
+			set startDate=result.%Get("startDate")
+			set stopDate=result.%Get("stopDate")
+			set provinceID=result.%Get("provinceID")
+			set provinceDesc=result.%Get("provinceDesc")
+			set cityID=result.%Get("cityID")
+			set cityDesc=result.%Get("cityDesc")
+			set dataObj={}
+			set dataObj.id=id
+			set dataObj.dictID=dictID
+			set dataObj.code=code
+			set dataObj.desc=desc
+			set dataObj.startDate=startDate
+			set dataObj.stopDate=stopDate			
+			set dataObj.provinceID=provinceID
+			set dataObj.provinceDesc=provinceDesc
+			set dataObj.cityID=cityID
+			set dataObj.cityDesc=cityDesc			
+			set dataObj.identification=identification
+			if startDate'=""{
+				set startDate=$zdh(startDate,3)
+			}
+			if stopDate'=""{
+				set stopDate=$zdh(stopDate,3)
+			}			
+			set iStatus=##class(src.DRG.Interface).IsRecordActive(startDate,stopDate)
+			if (iStatus)
+			{
+		    	set statusDesc="有效"
+		     	set statusFlag="Y"				
+			}
+			else
+			{
+		    	set statusDesc="无效"
+		     	set statusFlag="N"				
+			}
+			if status="Y"
+			{
+				continue:statusFlag="N"
+			}
+			elseif status="N"
+			{
+			    continue:statusFlag="Y"	
+			}			
+			set dataObj.statusDesc=statusDesc
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询医保ICD编码信息出现问题:w ##class("_$ClassName()_")GetMedInsuICDInfo("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+zPreviewImportICD(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{"totalCount":0,"validCount":0,"invalidCount":0,"duplicateCount":0,"previewList":[]}}
+	set totalCount=0,validCount=0,invalidCount=0,duplicateCount=0
+	set previewList=[]
+	try 
+	{
+		set params=jsonObj.params.%Get(0)
+		set provinceID=params.provinceID
+		set cityID=params.cityID
+		set fileData=params.fileData
+		// 参数校验
+		if provinceID="" {
+			set resultObj.errorCode="01000007"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000007")
+			quit
+		}
+		if cityID="" {
+			set resultObj.errorCode="01000008"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000008")
+			quit
+		}
+		if fileData="" {
+			set resultObj.errorCode="02010001"
+			set resultObj.errorMessage="导入文件不能为空"
+			quit
+		}
+		// Base64解码 - 尝试多种方法
+		set csvContent = ""
+		// 方法1: 使用$zcvt函数
+		try {
+			set csvContent = $zcvt(fileData, "I", "BASE64")
+		} catch e1 {
+			// 不输出调试信息，避免Web响应冲突
+		}
+		// 如果方法1失败，尝试方法2: 使用%SYSTEM.Encryption.Base64Decode并尝试多种编码
+		if csvContent="" {
+			try {
+				set binaryData = ##class(%SYSTEM.Encryption).Base64Decode(fileData)
+				// 尝试不同的编码方式
+				// 1. 先尝试UTF-8
+				set csvContent = $zcvt(binaryData, "I", "UTF8")
+				// 2. 如果包含问号，尝试GB18030（中文标准编码）
+				if csvContent["?" {
+					set csvContent = $zcvt(binaryData, "I", "GB18030")
+				}
+				// 3. 如果仍然有问题，直接使用二进制数据
+				if csvContent["?" {
+					set csvContent = binaryData
+				}
+			} catch e2 {
+				// 不输出调试信息，避免Web响应冲突
+			}
+		}
+		// 如果仍然失败，尝试方法3: 使用%SYSTEM.Encryption.Base64Decode但不转换
+		if csvContent="" {
+			try {
+				set binaryData = ##class(%SYSTEM.Encryption).Base64Decode(fileData)
+				set csvContent = binaryData
+			} catch e3 {
+				// 不输出调试信息，避免Web响应冲突
+			}
+		}
+		if csvContent="" 
+		{
+			set resultObj.errorCode="02010003"
+			set resultObj.errorMessage="文件解码失败，请提供有效的CSV文件"
+			quit
+		}
+		// 检查解码后的内容
+		if csvContent="" 
+		{
+			set resultObj.errorCode="02010004"
+			set resultObj.errorMessage="文件内容为空或解码失败"
+			quit
+		}
+		// 解析CSV内容（增强版，支持中文字符和换行符处理）
+		set lineNum=0
+		set ptr=1
+		set csvContent=$replace(csvContent,$c(13,10),$c(10))  // 统一换行符
+		set csvContent=$replace(csvContent,$c(13),$c(10))    // 处理MAC格式换行符
+		for 
+		{
+			set line=$piece(csvContent,$c(10),ptr)
+			quit:line=""
+			set ptr=ptr+1
+			set lineNum=lineNum+1
+			continue:lineNum=1  // 跳过表头
+			continue:line=""
+			set totalCount=totalCount+1
+			set rowNum=lineNum-1  // 数据行号（不含表头）
+			// 解析CSV列 - 使用安全的解析方法
+			set errorMsg=""
+			try 
+			{
+				set code=$piece(line,",",1)
+			} 
+			catch codeError 
+			{
+				set code=""
+				set errorMsg="字段解析错误: " _ codeError.Name
+			}
+			try 
+			{
+				set desc=$piece(line,",",2)
+			} 
+			catch descError 
+			{
+				set desc=""
+				set:'$data(errorMsg) errorMsg="字段解析错误: " _ descError.Name
+			}
+			try 
+			{
+				set version=$piece(line,",",3)
+			} 
+			catch versionError 
+			{
+				set version=""
+				set:'$data(errorMsg) errorMsg="字段解析错误: " _ versionError.Name
+			}										
+			set previewObj={}
+			set previewObj.rowNum=rowNum
+			set previewObj.code=code
+			set previewObj.desc=desc
+			set previewObj.version=version
+			set previewObj.provinceID=provinceID
+			set previewObj.cityID=cityID
+			set previewObj.remark=""
+			set previewObj.errorMsg=errorMsg
+			// 数据校验
+			if (errorMsg '="")
+			{
+				// 字段解析错误
+				set invalidCount=invalidCount+1
+				set previewObj.errorMsg=errorMsg
+				set previewObj.status="invalid"
+				set previewObj.statusDesc="解析错误"
+			} 		
+			elseif code="" 
+			{
+				set previewObj.status="invalid"
+				set previewObj.statusDesc="错误"
+				set previewObj.errorMsg="ICD代码不能为空"
+				set invalidCount=invalidCount+1
+				do previewList.%Push(previewObj)
+				continue
+			}
+			if desc="" 
+			{
+				set previewObj.status="invalid"
+				set previewObj.statusDesc="错误"
+				set previewObj.errorMsg="ICD描述不能为空"
+				set invalidCount=invalidCount+1
+				do previewList.%Push(previewObj)
+				continue
+			}
+			if version="" 
+			{
+				set previewObj.status="invalid"
+				set previewObj.statusDesc="错误"
+				set previewObj.errorMsg="版本不能为空"
+				set invalidCount=invalidCount+1
+				do previewList.%Push(previewObj)
+				continue
+			}
+			// 检查是否已存在
+			set existingID=""
+			 ;---&sql(SELECT ID INTO :existingID FROM SQLUser.BS_DRGICDInfo 
+ 			 ;---			     WHERE Code=:code AND Province_Dr=:provinceID AND City_Dr=:cityID and Version=:version)
+ 			 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, cityID, code, existingID, provinceID, version
+			do %0Co
+			if existingID'="" 
+			{
+				set previewObj.status="duplicate"
+				set previewObj.statusDesc="重复"
+				set previewObj.errorMsg="该ICD代码已存在，导入将执行更新操作"
+				set duplicateCount=duplicateCount+1
+			} 
+			else 
+			{
+				set previewObj.status="valid"
+				set previewObj.statusDesc="正常"
+				set validCount=validCount+1
+			}
+			do previewList.%Push(previewObj)
+		    set resultObj.result.totalCount=totalCount
+		    set resultObj.result.validCount=validCount
+		    set resultObj.result.invalidCount=invalidCount
+		    set resultObj.result.duplicateCount=duplicateCount
+	    	set resultObj.result.previewList=previewList
+		}
+	} 
+	catch(e) 
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage="预览失败："_errorMessage
+	}
+	quit resultObj
+ q
+%0Co n sqldata18d,sqldata19d,sqldata20d,sqldata30d,sqldata33d,sqldata34d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata12d,sqldata13d,sqldata5d,sqldata7d,sqldata9d,sqldata14d,sqldata15d,sqldata16d,sqldata3d,sqldata17d
+ s $zt="%0Cerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata18d=$zu(115,2)
+ s sqldata19d=0,sqldata20d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(code),sqldata6d=$s($g(provinceID)="":"",$isvalidnum(provinceID):+provinceID,1:provinceID),sqldata8d=$s($g(cityID)="":"",$isvalidnum(cityID):+cityID,1:cityID),sqldata10d=$g(version)
+ s SQLCODE=100
+ s sqldata15d=$zu(28,sqldata10d,7)
+ s sqldata13d=$zu(28,sqldata4d,5)
+ ; asl MOD# 2
+ s sqldata12d=sqldata13d
+ s sqldata5d=sqldata6d
+ s sqldata7d=sqldata8d
+ i sqldata12d="" g %0CmBdun
+ i sqldata5d="" g %0CmBdun
+ i sqldata7d="" g %0CmBdun
+ s existingID=""
+%0CmBk1 s existingID=$o(^User.BSDRGICDInfoI("DataIndex",sqldata12d,sqldata5d,sqldata7d,existingID))
+ i existingID="" g %0CmBdun
+ s sqldata30d="" i $d(^User.BSDRGICDInfoD(existingID),sqldata30d)
+ e  g %0CmBk1
+ S sqldata9d=$lg(sqldata30d,13)
+ s sqldata14d=$zu(28,sqldata9d,7)
+ g:'(sqldata14d=sqldata15d) %0CmBk1
+ g:'(sqldata14d'=" ") %0CmBk1
+ goto:sqldata18d'=1 %0CmBuncommitted
+ if sqldata18d=1 {
+ 	lock +^User.BSDRGICDInfoD($p(existingID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata20d=$name(^User.BSDRGICDInfoD($p(existingID,"||",1)))_"#""SI""",sqldata19d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_DRGICDInfo for RowID value: "_existingID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata16d=$zlist(sqldata12d,sqldata7d,sqldata5d,sqldata14d)
+ i existingID'="" s sqldata33d="" i $d(^User.BSDRGICDInfoD(existingID),sqldata33d)
+ e  g %0CmCdun
+ S $lg(,sqldata3d,,,sqldata5d,sqldata7d,,,,,,,sqldata9d)=sqldata33d
+ s sqldata12d=$zu(28,sqldata3d,5)
+ s sqldata14d=$zu(28,sqldata9d,7)
+ s sqldata17d=$zlist(sqldata12d,sqldata7d,sqldata5d,sqldata14d)
+ g:sqldata16d'=sqldata17d %0CmCdun
+%0CmBuncommitted ;
+ s SQLCODE=0 g %0Cc
+%0CmCdun if $g(sqldata18d)=1 { if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }}
+ g %0CmBk1
+%0CmBdun 
+%0CmAdun 
+%0Cc set %ROWCOUNT='SQLCODE
+ if $g(sqldata18d)=1 {
+ 	if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata34d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"fH4LuFKXXZfFy3ZJnAijVegxeVo="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"fH4LuFKXXZfFy3ZJnAijVegxeVo=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Cerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Cc
+zQueryMappingInfo(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try
+	{
+		if (jsonObj.%IsDefined("pagination")'=0) 
+		{
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		set (id,code,descripts,icd,icdDesc,provinceID,cityID,versionNo)=""
+		set params=jsonObj.params.%Get(0)
+		set id=params.id
+		set code=params.code				
+		set descripts=params.descripts
+		set icd=params.icd				
+		set icdDesc=params.icdDesc	
+		set provinceID=params.provinceID		
+		set cityID=params.cityID
+		set versionNo=params.versionNo
+		//如果查询传参都为空则给出默认返回国家医保中心的映射关系数据
+		set str=id_code_descripts_icd_icdDesc_provinceID_cityID_versionNo
+		if (str="")||($ZSTRIP(str, "*W")="")
+		{
+		    set provinceID="000000",cityID="000000"	
+		}
+		set sql =" SELECT ID,Code,Descripts,Province_Dr as ProvinceID,"
+		        _" Province_Dr->Descripts as ProvinceDesc,City_Dr as CityID,"
+		        _" City_Dr->Descripts as CityDesc,ICD,ICDDesc,VersionNo, "
+		        _" UpdateDate,UpdateTime,UpdateUser_Dr as UpdateUserID, "
+		        _" UpdateUser_Dr->Descripts as UpdateUserDesc,Identification,Remark"
+			    _" FROM HB_DRGICDVersionMapping where 1=1"
+		if id'=""
+		{
+			set sql=sql_" and ID = "_id 
+		} 
+		if code'=""
+		{
+			set sql=sql_" and Code = '"_code_"'" 
+		}											 			    
+		if descripts'=""
+		{
+			set sql=sql_" and Descripts like '%"_descripts_"%'" 
+		} 
+		if icd'=""
+		{
+			set sql=sql_" and ICD like '%"_icd_"%'" 
+		} 
+		if icdDesc'=""
+		{
+			set sql=sql_" and ICDDesc like '%"_icdDesc_"%'" 
+		} 		
+		if provinceID'=""
+		{
+			set sql=sql_" and Province_Dr = '"_provinceID_"'" 
+		} 		
+		if cityID'=""
+		{
+			set sql=sql_" and City_Dr = '"_cityID_"'" 
+		} 	
+		if versionNo'=""
+		{
+			set sql=sql_" and VersionNo = '"_versionNo_"'" 
+		} 									
+		set sqlObj=##class(%SQL.Statement).%New(1)
+		set sc=sqlObj.%Prepare(sql)
+		set result=sqlObj.%Execute()
+		while result.%Next(sc)	
+		{	
+			set dataObj={}
+			set dataObj.id=result.%Get("ID")
+			set dataObj.code=result.%Get("Code")
+			set dataObj.descripts=result.%Get("Descripts")	
+		    set dataObj.icd=result.%Get("ICD")		
+		    set dataObj.icdDesc=result.%Get("ICDDesc")					
+            set dataObj.provinceID=result.%Get("ProvinceID")
+		    set dataObj.provinceDesc=result.%Get("ProvinceDesc")
+		    set dataObj.cityID=result.%Get("CityID")
+		    set dataObj.cityDesc=result.%Get("CityDesc")
+		    set dataObj.versionNo=result.%Get("VersionNo")		
+		    set dataObj.updateDate=result.%Get("UpdateDate")
+		    set dataObj.updateTime=result.%Get("UpdateTime")														
+			set dataObj.updateUserDr=result.%Get("UpdateUserID")
+			set dataObj.updateUserDesc=result.%Get("UpdateUserDesc")
+			set dataObj.identification=result.%Get("Identification")
+			set dataObj.remark=result.%Get("Remark")	
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count		
+	}
+	catch(e)
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询ICD编码映射关系数据出现问题:w ##class("_$ClassName()_").BS_DRGICDVersionMapping("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+zUpdateMappingInfo(postObj)
+	set paramsObj={}
+	set paramsObj=postObj.params.%Get(0)
+	//set session=postObj.session.%Get(0)
+	set booleanSuccess = 0
+	set resultObj={}
+	set resultObj.errorCode=0
+	set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage(resultObj.errorCode)
+    set PreMsg = ""        
+	set errorMsgList=""
+		set (UpdateUserDr,ID,ProvinceDr,CityDr,VersionNO,Code,Descripts,ICD,ICDDesc,errorMessage)=""
+		try
+		{					
+			set UpdateUserDr=paramsObj.updateUserID
+			set VersionNo=paramsObj.versionNo			
+			set Code=paramsObj.code
+			set Descripts=paramsObj.descripts				
+			set ProvinceDr=paramsObj.provinceID
+			set CityDr=paramsObj.cityID  									
+			set ICD=paramsObj.icd
+   		    set ICDDesc=paramsObj.icdDesc	
+			set ID=paramsObj.id					
+			if ID=0 set ID=""				
+	    	if ProvinceDr=""
+	    	{
+				set errorMessage = PreMsg_"省代码不能为空;"
+				set errorMsgList = errorMsgList_errorMessage
+				set booleanSuccess = booleanSuccess + 1			
+			}
+	    	if CityDr=""
+	    	{
+				set errorMessage= PreMsg_"市代码不能为空;"
+				set errorMsgList = errorMsgList_errorMessage
+				set booleanSuccess = booleanSuccess + 1				
+			}				
+	    	if VersionNo=""
+	    	{
+				set errorMessage= PreMsg_"ICD版本不能为空;"
+				set errorMsgList = errorMsgList_errorMessage
+				set booleanSuccess = booleanSuccess + 1				
+			}				
+			if (Code="")||(Descripts="")
+			{
+				set errorMessage= PreMsg_"代码["_Code_"]或描述["_Descripts_"]不能为空;"
+				set errorMsgList = errorMsgList_errorMessage
+				set booleanSuccess = booleanSuccess + 1					
+			}			
+			if (ICD="")||(ICDDesc="")
+			{
+				set errorMessage= PreMsg_"ICD["_ICD_"]或ICD描述["_ICDDesc_"]不能为空;"
+				set errorMsgList = errorMsgList_errorMessage
+				set booleanSuccess = booleanSuccess + 1					
+			}		
+			set dataObj={}			
+			set dataObj.Code=Code
+			set dataObj.Descripts=Descripts				
+			set dataObj.ICD=ICD
+			set dataObj.ICDDesc=ICDDesc									
+			set dataObj.CityDr=CityDr
+			set dataObj.ProvinceDr=ProvinceDr			
+			set dataObj.VersionNo=VersionNo	
+			set dataObj.UpdateUserDr =UpdateUserDr 		
+		    set dataObj.UpdateDate=$zd($h,3)
+	    	set dataObj.UpdateTime=$zt($p($h,",",2),1)																																						     		   
+			set insObj={},data=[]
+			set insObj.className="User.HBDRGICDVersionMapping"					
+			do data.%Push(dataObj)
+			set insObj.data= data			
+			if ID=""
+			{
+				set rtn=##class(src.util.operatetable).Insert(.insObj) 
+				set errorCode=rtn.errorCode
+				set errorMessage= PreMsg_"插入结果为"_rtn.errorMessage_";" 
+				set errorMsgList = errorMsgList_errorMessage 
+				if errorCode '= 0
+				{
+					set booleanSuccess = booleanSuccess + 1
+					set errorMsgList = errorMsgList_errorMessage  
+				}
+			}
+			else
+			{
+				set rtn=##class(src.util.operatetable).Update(.insObj) 
+				set errorCode=errorCode
+				set errorMessage=PreMsg_"更新结果为"_rtn.errorMessage_";" 
+				set errorMsgList = errorMsgList_errorMessage 
+				if errorCode '= 0
+				{
+					set booleanSuccess = booleanSuccess + 1
+					set errorMsgList = errorMsgList_errorMessage  
+				}
+		    }		    
+		}
+		catch(e)
+		{
+			set status=e.AsStatus()
+	    	set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    	set errorMessage=##class(%SYSTEM.Status).GetErrorText(status,"cn")					
+		}
+	if booleanSuccess > 0
+	{
+		set resultObj.errorCode = "04000007"	
+		set resultObj.errorMessage = errorMsgList		
+	}
+	else
+	{
+		set resultObj.errorCode = "0"	
+		set resultObj.errorMessage = errorMsgList
+	}
+	quit resultObj
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("src.DRG.BasicData.ICDInfo",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"src.DRG.BasicData.ICDInfo")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"src.DRG.BasicData.ICDInfo")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="src.DRG.BasicData.ICDInfo"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="ICDInfo"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"ICDInfo"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"ICDInfo"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If encoded Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ If indentFlag,encoded { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("src.DRG.BasicData.ICDInfo",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"src.DRG.BasicData.ICDInfo")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLNew(document,node,containerOref="")
+	Quit (##class(src.DRG.BasicData.ICDInfo).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("src.DRG.BasicData.ICDInfo",top,format,namespacePrefix,input,refOnly,.schema)

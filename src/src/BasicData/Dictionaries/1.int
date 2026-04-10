@@ -1,0 +1,620 @@
+ROUTINE src.BasicData.Dictionaries.1 [Type=INT,Generated]
+ ;src.BasicData.Dictionaries.1
+ ;Generated for class src.BasicData.Dictionaries.  Do NOT edit. 01/05/2026 08:50:26AM
+ ;;6C504161;src.BasicData.Dictionaries
+ ;
+zDeleteDictionaries(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	try{
+		set params=jsonObj.params.%Get(0)
+		set session=jsonObj.session.%Get(0)
+		set userID=session.userID
+		if params.dictID="" 
+		{
+			set resultObj.errorCode="05100128"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("05100128")  ///请选择一条数据
+			quit
+		}
+		set oleDictID=""
+		 ;---&sql(select count(ID) into:oleDictID from HB_DictionariesDateDetail where HBDictionaries_Dr=:params.dictID)
+ 		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, oleDictID, params
+		do %0Ao
+		if SQLCODE=100{
+			set oleDictID=""
+		}
+		if oleDictID=""{
+			set resultObj.errorCode="03000005"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("03000005")  ///子表存在数据不能删除父表记录
+			quit
+		}
+		set delObj={},data=[]
+		set delObj.className="User.HBDictionaries"
+		set delObj.updateUserID=userID
+		set dataObj={}
+		set dataObj.ID=params.dictID
+		do data.%Push(dataObj)
+		set delObj.data=data
+		;b ;0
+		set rtn=##class(src.util.operatetable).Delete(.delObj) ;调用公共类方法记录修改日记
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+		set resultObj.errorCode=errorCode
+		set resultObj.errorMessage=errorMessage		
+	}catch(e){
+		set status=e.AsStatus()
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorInfo="删除平台字典出现问题:w ##class("_$ClassName()_").DeleteDictionaries("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID
+	}
+	quit resultObj
+ q
+%0Ao n sqldata7d,sqldata13d,sqldata5d,sqldata4d,sqldata1d
+ s $zt="%0Aerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata7d=$zu(115,2)
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata5d=params.dictID,sqldata5d=$s(sqldata5d="":"",$isvalidnum(sqldata5d):+sqldata5d,1:sqldata5d)
+ s SQLCODE=100
+ s oleDictID=0
+ d %0AmBMod
+ ; asl MOD# 4
+ s SQLCODE=0 g %0Ac
+%0AmDdun 
+%0AmAdun 
+%0Ac set %ROWCOUNT='SQLCODE
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata13d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"/ne596CCk04OnuxaYlm5Pv/amxw="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"/ne596CCk04OnuxaYlm5Pv/amxw=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Aerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Ac
+%0AmBMod ; asl MOD# 2
+ s sqldata4d=sqldata5d
+ i sqldata4d="" g %0AmBdun
+ s sqldata1d=""
+%0AmBk1 s sqldata1d=$o(^HBDictionarF5E8I("Dict",sqldata4d,sqldata1d))
+ i sqldata1d="" g %0AmBdun
+ ; asl MOD# 3
+%0AmCdun d $i(oleDictID,sqldata1d'="")
+ g %0AmBk1
+%0AmBdun q
+zDeleteDictionariesDetailed(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	try{
+		set params=jsonObj.params.%Get(0)
+		set session=jsonObj.session.%Get(0)
+		set userID=session.userID
+		if params.id="" 
+		{
+			set resultObj.errorCode="05100128"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("05100128")  ///请选择一条数据
+			quit
+		}
+		set delObj={},data=[]
+		set delObj.className="User.HBDictionariesDateDetailed"
+		set delObj.updateUserID=userID
+		set dataObj={}
+		set dataObj.ID=params.id
+		do data.%Push(dataObj)
+		set delObj.data=data
+		;b ;0
+		set rtn=##class(src.util.operatetable).Delete(.delObj) ;调用公共类方法记录修改日记
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+		set resultObj.errorCode=errorCode
+		set resultObj.errorMessage=errorMessage		
+	}catch(e){
+		set status=e.AsStatus()
+		set resultObj.errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set resultObj.errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorInfo="删除平台字典明细出现问题:w ##class("_$ClassName()_").DeleteDictionariesDetailed("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID
+	}
+	quit resultObj
+zGetDictionariesDetailedList(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try{
+		if (jsonObj.%IsDefined("pagination")'=0) {
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		set params=jsonObj.params.%Get(0)
+		set dictID=params.dictID
+		set desc=params.desc
+		set status=params.status
+		set tStatement = ##class(%SQL.Statement).%New(1)
+		set sql="SELECT ID,HBDictionaries_Dr as dictID,Code,Descripts,StartDate,StopDate FROM HB_DictionariesDateDetail where HBDictionaries_Dr="_dictID
+		if desc'=""{
+			set sql=sql_" and Descripts like '%"_desc_"%'" 
+		}	
+		do tStatement.%Prepare(sql)
+		set result=tStatement.%Execute()		
+		while result.%Next(.sc){
+			set id=result.%Get("ID")
+			set dictID=result.%Get("dictID")
+			set code=result.%Get("Code")
+			set desc=result.%Get("Descripts")
+			set startDate=result.%Get("StartDate")
+			set stopDate=result.%Get("StopDate")
+			set dataObj={}
+			set dataObj.id=id
+			set dataObj.dictID=dictID
+			set dataObj.code=code
+			set dataObj.desc=desc
+			set dataObj.startDate=startDate
+			set dataObj.stopDate=stopDate
+			if startDate'=""{
+				set startDate=$zdh(startDate,3)
+			}
+			if stopDate'=""{
+				set stopDate=$zdh(stopDate,3)
+			}
+			set statusDesc="有效"
+			set statusFlag=""
+			if ((startDate'="")&&(startDate>$h)){
+				set statusDesc="失效"
+				set statusFlag="Y"
+			}
+			if ((stopDate'="")&&(stopDate<$h)){
+				set statusDesc="失效"
+				set statusFlag="Y"
+			}
+			if status="Y"{
+				continue:statusFlag="Y"
+			}
+			set dataObj.statusDesc=statusDesc
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.Data=dataArr
+		set resultObj.result.TotalCount=count		
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询平台字典明细出现问题:w ##class("_$ClassName()_").GetDictionariesDetailedList("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID
+	}
+	quit resultObj
+zGetDictionariesList(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try{
+		if (jsonObj.%IsDefined("pagination")'=0) {
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		set params=jsonObj.params.%Get(0)
+		set insuDesc=params.insuDesc
+		set status=params.status
+		set tStatement = ##class(%SQL.Statement).%New(1)
+		set sql =" SELECT ID,InsuCode,InsuDesc,Province_Dr as provinceID,"
+		        _" Province_Dr->Descripts as provinceDesc,City_Dr as cityID,"
+		        _" City_Dr->Descripts as cityDesc,Area_Dr as areaID,"
+			    _" Area_Dr->Descripts as areaDesc,StartDate,StopDate,"
+			    _" identification,Remark "
+			    _" FROM HB_Dictionaries where 1=1"
+		if insuDesc'=""
+		{
+			set sql=sql_" and InsuDesc like '%"_insuDesc_"%'" 
+		}	
+		b ;; sql
+		do tStatement.%Prepare(sql)
+		set result=tStatement.%Execute()		
+		while result.%Next(.sc){
+			set startDate=result.%Get("startDate")
+			set stopDate=result.%Get("StopDate")
+			set dataObj={}
+			set dataObj.dictID=result.%Get("ID")
+			set dataObj.insuCode=result.%Get("InsuCode")
+			set dataObj.insuDesc=result.%Get("InsuDesc")
+			set dataObj.provinceID=result.%Get("provinceID")
+			set dataObj.provinceDesc=result.%Get("provinceDesc")
+			set dataObj.cityID=result.%Get("cityID")
+			set dataObj.cityDesc=result.%Get("cityDesc")
+			set dataObj.areaID=result.%Get("areaID")
+			set dataObj.areaDesc=result.%Get("areaDesc")
+			set dataObj.identification=result.%Get("identification")
+		    set dataObj.remark=result.%Get("remark")
+			set dataObj.startDate=startDate
+			set dataObj.stopDate=stopDate
+			//b ;; startDate
+			if startDate'=""{
+				set startDate=$zdh(startDate,3)
+			}
+			if stopDate'=""{
+				set stopDate=$zdh(stopDate,3)
+			}
+			set statusDesc="有效"
+			set statusFlag=""
+			if ((startDate'="")&&(startDate>$h)){
+				set statusDesc="失效"
+				set statusFlag="Y"
+			}
+			if ((stopDate'="")&&(stopDate<$h)){
+				set statusDesc="失效"
+				set statusFlag="Y"
+			}
+			if status="Y"{
+				continue:statusFlag="Y"
+			}
+			set dataObj.statusDesc=statusDesc
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.Data=dataArr
+		set resultObj.result.TotalCount=count		
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询平台字典明细出现问题:w ##class("_$ClassName()_").GetDictionariesDetailedList("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID
+	}
+	quit resultObj
+zSaveDictionaries(postObj)
+	new (postObj)
+	set resultObj={}
+	set resultObj.errorCode="0"
+	set resultObj.errorMessage="保存成功"
+	set resultObj.result={}
+	try{
+		set params=postObj.params.%Get(0)
+		set session=postObj.session.%Get(0)
+		set hospID=session.hospID
+		set userID=session.userID
+		set dictID=params.dictID
+		set insuCode=params.insuCode
+		set insuDesc=params.insuDesc
+		set provinceID=params.provinceID
+		set cityID=params.cityID
+		set areaID=params.areaID
+		set Identification=params.identification
+		set remark=params.remark
+		set startDate=params.startDate
+		set stopDate=params.stopDate
+		if (insuCode=""){
+			set resultObj.errorCode="01000006"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000006")   
+			quit
+		}
+		if (insuDesc=""){
+			set resultObj.errorCode="01000005"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000005")
+			quit
+		}
+		if (provinceID=""){
+			set resultObj.errorCode="01000007"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000007")
+			quit
+		}
+		if (cityID=""){
+			set resultObj.errorCode="01000008"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000008")
+			quit
+		}
+		set data=[]
+		set dataObj={}
+		set dataObj.ID=dictID
+		set dataObj.InsuCode=insuCode
+		set dataObj.InsuDesc=insuDesc
+		set dataObj.ProvinceDr=provinceID
+		set dataObj.CityDr=cityID
+		set dataObj.AreaDr=areaID
+		set dataObj.StartDate=startDate
+		set dataObj.StopDate=stopDate
+		set dataObj.CreateUserDr=userID
+		set dataObj.CreateDate=$zd($h,3)
+		set dataObj.CreateTime=$zt($p($h,",",2),1)
+		set dataObj.Identification=identification
+		set dataObj.Remark=remark
+		set insObj={}
+		set insObj.className="User.HBDictionaries"
+		set insObj.updateUserID=userID	
+		set rtn=""
+		do data.%Push(dataObj)
+		set insObj.data=data
+		if dictID=""{
+			set rtn=##class(src.util.operatetable).Insert(.insObj)
+		}else{
+			set rtn=##class(src.util.operatetable).Update(.insObj)
+		}
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+	    if errorCode'=0{
+		    set resultObj.errorCode=errorCode
+	    	set resultObj.errorMessage=errorMessage
+	   	}
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="保存平台字典出现问题:w ##class("_$ClassName()_").SaveDictionaries("_postObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID
+	}
+ 	quit resultObj
+zSaveDictionariesDetailed(postObj)
+	new (postObj)
+	set resultObj={}
+	set resultObj.errorCode="0"
+	set resultObj.errorMessage="保存成功"
+	set resultObj.result={}
+	try{
+		set params=postObj.params.%Get(0)
+		set session=postObj.session.%Get(0)
+		set hospID=session.hospID
+		set userID=session.userID
+		set id=params.id
+		set dictID=params.dictID  
+		set code=params.code
+		set desc=params.desc
+		set startDate=params.startDate
+		set stopDate=params.stopDate
+		if startDate=""{
+			set startDate=$zd($h,3)
+		}
+		if (dictID=""){
+			set resultObj.errorCode="01000010"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000010")   
+			quit
+		}
+		if (code=""){
+			set resultObj.errorCode="01000011"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000011")
+			quit
+		}
+		if (desc=""){
+			set resultObj.errorCode="01000012"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000012")
+			quit
+		}
+		set data=[]
+		set dataObj={}
+		set dataObj.ID=id
+		set dataObj.HBDictionariesDr=dictID
+		set dataObj.Code=code
+		set dataObj.Descripts=desc
+		set dataObj.StartDate=startDate
+		set dataObj.StopDate=stopDate
+		set dataObj.CreateUserDr=userID
+		set dataObj.CreateDate=$zd($h,3)
+		set dataObj.CreateTime=$zt($p($h,",",2),1)
+		set insObj={}
+		set insObj.className="User.HBDictionariesDateDetailed"
+		set insObj.updateUserID=userID	
+		set rtn=""
+		do data.%Push(dataObj)
+		set insObj.data=data
+		b ;;  insObj
+		if id=""{
+			set rtn=##class(src.util.operatetable).Insert(.insObj)
+		}else{
+			set rtn=##class(src.util.operatetable).Update(.insObj)
+		}
+		b ;; rtn
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+	    if errorCode'=0{
+		    set resultObj.errorCode=errorCode
+	    	set resultObj.errorMessage=errorMessage
+	   	}
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="保存平台字典明细出现问题:w ##class("_$ClassName()_").SaveDictionariesDetailed("_postObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID
+	}
+ 	quit resultObj
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("src.BasicData.Dictionaries",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"src.BasicData.Dictionaries")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"src.BasicData.Dictionaries")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="src.BasicData.Dictionaries"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="Dictionaries"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"Dictionaries"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"Dictionaries"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If encoded Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ If indentFlag,encoded { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("src.BasicData.Dictionaries",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"src.BasicData.Dictionaries")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLNew(document,node,containerOref="")
+	Quit (##class(src.BasicData.Dictionaries).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("src.BasicData.Dictionaries",top,format,namespacePrefix,input,refOnly,.schema)

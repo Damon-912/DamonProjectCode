@@ -26,6 +26,7 @@ import {
   IcdImportPreviewItem,
   IcdImportResult
 } from '@/api/basicData';
+import CustomPagination from '../../components/CustomPagination';
 
 const { Option } = Select;
 const { Text, Title } = Typography;
@@ -577,21 +578,16 @@ const ICDQuery: React.FC = () => {
           loading={loading}
           size="small"
           scroll={{ x: 1100 }}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (t) => `共 ${t} 条`,
-            onChange: (page, size) => loadData(page, size),
-            locale: {
-              items_per_page: '/页',
-              jump_to: '跳至',
-              page: '页',
-            }
-          }}
+          pagination={false}
         />
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <CustomPagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={total}
+            onChange={(page, size) => loadData(page, size)}
+          />
+        </div>
       </Card>
 
       {/* 导入弹窗 */}

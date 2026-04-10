@@ -40,6 +40,7 @@ import {
   type AreaItem,
   type PolicyTypeItem
 } from '../../api/basicData';
+import CustomPagination from '../../components/CustomPagination';
 
 
 
@@ -535,23 +536,19 @@ const Hospitals: React.FC = () => {
           loading={loading}
           scroll={{ x: 1400 }}
           size="small"
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            showSizeChanger: true,
-            showTotal: (t) => `共 ${t} 条`,
-            onChange: (page, size) => {
+          pagination={false}
+        />
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <CustomPagination
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onChange={(page, size) => {
               setPagination(prev => ({ ...prev, current: page, pageSize: size }));
               fetchData(page, size);
-            },
-            locale: {
-              items_per_page: '/页',
-              jump_to: '跳至',
-              page: '页',
-            }
-          }}
-        />
+            }}
+          />
+        </div>
       </Card>
 
       {/* 新增/编辑弹窗 */}
@@ -560,6 +557,8 @@ const Hospitals: React.FC = () => {
         open={modalVisible}
         onOk={handleSave}
         onCancel={() => setModalVisible(false)}
+        okText="确定"
+        cancelText="取消"
         width={800}
       >
         <Form

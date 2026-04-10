@@ -28,6 +28,7 @@ import {
   CheckOutlined,
   CloseOutlined
 } from '@ant-design/icons';
+import CustomPagination from '../../components/CustomPagination';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
@@ -482,17 +483,16 @@ const Center: React.FC = () => {
           rowKey="id"
           loading={loading}
           scroll={{ x: 1200, y: 'calc(100vh - 450px)' }}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `共 ${total} 条`,
-            locale: {
-              items_per_page: '/页',
-              jump_to: '跳至',
-              page: '页',
-            }
-          }}
+          pagination={false}
         />
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <CustomPagination
+            current={1}
+            pageSize={10}
+            total={getFilteredData().length}
+            onChange={() => {}}
+          />
+        </div>
       </Card>
 
       {/* 处理弹窗 */}
@@ -501,6 +501,8 @@ const Center: React.FC = () => {
         open={processModalVisible}
         onOk={submitProcess}
         onCancel={() => setProcessModalVisible(false)}
+        okText="确定"
+        cancelText="取消"
         width={500}
       >
         <Form form={form} layout="vertical">

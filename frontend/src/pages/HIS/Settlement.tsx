@@ -26,6 +26,7 @@ import {
 } from '@ant-design/icons';
 import type { RangePickerProps } from 'antd/es/date-picker';
 import dayjs, { Dayjs } from 'dayjs';
+import CustomPagination from '../../components/CustomPagination';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -509,23 +510,18 @@ const Settlement: React.FC = () => {
           loading={loading}
           rowSelection={rowSelection}
           scroll={{ x: 2000 }}
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条记录`,
-            onChange: (page, pageSize) => {
-              setPagination({ current: page, pageSize: pageSize || 10, total: pagination.total });
-            },
-            locale: {
-              items_per_page: '/页',
-              jump_to: '跳至',
-              page: '页',
-            }
-          }}
+          pagination={false}
         />
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <CustomPagination
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onChange={(page, pageSize) => {
+              setPagination({ current: page, pageSize: pageSize || 10, total: pagination.total });
+            }}
+          />
+        </div>
       </Card>
 
       <Modal

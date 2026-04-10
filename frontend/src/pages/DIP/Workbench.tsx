@@ -16,6 +16,7 @@ import {
   dipGroup, queryDIPGroupRecords, batchDIPGroup,
   type DIPGroupParams, type DIPGroupResult, type DIPGroupQueryParams
 } from '../../api/dip';
+import CustomPagination from '../../components/CustomPagination';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -498,24 +499,20 @@ const Workbench: React.FC = () => {
                 selectedRowKeys: selectedRecords,
                 onChange: (keys) => setSelectedRecords(keys as string[]),
               }}
-              pagination={{
-                current: currentPage,
-                pageSize,
-                total: recordsTotal,
-                showSizeChanger: true,
-                showTotal: (t) => `共 ${t} 条`,
-                onChange: (page, size) => {
+              pagination={false}
+            />
+            <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+              <CustomPagination
+                current={currentPage}
+                pageSize={pageSize}
+                total={recordsTotal}
+                onChange={(page, size) => {
                   setCurrentPage(page);
                   setPageSize(size);
                   fetchRecords(page, size);
-                },
-                locale: {
-                  items_per_page: '/页',
-                  jump_to: '跳至',
-                  page: '页',
-                }
-              }}
-            />
+                }}
+              />
+            </div>
           </Card>
         </TabPane>
       </Tabs>

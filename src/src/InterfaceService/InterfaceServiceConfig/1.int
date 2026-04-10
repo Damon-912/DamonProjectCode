@@ -1,0 +1,570 @@
+ROUTINE src.InterfaceService.InterfaceServiceConfig.1 [Type=INT,Generated]
+ ;src.InterfaceService.InterfaceServiceConfig.1
+ ;Generated for class src.InterfaceService.InterfaceServiceConfig.  Do NOT edit. 03/29/2026 09:14:43PM
+ ;;7259394B;src.InterfaceService.InterfaceServiceConfig
+ ;
+zDeleteSysServiceTypeConfig(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	try{
+		set params=jsonObj.params.%Get(0)
+		set session=jsonObj.session.%Get(0)
+		set userID=session.userID
+		if params.id="" 
+		{
+			set resultObj.errorCode="05100128"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("05100128")
+			quit
+		}
+		set delObj={},data=[]
+		set delObj.className="User.CBSysServiceType"
+		set delObj.updateUserID=userID
+		set dataObj={}
+		set dataObj.ID=params.id
+		do data.%Push(dataObj)
+		set delObj.data=data
+		;b ;0
+		set rtn=##class(src.util.operatetable).Delete(.delObj) ;调用公共类方法记录修改日记
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+		set resultObj.errorCode=errorCode
+		set resultObj.errorMessage=errorMessage		
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="删除读写类型配置出错:w ##class("_$ClassName()_").DeleteSysServiceTypeConfig("_jsonObj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")	
+	}
+	quit resultObj
+zFindStatusData()
+	set dataArr=[]
+	set dataObj={}
+	set dataObj.id=2
+	set dataObj.code="All"
+	set dataObj.descripts="所有"
+	set dataObj.enDescripts=""
+	set dataObj.descriptsSPCode=##class(src.Interface.ChineseCharacter).GetSPCodeByDescNew(dataObj.descripts)
+	do dataArr.%Push(dataObj)
+	set dataObj={}
+	set dataObj.id=1
+	set dataObj.code="Valid"
+	set dataObj.descripts="生效"
+	set dataObj.enDescripts=""
+	set dataObj.descriptsSPCode=##class(src.Interface.ChineseCharacter).GetSPCodeByDescNew(dataObj.descripts)
+	do dataArr.%Push(dataObj)
+	set dataObj={}
+	set dataObj.id=0
+	set dataObj.code="Invalid"
+	set dataObj.descripts="失效"
+	set dataObj.enDescripts=""
+	set dataObj.descriptsSPCode=##class(src.Interface.ChineseCharacter).GetSPCodeByDescNew(dataObj.descripts)
+	do dataArr.%Push(dataObj)
+	Quit dataArr
+zGetInterfaceServiceConfig(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try{
+		if (jsonObj.%IsDefined("pagination")'=0) {
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		set params=jsonObj.params.%Get(0)		
+		set compareCode=params.code
+		set compareDescripts=params.descripts
+		set compareClassName=params.className
+		set compareMethodName=params.methodName
+		set status=params.status
+		set tStatement = ##class(%SQL.Statement).%New(1)  
+		set sql="SELECT ProductCat_Dr->Descripts AS productCatDesc,ProductModule_Dr -> Descripts AS productModuleDesc,RWServiceType_Dr -> Descripts AS rwServiceTypeDesc,* FROM CB_MapInterface"		
+		set sql=sql_" WHERE 1=1"
+		set:(compareCode'="") sql=sql_" and Code LIKE '%"_compareCode_"%'"
+		set:(compareDescripts'="") sql=sql_" AND Descripts LIKE '%"_compareDescripts_"%'"
+		set:(compareClassName'="") sql=sql_" AND ClassName LIKE '%"_compareClassName_"%'"
+		set:(compareMethodName'="") sql=sql_" AND MethodName LIKE '%"_compareMethodName_"%'"
+		if (status'="") {
+			set:status="1" sql=sql_" AND StartDate <"_(+$h+1)_" and (StopDate is NULL or StopDate >"_+$h_")"
+			set:status="0" sql=sql_" AND StartDate >"_(+$h)_" and (StopDate is NULL or StopDate <"_+$h_")"
+		}
+		b	;111
+		set sc=tStatement.%Prepare(sql)
+		set result=tStatement.%Execute()		
+		while result.%Next(.sc){
+			set dataObj={}
+			set dataObj.key=result.%Get("ID")
+			set dataObj.id=result.%Get("ID")
+			set dataObj.code=result.%Get("Code")
+			set dataObj.descripts=result.%Get("Descripts")
+			set dataObj.className=result.%Get("ClassName")
+			set dataObj.methodName=result.%Get("MethodName")
+			set dataObj.startDate=result.%Get("StartDate")			
+			set dataObj.stopDate=result.%Get("StopDate")
+			set dataObj.serviceType=result.%Get("ServiceType")
+			set dataObj.productCatID=result.%Get("ProductCat_Dr")
+			set dataObj.productCatDesc=result.%Get("productCatDesc")
+			set dataObj.productModuleID=result.%Get("ProductModule_Dr")
+			set dataObj.productModuleDesc=result.%Get("productModuleDesc")
+			set dataObj.seqNo=result.%Get("SeqNo")
+			set dataObj.sessionFlag=result.%Get("SessionFlag")
+			set dataObj.tokenFlag=result.%Get("TokenFlag")			
+			set dataObj.tokenOverTime=result.%Get("TokenOverTime")
+			set dataObj.rwServiceTypeID=result.%Get("RWServiceType_Dr")
+			set dataObj.rwServiceTypeDesc=result.%Get("rwServiceTypeDesc")
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count		
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="获取接口服务配置出错:w ##class("_$ClassName()_").GetInterfaceServiceConfig("_jsonObj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")	
+	}
+	quit resultObj
+zGetProductCatData()
+	set dataArr=[]
+	try{
+		set tStatement = ##class(%SQL.Statement).%New(1)
+		set sql="SELECT * FROM CB_ProductCat"
+		do tStatement.%Prepare(sql)
+		set result=tStatement.%Execute()
+		while result.%Next(.sc){
+			set dataObj={}
+			set dataObj.id=result.%Get("ID")
+			set dataObj.code=result.%Get("Code")
+			set dataObj.descripts=result.%Get("Descripts")
+			set dataObj.descriptsSPCode=result.%Get("ENDesc")
+			do dataArr.%Push(dataObj)
+		}	
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="获取产品分类下拉数据出错:w ##class("_$ClassName()_").GetProductCatData()"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")
+	}
+	quit dataArr
+zGetProductModuleData(jsonObj)
+	set dataArr=[]
+	try{
+		set params=jsonObj.params.%Get(0)
+		set productCatID=params.productCatID
+		;quit:productCatID=""
+		set tStatement = ##class(%SQL.Statement).%New(1)
+		set sql="SELECT * FROM CB_ProductModule"
+		if productCatID'="" {
+			set sql=sql_" where ProductCat_Dr = "_productCatID
+		}
+		do tStatement.%Prepare(sql)
+		set result=tStatement.%Execute()
+		while result.%Next(.sc){
+			set dataObj={}
+			set dataObj.id=result.%Get("ID")
+			set dataObj.code=result.%Get("Code")
+			set dataObj.descripts=result.%Get("Descripts")
+			set dataObj.descriptsSPCode=result.%Get("ENDesc")
+			set dataObj.productCatID=result.%Get("ProductCat_Dr")
+			do dataArr.%Push(dataObj)
+		}	
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="获取产品模块下拉数据出错:w ##class("_$ClassName()_").GetProductModuleData("_jsonObj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")
+	}
+	quit dataArr
+zGetSelectData(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	try{
+		set resultObj.result.status=##class(src.InterfaceService.InterfaceServiceConfig).FindStatusData()
+		set resultObj.result.serviceType=##class(src.InterfaceService.InterfaceServiceConfig).GetServiceTypeData()
+		set resultObj.result.productCat=##class(src.InterfaceService.InterfaceServiceConfig).GetProductCatData()
+		set postObj={},postArr=[]
+		do postArr.%Push(postObj)
+		set post={}
+		set post.params=postArr
+		set resultObj.result.rwServiceType=##class(src.InterfaceService.InterfaceServiceConfig).GetSysServiceTypeConfig(post).result.Data
+		set resultObj.result.productModule=##class(src.InterfaceService.InterfaceServiceConfig).GetProductModuleData({"params":[{"productCatID":""}]})
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="获取接口服务下拉数据出错:w ##class("_$ClassName()_").GetSelectData("_jsonObj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")
+	}
+	quit resultObj
+zGetServiceTypeData()
+	new
+	set dataArr=[]
+    try{
+        set dataObj={}
+        set dataObj.id="S"
+        set dataObj.code="search"
+        set dataObj.descripts="查询"
+        set dataObj.enDescripts="search"
+        set dataObj.descriptsSPCode=##class(src.Interface.ChineseCharacter).GetSPCodeByDescNew(dataObj.descripts)
+        do dataArr.%Push(dataObj)
+        set dataObj={}
+        set dataObj.id="A"
+        set dataObj.code="add"
+        set dataObj.descripts="新增"
+        set dataObj.enDescripts="add"
+        set dataObj.descriptsSPCode=##class(src.Interface.ChineseCharacter).GetSPCodeByDescNew(dataObj.descripts)
+        do dataArr.%Push(dataObj)
+        set dataObj={}
+        set dataObj.id="U"
+        set dataObj.code="update"
+        set dataObj.descripts="修改"
+        set dataObj.enDescripts="update"
+        set dataObj.descriptsSPCode=##class(src.Interface.ChineseCharacter).GetSPCodeByDescNew(dataObj.descripts)
+        do dataArr.%Push(dataObj)
+        set dataObj={}
+        set dataObj.id="D"
+        set dataObj.code="delete"
+        set dataObj.descripts="删除"
+        set dataObj.enDescripts="delete"
+        set dataObj.descriptsSPCode=##class(src.Interface.ChineseCharacter).GetSPCodeByDescNew(dataObj.descripts)
+        do dataArr.%Push(dataObj)
+    }catch(e){
+	    set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="获取接口服务下拉数据出错:w ##class("_$ClassName()_").GetServiceTypeData()"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")
+    }
+    quit dataArr
+zGetSysServiceTypeConfig(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try{
+		if (jsonObj.%IsDefined("pagination")'=0) {
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		set params=jsonObj.params.%Get(0)
+		set compareHospID=params.hospID
+		set compareCode=params.code
+		set compareDescripts=params.descripts
+		set tStatement = ##class(%SQL.Statement).%New(1)
+		set sql="SELECT * FROM CB_SysServiceType"		
+		if (compareHospID'="")||(compareCode'="")||(compareDescripts'="") 
+		{
+			set sql=sql_" WHERE 1=1"
+			set:(compareCode'="") sql=sql_" AND Code LIKE '%"_compareCode_"%'"
+			set:(compareDescripts'="") sql=sql_" AND Descripts LIKE '%"_compareDescripts_"%'"
+		}
+		b	;111
+		do tStatement.%Prepare(sql)
+		set result=tStatement.%Execute()		
+		while result.%Next(.sc){
+			set dataObj={}
+			set dataObj.id=result.%Get("ID")
+			set dataObj.code=result.%Get("Code")
+			set dataObj.descripts=result.%Get("Descripts")
+			set dataObj.serviceIP=result.%Get("ServiceIP")
+			set dataObj.port=result.%Get("Port")
+			set dataObj.authorization=result.%Get("Authorization")
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count		
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="获取读写类型配置出错:w ##class("_$ClassName()_").GetSysServiceTypeConfig("_jsonObj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")	
+	}
+	quit resultObj
+zSaveInterfaceServiceConfig(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	try{
+		set params=jsonObj.params.%Get(0)
+		set session=jsonObj.session.%Get(0)
+		set dataObj={},dataArr=[]
+		set dataObj.ID=params.id
+		set dataObj.Code=params.code
+		set dataObj.Descripts=params.descripts
+		set dataObj.ClassName=params.className
+		set dataObj.MethodName=params.methodName
+		set dataObj.StartDate=params.startDate		
+		set dataObj.StopDate=params.stopDate
+		set dataObj.ServiceType=params.serviceType
+		set dataObj.ProductCatDr=params.productCatID
+		set dataObj.ProductModuleDr=params.productModuleID		
+		set dataObj.SeqNo=params.seqNo
+		set dataObj.ServiceIP=params.serviceIP
+		set dataObj.SessionFlag=params.sessionFlag
+		set dataObj.TokenFlag=params.tokenFlag		
+		set dataObj.TokenOverTime=params.tokenOverTime
+		set dataObj.RWServiceTypeDr=params.rwServiceTypeID
+		do dataArr.%Push(dataObj)
+		;b	;12121
+		set operateObj={}
+		set operateObj.updateUserID=session.userID
+		set operateObj.className="User.CBMapInterface"			
+		set operateObj.data=dataArr		
+		if params.id=""{
+			set rtn=##class(src.util.operatetable).Insert(.operateObj) ;调用公共类方法记录修改日记
+		}else{				
+			set rtn=##class(src.util.operatetable).Update(.operateObj) ;调用公共类方法记录修改日记
+		}
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+		if errorCode'="0"{
+			set resultObj.errorCode=errorCode
+			set resultObj.errorMessage=errorMessage
+			quit
+		}
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="保存接口服务配置出错:w ##class("_$ClassName()_").SaveInterfaceServiceConfig("_jsonObj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")	
+	}
+	quit resultObj
+zSaveSysServiceTypeConfig(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	try{
+		set params=jsonObj.params.%Get(0)
+		set session=jsonObj.session.%Get(0)
+		set dataObj={},dataArr=[]
+		set dataObj.ID=params.id
+		set dataObj.HospDr=$case(params.hospID'="",1:params.hospID,:session.hospID)
+		set dataObj.Code=params.code
+		set dataObj.Descripts=params.descripts
+		set dataObj.ServiceIP=params.serviceIP
+		set dataObj.Port=params.port
+		set dataObj.Authorization=params.authorization
+		do dataArr.%Push(dataObj)
+		;b	;12121
+		set operateObj={}
+		set operateObj.updateUserID=session.userID
+		set operateObj.className="User.CBSysServiceType"			
+		set operateObj.data=dataArr		
+		if params.id=""{
+			set rtn=##class(src.util.operatetable).Insert(.operateObj) ;调用公共类方法记录修改日记
+		}else{				
+			set rtn=##class(src.util.operatetable).Update(.operateObj) ;调用公共类方法记录修改日记
+		}
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+		if errorCode'="0"{
+			set resultObj.errorCode=errorCode
+			set resultObj.errorMessage=errorMessage
+			quit
+		}
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")	
+	    set errorInfo="保存读写类型配置出错:w ##class("_$ClassName()_").SaveSysServiceTypeConfig("_jsonObj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")
+	}
+	quit resultObj
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("src.InterfaceService.InterfaceServiceConfig",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"src.InterfaceService.InterfaceServiceConfig")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"src.InterfaceService.InterfaceServiceConfig")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="src.InterfaceService.InterfaceServiceConfig"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="InterfaceServiceConfig"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"InterfaceServiceConfig"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"InterfaceServiceConfig"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If encoded Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ If indentFlag,encoded { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("src.InterfaceService.InterfaceServiceConfig",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"src.InterfaceService.InterfaceServiceConfig")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLNew(document,node,containerOref="")
+	Quit (##class(src.InterfaceService.InterfaceServiceConfig).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("src.InterfaceService.InterfaceServiceConfig",top,format,namespacePrefix,input,refOnly,.schema)

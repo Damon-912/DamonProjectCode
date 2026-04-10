@@ -1,0 +1,43 @@
+{
+  "name": "pagination-update-team",
+  "leadAgentId": "66a5cf3a2e57494e83ac84515757e50b",
+  "workspacePath": "d:/AI开发/CodeBuddy/DRG医保控费预警系统开发项目",
+  "createdAt": "2026-04-09T13:13:14.745Z",
+  "options": {
+    "workspacePath": "d:/AI开发/CodeBuddy/DRG医保控费预警系统开发项目",
+    "isAutoTeam": false
+  },
+  "members": [
+    {
+      "memberId": "team-lead@pagination-update-team",
+      "name": "team-lead",
+      "role": "Team Lead - coordinates the team and interacts with the user"
+    },
+    {
+      "memberId": "basicdata-agent@pagination-update-team",
+      "name": "basicdata-agent",
+      "role": "修改BasicData目录下的分页组件"
+    },
+    {
+      "memberId": "dip-drg-agent@pagination-update-team",
+      "name": "dip-drg-agent",
+      "role": "修改DIP和DRG目录下的分页组件"
+    },
+    {
+      "memberId": "his-agent@pagination-update-team",
+      "name": "his-agent",
+      "role": "修改HIS目录下的分页组件"
+    },
+    {
+      "memberId": "profit-agent@pagination-update-team",
+      "name": "profit-agent",
+      "role": "修改Profit目录下的分页组件"
+    },
+    {
+      "memberId": "system-warning-agent@pagination-update-team",
+      "name": "system-warning-agent",
+      "role": "修改System和Warning目录下的分页组件"
+    }
+  ],
+  "isAutoTeam": false
+}

@@ -1,0 +1,28 @@
+ROUTINE src.util.DynamicObject.AdapterToDynamicObj.G1 [Generated]
+	;src.util.DynamicObject.AdapterToDynamicObj.G1
+	;(C)InterSystems, method generator for class src.util.DynamicObject.AdapterToDynamicObj.  Do NOT edit.
+	Quit
+	;
+#include %systemInclude
+#classcontext src.util.DynamicObject.AdapterToDynamicObj
+#generator
+#classmethod ToDynamicObj
+ToDynamicObj(%class,%code,%method,%compiledclass,%compiledmethod,%parameter) public {
+	set sc=$$$OK
+	try {
+		set tSerializeEmbedded=$GET(%parameter("SerializeEmbeddedPersistentObjects"),0)
+		set tSerializeArraysAsDynamicArrays=$GET(%parameter("SerializeArraysAsDynamicArrays"),1)
+		set tCodeGeneratorUtility=##class(src.util.DynamicObject.ToDynamicObjSourceGenerator).%New()
+	   	set tDynamicObjectCode=tCodeGeneratorUtility.Generate(%compiledclass,tSerializeEmbedded,tSerializeArraysAsDynamicArrays)
+	   	do %code.WriteLine("	set sc=$$$OK")
+	   	do %code.WriteLine("	try {")
+	   	do %code.WriteLine("		set pDynamicObject="_tDynamicObjectCode)
+	   	do %code.WriteLine("	} catch(ex) {")
+	   	do %code.WriteLine("		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)")
+	   	do %code.WriteLine("	}")
+	   	do %code.WriteLine("	quit sc") //Ends Of code line
+	} catch(ex) {
+		set sc=ex.AsStatus()
+	}
+	quit sc
+ Quit 1 }

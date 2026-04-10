@@ -14,6 +14,7 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { invoke } from '../../api/request';
+import CustomPagination from '../../components/CustomPagination';
 
 const { Option } = Select;
 
@@ -416,25 +417,19 @@ const TableDataMaintenance: React.FC = () => {
               loading={dataLoading}
               size="small"
               scroll={{ x: 'max-content' }}
-              pagination={{
-                current: dataPage,
-                pageSize: dataPageSize,
-                total: dataTotal,
-                size: 'small',
-                showSizeChanger: true,
-                showTotal: (t) => `共 ${t} 条`,
-                pageSizeOptions: ['10', '20', '50', '100'],
-                onChange: (page, size) => {
+              pagination={false}
+            />
+            <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+              <CustomPagination
+                current={dataPage}
+                pageSize={dataPageSize}
+                total={dataTotal}
+                onChange={(page, size) => {
                   setDataPage(page);
                   setDataPageSize(size);
-                },
-                locale: {
-                  items_per_page: '/页',
-                  jump_to: '跳至',
-                  page: '页',
-                }
-              }}
-            />
+                }}
+              />
+            </div>
           </div>
         </Card>
       </div>
@@ -445,6 +440,8 @@ const TableDataMaintenance: React.FC = () => {
         open={modalOpen}
         onOk={handleSave}
         onCancel={() => setModalOpen(false)}
+        okText="确定"
+        cancelText="取消"
         confirmLoading={saving}
         width={700}
         destroyOnClose

@@ -28,6 +28,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import type { DataNode } from 'antd/es/tree';
 import { queryHospitals, type HospitalItem } from '../../api/hospital';
+import CustomPagination from '../../components/CustomPagination';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -240,7 +241,7 @@ const Menus: React.FC = () => {
           return '全部医院';
         }
         const hospitalNames = record.hospitalIDs.map(id => {
-          const hospital = hospitals.find(h => h.hospitalID === id);
+          const hospital = hospitals.find(h => h.hospitalID === String(id));
           return hospital ? hospital.descripts : `ID: ${id}`;
         });
         return hospitalNames.join(', ');
@@ -446,22 +447,18 @@ const Menus: React.FC = () => {
           loading={loading}
           scroll={{ x: 1200 }}
           size="small"
-          pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
-            total: pagination.total,
-            showSizeChanger: true,
-            showTotal: (t) => `共 ${t} 条`,
-            onChange: (page, size) => {
-              setPagination(prev => ({ ...prev, current: page, pageSize: size }));
-            },
-            locale: {
-              items_per_page: '/页',
-              jump_to: '跳至',
-              page: '页',
-            }
-          }}
+          pagination={false}
         />
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <CustomPagination
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onChange={(page, size) => {
+              setPagination(prev => ({ ...prev, current: page, pageSize: size }));
+            }}
+          />
+        </div>
       </Card>
 
       {/* 新增/编辑弹窗 */}
@@ -470,6 +467,8 @@ const Menus: React.FC = () => {
         open={modalVisible}
         onOk={handleSave}
         onCancel={() => setModalVisible(false)}
+        okText="确定"
+        cancelText="取消"
         width={600}
         destroyOnClose
       >

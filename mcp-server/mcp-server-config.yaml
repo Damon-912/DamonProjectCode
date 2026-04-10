@@ -1,0 +1,309 @@
+# MCP服务器配置 - 腾讯云IRIS数据库连接
+# 最后更新: 2026-04-09
+# 配置连接到腾讯云轻量应用服务器上的InterSystems IRIS数据库
+
+version: "1.0"
+name: "drg-iris-mcp-server"
+description: "DRG医保控费预警系统IRIS数据库MCP服务器"
+author: "DRG开发团队"
+
+# 服务器连接配置
+server:
+  type: "http"
+  base_url: "http://111.229.137.113:52773"
+  timeout: 30
+  retry_policy:
+    max_attempts: 3
+    backoff_factor: 2
+    retry_status_codes: [500, 502, 503, 504]
+
+# IRIS数据库连接配置
+database:
+  type: "intersystems-iris"
+  namespace: "USER"
+  credentials:
+    username: "_system"
+    password: "123456"
+  connection_params:
+    host: "111.229.137.113"
+    port: 52773
+    web_app_path: "/csp/drg/sysInternalMutiple"
+    charset: "UTF-8"
+    pool_size: 10
+    max_lifetime: 300
+
+# API端点配置
+endpoints:
+  # DRG分组服务
+  drg_group:
+    path: "/iris-api/invoke"
+    method: "POST"
+    content_type: "application/json"
+    auth_type: "bearer"
+    timeout: 60
+    description: "DRG分组接口调用"
+
+  # 基础数据服务
+  basic_data:
+    path: "/iris-api/invoke"
+    method: "POST"
+    content_type: "application/json"
+    description: "基础数据接口调用"
+
+  # 预警服务
+  warning:
+    path: "/iris-api/invoke"
+    method: "POST"
+    content_type: "application/json"
+    description: "预警接口调用"
+
+  # 盈亏分析服务
+  profit:
+    path: "/iris-api/invoke"
+    method: "POST"
+    content_type: "application/json"
+    description: "盈亏分析接口调用"
+
+# 认证配置
+authentication:
+  # API密钥认证
+  api_key:
+    enabled: true
+    header_name: "X-API-Key"
+    required: true
+
+  # 会话认证
+  session:
+    enabled: true
+    token_refresh_interval: 1800
+    session_timeout: 7200
+
+# 请求/响应格式
+request_format:
+  structure:
+    code: "string"  # 接口代码，如02010001
+    params: "array"  # 接口参数数组
+    session: "array"  # 会话信息数组
+    pagination: "optional"  # 可选分页参数
+  validation:
+    required: ["code", "params", "session"]
+    min_params: 1
+    max_params: 50
+
+response_format:
+  success:
+    structure:
+      errorCode: "0"
+      errorMessage: ""
+      result: "object|array"
+  error:
+    structure:
+      errorCode: "string"
+      errorMessage: "string"
+    error_codes:
+      "0": "成功"
+      "-1": "业务逻辑失败"
+      "-99": "系统异常"
+      "1001": "参数错误"
+      "1002": "会话过期"
+      "1003": "权限不足"
+      "2001": "数据不存在"
+      "2002": "数据已存在"
+      "3001": "服务器内部错误"
+
+# 接口服务映射
+interface_mapping:
+  # DRG分组服务
+  "02010001":
+    name: "DRG分组器"
+    class: "User.DRG.Warning"
+    method: "QueryWarningRules"
+    service_type: "S"
+    description: "DRG分组核心接口"
+
+  # 基础数据接口
+  "02010101":
+    name: "查询预警规则"
+    class: "User.DRG.Warning"
+    method: "QueryWarningRules"
+    service_type: "S"
+    description: "查询预警规则列表"
+
+  "02010102":
+    name: "保存预警规则"
+    class: "User.DRG.Warning"
+    method: "SaveWarningRule"
+    service_type: "A"
+    description: "保存预警规则"
+
+  # 盈亏分析接口
+  "02010201":
+    name: "查询科室盈亏"
+    class: "User.DRG.Profit"
+    method: "QueryDeptProfit"
+    service_type: "S"
+    description: "查询科室盈亏统计"
+
+  "02010202":
+    name: "查询医生盈亏"
+    class: "User.DRG.Profit"
+    method: "QueryDoctorProfit"
+    service_type: "S"
+    description: "查询医生盈亏统计"
+
+  # 系统管理接口
+  "02010401":
+    name: "查询用户列表"
+    class: "User.DRG.System"
+    method: "QuerySystemUsers"
+    service_type: "S"
+    description: "查询系统用户列表"
+
+  "02010404":
+    name: "查询接口服务"
+    class: "User.DRG.System"
+    method: "QueryInterfaceServices"
+    service_type: "S"
+    description: "查询已注册的接口服务"
+
+# 代理服务器配置（可选）
+proxy:
+  enabled: true
+  host: "localhost"
+  port: 8090
+  protocol: "http"
+  # 如果需要身份验证
+  auth:
+    username: ""
+    password: ""
+
+# 监控和日志
+monitoring:
+  enabled: true
+  metrics:
+    request_count: true
+    response_time: true
+    error_rate: true
+  logging:
+    level: "info"
+    format: "json"
+    output: "stdout"
+    rotate:
+      enabled: true
+      max_size: "100MB"
+      max_files: 10
+
+# 健康检查
+health_check:
+  enabled: true
+  endpoint: "/health"
+  interval: 30
+  timeout: 5
+  failure_threshold: 3
+  success_threshold: 1
+
+# 缓存配置
+cache:
+  enabled: true
+  ttl: 300
+  max_size: 1000
+  strategy: "lru"
+
+# 安全配置
+security:
+  ssl:
+    enabled: false  # 如果IRIS配置了SSL
+    verify: false
+    cert_path: ""
+  cors:
+    enabled: true
+    allowed_origins: ["*"]
+    allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allowed_headers: ["Content-Type", "Authorization", "X-API-Key"]
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 60
+    burst_limit: 10
+
+# 部署配置
+deployment:
+  environment: "production"
+  region: "ap-shanghai"
+  server_type: "tencent-lighthouse"
+  instance_id: "lhins-djbbo9ac"
+  access_info:
+    ip_address: "111.229.137.113"
+    ssh_port: 22
+    username: "administrator"
+    password: "q597167810.."
+
+# MCP工具配置
+tools:
+  - name: "query_drg_data"
+    description: "查询DRG相关数据"
+    parameters:
+      - name: "interface_code"
+        type: "string"
+        required: true
+        description: "接口代码，如02010001"
+      - name: "params"
+        type: "array"
+        required: false
+        description: "查询参数数组"
+      - name: "session"
+        type: "object"
+        required: true
+        description: "会话信息"
+
+  - name: "execute_drg_grouping"
+    description: "执行DRG分组操作"
+    parameters:
+      - name: "patient_data"
+        type: "object"
+        required: true
+        description: "病案首页数据"
+      - name: "grouping_rules"
+        type: "object"
+        required: false
+        description: "分组规则配置"
+
+  - name: "get_warning_records"
+    description: "获取预警记录"
+    parameters:
+      - name: "start_date"
+        type: "string"
+        required: false
+        description: "开始日期，格式: YYYY-MM-DD"
+      - name: "end_date"
+        type: "string"
+        required: false
+        description: "结束日期，格式: YYYY-MM-DD"
+      - name: "warning_level"
+        type: "string"
+        required: false
+        description: "预警级别"
+
+# MCP资源配置
+resources:
+  - type: "iris-database"
+    uri: "iris://111.229.137.113:52773/USER"
+    description: "腾讯云IRIS数据库连接"
+    metadata:
+      server_type: "InterSystems IRIS"
+      namespace: "USER"
+      credentials_stored: "secure"
+
+  - type: "api-documentation"
+    uri: "file://./接口服务说明/00-接口总览.md"
+    description: "接口服务文档"
+
+# 配置版本信息
+metadata:
+  version: "1.0.0"
+  created: "2026-04-09"
+  last_updated: "2026-04-09"
+  environment: "production"
+  project: "DRG医保控费预警系统"
+  team: "DRG开发团队"
+  repository: "https://github.com/your-org/drg-project"
+  documentation: "https://docs.drg-project.com"

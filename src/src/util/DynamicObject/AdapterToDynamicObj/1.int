@@ -1,0 +1,118 @@
+ROUTINE src.util.DynamicObject.AdapterToDynamicObj.1 [Type=INT,Generated]
+ ;src.util.DynamicObject.AdapterToDynamicObj.1
+ ;Generated for class src.util.DynamicObject.AdapterToDynamicObj.  Do NOT edit. 12/23/2025 05:01:53PM
+ ;;4A6E3032;src.util.DynamicObject.AdapterToDynamicObj
+ ;
+zCopyStreamToString(pStream) public {
+	set tStreamContent=""
+	set tStreamContent=pStream.Read(pStream.SizeGet())
+	quit tStreamContent }
+zGenerateArrayOfDTDynamicArray(pArrayParentObject,pArrayPropertyName,pArray) public {
+	set tDynamicArray=[]
+	set tArrayKey=""
+	for  {
+		set tArrayElementValue=pArray.GetNext(.tArrayKey)
+		quit:tArrayKey=""
+		do tDynamicArray.%Push(..GetLogicalToXSDValue(pArrayParentObject,pArrayPropertyName,tArrayElementValue))
+	}
+	quit tDynamicArray }
+zGenerateArrayOfDTDynamicObj(pArrayParentObject,pArrayPropertyName,pArray) public {
+	set tDynamicObj={}
+	set tArrayKey=""
+	for  {
+		set tArrayElementValue=pArray.GetNext(.tArrayKey)
+		quit:tArrayKey=""
+		do tDynamicObj.%Set(	tArrayKey, 
+								..GetLogicalToXSDValue(pArrayParentObject,pArrayPropertyName,tArrayElementValue)							
+							)
+	}
+	quit tDynamicObj }
+zGenerateArrayOfObjDynamicArray(pArray,sc) public {
+	set tDynamicArray=[]
+	set tArrayKey=""
+	for  {
+		set tArrayElement=pArray.GetNext(.tArrayKey)
+		quit:tArrayKey=""
+		set tValue=""
+		if (('..#SerializeEmbeddedPersistentObjects) && (tArrayElement.%Extends("%Library.Persistent"))) {
+			set tValue=tArrayElement.%Id()
+		} else {
+			set tValue=tArrayElement.ToDynamicObjRecursive(.sc)
+		}
+		do tDynamicArray.%Push(tValue)
+	}
+	quit tDynamicArray }
+zGenerateArrayOfObjDynamicObj(pArray,sc) public {
+	set tDynamicObj={}
+	set tArrayKey=""
+	for  {
+		set tArrayElement=pArray.GetNext(.tArrayKey)
+		quit:tArrayKey=""
+		set tValue=""
+		if (('..#SerializeEmbeddedPersistentObjects) && (tArrayElement.%Extends("%Library.Persistent"))) {
+			set tValue=tArrayElement.%Id()
+		} else {
+			set tValue=tArrayElement.ToDynamicObjRecursive(.sc)
+		}	
+		do tDynamicObj.%Set(tArrayKey, tValue)
+	}
+	quit tDynamicObj }
+zGenerateListOfDTDynamicObj(pListParentObject,pListPropertyName,pList) public {
+	set tDynamicArray=[]
+	for i=1:1:pList.Count() {
+		set tElementValue=pList.GetAt(i)
+		do tDynamicArray.%Push(	..GetLogicalToXSDValue(pListParentObject,pListPropertyName,tElementValue))
+	}
+	quit tDynamicArray }
+zGenerateListOfObjDynamicObj(pList,sc) public {
+	set tDynamicArray=[]
+	for i=1:1:pList.Count() {
+		set tListElement=pList.GetAt(i)
+		if (('..#SerializeEmbeddedPersistentObjects) && (tListElement.%Extends("%Library.Persistent"))) {
+			set tValue=tListElement.%Id()
+		} else {
+			set tValue=tListElement.ToDynamicObjRecursive(.sc)
+		}
+		do tDynamicArray.%Push(tValue)
+		do pList.%UnSwizzleAt(i) //Memory Management
+	}
+	quit tDynamicArray }
+zGenerateManyRelationshipDynami(pManyRelationShip,sc) public {
+	quit ..GenerateListOfObjDynamicObj(pManyRelationShip,.sc) //Acts same as list of objects
+}
+zGetLogicalToXSDValue(pObject,pPropertyName,pValue) public {
+	set tReturnValue=""
+	try {
+		set:(pValue'="") tReturnValue=$Method(pObject,pPropertyName_"LogicalToXSD",pValue)
+	} catch(ex) {
+		//We explicitly check for this error to identify that LogicalToXSD did not exist
+		//the reason being that sometimes on arrays of types which implement LogicalToXSD
+		//using codemode=generator instead of objectgenerator results in the CompiledProperty 
+		//of the array claiming the LogicalToXSD method exists during compile on the array itself.
+		if (($ZERROR["<METHOD DOES NOT EXIST>")&&($ZERROR["LogicalToXSD")) { 
+			set tReturnValue=pValue //Did not exist so straight assign is correct
+		} else {
+			throw ex
+		}
+		set $ZERROR=""
+	}
+	quit tReturnValue }
+zToDynamicObj(pDynamicObject) public {
+	set sc=1
+	try {
+		set pDynamicObject={}
+	} catch(ex) {
+		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+	}
+	quit sc }
+zToDynamicObjRecursive(sc) public {
+	set:$GET(sc)="" sc=1
+	set tSCNew=1
+	set tDynamicObject=""
+	try {
+		set tSCNew=..ToDynamicObj(.tDynamicObject)
+		set:('tSCNew) sc=$SYSTEM.Status.AppendStatus(tSCNew,sc)
+	} catch(ex) {
+		set:('tSCNew) sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+	}
+	quit tDynamicObject }

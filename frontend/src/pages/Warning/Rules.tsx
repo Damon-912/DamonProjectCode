@@ -29,6 +29,7 @@ import {
   BellOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
+import CustomPagination from '../../components/CustomPagination';
 import type { ColumnsType } from 'antd/es/table';
 import { queryWarningRules, saveWarningRule, deleteWarningRule } from '@/api/warning';
 import type { WarningRule } from '@/api/warning';
@@ -452,18 +453,16 @@ const Rules: React.FC = () => {
           rowKey="id"
           loading={loading}
           scroll={{ x: 1400, y: 'calc(100vh - 380px)' }}
-          pagination={{
-            total: total,
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `共 ${total} 条`,
-            locale: {
-              items_per_page: '/页',
-              jump_to: '跳至',
-              page: '页',
-            }
-          }}
+          pagination={false}
         />
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <CustomPagination
+            current={1}
+            pageSize={10}
+            total={total}
+            onChange={() => {}}
+          />
+        </div>
       </Card>
 
       {/* 新增/编辑弹窗 */}
@@ -472,6 +471,8 @@ const Rules: React.FC = () => {
         open={modalVisible}
         onOk={handleSave}
         onCancel={() => setModalVisible(false)}
+        okText="确定"
+        cancelText="取消"
         width={700}
         confirmLoading={saving}
       >

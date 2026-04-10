@@ -1,0 +1,1002 @@
+ROUTINE src.Group.Public.1 [Type=INT,Generated]
+ ;src.Group.Public.1
+ ;Generated for class src.Group.Public.  Do NOT edit. 07/04/2022 04:24:52PM
+ ;;554F7136;src.Group.Public
+ ;
+zFind(className,paginationStr,paramsStr)
+	Set $ZT="ERROR"
+	s params=paramsStr //##class(%Library.DynamicObject).%FromJSON(paramsStr)
+	//s FieldJson=##class(src.Group.Public).FindDataPosition(className)
+	w className,!
+	do ##class(src.Group.Public).FindDataPositionNew(className,.postdata)
+	s pagination=paginationStr //##class(%Library.DynamicObject).%FromJSON(paginationStr)
+	s pageSize=pagination.pageSize
+	s currentPage=pagination.currentPage
+	s sortColumn=pagination.sortColumn
+	s sortOrder=pagination.sortOrder
+	//if sortColumn="" s sortColumn="Code"
+	//s sortOrder="desc"
+	s resultArr=[]
+	s TotalCount=0
+	k dataJsonArr
+	s id=0
+	for{
+		s id=$o(@("^"_$p(className,".",2)_"D("_id_")"))
+		Quit:id=""
+		set iter = params.%GetIterator()
+		s dataJson={}
+		s flag=0
+		s count=0
+		while iter.%GetNext(.key , .value ) {
+			s val=$lg(@("^"_$p(className,".",2)_"D("_id_")"),postdata(key))
+			s count=count+1
+			continue:(value'="")&&(val'[value) 
+			s flag=flag+1
+		}
+		continue:flag'=count
+		//s itemJson=##class(src.Group.Public).FindOne(className,id,.FieldJson)
+		s itemJson=##class(src.Group.Public).FindOneNew(className,id,.postdata)
+		if sortColumn'=""{
+			s ColumnVal=$PROPERTY(itemJson,sortColumn)
+			if ColumnVal=""{	
+				s dataJsonArr("ZZZZZ",id)=itemJson
+			}else{
+				if sortColumn="Code"{
+					s dataJsonArr("Z"_ColumnVal,id)=itemJson
+				}else{
+					s dataJsonArr(ColumnVal,id)=itemJson	
+				}	
+			}	
+		}else{
+			s dataJsonArr(1,id)=itemJson	
+		}
+		//do resultArr.%Push(itemJson)
+		s TotalCount=TotalCount+1
+	}
+	b ;1212
+	s globalSort=1
+	s index=0
+	if sortOrder["desc"{
+		s index=""
+		s globalSort=-1	
+	}
+	if currentPage="" s currentPage=1
+	s count=0
+	for{
+		s index=$o(dataJsonArr(index),globalSort)	 
+		Quit:index=""
+		s id=0
+		for{
+			s id=$o(dataJsonArr(index,id))
+			Quit:id=""
+			s itemJson=dataJsonArr(index,id)
+			s count=count+1
+			continue:(+pageSize>0)&&((count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize)))
+			do resultArr.%Push(itemJson)
+			//w count,!
+		}
+	}
+	s resultJson={}
+	s resultJson.TotalCount=TotalCount
+	s resultJson.Data=resultArr
+	s retJson={}
+	s retJson.errorCode=0
+	s retJson.errorMessage=0
+	s retJson.result=resultJson
+	Quit retJson
+ERROR
+	s retJson={}
+	s retJson.errorCode=-100
+	s retJson.errorMessage=$ze
+	Quit retJson
+zFindDataPosition(ClassName)
+	s storage=^oddCOM(ClassName,59)
+	s defaultData=^oddCOM(ClassName,"s",storage,22)
+	s prop={}
+	s index=1
+	for{
+		s index=$o(^oddCOM(ClassName,"s",storage,"D",defaultData,"V",index)) 
+		Quit:index=""
+		s Property=^oddCOM(ClassName,"s",storage,"D",defaultData,"V",index,21)
+		s dataType=^oddCOM(ClassName,"a",Property,5)
+		if dataType["User."{
+			//s $PROPERTY(prop,Property_"Desc")=##class(src.Group.Public).GetDescIndex(ClassName)	
+			s fieldIndex=##class(src.Group.Public).GetDescIndex(ClassName)
+			if fieldIndex'="" {
+				s itemJson={}
+				s itemJson.index=index
+				s itemJson.descClassName=dataType
+				s itemJson.descField="Descripts"
+				s itemJson.fieldIndex=fieldIndex
+				s $PROPERTY(prop,Property)=itemJson	
+			}
+		}else{
+			s $PROPERTY(prop,Property)=index	
+		}
+	}
+	Quit prop
+zFindDataPositionNew(ClassName,DataPostArr)
+	s storage=^oddCOM(ClassName,59)
+	s defaultData=^oddCOM(ClassName,"s",storage,22)
+	s prop={}
+	s index=1
+	for{
+		s index=$o(^oddCOM(ClassName,"s",storage,"D",defaultData,"V",index)) 
+		Quit:index=""
+		s Property=^oddCOM(ClassName,"s",storage,"D",defaultData,"V",index,21)
+		s dataType=^oddCOM(ClassName,"a",Property,5)
+		if dataType["User."{
+			//s $PROPERTY(prop,Property_"Desc")=##class(src.Group.Public).GetDescIndex(ClassName)	
+			s DataPostArr(Property)=index
+			s fieldIndex=##class(src.Group.Public).GetDescIndex(ClassName)
+			if fieldIndex'="" {
+				s DataPostArr(Property,"descClassName")=dataType
+				s DataPostArr(Property,"descField")="Descripts"
+				s DataPostArr(Property,"fieldIndex")=fieldIndex
+			}
+		}else{
+			s DataPostArr(Property)=index
+		}
+	}
+	Quit 0
+zFindOne(ClassName,rowid,FieldJson)
+	//s FieldJson=##class(src.Group.Public).FindDataPosition(ClassName)
+	//quit {}
+	set iter = FieldJson.%GetIterator()
+	s dataJson={}
+	s dataJson.ID=rowid
+	s itemData=@("^"_$p(ClassName,".",2)_"D("_rowid_")")
+	while iter.%GetNext(.key , .value ) {
+		s PropName=key
+		s dataType=^oddCOM(ClassName,"a",PropName,5)
+		if dataType["User."{
+			s PropIndex=value.index
+			s dataValue=$lg(itemData,PropIndex)
+			s $PROPERTY(dataJson,PropName)=dataValue
+			if dataValue'=""{
+				s descPropName=value.descField
+				s descPropIndex=value.fieldIndex
+				s descClassName=value.descClassName
+				s descItemData=@("^"_$p(descClassName,".",2)_"D("_dataValue_")")
+				s $PROPERTY(dataJson,PropName_"Desc")=$lg(itemData,descPropIndex)
+			}else{
+				s $PROPERTY(dataJson,PropName_"Desc")=""	
+			}
+		}else{
+			s PropIndex=value
+			s dataValue=$lg(itemData,PropIndex)
+			if dataType["Date"{
+				if dataValue'=""{
+					s $PROPERTY(dataJson,PropName)=$zd(dataValue,3)	
+				}else{
+					s $PROPERTY(dataJson,PropName)=""
+				}
+			}elseif dataType["Time"{
+				if dataValue'=""{
+					s $PROPERTY(dataJson,PropName)=$zt(dataValue)	
+				}else{
+					s $PROPERTY(dataJson,PropName)=""
+				}	
+			}else{
+				s $PROPERTY(dataJson,PropName)=dataValue	
+			}	
+		}
+	}
+	Quit dataJson
+zFindOneItem(className,rowid)
+	do ##class(src.Group.Public).FindDataPositionNew(className,.postData)
+	s ret=##class(src.Group.Public).FindOneNew(className,rowid,.postData)
+	Quit ret
+zFindOneNew(ClassName,rowid,postData)
+	//s FieldJson=##class(src.Group.Public).FindDataPosition(ClassName)
+	//quit {}
+	//set iter = FieldJson.%GetIterator()
+	s dataJson={}
+	s itemData=@("^"_$p(ClassName,".",2)_"D("_rowid_")")
+	s PropName=""
+	s dataJson.ID=rowid
+	for {
+		s PropName=$o(postData(PropName))
+		Quit:PropName=""
+		s PropIndex=postData(PropName)
+		s dataType=^oddCOM(ClassName,"a",PropName,5)
+		s dataValue=$lg(itemData,PropIndex)
+		s $PROPERTY(dataJson,PropName)=dataValue
+		if dataType["User."{
+			s PropIndex=postData(PropName)
+			s dataValue=$lg(itemData,PropIndex)
+			s $PROPERTY(dataJson,PropName)=dataValue
+			if dataValue'=""{
+				s descPropName=postData(PropName,"descField")
+				s descPropIndex=postData(PropName,"fieldIndex")
+				s descClassName=postData(PropName,"descClassName")
+				s descItemData=$g(@("^"_$p(descClassName,".",2)_"D("_dataValue_")"))
+				s $PROPERTY(dataJson,PropName_"Desc")=$lg(descItemData,descPropIndex)	
+			}else{
+				s $PROPERTY(dataJson,PropName_"Desc")=""	
+			}
+		}else{
+			s PropIndex=postData(PropName)
+			s dataValue=$lg(itemData,PropIndex)
+			if dataType["Date"{
+				if dataValue'=""{
+					s $PROPERTY(dataJson,PropName)=$zd(dataValue,3)	
+				}else{
+					s $PROPERTY(dataJson,PropName)=""
+				}
+			}elseif dataType["Time"{
+				if dataValue'=""{
+					s $PROPERTY(dataJson,PropName)=$zt(dataValue)	
+				}else{
+					s $PROPERTY(dataJson,PropName)=""
+				}	
+			}else{
+				s $PROPERTY(dataJson,PropName)=dataValue	
+			}	
+		}
+	}
+	Quit dataJson
+zGetDescById(className,rowid)
+	s storage=^oddCOM(className,59)
+	s defaultData=^oddCOM(className,"s",storage,22)
+	s prop={}
+	s index=1
+	s desc=""
+	for{
+		s index=$o(^oddCOM(className,"s",storage,"D",defaultData,"V",index)) 
+		Quit:index=""
+		s Property=^oddCOM(className,"s",storage,"D",defaultData,"V",index,21)
+		continue:Property'="Descripts"
+		s desc=$lg($g(@("^"_$p(className,".",2)_"D("_rowid_")")),index)
+		Quit 
+	}
+	///w $o(a_"(0)")
+	Quit desc
+zGetDescIndex(className)
+	n (className)
+	s storage=^oddCOM(className,59)
+	s defaultData=^oddCOM(className,"s",storage,22)
+	s prop={}
+	s index=1
+	s fieldIndex=""
+	s desc=""
+	for{
+		s index=$o(^oddCOM(className,"s",storage,"D",defaultData,"V",index)) 
+		Quit:index=""
+		s Property=^oddCOM(className,"s",storage,"D",defaultData,"V",index,21)
+		continue:Property'="Descripts"
+		s fieldIndex=index
+		Quit 
+	}
+	///w $o(a_"(0)")
+	Quit fieldIndex
+zGetDroupIDByDesc(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set errorCode="0",errorMessage=""
+	try{
+		set desc=jsonObj.params.%Get(0).desc
+		quit:desc=""
+		set id=$o(^CBGroupI("Desc",desc,0))
+		set resultObj.result.groupID=id
+	}catch(e){
+	}
+	quit resultObj
+zGetGroupChildMenu(MenuGroupId,LinkPathStr,locID)
+	n (MenuGroupId,LinkPathStr,locID)
+	s GroupId=+MenuGroupId
+	s GroupChild=$p(MenuGroupId,"||",2)
+	s childarr=[]
+	k childItemArr
+	s sub=0
+	k menuSortArr
+	for{
+		s sub=$o(^CBGroupMenuSubI("PreMenu",MenuGroupId,GroupId,GroupChild,sub))
+		Quit:sub=""
+		s MenuId=$lg(^CBGroupD(GroupId,"O",GroupChild,"M",sub),3)
+		continue:$g(^CBMenuDetailD(MenuId))=""
+		s GroupMenuFlag=$lg(^CBMenuDetailD(MenuId),8)
+		s MenuDetailDr=$lg(^CBGroupD(GroupId,"O",GroupChild,"M",sub),3)
+		continue:MenuDetailDr=""
+		set locFlag=1
+		set locSub=0
+		for{
+			set locSub=$o(^CBGroupD(GroupId,"O",GroupChild,"M",sub,"L",locSub))
+			Quit:locSub=""
+			set menuLocData=$g(^CBGroupD(GroupId,"O",GroupChild,"M",sub,"L",locSub))
+			continue:menuLocData=""
+			set locFlag=0
+			set menuLocID=$lg(menuLocData,2)
+			if menuLocID=locID{
+				set locFlag=1
+				Quit 	
+			}
+		}
+		continue:locFlag'=1
+		s Code=$lg(^CBMenuDetailD(MenuDetailDr),2)	
+		s MenuDetailDrDesc=$lg(^CBMenuDetailD(MenuDetailDr),3)
+		s ENDesc=$lg(^CBMenuDetailD(MenuDetailDr),4)
+		s LinkAddress=$lg(^CBMenuDetailD(MenuDetailDr),5)
+		s LinkPath=$lg(^CBMenuDetailD(MenuDetailDr),6)
+		s Image=$lg(^CBMenuDetailD(MenuDetailDr),9)
+		s WinPosition=$lg(^CBMenuDetailD(MenuDetailDr),12)
+		s BackMethod=$lg(^CBMenuDetailD(MenuDetailDr),13)
+		s Paras=$lg(^CBMenuDetailD(MenuDetailDr),14)
+		s CondExpress=$lg(^CBMenuDetailD(MenuDetailDr),15)
+		s JSMethod=$lg(^CBMenuDetailD(MenuDetailDr),16)
+		s Tooltip=$lg(^CBMenuDetailD(MenuDetailDr),17)
+		s SeqNo=$lg(^CBGroupD(GroupId,"O",GroupChild,"M",sub),2)
+		if SeqNo="" s SeqNo=9999
+		s subJson={}
+		s subJson.ID=GroupId_"||"_GroupChild_"||"_sub
+		s subJson.title=MenuDetailDrDesc
+		s subJson.ENDesc=ENDesc
+		if LinkAddress["../"{
+			s LinkAddress=$p(LinkAddress,"../",2)	
+		}
+		s LinkPath="/"_Code
+		if LinkPath'["/" s LinkPath="/"_LinkPath
+		if LinkPathStr'=""{
+			s subJson.path=LinkPathStr_LinkPath	
+		}else{
+			s subJson.path=LinkPath
+		}
+		s subJson.component=LinkAddress
+		s subJson.icon=Image
+		s subJson.WinPosition=WinPosition
+		s subJson.BackMethod=BackMethod
+		s ParaJson={}
+		if Paras'=""{
+			for i=1:1:$l(Paras,","){
+				s itemPara=$p(Paras,",",i)	
+				continue:itemPara=""
+				s $PROPERTY(ParaJson,$p(itemPara,"=",1))=$p(itemPara,"=",2)
+			}		
+		}
+		s subJson.Paras=ParaJson
+		s subJson.CondExpress=CondExpress
+		s subJson.BackMethod=BackMethod
+		s subJson.JSMethod=JSMethod
+		s subJson.Tooltip=Tooltip
+		if GroupMenuFlag="Y"{
+			s MenuDetailDr=$lg(^CBGroupD(GroupId,"O",GroupChild,"M",sub),3)
+			s MenuDetailDrDesc=""
+			if MenuDetailDr'=""{
+				s MenuDetailDrDesc=$lg(^CBMenuDetailD(MenuDetailDr),3)
+			}
+			s jsonret=##class(src.Group.Public).GetGroupChildMenu(GroupId_"||"_GroupChild_"||"_sub,LinkPathStr_LinkPath)	
+			s subJson.subs=jsonret
+			//do childarr.%Push(subJson)
+		}else{
+			//do childarr.%Push(subJson)
+		}
+		s menuSortArr(sub)=subJson
+	}
+	set menuSortStr=$lg(^CBGroupD(+MenuGroupId,"O",$p(MenuGroupId,"||",2),"M",$p(MenuGroupId,"||",3)),9)
+	if menuSortStr'=""{
+		for i=1:1:$l(menuSortStr,"^"){
+			set subJson=$g(menuSortArr($p($p(menuSortStr,"^",i),"||",3)))
+			continue:subJson=""
+			do childarr.%Push(subJson)	
+			k menuSortArr($p($p(menuSortStr,"^",i),"||",3))
+		}	
+	}
+	set id=0
+	for{
+		set id=$o(menuSortArr(id))
+		Quit:id=""
+		do childarr.%Push(menuSortArr(id))		
+	}
+	Quit childarr
+zGetGroupChildRouter(MenuGroupId,BreadCrumbStr,routerArr,LinkPathStr,locID)
+	n (MenuGroupId,BreadCrumbStr,routerArr,LinkPathStr,locID)
+	//s BreadCrumb=##class(%Library.DynamicObject).%FromJSON(BreadCrumbStr)
+	s GroupId=+MenuGroupId
+	s GroupChild=$p(MenuGroupId,"||",2)
+	s sub=0
+	//s routerArr=[]
+	for{
+		s sub=$o(^CBGroupMenuSubI("PreMenu",MenuGroupId,GroupId,GroupChild,sub))
+		Quit:sub=""
+		s MenuId=$lg(^CBGroupD(GroupId,"O",GroupChild,"M",sub),3)
+		continue:$g(^CBMenuDetailD(MenuId))=""
+		s GroupMenuFlag=$lg(^CBMenuDetailD(MenuId),8)
+		s MenuDetailDr=$lg(^CBGroupD(GroupId,"O",GroupChild,"M",sub),3)
+		continue:MenuDetailDr=""
+		set locFlag=1
+		set locSub=0
+		for{
+			set locSub=$o(^CBGroupD(GroupId,"O",GroupChild,"M",sub,"L",locSub))
+			Quit:locSub=""
+			set menuLocData=$g(^CBGroupD(GroupId,"O",GroupChild,"M",sub,"L",locSub))
+			continue:menuLocData=""
+			set locFlag=0
+			set menuLocID=$lg(menuLocData,2)
+			if menuLocID=locID{
+				set locFlag=1
+				Quit 	
+			}
+		}
+		s Code=$lg(^CBMenuDetailD(MenuDetailDr),2)	
+		s MenuDetailDrDesc=$lg(^CBMenuDetailD(MenuDetailDr),3)
+		s ENDesc=$lg(^CBMenuDetailD(MenuDetailDr),4)
+		s LinkAddress=$lg(^CBMenuDetailD(MenuDetailDr),5)
+		s LinkPath=$lg(^CBMenuDetailD(MenuDetailDr),6)
+		s Image=$lg(^CBMenuDetailD(MenuDetailDr),9)
+		s WinPosition=$lg(^CBMenuDetailD(MenuDetailDr),12)
+		s BackMethod=$lg(^CBMenuDetailD(MenuDetailDr),13)
+		s Paras=$lg(^CBMenuDetailD(MenuDetailDr),14)
+		s CondExpress=$lg(^CBMenuDetailD(MenuDetailDr),15)
+		s JSMethod=$lg(^CBMenuDetailD(MenuDetailDr),16)
+		s Tooltip=$lg(^CBMenuDetailD(MenuDetailDr),17)
+		s SeqNo=$lg(^CBGroupD(GroupId,"O",GroupChild,"M",sub),2)
+		s subJson={}
+		s subJson.ID=GroupId_"||"_GroupChild_"||"_sub
+		s subJson.title=MenuDetailDrDesc
+		s subJson.ENDesc=ENDesc
+		if LinkAddress["../"{
+			s LinkAddress=$p(LinkAddress,"../",2)	
+		}
+		s LinkPath="/"_Code
+		if LinkPath'["/" s LinkPath="/"_LinkPath
+		if LinkPathStr'=""{
+			s subJson.path=LinkPathStr_LinkPath	
+		}else{
+			s subJson.path=LinkPath	
+		}
+		s subJson.component=LinkAddress
+		s BreadCrumb=##class(%Library.DynamicObject).%FromJSON(BreadCrumbStr)
+		do BreadCrumb.%Push(MenuDetailDrDesc)
+		s subJson.breadcrumbName=BreadCrumb
+		if GroupMenuFlag="Y"{
+			s MenuDetailDr=$lg(^CBGroupD(GroupId,"O",GroupChild,"M",sub),3)
+			s MenuDetailDrDesc=""
+			if MenuDetailDr'=""{
+				s MenuDetailDrDesc=$lg(^CBMenuDetailD(MenuDetailDr),3)
+			}
+			s jsonret=##class(src.Group.Public).GetGroupChildRouter(GroupId_"||"_GroupChild_"||"_sub,BreadCrumb.%ToJSON(),.routerArr,LinkPathStr_LinkPath)	
+			//s subJson.children=jsonret
+			//do childarr.%Push(routerArr)
+		}else{
+			do routerArr.%Push(subJson)
+		}	
+	}
+	Quit routerArr
+zGetGroupMenu(jsonStr)
+	s jsonObj=##class(%Library.DynamicObject).%FromJSON(jsonStr)
+	s resultJson={}
+	s GroupDr=jsonObj.GroupDr
+	s Type=jsonObj.Type
+	s LocDr=jsonObj.LocDr
+	s child=0
+	//s GroupMenuId=""
+	b ;1212
+	s subJsonArr=[]
+	k subArr
+	k menuSortArr
+	set menuSortStr=""
+	for{
+		s child=$o(^CBGroupD(GroupDr,"O",child))
+		Quit:child=""	
+		continue:$g(^CBGroupD(GroupDr,"O",child))=""
+		s menuType=$lg(^CBGroupD(GroupDr,"O",child),3)
+		continue:(menuType'=Type)&&(Type'="")
+		set menuSortStr=$lg(^CBGroupD(GroupDr,"O",child),6)
+		s sub=0
+		for{
+			s sub=$o(^CBGroupD(GroupDr,"O",child,"M",sub))
+			Quit:sub=""
+			s PreMenuGroupDr=$lg(^CBGroupD(GroupDr,"O",child,"M",sub),5)	
+			continue:PreMenuGroupDr'=""
+			//s MenuLocDr=$lg(^CBGroupD(GroupDr,"O",child,"M",sub),4)
+			//continue:(MenuLocDr'=LocDr)&&(MenuLocDr'="")
+			s MenuDetailDr=$lg(^CBGroupD(GroupDr,"O",child,"M",sub),3)
+			continue:MenuDetailDr=""
+			continue:$g(^CBMenuDetailD(MenuDetailDr))=""
+			set locFlag=1
+			set locSub=0
+			for{
+				set locSub=$o(^CBGroupD(GroupDr,"O",child,"M",sub,"L",locSub))
+				Quit:locSub=""
+				set menuLocData=$g(^CBGroupD(GroupDr,"O",child,"M",sub,"L",locSub))
+				continue:menuLocData=""
+				set locFlag=0
+				set menuLocID=$lg(menuLocData,2)
+				if menuLocID=LocDr{
+					set locFlag=1
+					Quit 	
+				}
+			}
+			continue:locFlag'=1
+			s Code=$lg(^CBMenuDetailD(MenuDetailDr),2)
+			s MenuDetailDrDesc=$lg(^CBMenuDetailD(MenuDetailDr),3)
+			s ENDesc=$lg(^CBMenuDetailD(MenuDetailDr),4)
+			s LinkAddress=$lg(^CBMenuDetailD(MenuDetailDr),5)
+			s LinkPath=$lg(^CBMenuDetailD(MenuDetailDr),6)
+			s Image=$lg(^CBMenuDetailD(MenuDetailDr),9)
+			s WinPosition=$lg(^CBMenuDetailD(MenuDetailDr),12)
+			s BackMethod=$lg(^CBMenuDetailD(MenuDetailDr),13)
+			s Paras=$lg(^CBMenuDetailD(MenuDetailDr),14)
+			s CondExpress=$lg(^CBMenuDetailD(MenuDetailDr),15)
+			s JSMethod=$lg(^CBMenuDetailD(MenuDetailDr),16)
+			s Tooltip=$lg(^CBMenuDetailD(MenuDetailDr),17)
+			s SeqNo=$lg(^CBGroupD(GroupDr,"O",child,"M",sub),2)
+			if SeqNo="" s SeqNo=9999
+			s subJson={}
+			s subJson.ID=GroupDr_"||"_child_"||"_sub
+			s subJson.title=MenuDetailDrDesc
+			s subJson.ENDesc=ENDesc
+			if LinkAddress["../"{
+				s LinkAddress=$p(LinkAddress,"../",2)	
+			}
+			s LinkPath="/"_Code
+			s subJson.path="/"_Code    //LinkPath
+			s subJson.code=Code
+			s subJson.component=LinkAddress
+			s subJson.icon=Image
+			s subJson.WinPosition=WinPosition
+			s subJson.BackMethod=BackMethod
+			s ParaJson={}
+			if Paras'=""{
+				for i=1:1:$l(Paras,","){
+					s itemPara=$p(Paras,",",i)	
+					continue:itemPara=""
+					s $PROPERTY(ParaJson,$p(itemPara,"=",1))=$p(itemPara,"=",2)
+				}		
+			}
+			s subJson.Paras=ParaJson
+			s subJson.CondExpress=CondExpress
+			s subJson.BackMethod=BackMethod
+			s subJson.JSMethod=JSMethod
+			s subJson.Tooltip=Tooltip
+			s GroupMenuFlag=$lg(^CBMenuDetailD(MenuDetailDr),8)
+			if GroupMenuFlag="Y"{
+				s retJson=##class(src.Group.Public).GetGroupChildMenu(GroupDr_"||"_child_"||"_sub,LinkPath,LocDr )	
+				s subJson.subs=retJson
+			}
+			s menuSortArr(sub)=subJson
+			//do subJsonArr.%Push(subJson)
+		}
+		Quit
+	}
+	if menuSortStr'=""{
+		for i=1:1:$l(menuSortStr,"^"){
+			set subJson=$g(menuSortArr($p($p(menuSortStr,"^",i),"||",3)))
+			continue:subJson=""
+			do subJsonArr.%Push(subJson)	
+			k menuSortArr($p($p(menuSortStr,"^",i),"||",3))
+		}	
+	}
+	set id=0
+	for{
+		set id=$o(menuSortArr(id))
+		Quit:id=""
+		do subJsonArr.%Push(menuSortArr(id))		
+	}
+	s resultObj={}
+	s resultObj.errorCode=0
+	s resultObj.errorMessage=""
+	s resultData=[]
+	s resultData=subJsonArr
+	s resultObj.result=resultData
+	Quit resultObj
+zGetGroupRouter(jsonStr)
+	s jsonObj=##class(%Library.DynamicObject).%FromJSON(jsonStr)
+	s resultJson={}
+	s GroupDr=jsonObj.GroupDr
+	s Type=jsonObj.Type
+	s LocDr=jsonObj.LocDr
+	s child=0
+	s routerArr=[]
+	//s GroupMenuId=""
+	s subJsonArr=[]
+	for{
+		s child=$o(^CBGroupD(GroupDr,"O",child))
+		Quit:child=""
+		continue:$g(^CBGroupD(GroupDr,"O",child))=""	
+		s menuType=$lg(^CBGroupD(GroupDr,"O",child),3)
+		continue:(menuType'=Type)&&(Type'="")
+		s sub=0
+		for{
+			s sub=$o(^CBGroupD(GroupDr,"O",child,"M",sub))
+			Quit:sub=""
+			s PreMenuGroupDr=$lg(^CBGroupD(GroupDr,"O",child,"M",sub),5)	
+			continue:PreMenuGroupDr'=""
+			s MenuLocDr=$lg(^CBGroupD(GroupDr,"O",child,"M",sub),4)
+			continue:(MenuLocDr'=LocDr)&&(MenuLocDr'="")
+			s MenuDetailDr=$lg(^CBGroupD(GroupDr,"O",child,"M",sub),3)
+			continue:MenuDetailDr=""
+			continue:$g(^CBMenuDetailD(MenuDetailDr))=""
+			set locFlag=1
+			set locSub=0
+			for{
+				set locSub=$o(^CBGroupD(GroupDr,"O",child,"M",sub,"L",locSub))
+				Quit:locSub=""
+				set menuLocData=$g(^CBGroupD(GroupDr,"O",child,"M",sub,"L",locSub))
+				continue:menuLocData=""
+				set locFlag=0
+				set menuLocID=$lg(menuLocData,2)
+				if menuLocID=LocDr{
+					set locFlag=1
+					Quit 	
+				}
+			}
+			s Code=$lg(^CBMenuDetailD(MenuDetailDr),2)
+			s MenuDetailDrDesc=$lg(^CBMenuDetailD(MenuDetailDr),3)
+			s ENDesc=$lg(^CBMenuDetailD(MenuDetailDr),4)
+			s LinkAddress=$lg(^CBMenuDetailD(MenuDetailDr),5)
+			s LinkPath=$lg(^CBMenuDetailD(MenuDetailDr),6)
+			s Image=$lg(^CBMenuDetailD(MenuDetailDr),9)
+			s WinPosition=$lg(^CBMenuDetailD(MenuDetailDr),12)
+			s BackMethod=$lg(^CBMenuDetailD(MenuDetailDr),13)
+			s Paras=$lg(^CBMenuDetailD(MenuDetailDr),14)
+			s CondExpress=$lg(^CBMenuDetailD(MenuDetailDr),15)
+			s JSMethod=$lg(^CBMenuDetailD(MenuDetailDr),16)
+			s Tooltip=$lg(^CBMenuDetailD(MenuDetailDr),17)
+			s SeqNo=$lg(^CBGroupD(GroupDr,"O",child,"M",sub),2)
+			s subJson={}
+			s subJson.ID=GroupDr_"||"_child_"||"_sub
+			s subJson.code=Code
+			s subJson.title=MenuDetailDrDesc
+			s subJson.ENDesc=ENDesc
+			s component=""
+			if LinkAddress["../"{
+				s LinkAddress=$p(LinkAddress,"../",2)	
+			}
+			if Image["../"{
+				s Image=$p(Image,"../",2)	
+			}
+			s LinkPath="/"_Code
+			s subJson.path=LinkPath
+			s subJson.component=LinkAddress
+			s subJson.image=Image
+			s BreadCrumb=[]
+			do BreadCrumb.%Push(MenuDetailDrDesc)
+			s subJson.breadcrumbName=BreadCrumb
+			s GroupMenuFlag=$lg(^CBMenuDetailD(MenuDetailDr),8)
+			if GroupMenuFlag="Y"{
+				s retJson=##class(src.Group.Public).GetGroupChildRouter(GroupDr_"||"_child_"||"_sub,BreadCrumb.%ToJSON(),.routerArr,LinkPath,LocDr)	
+				//s subJson.children=retJson
+			}else{
+				do routerArr.%Push(subJson)	
+			}
+		}
+	}
+	s resultObj={}
+	s resultObj.errorCode=0
+	s resultObj.errorMessage=""
+	s resultData=[]
+	s resultData=subJsonArr
+	s resultObj.result=routerArr
+	Quit resultObj
+zGetMenuData()
+	s menuDataArr=[]
+	s menuItem={}
+	s menuItem.title="首页"
+	s menuItem.icon="home"
+	s menuItem.path="/header"
+	do menuDataArr.%Push(menuItem)
+	s menuItem={}
+	s menuItem.title="菜单管理"
+	s menuItem.icon="schedule"
+	s menuItem.path="/mine"
+	s menuSubs=[]
+	s menuSubItem={}
+	s menuSubItem.path="/mine/add"
+	s menuSubItem.title="菜单维护"
+	s menuSubItem.icon="coffee"
+	do menuSubs.%Push(menuSubItem)
+	s menuSubItem={}
+	s menuSubItem.path="/mine/list"
+	s menuSubItem.title="菜单授权"
+	s menuSubItem.icon="zoom-in"
+	do menuSubs.%Push(menuSubItem)
+	s menuItem.subs=menuSubs
+	do menuDataArr.%Push(menuItem)
+	s menuItem={}
+	s menuItem.title="基础数据"
+	s menuItem.icon="sliders"
+	s menuItem.path="/basic"
+	s menuSubs=[]
+	s menuSubItem={}
+	s menuSubItem.path="/basic/system"
+	s menuSubItem.title="系统资源"
+	s menuSubItem.icon="deployment-unit"
+	s systemSub=[]
+	s systemSubItem={}
+	s systemSubItem.path="/basic/system/user"
+	s systemSubItem.title="用户"
+	s systemSubItem.icon="user-delete"
+	do systemSub.%Push(systemSubItem)
+	s systemSubItem={}
+	s systemSubItem.path="/basic/system/user_maintenance"
+	s systemSubItem.title="用户维护"
+	s systemSubItem.icon="usergroup-add"
+	do systemSub.%Push(systemSubItem)
+	s systemSubItem={}
+	s systemSubItem.path="/basic/system/role_maintenance"
+	s systemSubItem.title="角色维护"
+	s systemSubItem.icon="usergroup-delete"
+	do systemSub.%Push(systemSubItem)
+	s menuSubItem.subs=systemSub
+	do menuSubs.%Push(menuSubItem)
+	s menuSubItem={}
+	s menuSubItem.path="/basic/main"
+	s menuSubItem.title="主菜单维护"
+	s menuSubItem.icon="build"
+	do menuSubs.%Push(menuSubItem)
+	s menuSubItem={}
+	s menuSubItem.path="/basic/detail"
+	s menuSubItem.title="菜单明细维护"
+	s menuSubItem.icon="branches"
+	do menuSubs.%Push(menuSubItem)
+	s menuSubItem={}
+	s menuSubItem.path="/basic/authorization"
+	s menuSubItem.title="菜单授权"
+	s menuSubItem.icon="branches"
+	do menuSubs.%Push(menuSubItem)
+	s menuItem.subs=menuSubs
+	do menuDataArr.%Push(menuItem)
+	Quit menuDataArr
+zGetMenuSubPath(menuSubID,linkPath="")
+	new (menuSubID, linkPath)
+	quit:menuSubID="" linkPath
+	quit:$l(menuSubID,"||")'=3 linkPath
+	set groupID=+menuSubID
+	set groupMenuID=$p(menuSubID,"||",2)
+	set groupMenuSubID=$p(menuSubID,"||",3)
+	set menuSubData=$g(^CBGroupD(groupID,"O",groupMenuID,"M",groupMenuSubID))
+	;处理角色默认主界面指针不存在数据问题 [2019-11-12 NZS]
+	if ($d(^CBGroupD(groupID,"O",groupMenuID,"M",groupMenuSubID))'=0){
+		set menuDetailID=$lg(menuSubData,3)
+		set preGroupMenuSubID=$lg(menuSubData,5)
+		set code=$case($d(^CBMenuDetailD(menuDetailID))'=0,"1":$lg($g(^CBMenuDetailD(menuDetailID)),2),:"")
+		set linkPath="/"_code_linkPath
+		if preGroupMenuSubID'="" {
+			set linkPath=..GetMenuSubPath(preGroupMenuSubID,linkPath)
+		}
+	}
+	quit linkPath
+zGetRouterData()
+	s RouterData=[]
+	s route={}
+	s route.path="/header"
+	s route.breadcrumbName=["首页", "欢迎进入"]
+	s route.component="pages/Header/index.jsx"
+	do RouterData.%Push(route)
+	s route={}
+	s route.path="/mine/add"
+	s route.breadcrumbName=["菜单管理", "菜单维护"]
+	s route.component="pages/Mine/index.jsx"
+	do RouterData.%Push(route)
+	s route={}
+	s route.path="/mine/list"
+	s route.breadcrumbName=["菜单管理", "菜单授权"]
+	s route.component="pages/System/menuAuthorization.jsx"
+	do RouterData.%Push(route)
+	s route={}
+	s route.path="/basic/system/user"
+	s route.breadcrumbName=["基础数据", "系统资源", "用户"]
+	s route.component="pages/System/user.jsx"
+	do RouterData.%Push(route)
+	s route={}
+	s route.path="/basic/system/user_maintenance"
+	s route.breadcrumbName=["基础数据", "系统资源", "用户管理"]
+	s route.component="pages/System/userMaintenance.jsx"
+	do RouterData.%Push(route)
+	s route={}
+	s route.path="/basic/system/role_maintenance"
+	s route.breadcrumbName=["基础数据", "系统资源", "角色管理"]
+	s route.component="pages/System/roleMaintenance.jsx"
+	do RouterData.%Push(route)
+	s route={}
+	s route.path="/basic/main"
+	s route.breadcrumbName=["基础数据", "主菜单维护"]
+	s route.component="pages/System/mainMenuMaintenance.jsx"
+	do RouterData.%Push(route)
+	s route={}
+	s route.path="/basic/detail"
+	s route.breadcrumbName=["基础数据", "菜单明细维护"]
+	s route.component="pages/System/menuDetailMaintenance.jsx"
+	do RouterData.%Push(route)
+	s route={}
+	s route.path="/basic/authorization"
+	s route.breadcrumbName=["基础数据", "菜单授权"]
+	s route.component="pages/System/menuAuthorization.jsx"
+	do RouterData.%Push(route)
+	s route={}
+	s route.path="/basic/cbdata"
+	s route.breadcrumbName=["基础数据", "数据维护"]
+	s route.component="pages/System/cbdata.jsx"
+	//do RouterData.%Push(route)
+	Quit RouterData
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("src.Group.Public",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"src.Group.Public")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"src.Group.Public")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="src.Group.Public"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="Public"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"Public"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"Public"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If encoded Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ If indentFlag,encoded { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("src.Group.Public",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"src.Group.Public")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLNew(document,node,containerOref="")
+	Quit (##class(src.Group.Public).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("src.Group.Public",top,format,namespacePrefix,input,refOnly,.schema)
+ztest1(Arg1)
+	set json={}
+	set json.GroupDr=2
+	s json.Type=2
+	s json.LocDr=1
+	set ret=##class(src.Group.Public).GetGroupRouter(json.%ToJSON())
+	quit ret.%ToJSON()

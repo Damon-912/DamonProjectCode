@@ -1,0 +1,249 @@
+{
+  "name": "drg-iris-client",
+  "version": "1.0.0",
+  "description": "DRG医保控费预警系统MCP客户端配置",
+  "author": "DRG开发团队",
+  "license": "MIT",
+  
+  "mcp": {
+    "version": "1.0",
+    "servers": [
+      {
+        "name": "drg-iris-server",
+        "type": "http",
+        "url": "http://localhost:8090",
+        "description": "本地代理服务器连接到腾讯云IRIS",
+        "auth": {
+          "type": "api_key",
+          "header": "X-API-Key",
+          "value": "drg-mcp-access-key-2026"
+        },
+        "timeout": 30000,
+        "retry": {
+          "attempts": 3,
+          "delay": 1000
+        }
+      }
+    ],
+    
+    "tools": {
+      "query_drg_data": {
+        "description": "查询DRG相关数据",
+        "parameters": {
+          "interface_code": {
+            "type": "string",
+            "description": "接口代码，如02010001",
+            "required": true
+          },
+          "params": {
+            "type": "array",
+            "description": "查询参数数组",
+            "required": false
+          },
+          "session": {
+            "type": "object",
+            "description": "会话信息",
+            "required": true
+          }
+        },
+        "execution": {
+          "url": "{{base_url}}/iris-api/invoke",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "X-API-Key": "{{api_key}}"
+          }
+        }
+      },
+      
+      "execute_drg_grouping": {
+        "description": "执行DRIS分组操作",
+        "parameters": {
+          "patient_data": {
+            "type": "object",
+            "description": "病案首页数据",
+            "required": true
+          },
+          "grouping_rules": {
+            "type": "object",
+            "description": "分组规则配置",
+            "required": false
+          }
+        },
+        "execution": {
+          "url": "{{base_url}}/iris-api/invoke",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        }
+      },
+      
+      "get_warning_records": {
+        "description": "获取预警记录",
+        "parameters": {
+          "start_date": {
+            "type": "string",
+            "description": "开始日期，格式: YYYY-MM-DD",
+            "required": false
+          },
+          "end_date": {
+            "type": "string",
+            "description": "结束日期，格式: YYYY-MM-DD",
+            "required": false
+          },
+          "warning_level": {
+            "type": "string",
+            "description": "预警级别",
+            "required": false
+          }
+        },
+        "execution": {
+          "url": "{{base_url}}/iris-api/invoke",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        }
+      }
+    },
+    
+    "resources": {
+      "iris_database": {
+        "type": "iris-database",
+        "description": "腾讯云IRIS数据库连接",
+        "uri": "iris://111.229.137.113:52773/USER",
+        "access": {
+          "username": "_system",
+          "password": "123456"
+        }
+      }
+    },
+    
+    "settings": {
+      "base_url": "http://localhost:8090",
+      "api_key": "drg-mcp-access-key-2026",
+      "default_session": {
+        "userID": "158",
+        "userCode": "admin",
+        "userName": "admin",
+        "locID": "2300",
+        "locDesc": "信息中心",
+        "groupID": "3",
+        "groupDesc": "医院维护员",
+        "hospID": "25",
+        "hospCode": "H03",
+        "hospDesc": "合肥普瑞眼科医院",
+        "langID": 1,
+        "langDesc": "简体中文",
+        "changeFlag": "N",
+        "changeDesc": "",
+        "lastLoginDate": "2026-01-01",
+        "lastLoginTime": "00:00:00",
+        "directorAuth": "N",
+        "defaultMenuType": "2",
+        "titleDesc": "",
+        "userYBCode": "",
+        "hospYBCode": "H34010400768",
+        "path": "",
+        "sessionID": "P9BXebxmDI",
+        "errorMessageTime": "",
+        "language": "CN",
+        "messageTime": 1
+      },
+      
+      "pagination": {
+        "default_page": 1,
+        "default_limit": 20,
+        "max_limit": 100
+      },
+      
+      "timeout": {
+        "request": 30000,
+        "connect": 10000
+      },
+      
+      "retry": {
+        "attempts": 3,
+        "delay": 1000,
+        "backoff": "exponential"
+      }
+    },
+    
+    "endpoints": {
+      "drg_group": {
+        "path": "/iris-api/invoke",
+        "method": "POST",
+        "content_type": "application/json",
+        "description": "DRG分组接口调用"
+      },
+      
+      "basic_data": {
+        "path": "/iris-api/invoke",
+        "method": "POST",
+        "content_type": "application/json",
+        "description": "基础数据接口调用"
+      },
+      
+      "warning": {
+        "path": "/iris-api/invoke",
+        "method": "POST",
+        "content_type": "application/json",
+        "description": "预警接口调用"
+      },
+      
+      "profit": {
+        "path": "/iris-api/invoke",
+        "method": "POST",
+        "content_type": "application/json",
+        "description": "盈亏分析接口调用"
+      }
+    },
+    
+    "authentication": {
+      "type": "api_key",
+      "header": "X-API-Key",
+      "value": "drg-mcp-access-key-2026",
+      "description": "API密钥认证",
+      "required": true
+    },
+    
+    "logging": {
+      "enabled": true,
+      "level": "info",
+      "format": "json",
+      "output": "console",
+      "file": {
+        "enabled": false,
+        "path": "./logs/mcp-client.log",
+        "max_size": "100MB",
+        "max_files": 10
+      }
+    },
+    
+    "monitoring": {
+      "enabled": true,
+      "metrics": ["request_count", "response_time", "error_rate"],
+      "health_check": {
+        "enabled": true,
+        "interval": 30,
+        "endpoint": "/health"
+      }
+    },
+    
+    "security": {
+      "ssl": {
+        "enabled": false,
+        "verify": false
+      },
+      "cors": {
+        "enabled": true,
+        "origins": ["*"]
+      },
+      "rate_limiting": {
+        "enabled": true,
+        "requests_per_minute": 60
+      }
+    }
+  }
+}

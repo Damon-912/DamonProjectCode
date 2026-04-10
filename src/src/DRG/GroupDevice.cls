@@ -1061,6 +1061,10 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
             set adrgCode = item.code
             set adrgDesc = item.desc
             
+            //根据细分规则判断第四位编码
+            set iCount=0
+            &sql(SELECT count(*) into :iCount FROM CB_DRGCoreGroupsList Where ADRG=:adrgCode AND SegmentationFlag=0)
+            
 		    set num="9"
 		    if (age>=17)
 		    {
@@ -1072,6 +1076,10 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
 	    	    {
 		            set num="1"		    	
 	    	    }
+	    	    elseif (complication="")&&(iCount>0)
+		        {
+		            set num="9"	
+		        }	    	    
 	    	    elseif (complication="")
 		        {
 		            set num="5"		    	

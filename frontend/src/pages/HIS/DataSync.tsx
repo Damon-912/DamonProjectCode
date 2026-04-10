@@ -24,6 +24,7 @@ import {
   EyeOutlined,
   SyncOutlined
 } from '@ant-design/icons';
+import CustomPagination from '../../components/CustomPagination';
 
 const { Option } = Select;
 
@@ -461,17 +462,16 @@ const DataSync: React.FC = () => {
           dataSource={data}
           loading={loading}
           scroll={{ x: 1800 }}
-          pagination={{
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条记录`,
-            locale: {
-              items_per_page: '/页',
-              jump_to: '跳至',
-              page: '页',
-            }
-          }}
+          pagination={false}
         />
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <CustomPagination
+            current={1}
+            pageSize={15}
+            total={data.length}
+            onChange={() => {}}
+          />
+        </div>
       </Card>
 
       <Modal

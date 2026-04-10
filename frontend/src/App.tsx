@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { Layout, Menu, Card, Row, Col, Statistic, Table, Tag, Progress, List, Avatar, Typography, Tabs } from 'antd';
+import { useState, useEffect } from 'react';
+import { Layout, Menu, Card, Row, Col, Statistic, Table, Tag, Progress, List, Avatar, Typography, Tabs, Input, Dropdown, Badge } from 'antd';
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
 import {
   DashboardOutlined,
   PartitionOutlined,
@@ -32,6 +34,8 @@ import CoreAlgorithmConfig from './pages/BasicData/CoreAlgorithmConfig';
 import BasicDataMaintenance from './pages/BasicData/BasicDataMaintenance';
 import DIPDisease from './pages/BasicData/DIPDisease';
 import TableDataMaintenance from './pages/BasicData/TableDataMaintenance';
+import DRGCataLog from './pages/BasicData/DRGCataLog';
+import DRGSegmentationRules from './pages/BasicData/DRGSegmentationRules';
 
 // DRG pages
 import DRGWorkbench from './pages/DRG/Workbench';
@@ -69,6 +73,50 @@ import HISDataSync from './pages/HIS/DataSync';
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
 
+// 扁平化菜单项用于搜索
+interface FlatMenuItem {
+  key: string;
+  label: string;
+  icon?: React.ReactNode;
+}
+
+const flattenMenuItems = (items: MenuProps['items']): FlatMenuItem[] => {
+  const result: FlatMenuItem[] = [];
+  items?.forEach(item => {
+    if (item && 'key' in item && 'label' in item && item.key !== 'dashboard') {
+      result.push({ 
+        key: item.key as string, 
+        label: item.label as string, 
+        icon: 'icon' in item ? (item as any).icon : undefined 
+      });
+    }
+    if (item && 'children' in item && item.children) {
+      result.push(...flattenMenuItems(item.children));
+    }
+  });
+  return result;
+};
+
+// 递归过滤菜单
+const filterMenuItems = (items: MenuProps['items'], searchText: string): MenuProps['items'] => {
+  if (!searchText) return items;
+  const lowerSearch = searchText.toLowerCase();
+  return items?.map(item => {
+    if (!item) return item;
+    const itemLabel = ('label' in item ? item.label : '') as string;
+    const matchSelf = itemLabel.toLowerCase().includes(lowerSearch);
+    if ('children' in item && item.children) {
+      const filteredChildren = filterMenuItems(item.children, searchText);
+      const hasMatchingChild = filteredChildren && filteredChildren.length > 0;
+      if (matchSelf || hasMatchingChild) {
+        return { ...item, children: filteredChildren };
+      }
+      return null;
+    }
+    return matchSelf ? item : null;
+  }).filter(Boolean) as MenuProps['items'];
+};
+
 // 菜单key到标题的映射
 const menuTitleMap: Record<string, string> = {
   'dashboard': '监控仪表盘',
@@ -99,6 +147,8 @@ const menuTitleMap: Record<string, string> = {
   'basic-data-adrg-rules': 'ADRG分组规则维护',
   'basic-data-core-algorithm': 'DRG算法配置维护',
   'basic-data-dip': 'DIP付费病种库',
+  'basic-data-drg-catalog': 'DRGs目录信息表',
+  'basic-data-segmentation-rules': 'ADRG细分规则表',
   'system-user': '用户管理',
   'system-role': '角色权限',
   'system-menu': '菜单配置',
@@ -180,12 +230,14 @@ const menuItems: MenuProps['items'] = [
     icon: <TableOutlined />,
     label: '数据管理',
     children: [
-      { key: 'basic-data-dict', label: '基础数据维护' },
+      { key: 'basic-data-dict', label: 'DRG基础数据' },
       { key: 'basic-data-icd-mapping', label: 'ICD编码映射' },
       { key: 'basic-data-icd-query', label: 'ICD编码查询' },
       { key: 'basic-data-adrg-rules', label: 'ADRG分组规则' },
       { key: 'basic-data-core-algorithm', label: 'DRG算法配置' },
       { key: 'basic-data-dip', label: 'DIP付费病种库' },
+      { key: 'basic-data-drg-catalog', label: 'DRGs目录信息表' },
+      { key: 'basic-data-segmentation-rules', label: 'ADRG细分规则表' },
     ],
   },
   {
@@ -232,8 +284,33 @@ interface TabItem {
 }
 
 function App() {
+  // 强制设置 dayjs 为中文，确保 DatePicker 等组件显示中文
+  useEffect(() => {
+    dayjs.locale('zh-cn');
+  }, []);
+
   const [collapsed, setCollapsed] = useState(false);
   const [currentMenu, setCurrentMenu] = useState('dashboard');
+  const [menuSearch, setMenuSearch] = useState('');
+  const [searchVisible, setSearchVisible] = useState(false);
+
+  // 获取扁平化的菜单列表用于搜索
+  const flatMenuList = flattenMenuItems(menuItems);
+
+  // 搜索结果
+  const searchResults = menuSearch
+    ? flatMenuList.filter(item => item.label.toLowerCase().includes(menuSearch.toLowerCase()))
+    : [];
+
+  // 处理搜索选中
+  const handleSearchSelect = ({ key }: { key: string }) => {
+    handleMenuClick(key);
+    setMenuSearch('');
+    setSearchVisible(false);
+  };
+
+  // 根据搜索过滤菜单
+  const filteredMenuItems = filterMenuItems(menuItems, menuSearch);
   // 已打开的标签页列表
   const [openTabs, setOpenTabs] = useState<TabItem[]>([
     { key: 'dashboard', label: '监控仪表盘', closable: false }
@@ -384,6 +461,10 @@ function App() {
         return <TableDataMaintenance />;
       case 'basic-data-dip':
         return <DIPDisease />;
+      case 'basic-data-drg-catalog':
+        return <DRGCataLog />;
+      case 'basic-data-segmentation-rules':
+        return <DRGSegmentationRules />;
       case 'system-user':
         return <SystemUsers />;
       case 'system-role':
@@ -467,8 +548,8 @@ function App() {
           {!collapsed && (
             <span style={{
               color: '#fff',
-              fontSize: 14,
-              fontWeight: 600,
+              fontSize: 18,
+              fontWeight: 700,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis'
@@ -477,12 +558,74 @@ function App() {
             </span>
           )}
         </div>
+        {/* 菜单搜索框 */}
+        {!collapsed && (
+          <div style={{ padding: '12px 12px 8px 12px' }}>
+            <Dropdown
+              open={searchVisible && menuSearch.length > 0}
+              onOpenChange={setSearchVisible}
+              dropdownRender={() => (
+                <div style={{
+                  background: '#fff',
+                  borderRadius: 6,
+                  boxShadow: '0 6px 16px 0 rgba(0, 0, 0, 0.15)',
+                  maxHeight: 320,
+                  overflow: 'auto'
+                }}>
+                  {searchResults.length > 0 ? (
+                    searchResults.map(item => (
+                      <div
+                        key={item.key}
+                        onClick={() => handleSearchSelect({ key: item.key })}
+                        style={{
+                          padding: '10px 16px',
+                          cursor: 'pointer',
+                          color: '#333',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.background = '#f5f5f5')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        {item.icon && <span style={{ color: '#1890ff' }}>{item.icon}</span>}
+                        <span>{item.label}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ padding: '16px', textAlign: 'center', color: '#999' }}>
+                      未找到匹配的菜单
+                    </div>
+                  )}
+                </div>
+              )}
+            >
+              <Input
+                prefix={<SearchOutlined style={{ color: 'rgba(255,255,255,0.45)' }} />}
+                placeholder="搜索菜单..."
+                value={menuSearch}
+                onChange={e => {
+                  setMenuSearch(e.target.value);
+                  setSearchVisible(true);
+                }}
+                onFocus={() => menuSearch && setSearchVisible(true)}
+                style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  border: 'none',
+                  borderRadius: 4,
+                  color: '#fff'
+                }}
+                className="menu-search-input"
+              />
+            </Dropdown>
+          </div>
+        )}
         <Menu
           theme="dark"
           defaultSelectedKeys={['dashboard']}
           selectedKeys={[currentMenu]}
           mode="inline"
-          items={menuItems}
+          items={filteredMenuItems}
           onClick={({key}) => handleMenuClick(key)}
           style={{ flex: 1, borderRight: 0 }}
         />
