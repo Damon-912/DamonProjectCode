@@ -138,6 +138,48 @@ ClassMethod GetGroupList(jsonObj) As %Library.DynamicObject
 	quit resultObj
 }
 
+/// Creator:     LYP
+/// CreatDate:   2026-04-13
+/// Description: 查询角色下拉列表（用于下拉框选择）
+/// code:        01010057
+/// Input:       {"params":[{"active":"Y"}]}
+/// Debug:       w ##class(src.Group.Group).GetGroupDropdown({"params":[{"active":"Y"}]}).%ToJSON()
+ClassMethod GetGroupDropdown(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set dataArr=[]
+	try{
+		set params=jsonObj.params.%Get(0)
+		set active=$g(params.active,"Y")
+		
+		set tStatement = ##class(%SQL.Statement).%New(1)
+		set sql="SELECT ID, Code, Descripts FROM SQLUSER.CB_Group WHERE 1=1"
+		set:active'="" sql=sql_" AND Active = '"_active_"'"
+		set sql=sql_" ORDER BY Code"
+		
+		do tStatement.%Prepare(sql)
+		set result=tStatement.%Execute()
+		while result.%Next(.sc){
+			set dataObj={}
+			set dataObj.id=result.%Get("ID")
+			set dataObj.code=result.%Get("Code")
+			set dataObj.descripts=result.%Get("Descripts")
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=dataArr.%Size()
+	}catch(e){
+		set status=e.AsStatus()
+    	set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorInfo="获取角色下拉列表出错:w ##class("_$ClassName()_").GetGroupDropdown("_jsonObj.%ToJSON()_")"
+		do ##class(src.Interface.Message).InsErrRecord("01040044",errorInfo,errorMessage)
+		set resultObj.errorCode="01040044"
+	    set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040044")
+	}
+	quit resultObj
+}
+
 /// Creator:     TC
 /// CreatDate:   2022-6-30
 /// Description: 根据角色查询菜单

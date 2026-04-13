@@ -64,6 +64,7 @@ import ProfitCostStructure from './pages/Profit/CostStructure';
 import SystemUsers from './pages/System/Users';
 import SystemUserApply from './pages/System/UserApply';
 import SystemRoles from './pages/System/Roles';
+import SystemRoleManage from './pages/System/RoleManage';
 import SystemMenus from './pages/System/Menus';
 import SystemInterfaces from './pages/System/Interfaces';
 import SystemInterfaceLogs from './pages/System/InterfaceLogs';
@@ -157,8 +158,8 @@ const menuTitleMap: Record<string, string> = {
   'basic-data-drg-catalog': 'DRGs目录信息表',
   'basic-data-segmentation-rules': 'ADRG细分规则表',
   'system-user': '用户管理',
-  'system-user-apply': '用户申请审核',
   'system-role': '角色权限',
+  'system-role-manage': '角色管理',
   'system-menu': '菜单配置',
   'system-hospital': '医疗机构管理',
   'system-api': '接口服务配置',
@@ -254,7 +255,7 @@ const menuItems: MenuProps['items'] = [
     label: '用户管理',
     children: [
       { key: 'system-user', label: '用户管理' },
-      { key: 'system-user-apply', label: '用户申请审核' },
+      { key: 'system-role-manage', label: '角色管理' },
       { key: 'system-role', label: '角色权限' },
       { key: 'system-menu', label: '菜单配置' },
     ],
@@ -519,6 +520,8 @@ function App() {
         return <SystemUsers />;
       case 'system-user-apply':
         return <SystemUserApply />;
+      case 'system-role-manage':
+        return <SystemRoleManage />;
       case 'system-role':
         return <SystemRoles />;
       case 'system-menu':

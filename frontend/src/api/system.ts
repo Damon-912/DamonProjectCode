@@ -9,18 +9,16 @@ import type { ApiResponse, Pagination, PageResult } from './basicData';
 
 // ========== 用户管理 (01030101-01030111) ==========
 
-/** 用户列表项 */
+/** 用户列表项 - 01030101接口返回，只包含用户基本信息 */
 export interface UserItem {
   userDr: number;           // 用户ID
   userCode: string;         // 用户编码
   userName: string;         // 用户姓名
-  sexDr?: number;           // 性别ID
+  sexID?: number;           // 性别ID
   sexDesc?: string;         // 性别描述
-  hospDr?: number;          // 医院ID
-  hospDesc?: string;        // 医院名称
   mobile?: string;          // 手机号
-  credTypeDr?: number;      // 证件类型ID
-  ceadTypeDesc?: string;    // 证件类型描述
+  credTypeID?: number;      // 证件类型ID
+  credTypeDesc?: string;    // 证件类型描述
   credNo?: string;          // 证件号
   image?: string;           // 头像
   introduce?: string;       // 简介
@@ -53,7 +51,7 @@ export interface UserAuditLogItem {
   hospitalDr?: number;      // 医院ID
   hospDesc?: string;        // 医院名称
   mobile?: string;          // 手机号
-  credTypeDr?: number;      // 证件类型ID
+  credTypeID?: number;      // 证件类型ID (后端返回)
   credTypeDesc?: string;    // 证件类型描述
   credNo?: string;          // 证件号
   image?: string;           // 头像
@@ -103,7 +101,7 @@ export interface SaveUserParams {
   nickname?: string;        // 昵称
   image?: string;           // 头像
   introduce?: string;       // 简介
-  hospID?: string;          // 所属医院ID（必填）
+  hospID?: string;          // 所属医院ID（可选，现在通过角色管理）
   hospDesc?: string;        // 医院名称
   startDate: string;        // 启用日期（必填）
   stopDate?: string;        // 停用日期
@@ -323,4 +321,24 @@ export const getUserDetail = (
   }
 ): Promise<ApiResponse<{ rows: UserLogonLocItem[] }>> => {
   return invoke('01030111', [params]);
+};
+
+// ========== 角色管理 API 函数 ==========
+
+/** 角色下拉选项项 */
+export interface GroupOptionItem {
+  id: number;               // 角色ID
+  code: string;             // 角色编码
+  descripts: string;        // 角色名称
+}
+
+/** 查询角色下拉列表 (01010057)
+ * 注意：该接口返回格式为 result: [] 而非 result: { rows: [] }
+ */
+export const queryGroupOptions = (
+  params: {
+    active?: string;         // 状态 Y/N，默认Y
+  } = {}
+): Promise<ApiResponse<GroupOptionItem[]>> => {
+  return invoke('01010057', [params]);
 };

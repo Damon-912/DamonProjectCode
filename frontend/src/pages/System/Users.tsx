@@ -14,7 +14,8 @@ import {
   Form,
   Tag,
   Popconfirm,
-  Tabs
+  Tabs,
+  Switch
 } from 'antd';
 import {
   PlusOutlined,
@@ -33,10 +34,12 @@ import {
   getUserDetail,
   saveUserLogonLoc,
   deleteUserLogonLoc,
+  queryGroupOptions,
   type UserItem,
   type UserLogonLocItem,
   type SaveUserParams,
-  type SaveUserLogonLocParams
+  type SaveUserLogonLocParams,
+  type GroupOptionItem
 } from '../../api/system';
 import { queryHospitals, type HospitalItem } from '../../api/hospital';
 import CustomPagination from '../../components/CustomPagination';
@@ -65,17 +68,10 @@ const credTypeOptions = [
   { value: '4', label: '其他' },
 ];
 
-// 角色组选项（临时，后续从接口获取）
-const groupOptions = [
-  { value: '1', label: '系统管理员' },
-  { value: '2', label: '医院管理员' },
-  { value: '3', label: '医生' },
-  { value: '4', label: '护士' },
-];
-
 const Users: React.FC = () => {
   const [modalForm] = Form.useForm();
   const [roleForm] = Form.useForm();
+  const [editRoleForm] = Form.useForm();
   const [data, setData] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState<PaginationParams>({
@@ -97,6 +93,12 @@ const Users: React.FC = () => {
   const [roleModalVisible, setRoleModalVisible] = useState(false);
   const [editingRole, setEditingRole] = useState<UserLogonLocItem | null>(null);
 
+  // 新增/编辑弹窗中的角色管理
+  const [editUserRoles, setEditUserRoles] = useState<UserLogonLocItem[]>([]);
+  const [editRoleLoading, setEditRoleLoading] = useState(false);
+  const [editRoleModalVisible, setEditRoleModalVisible] = useState(false);
+  const [editingEditRole, setEditingEditRole] = useState<UserLogonLocItem | null>(null);
+
   // 查询条件
   const [searchCode, setSearchCode] = useState('');
   const [searchName, setSearchName] = useState('');
@@ -106,6 +108,10 @@ const Users: React.FC = () => {
   // 医院列表
   const [hospitals, setHospitals] = useState<HospitalItem[]>([]);
   const [hospitalLoading, setHospitalLoading] = useState(false);
+
+  // 角色列表
+  const [groups, setGroups] = useState<GroupOptionItem[]>([]);
+  const [groupLoading, setGroupLoading] = useState(false);
 
   // 加载医院列表
   const fetchHospitals = async () => {
@@ -119,6 +125,22 @@ const Users: React.FC = () => {
       console.error('加载医院列表失败:', error);
     } finally {
       setHospitalLoading(false);
+    }
+  };
+
+  // 加载角色列表
+  const fetchGroups = async () => {
+    setGroupLoading(true);
+    try {
+      const res = await queryGroupOptions({ active: 'Y' });
+      if (String(res.errorCode) === '0' && res.result) {
+        // 接口返回的是 result: [] 数组格式
+        setGroups(res.result || []);
+      }
+    } catch (error) {
+      console.error('加载角色列表失败:', error);
+    } finally {
+      setGroupLoading(false);
     }
   };
 
@@ -149,12 +171,6 @@ const Users: React.FC = () => {
       width: 80
     },
     {
-      title: '所属医院',
-      dataIndex: 'hospDesc',
-      key: 'hospDesc',
-      width: 180
-    },
-    {
       title: '手机号',
       dataIndex: 'mobile',
       key: 'mobile',
@@ -162,8 +178,8 @@ const Users: React.FC = () => {
     },
     {
       title: '证件类型',
-      dataIndex: 'ceadTypeDesc',
-      key: 'ceadTypeDesc',
+      dataIndex: 'credTypeDesc',
+      key: 'credTypeDesc',
       width: 100
     },
     {
@@ -282,6 +298,7 @@ const Users: React.FC = () => {
     setEditingRecord(null);
     setModalTitle('新增用户');
     modalForm.resetFields();
+    setEditUserRoles([]); // 清空角色列表
     setModalVisible(true);
     setTimeout(() => {
       modalForm.setFieldsValue({ 
@@ -292,26 +309,39 @@ const Users: React.FC = () => {
   };
 
   // 编辑
-  const handleEdit = (record: UserItem) => {
+  const handleEdit = async (record: UserItem) => {
     setEditingRecord(record);
     setModalTitle('编辑用户');
     modalForm.resetFields();
     setModalVisible(true);
+    
+    // 加载用户角色信息
+    setEditUserRoles([]);
+    setEditRoleLoading(true);
+    try {
+      const res = await getUserDetail({ userID: record.userDr });
+      if (String(res.errorCode) === '0' && res.result) {
+        setEditUserRoles(res.result.rows || []);
+      }
+    } catch (error) {
+      console.error('加载用户角色失败:', error);
+    } finally {
+      setEditRoleLoading(false);
+    }
     
     setTimeout(() => {
       modalForm.setFieldsValue({
         userDr: record.userDr,
         userName: record.userName,
         mobile: record.mobile,
-        sexID: record.sexDr ? String(record.sexDr) : '1',
-        credTypeID: record.credTypeDr ? String(record.credTypeDr) : '',
+        sexID: record.sexID ? String(record.sexID) : '1',
+        credTypeID: record.credTypeID ? String(record.credTypeID) : '',
         credNo: record.credNo,
         birthDate: record.birthDate ? dayjs(record.birthDate) : null,
         workMobile: record.workMobile,
         mail: record.mail,
         nickname: record.nickname,
         introduce: record.introduce,
-        hospID: record.hospDr ? String(record.hospDr) : '',
         startDate: record.startDate ? dayjs(record.startDate) : dayjs(),
         stopDate: record.stopDate ? dayjs(record.stopDate) : null,
         statusFlag: record.statusFlag || 'Y',
@@ -358,8 +388,6 @@ const Users: React.FC = () => {
         mail: values.mail,
         nickname: values.nickname,
         introduce: values.introduce,
-        hospID: values.hospID,
-        hospDesc: hospitals.find(h => String(h.hospitalID) === values.hospID)?.descripts,
         startDate: values.startDate ? values.startDate.format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
         stopDate: values.stopDate ? values.stopDate.format('YYYY-MM-DD') : '',
         statusFlag: values.statusFlag,
@@ -370,6 +398,13 @@ const Users: React.FC = () => {
       const res = await saveUser(params);
 
       if (String(res.errorCode) === '0') {
+        const savedUserDr = res.rowIDArr?.[0] || editingRecord?.userDr;
+        
+        // 保存用户角色信息
+        if (savedUserDr && editUserRoles.length > 0) {
+          await handleSaveUserRoles(savedUserDr);
+        }
+        
         message.success(editingRecord ? '修改成功' : '新增成功');
         setModalVisible(false);
         fetchData(pagination.current, pagination.pageSize);
@@ -382,18 +417,173 @@ const Users: React.FC = () => {
     }
   };
 
+  // 保存用户角色信息
+  const handleSaveUserRoles = async (userDr: number) => {
+    try {
+      for (const role of editUserRoles) {
+        if (!role.userLogonLocID) {
+          // 新增角色
+          const params: SaveUserLogonLocParams = {
+            userID: userDr,
+            hospID: String(role.hospID),
+            groupID: String(role.groupID),
+            isDefault: role.isDefault ? 'Y' : 'N'
+          };
+          await saveUserLogonLoc(params);
+        }
+      }
+    } catch (error) {
+      console.error('保存用户角色失败:', error);
+    }
+  };
+
+  // 在编辑弹窗中打开添加角色弹窗
+  const handleAddRoleInEdit = async () => {
+    // 加载角色列表
+    if (groups.length === 0) {
+      await fetchGroups();
+    }
+    setEditingEditRole(null);
+    editRoleForm.resetFields();
+    setEditRoleModalVisible(true);
+    setTimeout(() => {
+      editRoleForm.setFieldsValue({ isDefault: false });
+    }, 0);
+  };
+
+  // 在编辑弹窗中编辑角色
+  const handleEditRoleInEdit = async (role: UserLogonLocItem) => {
+    // 加载角色列表
+    if (groups.length === 0) {
+      await fetchGroups();
+    }
+    setEditingEditRole(role);
+    editRoleForm.resetFields();
+    setEditRoleModalVisible(true);
+    setTimeout(() => {
+      editRoleForm.setFieldsValue({
+        hospID: String(role.hospID),
+        groupID: String(role.groupID),
+        isDefault: role.isDefault === 'Y'
+      });
+    }, 0);
+  };
+
+  // 在编辑弹窗中保存角色
+  const handleSaveRoleInEdit = async () => {
+    try {
+      const values = await editRoleForm.validateFields();
+      const isDefault = values.isDefault ? 'Y' : 'N';
+      
+      if (editingEditRole?.userLogonLocID) {
+        // 编辑现有角色 - 调用API
+        // 如果设置为默认，先将其他角色设为非默认
+        if (isDefault === 'Y' && editingRecord) {
+          for (const role of editUserRoles) {
+            if (role.userLogonLocID && role.userLogonLocID !== editingEditRole.userLogonLocID && role.isDefault === 'Y') {
+              await saveUserLogonLoc({
+                userLogonLocID: role.userLogonLocID,
+                userID: editingRecord.userDr,
+                hospID: String(role.hospID),
+                groupID: String(role.groupID),
+                isDefault: 'N'
+              });
+            }
+          }
+        }
+        
+        const params: SaveUserLogonLocParams = {
+          userLogonLocID: editingEditRole.userLogonLocID,
+          userID: editingRecord?.userDr || 0,
+          hospID: values.hospID,
+          groupID: values.groupID,
+          isDefault: isDefault
+        };
+        const res = await saveUserLogonLoc(params);
+        if (String(res.errorCode) === '0') {
+          // 刷新角色列表
+          if (editingRecord) {
+            const detailRes = await getUserDetail({ userID: editingRecord.userDr });
+            if (String(detailRes.errorCode) === '0' && detailRes.result) {
+              setEditUserRoles(detailRes.result.rows || []);
+            }
+          }
+        }
+      } else {
+        // 新增角色到本地列表
+        const newRole: UserLogonLocItem = {
+          userLogonLocID: undefined,
+          hospID: Number(values.hospID),
+          hospDesc: hospitals.find(h => String(h.hospitalID) === values.hospID)?.descripts || '',
+          hospCode: '',
+          groupID: Number(values.groupID),
+          groupDesc: groups.find(g => String(g.id) === values.groupID)?.descripts || '',
+          isDefault: isDefault
+        };
+        
+        // 如果设置为默认，将其他本地角色设为非默认
+        if (isDefault === 'Y') {
+          setEditUserRoles(prev => {
+            const updated: UserLogonLocItem[] = prev.map(r => ({ ...r, isDefault: 'N' as const }));
+            updated.push(newRole);
+            return updated;
+          });
+        } else {
+          setEditUserRoles(prev => [...prev, newRole]);
+        }
+      }
+      
+      setEditRoleModalVisible(false);
+      message.success(editingEditRole ? '修改成功' : '添加成功');
+    } catch (error) {
+      console.error('保存角色失败:', error);
+      message.error('保存角色失败');
+    }
+  };
+
+  // 在编辑弹窗中删除角色
+  const handleDeleteRoleInEdit = async (role: UserLogonLocItem) => {
+    if (role.userLogonLocID) {
+      // 已有ID的角色，需要调用API删除
+      try {
+        const res = await deleteUserLogonLoc({ userLogonLocID: role.userLogonLocID });
+        if (String(res.errorCode) === '0') {
+          setEditUserRoles(prev => prev.filter(r => r.userLogonLocID !== role.userLogonLocID));
+          message.success('删除成功');
+        } else {
+          message.error(res.errorMessage || '删除失败');
+        }
+      } catch (error) {
+        console.error('删除角色失败:', error);
+        message.error('删除角色失败');
+      }
+    } else {
+      // 本地新增的角色，直接从列表移除
+      setEditUserRoles(prev => prev.filter(r => !(r.hospID === role.hospID && r.groupID === role.groupID)));
+      message.success('删除成功');
+    }
+  };
+
   // 打开添加角色弹窗
-  const handleAddRole = () => {
+  const handleAddRole = async () => {
+    // 加载角色列表
+    if (groups.length === 0) {
+      await fetchGroups();
+    }
     setEditingRole(null);
     roleForm.resetFields();
     setRoleModalVisible(true);
     setTimeout(() => {
-      roleForm.setFieldsValue({ isDefault: 'N' });
+      roleForm.setFieldsValue({ isDefault: false });
     }, 0);
   };
 
   // 编辑角色
-  const handleEditRole = (role: UserLogonLocItem) => {
+  const handleEditRole = async (role: UserLogonLocItem) => {
+    // 加载角色列表
+    if (groups.length === 0) {
+      await fetchGroups();
+    }
     setEditingRole(role);
     roleForm.resetFields();
     setRoleModalVisible(true);
@@ -401,7 +591,7 @@ const Users: React.FC = () => {
       roleForm.setFieldsValue({
         hospID: String(role.hospID),
         groupID: String(role.groupID),
-        isDefault: role.isDefault || 'N'
+        isDefault: role.isDefault === 'Y'
       });
     }, 0);
   };
@@ -411,12 +601,29 @@ const Users: React.FC = () => {
     if (!detailRecord) return;
     try {
       const values = await roleForm.validateFields();
+      const isDefault = values.isDefault ? 'Y' : 'N';
+      
+      // 如果设置为默认，先将其他角色设为非默认
+      if (isDefault === 'Y' && userRoles.length > 0) {
+        for (const role of userRoles) {
+          if (role.userLogonLocID && role.userLogonLocID !== editingRole?.userLogonLocID && role.isDefault === 'Y') {
+            await saveUserLogonLoc({
+              userLogonLocID: role.userLogonLocID,
+              userID: detailRecord.userDr,
+              hospID: String(role.hospID),
+              groupID: String(role.groupID),
+              isDefault: 'N'
+            });
+          }
+        }
+      }
+      
       const params: SaveUserLogonLocParams = {
         userLogonLocID: editingRole?.userLogonLocID,
         userID: detailRecord.userDr,
         hospID: values.hospID,
         groupID: values.groupID,
-        isDefault: values.isDefault
+        isDefault: isDefault
       };
 
       const res = await saveUserLogonLoc(params);
@@ -600,7 +807,7 @@ const Users: React.FC = () => {
           dataSource={data}
           rowKey="userDr"
           loading={loading}
-          scroll={{ x: 1400 }}
+          scroll={{ x: 1200 }}
           size="small"
           pagination={false}
         />
@@ -742,26 +949,6 @@ const Users: React.FC = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="hospID"
-                label="所属医院"
-                rules={[{ required: true, message: '请选择所属医院' }]}
-              >
-                <Select 
-                  placeholder="请选择所属医院"
-                  loading={hospitalLoading}
-                  showSearch
-                  filterOption={(input, option) =>
-                    String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                  }
-                  options={hospitals.map(h => ({
-                    value: String(h.hospitalID),
-                    label: h.descripts
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
                 name="startDate"
                 label="启用日期"
                 rules={[{ required: true, message: '请选择启用日期' }]}
@@ -769,9 +956,6 @@ const Users: React.FC = () => {
                 <DatePicker style={{ width: '100%' }} placeholder="请选择启用日期" />
               </Form.Item>
             </Col>
-          </Row>
-
-          <Row gutter={16}>
             <Col span={12}>
               <Form.Item
                 name="stopDate"
@@ -788,6 +972,104 @@ const Users: React.FC = () => {
           >
             <Input.TextArea placeholder="请输入简介" maxLength={200} rows={3} />
           </Form.Item>
+
+          {/* 角色管理区域 */}
+          <div style={{ marginTop: 24, borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <h4 style={{ margin: 0, fontWeight: 'bold' }}>医院角色信息</h4>
+              <Button 
+                type="primary" 
+                icon={<PlusOutlined />} 
+                size="small"
+                onClick={handleAddRoleInEdit}
+              >
+                添加角色
+              </Button>
+            </div>
+            <Table
+              columns={[
+                {
+                  title: '医院编码',
+                  dataIndex: 'hospCode',
+                  key: 'hospCode',
+                  width: 100,
+                  render: (text: string, record: UserLogonLocItem) => {
+                    if (text) return text;
+                    // 从医院列表查找编码
+                    const hosp = hospitals.find(h => Number(h.hospitalID) === record.hospID);
+                    return hosp?.code || '-';
+                  }
+                },
+                {
+                  title: '医院名称',
+                  dataIndex: 'hospDesc',
+                  key: 'hospDesc',
+                  width: 180,
+                  render: (text: string, record: UserLogonLocItem) => {
+                    if (text) return text;
+                    // 从医院列表查找名称
+                    const hosp = hospitals.find(h => Number(h.hospitalID) === record.hospID);
+                    return hosp?.descripts || '-';
+                  }
+                },
+                {
+                  title: '角色名称',
+                  dataIndex: 'groupDesc',
+                  key: 'groupDesc',
+                  width: 120,
+                  render: (text: string, record: UserLogonLocItem) => {
+                    if (text) return text;
+                    // 从角色选项查找名称
+                    const group = groups.find(g => g.id === record.groupID);
+                    return group?.descripts || '-';
+                  }
+                },
+                {
+                  title: '是否默认',
+                  dataIndex: 'isDefault',
+                  key: 'isDefault',
+                  width: 100,
+                  render: (isDefault: string) => (
+                    isDefault === 'Y' ? <Tag color="blue">默认</Tag> : '-'
+                  )
+                },
+                {
+                  title: '操作',
+                  key: 'action',
+                  width: 120,
+                  render: (_, record) => (
+                    <Space size="small">
+                      <Button
+                        type="link"
+                        size="small"
+                        icon={<EditOutlined />}
+                        onClick={() => handleEditRoleInEdit(record)}
+                      >
+                        编辑
+                      </Button>
+                      <Popconfirm
+                        title="确认删除"
+                        description="确定要删除该角色权限吗？"
+                        onConfirm={() => handleDeleteRoleInEdit(record)}
+                        okText="确定"
+                        cancelText="取消"
+                      >
+                        <Button type="link" size="small" danger icon={<DeleteOutlined />}>
+                          删除
+                        </Button>
+                      </Popconfirm>
+                    </Space>
+                  )
+                }
+              ]}
+              dataSource={editUserRoles}
+              rowKey={(record) => record.userLogonLocID || `${record.hospID}-${record.groupID}`}
+              loading={editRoleLoading}
+              size="small"
+              pagination={false}
+              scroll={{ y: 200 }}
+            />
+          </div>
         </Form>
       </Modal>
 
@@ -824,19 +1106,19 @@ const Users: React.FC = () => {
               </Row>
               <Row gutter={[16, 16]}>
                 <Col span={12}>
-                  <p><strong>所属医院：</strong>{detailRecord.hospDesc || '-'}</p>
-                </Col>
-                <Col span={12}>
                   <p><strong>状态：</strong>
                     <Tag color={detailRecord.statusFlag === 'Y' ? 'green' : 'red'}>
                       {detailRecord.statusFlag === 'Y' ? '启用' : '停用'}
                     </Tag>
                   </p>
                 </Col>
+                <Col span={12}>
+                  <p><strong>创建人：</strong>{detailRecord.creatUserDesc || '-'}</p>
+                </Col>
               </Row>
               <Row gutter={[16, 16]}>
                 <Col span={12}>
-                  <p><strong>证件类型：</strong>{detailRecord.ceadTypeDesc || '-'}</p>
+                  <p><strong>证件类型：</strong>{detailRecord.credTypeDesc || '-'}</p>
                 </Col>
                 <Col span={12}>
                   <p><strong>证件号：</strong>{detailRecord.credNo || '-'}</p>
@@ -930,20 +1212,77 @@ const Users: React.FC = () => {
           >
             <Select 
               placeholder="请选择角色"
-              options={groupOptions}
+              loading={groupLoading}
+              options={groups.map(g => ({
+                value: String(g.id),
+                label: g.descripts
+              }))}
             />
           </Form.Item>
           <Form.Item
             name="isDefault"
             label="是否默认"
-            rules={[{ required: true, message: '请选择是否默认' }]}
+            valuePropName="checked"
+          >
+            <Switch 
+              checkedChildren="是"
+              unCheckedChildren="否"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* 新增/编辑弹窗中的角色分配弹窗 */}
+      <Modal
+        title={editingEditRole ? '编辑角色' : '添加角色'}
+        open={editRoleModalVisible}
+        onOk={handleSaveRoleInEdit}
+        onCancel={() => setEditRoleModalVisible(false)}
+        okText="确定"
+        cancelText="取消"
+        width={500}
+      >
+        <Form form={editRoleForm} layout="vertical">
+          <Form.Item
+            name="hospID"
+            label="医院"
+            rules={[{ required: true, message: '请选择医院' }]}
           >
             <Select 
-              placeholder="请选择是否默认"
-              options={[
-                { value: 'Y', label: '是' },
-                { value: 'N', label: '否' }
-              ]}
+              placeholder="请选择医院"
+              loading={hospitalLoading}
+              showSearch
+              filterOption={(input, option) =>
+                String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              options={hospitals.map(h => ({
+                value: String(h.hospitalID),
+                label: h.descripts
+              }))}
+            />
+          </Form.Item>
+          <Form.Item
+            name="groupID"
+            label="角色"
+            rules={[{ required: true, message: '请选择角色' }]}
+          >
+            <Select 
+              placeholder="请选择角色"
+              loading={groupLoading}
+              options={groups.map(g => ({
+                value: String(g.id),
+                label: g.descripts
+              }))}
+            />
+          </Form.Item>
+          <Form.Item
+            name="isDefault"
+            label="是否默认"
+            valuePropName="checked"
+          >
+            <Switch 
+              checkedChildren="是"
+              unCheckedChildren="否"
             />
           </Form.Item>
         </Form>

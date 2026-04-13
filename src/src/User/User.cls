@@ -33,9 +33,7 @@ ClassMethod FindUserDetail(postObj)
 		set end=currentPage*pageSize
 	}
 	set hospInfo=""
-	Set sqlString="select User_Dr as userDr, User_Dr->Code userCode, User_Dr->Descripts userName, User_Dr->Sex_Dr,User_Dr->Sex_Dr->Descripts sexDesc, Hosp_Dr,Hosp_Dr->Descripts hospDesc, User_Dr->Mobile, User_Dr->CredType_Dr,User_Dr->CredType_Dr->Descripts ceadTypeDesc, User_Dr->CredNo, User_Dr->Image, User_Dr->Introduce, User_Dr->CreatedBy_Dr,User_Dr->CreatedBy_Dr->descripts creatUserDesc, User_Dr->CreatedDate, User_Dr->CreatedTime,User_Dr->StartDate startDate,User_Dr->StopDate stopDate,User_Dr->Active statusFlag"
-				  _",User_Dr->Image, User_Dr->Nickname, User_Dr->Email mail, User_Dr->WorkMobile, User_Dr->BirthDate"
-				  _" from HB_UserLinkHosp where 1=1"
+	// 先从HB_UserLinkHosp获取有权限的用户ID列表
 	if hospID=""
 	{
 		if postObj.session'=""
@@ -68,11 +66,21 @@ ClassMethod FindUserDetail(postObj)
 	{
 		quit {"errorCode":0,"errorMessage":"成功","result":{"total":0,"rows":[]}}
 	}
-	Set sqlString=sqlString_" AND Hosp_Dr in ("_hospInfo_")"
-	Set:code'="" sqlString=sqlString_" AND User_Dr->Code like '%"_code_"%'"
-	Set:(active'="")&(active'="all") sqlString=sqlString_" AND User_Dr->Active = '"_active_"'"
-	Set:desc'="" sqlString=sqlString_" AND User_Dr->Descripts like '%"_desc_"%'"
-	b 
+	
+	// 构建用户ID过滤条件 - 只查询在授权医院中有关联的用户
+	Set userFilterSql="SELECT DISTINCT User_Dr FROM SQLUSER.HB_UserLinkHosp WHERE Hosp_Dr in ("_hospInfo_")"
+	Set:code'="" userFilterSql=userFilterSql_" AND User_Dr->Code like '%"_code_"%'"
+	Set:(active'="")&(active'="all") userFilterSql=userFilterSql_" AND User_Dr->Active = '"_active_"'"
+	Set:desc'="" userFilterSql=userFilterSql_" AND User_Dr->Descripts like '%"_desc_"%'"
+	
+	// 主查询：从HB_User查询用户基本信息（去重）
+	Set sqlString="SELECT ID as userDr, Code as userCode, Descripts as userName, Sex_Dr as sexID, Sex_Dr->Descripts as sexDesc, "_
+				  "Mobile, CredType_Dr as credTypeID, CredType_Dr->Descripts as credTypeDesc, CredNo, "_
+				  "Image, Introduce, CreatedBy_Dr, CreatedBy_Dr->Descripts as creatUserDesc, "_
+				  "CreatedDate, CreatedTime, StartDate, StopDate, Active as statusFlag, "_
+				  "Nickname, Email as mail, WorkMobile, BirthDate "_
+				  "FROM SQLUSER.HB_User WHERE ID IN ("_userFilterSql_")"
+	
 	set st = ##class(%SQL.Statement).%New(1)
 	set status = st.%Prepare(sqlString)
 	if status'=1 {
