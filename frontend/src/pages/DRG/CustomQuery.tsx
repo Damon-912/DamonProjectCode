@@ -159,8 +159,8 @@ const DRGCustomQuery: React.FC = () => {
         // 主诊断和主手术信息已包含在数组对象内
         diseInfo: diagnoses,
         oprnInfo: operations,
-        // 医疗机构信息数组
-        hospInfo: hospInfo.length > 0 ? hospInfo : undefined,
+        // 医疗机构信息数组，即使为空也要传递
+        hospInfo: hospInfo,
       };
 
       // 直接调用接口（内部会自动转换大小驼峰）
@@ -185,8 +185,8 @@ const DRGCustomQuery: React.FC = () => {
   const handleReset = () => {
     form.resetFields();
     setDiagnoses([{ mainFlag: 1, diagSn: 1, diagCode: '', diagName: '' }]);
-    setOperations([{ mainFlag: '1', oprnSn: 1, oprnCode: '', oprnName: '' }]);
-    setHospitals([{ ID: '', hospitalID: '', code: '', descripts: '', hospTypeID: '', hospNatureID: '', provIDID: 0, cityIDID: 0, areaIDID: 0, active: 'Y', organizationCode: '', businesslicense: '', policyTypeID: '', policyTypeDesc: '' }]);
+    setOperations([]);
+    setHospitals([]);
     setResult(null);
   };
 
@@ -250,6 +250,12 @@ const DRGCustomQuery: React.FC = () => {
 
   // 添加诊断
   const addDiagnosis = () => {
+    // 检查是否已存在未填写的空记录
+    const hasEmptyRecord = diagnoses.some(d => !d.diagCode || d.diagCode.trim() === '');
+    if (hasEmptyRecord) {
+      message.warning('已存在未填写的诊断记录，请先完善后再添加');
+      return;
+    }
     const newSn = diagnoses.length + 1;
     setDiagnoses([...diagnoses, { mainFlag: 0, diagSn: newSn, diagCode: '', diagName: '' }]);
   };
@@ -300,6 +306,12 @@ const DRGCustomQuery: React.FC = () => {
 
   // 添加手术
   const addOperation = () => {
+    // 检查是否已存在未填写的空记录
+    const hasEmptyRecord = operations.some(o => !o.oprnCode || o.oprnCode.trim() === '');
+    if (hasEmptyRecord) {
+      message.warning('已存在未填写的手术记录，请先完善后再添加');
+      return;
+    }
     const newSn = operations.length + 1;
     // 如果是第一条手术记录，默认设置为主手术
     const isFirstOperation = operations.length === 0;
@@ -314,10 +326,6 @@ const DRGCustomQuery: React.FC = () => {
 
   // 删除手术
   const removeOperation = (index: number) => {
-    if (operations.length === 1) {
-      message.warning('至少保留一条手术记录');
-      return;
-    }
     const newOperations = operations.filter((_, i) => i !== index);
     setOperations(newOperations.map((o, i) => ({ ...o, oprnSn: i + 1 })));
   };
@@ -357,20 +365,31 @@ const DRGCustomQuery: React.FC = () => {
 
   // 添加医疗机构
   const addHospital = () => {
+    // 检查是否已存在未填写的空记录
+    const hasEmptyRecord = hospitals.some(h => !h.code || h.code.trim() === '');
+    if (hasEmptyRecord) {
+      message.warning('已存在未填写的医疗机构记录，请先完善后再添加');
+      return;
+    }
     setHospitals([...hospitals, { ID: '', hospitalID: '', code: '', descripts: '', hospTypeID: '', hospNatureID: '', provIDID: 0, cityIDID: 0, areaIDID: 0, active: 'Y', organizationCode: '', businesslicense: '', policyTypeID: '', policyTypeDesc: '' }]);
   };
 
   // 删除医疗机构
   const removeHospital = (index: number) => {
-    if (hospitals.length === 1) {
-      message.warning('至少保留一个医疗机构');
-      return;
-    }
     setHospitals(hospitals.filter((_, i) => i !== index));
   };
 
   // 更新医疗机构
   const updateHospital = (index: number, field: keyof HospitalItem, value: any) => {
+    // 如果是更新医疗机构代码，校验唯一性
+    if (field === 'code' && value && value.trim() !== '') {
+      const isDuplicate = hospitals.some((h, i) => i !== index && h.code === value.trim());
+      if (isDuplicate) {
+        message.warning('该医疗机构代码已存在，请勿重复添加');
+        return;
+      }
+    }
+
     const newHospitals = [...hospitals];
     newHospitals[index] = { ...newHospitals[index], [field]: value };
     setHospitals(newHospitals);
@@ -379,8 +398,6 @@ const DRGCustomQuery: React.FC = () => {
   // 打开医疗机构查询弹窗并自动查询
   const openHospitalSearch = async (index: number) => {
     setHospitalCurrentIndex(index);
-    setHospitalResults([]);
-    setHospitalModalOpen(true);
     
     // 获取当前行的医疗机构代码和名称
     const currentHospitals = hospitalsRef.current;
@@ -398,12 +415,46 @@ const DRGCustomQuery: React.FC = () => {
         { pageSize: 20, currentPage: 1 }
       );
       if (String(res.errorCode) === '0' && res.result) {
-        setHospitalResults(res.result.rows || []);
+        const rows = res.result.rows || [];
+        if (rows.length === 1) {
+          // 只有1条数据，直接填充
+          const item = rows[0];
+          const newCode = item.organizationCode || item.code;
+          
+          // 检查是否已存在相同的医疗机构代码
+          const isDuplicate = hospitalsRef.current.some((h, i) => i !== index && h.code === newCode);
+          if (isDuplicate) {
+            message.warning(`医疗机构代码 ${newCode} 已存在，请勿重复添加`);
+            setHospitalResults(rows);
+            setHospitalModalOpen(true);
+            return;
+          }
+          
+          const newHospitals = [...hospitalsRef.current];
+          newHospitals[index] = { 
+            ...newHospitals[index], 
+            ...item,
+            code: newCode
+          };
+          setHospitals(newHospitals);
+          message.success(`已选择：${newCode} ${item.descripts}`);
+        } else if (rows.length > 1) {
+          // 多条数据，弹出选择框
+          setHospitalResults(rows);
+          setHospitalModalOpen(true);
+        } else {
+          // 没有数据
+          message.info('未找到匹配的医疗机构');
+          setHospitalResults([]);
+          setHospitalModalOpen(true);
+        }
       } else {
         message.error(res.errorMessage || '查询失败');
+        setHospitalModalOpen(true);
       }
     } catch (error) {
       message.error('查询医疗机构失败');
+      setHospitalModalOpen(true);
     } finally {
       setHospitalLoading(false);
     }
@@ -412,12 +463,27 @@ const DRGCustomQuery: React.FC = () => {
   // 选择医疗机构
   const selectHospital = (item: HospitalItem) => {
     if (hospitalCurrentIndex >= 0) {
+      const newCode = item.organizationCode || item.code;
+      
+      // 检查是否已存在相同的医疗机构代码
+      const isDuplicate = hospitals.some((h, i) => i !== hospitalCurrentIndex && h.code === newCode);
+      if (isDuplicate) {
+        message.warning(`医疗机构代码 ${newCode} 已存在，请勿重复添加`);
+        setHospitalModalOpen(false);
+        return;
+      }
+      
       const newHospitals = [...hospitals];
-      newHospitals[hospitalCurrentIndex] = { ...newHospitals[hospitalCurrentIndex], ...item };
+      // 使用 organizationCode 作为 code 字段的值
+      newHospitals[hospitalCurrentIndex] = { 
+        ...newHospitals[hospitalCurrentIndex], 
+        ...item,
+        code: newCode
+      };
       setHospitals(newHospitals);
     }
     setHospitalModalOpen(false);
-    message.success(`已选择：${item.code} ${item.descripts}`);
+    message.success(`已选择：${item.organizationCode || item.code} ${item.descripts}`);
   };
 
   // 打开ICD查询弹窗 - 诊断
@@ -465,6 +531,16 @@ const DRGCustomQuery: React.FC = () => {
           if (rows.length === 1) {
             // 只有1条数据，直接赋值
             const item = rows[0];
+            
+            // 检查是否已存在相同的诊断代码
+            const isDuplicate = diagnosesRef.current.some((d, i) => i !== index && d.diagCode === item.code);
+            if (isDuplicate) {
+              message.warning(`诊断代码 ${item.code} 已存在，请勿重复添加`);
+              setIcdResults(rows);
+              setIcdModalOpen(true);
+              return;
+            }
+            
             // 同时更新代码和名称，避免setState异步问题
             const newDiagnoses = [...diagnosesRef.current];
             newDiagnoses[index] = { 
@@ -548,6 +624,16 @@ const DRGCustomQuery: React.FC = () => {
           if (rows.length === 1) {
             // 只有1条数据，直接赋值
             const item = rows[0];
+            
+            // 检查是否已存在相同的手术代码
+            const isDuplicate = operationsRef.current.some((o, i) => i !== index && o.oprnCode === item.code);
+            if (isDuplicate) {
+              message.warning(`手术代码 ${item.code} 已存在，请勿重复添加`);
+              setIcdResults(rows);
+              setIcdModalOpen(true);
+              return;
+            }
+            
             // 同时更新代码和名称，避免setState异步问题
             const newOperations = [...operationsRef.current];
             newOperations[index] = { 
@@ -624,6 +710,14 @@ const DRGCustomQuery: React.FC = () => {
   // 选择ICD编码
   const selectIcd = (item: MedInsuIcdItem) => {
     if (icdQueryType === 'diagnosis' && currentIndex >= 0) {
+      // 检查是否已存在相同的诊断代码
+      const isDuplicate = diagnoses.some((d, i) => i !== currentIndex && d.diagCode === item.code);
+      if (isDuplicate) {
+        message.warning(`诊断代码 ${item.code} 已存在，请勿重复添加`);
+        setIcdModalOpen(false);
+        return;
+      }
+      
       // 诊断：直接更新状态，避免多次调用导致的异步问题
       const newDiagnoses = [...diagnoses];
       newDiagnoses[currentIndex] = { 
@@ -645,6 +739,14 @@ const DRGCustomQuery: React.FC = () => {
       setDiagnoses(newDiagnoses);
       
     } else if (icdQueryType === 'operation' && currentIndex >= 0) {
+      // 检查是否已存在相同的手术代码
+      const isDuplicate = operations.some((o, i) => i !== currentIndex && o.oprnCode === item.code);
+      if (isDuplicate) {
+        message.warning(`手术代码 ${item.code} 已存在，请勿重复添加`);
+        setIcdModalOpen(false);
+        return;
+      }
+      
       // 手术：直接更新状态
       const newOperations = [...operations];
       newOperations[currentIndex] = { 
@@ -703,10 +805,14 @@ const DRGCustomQuery: React.FC = () => {
           placeholder="如：I21.0"
           value={diagnoses[index]?.diagCode}
           onChange={(e) => {
-            updateDiagnosis(index, 'diagCode', e.target.value);
-            // 如果是主诊断，自动更新MainDiagnosisCode
+            const newValue = e.target.value;
+            // 一次性更新：设置代码，清空名称
+            let newDiagnoses = [...diagnoses];
+            newDiagnoses[index] = { ...newDiagnoses[index], diagCode: newValue, diagName: '' };
+            setDiagnoses(newDiagnoses);
+            // 如果是主诊断，更新MainDiagnosisCode
             if (diagnoses[index]?.mainFlag === 1) {
-              form.setFieldValue('MainDiagnosisCode', e.target.value);
+              form.setFieldValue('MainDiagnosisCode', newValue);
             }
           }}
         />
@@ -719,7 +825,17 @@ const DRGCustomQuery: React.FC = () => {
         <Input
           placeholder="如：急性心肌梗死"
           value={diagnoses[index]?.diagName}
-          onChange={(e) => updateDiagnosis(index, 'diagName', e.target.value)}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            // 一次性更新：设置名称，清空代码
+            let newDiagnoses = [...diagnoses];
+            newDiagnoses[index] = { ...newDiagnoses[index], diagName: newValue, diagCode: '' };
+            setDiagnoses(newDiagnoses);
+            // 如果是主诊断，清空MainDiagnosisCode
+            if (diagnoses[index]?.mainFlag === 1) {
+              form.setFieldValue('MainDiagnosisCode', '');
+            }
+          }}
         />
       )
     },
@@ -781,10 +897,14 @@ const DRGCustomQuery: React.FC = () => {
           placeholder="如：51.23"
           value={operations[index]?.oprnCode}
           onChange={(e) => {
-            updateOperation(index, 'oprnCode', e.target.value);
-            // 如果是主手术，自动更新MainOperationCode
+            const newValue = e.target.value;
+            // 一次性更新：设置代码，清空名称
+            const newOperations = [...operations];
+            newOperations[index] = { ...newOperations[index], oprnCode: newValue, oprnName: '' };
+            setOperations(newOperations);
+            // 如果是主手术，更新MainOperationCode
             if (operations[index]?.mainFlag === '1') {
-              form.setFieldValue('MainOperationCode', e.target.value);
+              form.setFieldValue('MainOperationCode', newValue);
             }
           }}
         />
@@ -797,7 +917,17 @@ const DRGCustomQuery: React.FC = () => {
         <Input
           placeholder="如：冠状动脉造影术"
           value={operations[index]?.oprnName}
-          onChange={(e) => updateOperation(index, 'oprnName', e.target.value)}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            // 一次性更新：设置名称，清空代码
+            const newOperations = [...operations];
+            newOperations[index] = { ...newOperations[index], oprnName: newValue, oprnCode: '' };
+            setOperations(newOperations);
+            // 如果是主手术，清空MainOperationCode
+            if (operations[index]?.mainFlag === '1') {
+              form.setFieldValue('MainOperationCode', '');
+            }
+          }}
         />
       )
     },
@@ -833,7 +963,13 @@ const DRGCustomQuery: React.FC = () => {
         <Input
           placeholder="如：10001"
           value={hospitals[index]?.code}
-          onChange={(e) => updateHospital(index, 'code', e.target.value)}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            // 一次性更新：设置代码，清空名称
+            const newHospitals = [...hospitals];
+            newHospitals[index] = { ...newHospitals[index], code: newValue, descripts: '' };
+            setHospitals(newHospitals);
+          }}
         />
       )
     },
@@ -844,7 +980,13 @@ const DRGCustomQuery: React.FC = () => {
         <Input
           placeholder="如：XX市人民医院"
           value={hospitals[index]?.descripts}
-          onChange={(e) => updateHospital(index, 'descripts', e.target.value)}
+          onChange={(e) => {
+            const newValue = e.target.value;
+            // 一次性更新：设置名称，清空代码
+            const newHospitals = [...hospitals];
+            newHospitals[index] = { ...newHospitals[index], descripts: newValue, code: '' };
+            setHospitals(newHospitals);
+          }}
         />
       )
     },
@@ -1468,7 +1610,7 @@ const DRGCustomQuery: React.FC = () => {
               style={{ cursor: 'pointer' }}
             >
               <List.Item.Meta
-                title={<Space><Tag color="green">{item.code}</Tag><span>{item.descripts}</span></Space>}
+                title={<Space><Tag color="green">{item.organizationCode || item.code}</Tag><span>{item.descripts}</span></Space>}
                 description={
                   <span>
                     类型: {item.typeDesc || '-'} | 

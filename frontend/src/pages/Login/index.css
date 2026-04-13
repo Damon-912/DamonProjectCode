@@ -325,6 +325,43 @@
   border-top: 1px solid #f0f0f0;
 }
 
+/* 下拉框选择样式 */
+.select-section {
+  margin: 24px 0;
+}
+
+.select-section .ant-select-selector {
+  border-radius: 8px !important;
+}
+
+.select-option-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.select-option-hosp {
+  font-weight: 500;
+  color: #262626;
+}
+
+.select-option-code {
+  color: #8c8c8c;
+  font-size: 12px;
+}
+
+.select-option-group {
+  margin-left: auto;
+  color: #1890ff;
+  font-size: 13px;
+}
+
+.select-option-default {
+  color: #52c41a;
+  font-size: 12px;
+}
+
 /* 响应式设计 */
 @media (max-width: 1024px) {
   .login-left {

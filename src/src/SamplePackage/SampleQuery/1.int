@@ -1,0 +1,322 @@
+ROUTINE src.SamplePackage.SampleQuery.1 [Type=INT,Generated]
+ ;src.SamplePackage.SampleQuery.1
+ ;Generated for class src.SamplePackage.SampleQuery.  Do NOT edit. 04/10/2026 05:39:31PM
+ ;;7973324C;src.SamplePackage.SampleQuery
+ ;
+zGetAllProductsClose(qHandle,pCategoryDr) public {
+        If $Data(qHandle) {
+            Kill qHandle
+        }
+        Quit 1 }
+zGetAllProductsExecute(qHandle,pCategoryDr) public {
+        Set tSC = 1
+        // 初始化游标数据
+        Set qHandle("index") = 0
+        Set qHandle("data") = ##class(%Library.ArrayOfDataTypes).%New()
+        // 执行SQL获取所有产品
+        Set tRS = ##class(%Library.ResultSet).%New("%DynamicQuery:SQL")
+        Set tSQL = "SELECT Code, Descripts, Price FROM User.CBProduct WHERE CategoryDr = ? AND Deleted = 0"
+        Do tRS.Prepare(tSQL)
+        Do tRS.Execute(pCategoryDr)
+        // 将数据存入数组
+        Set tIndex = 0
+        While tRS.Next() {
+            Set tIndex = tIndex + 1
+            Set tCode = tRS.GetData(1)
+            Set tName = tRS.GetData(2)
+            Set tPrice = tRS.GetData(3)
+            Set qHandle("data", tIndex, "Code") = tCode
+            Set qHandle("data", tIndex, "Name") = tName
+            Set qHandle("data", tIndex, "Price") = tPrice
+        }
+        Do tRS.Close()
+        // 保存数据条数
+        Set qHandle("count") = tIndex
+        Quit tSC }
+zGetAllProductsFetch(qHandle,Row,AtEnd,pCategoryDr) public {
+        Set tSC = 1
+        Set AtEnd = 1
+        Try {
+            If $Data(qHandle) {
+                Set tIndex = qHandle("index") + 1
+                If (tIndex <= qHandle("count")) {
+                    Set tCode = qHandle("data", tIndex, "Code")
+                    Set tName = qHandle("data", tIndex, "Name")
+                    Set tPrice = qHandle("data", tIndex, "Price")
+                    // 构建返回行
+                    Set Row = $ListBuild(tCode, tName, tPrice)
+                    Set AtEnd = 0
+                    // 更新索引
+                    Set qHandle("index") = tIndex
+                } Else {
+                    // 数据已读完
+                    Kill qHandle
+                }
+            }
+        } Catch {
+            Set tSC = $System.Status.Error(5001, "Fetch数据失败")
+        }
+        Quit tSC }
+zGetOrderDetailClose(qHandle,pOrderDr) public {
+        // 释放资源
+        If $IsObject(qHandle) {
+            Kill qHandle
+        }
+        Quit 1 }
+zGetOrderDetailExecute(qHandle,pOrderDr) public {
+        Set tSC = 1
+        // 参数验证
+        If (pOrderDr = "") {
+            Quit $System.Status.Error(5001, "订单ID不能为空")
+        }
+        // 获取订单对象
+        Set tOrder = ##class(User.BSOrderDetail).%OpenId(pOrderDr)
+        If '$IsObject(tOrder) {
+            Quit $System.Status.Error(5002, "订单不存在")
+        }
+        // 准备数据
+        Set tData = ##class(%Library.ArrayOfDataTypes).%New()
+        Set tData.OrderNo = tOrder.OrderNo
+        Set tData.OrderDate = tOrder.OrderDate
+        Set tData.Amount = tOrder.Amount
+        Set tData.Status = tOrder.Status
+        // 关闭对象
+        Do tOrder.%Close()
+        // 设置句柄
+        Set qHandle = tData
+        Quit tSC }
+zGetOrderDetailFetch(qHandle,Row,AtEnd,pOrderDr) public {
+        Set tSC = 1
+        Set AtEnd = 1  // 默认已结束
+        Try {
+            If $IsObject(qHandle) {
+                // 构建返回行（注意：顺序必须与ROWSPEC一致）
+                Set Row = $ListBuild(
+                    qHandle.OrderNo,
+                    qHandle.OrderDate,
+                    qHandle.Amount,
+                    qHandle.Status
+                )
+                Set AtEnd = 0  // 还有数据
+                // 释放句柄
+                Kill qHandle
+            }
+        } Catch {
+            Set tSC = $System.Status.Error(5001, "Fetch数据失败: " _ $ze)
+        }
+        Quit tSC }
+zGetUserListClose(qHandle,pOrganizationDr) public {
+        If $IsObject(qHandle) {
+            Do qHandle.Close()
+            Kill qHandle
+        }
+        Quit 1 }
+zGetUserListExecute(qHandle,pOrganizationDr) public {
+        Set tSC = 1
+        // 参数验证
+        If (pOrganizationDr = "") {
+            Quit $System.Status.Error(5001, "机构ID不能为空")
+        }
+        // 准备SQL
+        Set tSQL = "SELECT u.Descripts, u.Code, d.Descripts FROM User.CBUser u "
+        Set tSQL = tSQL _ " LEFT JOIN User.CBDepartment d ON u.DepartmentDr = d.Code "
+        Set tSQL = tSQL _ " WHERE u.OrganizationDr = ? AND u.Deleted = 0"
+        // 执行SQL
+        Set tRS = ##class(%Library.ResultSet).%New("%DynamicQuery:SQL")
+        Set tSC = tRS.Prepare(tSQL)
+        If ('tSC) Quit tSC
+        Set tSC = tRS.Execute(pOrganizationDr)
+        If ('tSC) {
+            Kill tRS
+            Quit tSC
+        }
+        // 设置句柄
+        Set qHandle = tRS
+        Quit tSC }
+zGetUserListFetch(qHandle,Row,AtEnd,pOrganizationDr) public {
+        Set tSC = 1
+        Set AtEnd = 1
+        Try {
+            If $IsObject(qHandle) {
+                If qHandle.Next() {
+                    Set tUserName = qHandle.GetData(1)
+                    Set tUserCode = qHandle.GetData(2)
+                    Set tDepartment = qHandle.GetData(3)
+                    // 构建返回行
+                    Set Row = $ListBuild(tUserName, tUserCode, tDepartment)
+                    Set AtEnd = 0
+                } Else {
+                    // 关闭ResultSet
+                    Do qHandle.Close()
+                    Kill qHandle
+                }
+            }
+        } Catch {
+            Set tSC = $System.Status.Error(5001, "Fetch数据失败")
+        }
+        Quit tSC }
+zGetAllProductsFetchRows(qHandle,FetchCount=0,RowSet,ReturnCount,AtEnd) public {
+	Set RowSet="",ReturnCount=0,AtEnd=0,sc=1
+	For {
+		Set sc=..GetAllProductsFetch(.qHandle,.Row,.AtEnd)
+		If Row'="",(''sc) Set RowSet=RowSet_Row,ReturnCount=ReturnCount+1 If (ReturnCount=FetchCount)||(($l(RowSet)+($l(RowSet)\ReturnCount))>24000)||$get(AtEnd) Quit
+		If ('sc) { Set:$isobject($g(%sqlcontext)) %sqlcontext.SQLCode=$g(SQLCODE,-400),%sqlcontext.Message=$g(%msg) Quit }
+		If Row="" Set AtEnd=1 Quit
+	}
+	Quit sc }
+zGetAllProductsFunc(pCategoryDr) public {
+	try {
+		set tSC = ..GetAllProductsExecute(.qHandle,.pCategoryDr)
+		if ('tSC) { throw ##class(%Exception.StatusException).CreateFromStatus(tSC) }
+		set tResult = ##class(%SQL.ClassQueryResultSet).%New($classname(),"GetAllProducts",.qHandle)
+	}
+	catch tException { if '$Isobject($Get(tResult)) { set tResult = ##class(%SQL.StatementResult).%New() } set tResult.%SQLCODE=tException.AsSQLCODE(),tResult.%Message=tException.AsSQLMessage() }
+	Quit tResult }
+zGetAllProductsGetInfo(colinfo,parminfo,idinfo,qHandle,extoption=0,extinfo) public {
+	Set colinfo=$lb($lb("ProductCode",10,"ProductCode"),$lb("ProductName",10,"ProductName"),$lb("Price",14,"Price"))
+	Set parminfo=$lb($lb("pCategoryDr","10"))
+	Set idinfo=$lb(0,"")
+	If extoption {
+		Set extinfo=$lb("",$lb($lb("",""),$lb("",""),$lb("","")))
+	}
+	Quit 1 }
+zGetAllProductsGetODBCInfo(colinfo,parminfo,qHandle) public {
+	set version = $Select($Get(%protocol,41)>40:4,1:3)
+	Set metadata=$lb(1,3,"ProductCode",12,50,0,2,"ProductCode","SampleQuery","src_SamplePackage","",$c(0,0,0,0,0,0,0,0,0,0,0,0),"ProductName",12,50,0,2,"ProductName","SampleQuery","src_SamplePackage","",$c(0,0,0,0,0,0,0,0,0,0,0,0),"Price",2,15,2,2,"Price","SampleQuery","src_SamplePackage","",$c(0,0,0,0,0,0,0,0,0,0,0,0),1,12,50,0,2,"pCategoryDr",1)
+	Set colcount=$li(metadata,2),cmdlen=colcount*10,parmcount=$li(metadata,3+cmdlen),pmdlen=parmcount*6,parminfo=$li(metadata,cmdlen+3,cmdlen+pmdlen+3)
+	If version=4 {
+		Set colinfo=$li(metadata,2,2+cmdlen)
+	} Else {
+		Set colinfo=$li(metadata,2,2)
+		For i=0:1:colcount-1 Set colinfo=colinfo_$list(metadata,3+(i*10),11+(i*10))
+	}
+	Quit 1 }
+zGetAllProductsPrepare(qHandle,statement,containid=0,optional) public {
+	Quit 1 }
+zGetAllProductsSendODBC(qHandle,array,qacn,%qrc,piece,ColumnCount) public {
+	kill row set %qrc=0,row=""
+	for {
+		set rc=..GetAllProductsFetch(.qHandle,.row,.atend)
+		if ('rc) { set %qrc=-400 set:$isobject($get(%sqlcontext)) %sqlcontext.SQLCode=-400,%sqlcontext.Message=$g(%msg) do ProcessError^%ourProcedure(rc,$get(%sqlcontext),.%qrc,.%msg),Logerr^%SYS.SQLSRV(%qrc,"","SP",.%msg) RETURN  }
+		if row="" { set %qrc=100 set:$isobject($get(%sqlcontext)) %sqlcontext.SQLCode=100 RETURN  }
+		if $g(%protocol)>50 { RETURN:$zobjexport(row,60) }
+		else {
+			if %protocol>46 { for piece=1:1:ColumnCount { goto:$zobjexport($lg(row,piece),50) SPDone } }
+			else { for piece=1:1:ColumnCount { goto:$zobjexport($lg(row,piece),7) SPDone } }
+		}
+	}
+	QUIT
+SPDone	set:%protocol>46 piece=piece+1
+	kill array(qacn)
+	for i=piece:1:ColumnCount { set array(qacn,i)=$lg(row,i) }
+	QUIT }
+zGetOrderDetailFetchRows(qHandle,FetchCount=0,RowSet,ReturnCount,AtEnd) public {
+	Set RowSet="",ReturnCount=0,AtEnd=0,sc=1
+	For {
+		Set sc=..GetOrderDetailFetch(.qHandle,.Row,.AtEnd)
+		If Row'="",(''sc) Set RowSet=RowSet_Row,ReturnCount=ReturnCount+1 If (ReturnCount=FetchCount)||(($l(RowSet)+($l(RowSet)\ReturnCount))>24000)||$get(AtEnd) Quit
+		If ('sc) { Set:$isobject($g(%sqlcontext)) %sqlcontext.SQLCode=$g(SQLCODE,-400),%sqlcontext.Message=$g(%msg) Quit }
+		If Row="" Set AtEnd=1 Quit
+	}
+	Quit sc }
+zGetOrderDetailFunc(pOrderDr) public {
+	try {
+		set tSC = ..GetOrderDetailExecute(.qHandle,.pOrderDr)
+		if ('tSC) { throw ##class(%Exception.StatusException).CreateFromStatus(tSC) }
+		set tResult = ##class(%SQL.ClassQueryResultSet).%New($classname(),"GetOrderDetail",.qHandle)
+	}
+	catch tException { if '$Isobject($Get(tResult)) { set tResult = ##class(%SQL.StatementResult).%New() } set tResult.%SQLCODE=tException.AsSQLCODE(),tResult.%Message=tException.AsSQLMessage() }
+	Quit tResult }
+zGetOrderDetailGetInfo(colinfo,parminfo,idinfo,qHandle,extoption=0,extinfo) public {
+	Set colinfo=$lb($lb("OrderNo",10,"OrderNo"),$lb("OrderDate",2,"OrderDate"),$lb("Amount",14,"Amount"),$lb("Status",10,"Status"))
+	Set parminfo=$lb($lb("pOrderDr","10"))
+	Set idinfo=$lb(0,"")
+	If extoption {
+		Set extinfo=$lb("",$lb($lb("",""),$lb("",""),$lb("",""),$lb("","")))
+	}
+	Quit 1 }
+zGetOrderDetailGetODBCInfo(colinfo,parminfo,qHandle) public {
+	set version = $Select($Get(%protocol,41)>40:4,1:3)
+	Set metadata=$lb(1,4,"OrderNo",12,50,0,2,"OrderNo","SampleQuery","src_SamplePackage","",$c(0,0,0,0,0,0,0,0,0,0,0,0),"OrderDate",9,10,0,2,"OrderDate","SampleQuery","src_SamplePackage","",$c(0,0,0,0,0,0,0,0,0,0,0,0),"Amount",2,15,2,2,"Amount","SampleQuery","src_SamplePackage","",$c(0,0,0,0,0,0,0,0,0,0,0,0),"Status",12,50,0,2,"Status","SampleQuery","src_SamplePackage","",$c(0,0,0,0,0,0,0,0,0,0,0,0),1,12,50,0,2,"pOrderDr",1)
+	Set colcount=$li(metadata,2),cmdlen=colcount*10,parmcount=$li(metadata,3+cmdlen),pmdlen=parmcount*6,parminfo=$li(metadata,cmdlen+3,cmdlen+pmdlen+3)
+	If version=4 {
+		Set colinfo=$li(metadata,2,2+cmdlen)
+	} Else {
+		Set colinfo=$li(metadata,2,2)
+		For i=0:1:colcount-1 Set colinfo=colinfo_$list(metadata,3+(i*10),11+(i*10))
+	}
+	Quit 1 }
+zGetOrderDetailPrepare(qHandle,statement,containid=0,optional) public {
+	Quit 1 }
+zGetOrderDetailSendODBC(qHandle,array,qacn,%qrc,piece,ColumnCount) public {
+	kill row set %qrc=0,row=""
+	for {
+		set rc=..GetOrderDetailFetch(.qHandle,.row,.atend)
+		if ('rc) { set %qrc=-400 set:$isobject($get(%sqlcontext)) %sqlcontext.SQLCode=-400,%sqlcontext.Message=$g(%msg) do ProcessError^%ourProcedure(rc,$get(%sqlcontext),.%qrc,.%msg),Logerr^%SYS.SQLSRV(%qrc,"","SP",.%msg) RETURN  }
+		if row="" { set %qrc=100 set:$isobject($get(%sqlcontext)) %sqlcontext.SQLCode=100 RETURN  }
+		if $g(%protocol)>50 { RETURN:$zobjexport(row,60) }
+		else {
+			if %protocol>46 { for piece=1:1:ColumnCount { goto:$zobjexport($lg(row,piece),50) SPDone } }
+			else { for piece=1:1:ColumnCount { goto:$zobjexport($lg(row,piece),7) SPDone } }
+		}
+	}
+	QUIT
+SPDone	set:%protocol>46 piece=piece+1
+	kill array(qacn)
+	for i=piece:1:ColumnCount { set array(qacn,i)=$lg(row,i) }
+	QUIT }
+zGetUserListFetchRows(qHandle,FetchCount=0,RowSet,ReturnCount,AtEnd) public {
+	Set RowSet="",ReturnCount=0,AtEnd=0,sc=1
+	For {
+		Set sc=..GetUserListFetch(.qHandle,.Row,.AtEnd)
+		If Row'="",(''sc) Set RowSet=RowSet_Row,ReturnCount=ReturnCount+1 If (ReturnCount=FetchCount)||(($l(RowSet)+($l(RowSet)\ReturnCount))>24000)||$get(AtEnd) Quit
+		If ('sc) { Set:$isobject($g(%sqlcontext)) %sqlcontext.SQLCode=$g(SQLCODE,-400),%sqlcontext.Message=$g(%msg) Quit }
+		If Row="" Set AtEnd=1 Quit
+	}
+	Quit sc }
+zGetUserListFunc(pOrganizationDr) public {
+	try {
+		set tSC = ..GetUserListExecute(.qHandle,.pOrganizationDr)
+		if ('tSC) { throw ##class(%Exception.StatusException).CreateFromStatus(tSC) }
+		set tResult = ##class(%SQL.ClassQueryResultSet).%New($classname(),"GetUserList",.qHandle)
+	}
+	catch tException { if '$Isobject($Get(tResult)) { set tResult = ##class(%SQL.StatementResult).%New() } set tResult.%SQLCODE=tException.AsSQLCODE(),tResult.%Message=tException.AsSQLMessage() }
+	Quit tResult }
+zGetUserListGetInfo(colinfo,parminfo,idinfo,qHandle,extoption=0,extinfo) public {
+	Set colinfo=$lb($lb("UserName",10,"UserName"),$lb("UserCode",10,"UserCode"),$lb("Department",10,"Department"))
+	Set parminfo=$lb($lb("pOrganizationDr","10"))
+	Set idinfo=$lb(0,"")
+	If extoption {
+		Set extinfo=$lb("",$lb($lb("",""),$lb("",""),$lb("","")))
+	}
+	Quit 1 }
+zGetUserListGetODBCInfo(colinfo,parminfo,qHandle) public {
+	set version = $Select($Get(%protocol,41)>40:4,1:3)
+	Set metadata=$lb(1,3,"UserName",12,50,0,2,"UserName","SampleQuery","src_SamplePackage","",$c(0,0,0,0,0,0,0,0,0,0,0,0),"UserCode",12,50,0,2,"UserCode","SampleQuery","src_SamplePackage","",$c(0,0,0,0,0,0,0,0,0,0,0,0),"Department",12,50,0,2,"Department","SampleQuery","src_SamplePackage","",$c(0,0,0,0,0,0,0,0,0,0,0,0),1,12,50,0,2,"pOrganizationDr",1)
+	Set colcount=$li(metadata,2),cmdlen=colcount*10,parmcount=$li(metadata,3+cmdlen),pmdlen=parmcount*6,parminfo=$li(metadata,cmdlen+3,cmdlen+pmdlen+3)
+	If version=4 {
+		Set colinfo=$li(metadata,2,2+cmdlen)
+	} Else {
+		Set colinfo=$li(metadata,2,2)
+		For i=0:1:colcount-1 Set colinfo=colinfo_$list(metadata,3+(i*10),11+(i*10))
+	}
+	Quit 1 }
+zGetUserListPrepare(qHandle,statement,containid=0,optional) public {
+	Quit 1 }
+zGetUserListSendODBC(qHandle,array,qacn,%qrc,piece,ColumnCount) public {
+	kill row set %qrc=0,row=""
+	for {
+		set rc=..GetUserListFetch(.qHandle,.row,.atend)
+		if ('rc) { set %qrc=-400 set:$isobject($get(%sqlcontext)) %sqlcontext.SQLCode=-400,%sqlcontext.Message=$g(%msg) do ProcessError^%ourProcedure(rc,$get(%sqlcontext),.%qrc,.%msg),Logerr^%SYS.SQLSRV(%qrc,"","SP",.%msg) RETURN  }
+		if row="" { set %qrc=100 set:$isobject($get(%sqlcontext)) %sqlcontext.SQLCode=100 RETURN  }
+		if $g(%protocol)>50 { RETURN:$zobjexport(row,60) }
+		else {
+			if %protocol>46 { for piece=1:1:ColumnCount { goto:$zobjexport($lg(row,piece),50) SPDone } }
+			else { for piece=1:1:ColumnCount { goto:$zobjexport($lg(row,piece),7) SPDone } }
+		}
+	}
+	QUIT
+SPDone	set:%protocol>46 piece=piece+1
+	kill array(qacn)
+	for i=piece:1:ColumnCount { set array(qacn,i)=$lg(row,i) }
+	QUIT }

@@ -304,7 +304,7 @@ ClassMethod PreviewImportDRGs(jsonObj) As %Library.DynamicObject
 ClassMethod ConfirmImportDRGs(jsonObj) As %Library.DynamicObject
 {
 	new (jsonObj)
-	quit ##class(src.DRG.BasicData.DRGCataLog).ConfirmImportICD(jsonObj)
+	quit ##class(src.DRG.BasicData.DRGCataLog).ConfirmImportDRGs(jsonObj)
 }
 
 /// Creator:     CM
@@ -314,7 +314,7 @@ ClassMethod ConfirmImportDRGs(jsonObj) As %Library.DynamicObject
 ClassMethod DownloadDRGsTemplate(jsonObj) As %Library.DynamicObject
 {
 	new (jsonObj)
-	quit ##class(src.DRG.BasicData.DRGCataLog).ConfirmImportDrg(jsonObj)
+	quit ##class(src.DRG.BasicData.DRGCataLog).DownloadDRGsTemplate(jsonObj)
 }
 
 }
