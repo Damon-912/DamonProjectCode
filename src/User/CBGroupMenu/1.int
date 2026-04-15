@@ -1,7 +1,7 @@
 ROUTINE User.CBGroupMenu.1 [Type=INT,Generated]
  ;User.CBGroupMenu.1
- ;Generated for class User.CBGroupMenu.  Do NOT edit. 12/24/2025 10:04:03AM
- ;;5550622F;User.CBGroupMenu
+ ;Generated for class User.CBGroupMenu.  Do NOT edit. 04/14/2026 10:01:59PM
+ ;;7476675A;User.CBGroupMenu
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
 ALPHAUP(v,r) { quit $zu(28,v,6) }
@@ -16,7 +16,7 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
    s sc = 1
  s proporef=..CreateUserDr
  s proporef=..GroupDr
- s proporef=..MenuDetailDr
+ s proporef=..MenuDr
  s proporef=..PreGroupMenuDr
  s proporef=..SafeClassificat
    d:RegisterOref InitObjVar^%SYS.BINDSRV($this)
@@ -27,7 +27,7 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
        i proporef'="" s sc=1 i AllowedDepth'=0,AllowedCapacity'=0 s sc=proporef.%BindExport(dev,.Seen,RegisterOref,AllowedDepth,AllowedCapacity) q:('sc) sc
  s proporef=..GroupDr
        i proporef'="" s sc=1 i AllowedDepth'=0,AllowedCapacity'=0 s sc=proporef.%BindExport(dev,.Seen,RegisterOref,AllowedDepth,AllowedCapacity) q:('sc) sc
- s proporef=..MenuDetailDr
+ s proporef=..MenuDr
        i proporef'="" s sc=1 i AllowedDepth'=0,AllowedCapacity'=0 s sc=proporef.%BindExport(dev,.Seen,RegisterOref,AllowedDepth,AllowedCapacity) q:('sc) sc
  s proporef=..PreGroupMenuDr
        i proporef'="" s sc=1 i AllowedDepth'=0,AllowedCapacity'=0 s sc=proporef.%BindExport(dev,.Seen,RegisterOref,AllowedDepth,AllowedCapacity) q:('sc) sc
@@ -124,70 +124,70 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext0255d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03200d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext0255d(1)=0,%ext0255d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext0255d(3)=$zu(115,2)
- s %ext0255d(4)=0,%ext0255d(5)=""
+ s %ext03200d(1)=0,%ext03200d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03200d(3)=$zu(115,2)
+ s %ext03200d(4)=0,%ext03200d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext0255d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext0255d(6)=$g(%ext0255d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext0255d }
+ s %ext03200d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03200d(6)=$g(%ext03200d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03200d }
  q
 %0Afirst 
  ; asl MOD# 2
- s %ext0255d(7)=""
-%0AmBk1 s %ext0255d(7)=$o(^CBGroupMenuI("Type",%ext0255d(7)))
- i %ext0255d(7)="" g %0AmBdun
+ s %ext03200d(7)=""
+%0AmBk1 s %ext03200d(7)=$o(^CBGroupMenuI("Type",%ext03200d(7)))
+ i %ext03200d(7)="" g %0AmBdun
  s tID=""
-%0AmBk2 s tID=$o(^CBGroupMenuI("Type",%ext0255d(7),tID))
+%0AmBk2 s tID=$o(^CBGroupMenuI("Type",%ext03200d(7),tID))
  i tID="" g %0AmBk1
- goto:%ext0255d(3)'=1 %0AmBuncommitted
- if %ext0255d(3)=1 {
+ goto:%ext03200d(3)'=1 %0AmBuncommitted
+ if %ext03200d(3)=1 {
  	lock +^CBGroupMenuD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext0255d(5)=$name(^CBGroupMenuD($p(tID,"||",1)))_"#""SI""",%ext0255d(4)=1 }
+ 	if $t { set %ext03200d(5)=$name(^CBGroupMenuD($p(tID,"||",1)))_"#""SI""",%ext03200d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_GroupMenu for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^CBGroupMenuD(tID))
  e  g %0AmCdun
 %0AmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext0255d(1)),%ROWID=tID,%ext0255d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03200d(1)),%ROWID=tID,%ext03200d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext0255d(6)=$g(%ext0255d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03200d(6)=$g(%ext03200d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext0255d(0)) { s SQLCODE=-102 q  } i %ext0255d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext0255d(2),%ext0255d(1)'<%ext0255d(2) { s SQLCODE=100,%ROWCOUNT=%ext0255d(1),%ext0255d(0)=100 q }
+ i '$g(%ext03200d(0)) { s SQLCODE=-102 q  } i %ext03200d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03200d(2),%ext03200d(1)'<%ext03200d(2) { s SQLCODE=100,%ROWCOUNT=%ext03200d(1),%ext03200d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Afirst:%ext0255d(0)=1
-%0AmCdun if $g(%ext0255d(3))=1 { if $g(%ext0255d(4))=1 { l -@%ext0255d(5) s %ext0255d(4)=0 } elseif $g(%ext0255d(4))=2 { do $classmethod($li(%ext0255d(5)),"%UnlockId",$li(%ext0255d(5),2),1,1)  s %ext0255d(4)=0 }}
+ g %0Afirst:%ext03200d(0)=1
+%0AmCdun if $g(%ext03200d(3))=1 { if $g(%ext03200d(4))=1 { l -@%ext03200d(5) s %ext03200d(4)=0 } elseif $g(%ext03200d(4))=2 { do $classmethod($li(%ext03200d(5)),"%UnlockId",$li(%ext03200d(5),2),1,1)  s %ext03200d(4)=0 }}
  g %0AmBk2
 %0AmBdun 
 %0AmAdun 
- s %ROWCOUNT=%ext0255d(1),SQLCODE=100,%ext0255d(0)=100
- s:$d(%sqltime) %ext0255d(6)=$g(%ext0255d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03200d(1),SQLCODE=100,%ext03200d(0)=100
+ s:$d(%sqltime) %ext03200d(6)=$g(%ext03200d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext0255d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03200d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext0255d(1)),1:0)
- if $g(%ext0255d(3))=1 {
- 	if $g(%ext0255d(4))=1 { l -@%ext0255d(5) s %ext0255d(4)=0 } elseif $g(%ext0255d(4))=2 { do $classmethod($li(%ext0255d(5)),"%UnlockId",$li(%ext0255d(5),2),1,1)  s %ext0255d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03200d(1)),1:0)
+ if $g(%ext03200d(3))=1 {
+ 	if $g(%ext03200d(4))=1 { l -@%ext03200d(5) s %ext03200d(4)=0 } elseif $g(%ext03200d(4))=2 { do $classmethod($li(%ext03200d(5)),"%UnlockId",$li(%ext03200d(5),2),1,1)  s %ext03200d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext0255d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03200d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"yr4AWQ/4UQvGw6oR/vF3TNVlzec="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"yr4AWQ/4UQvGw6oR/vF3TNVlzec=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext0255d
+ k %ext03200d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext0255d(8)
+ kill %ext03200d(8)
  quit  // close
 %0Aerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext0255d(0)=100
+ s %ext03200d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^CBGroupMenuD(id)),1)
@@ -200,7 +200,7 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	If deep>0 {
 		If $isobject(..CreateUserDr)=1 Set r%CreateUserDr=r%CreateUserDr.%ConstructClone(1,.cloned),i%CreateUserDr=""
 		If $isobject(..GroupDr)=1 Set r%GroupDr=r%GroupDr.%ConstructClone(1,.cloned),i%GroupDr=""
-		If $isobject(..MenuDetailDr)=1 Set r%MenuDetailDr=r%MenuDetailDr.%ConstructClone(1,.cloned),i%MenuDetailDr=""
+		If $isobject(..MenuDr)=1 Set r%MenuDr=r%MenuDr.%ConstructClone(1,.cloned),i%MenuDr=""
 		If $isobject(..PreGroupMenuDr)=1 Set r%PreGroupMenuDr=r%PreGroupMenuDr.%ConstructClone(1,.cloned),i%PreGroupMenuDr=""
 		If $isobject(..SafeClassificat)=1 Set r%SafeClassificat=r%SafeClassificat.%ConstructClone(1,.cloned),i%SafeClassificat=""
 	}
@@ -348,9 +348,9 @@ CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
     Write sep_"""Type"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
     Set $extract(sep,1)=","
   }
-  Set value=..MenuDetailDr
+  Set value=..MenuDr
   If value'="" {
-    Write sep_"""MenuDetailDr"":"""_$zcvt(value.%Id(),"O","JSON")_""""
+    Write sep_"""MenuDr"":"""_$zcvt(value.%Id(),"O","JSON")_""""
     Set $extract(sep,1)=","
   }
   Set value=..PreGroupMenuDr
@@ -393,9 +393,9 @@ CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
     Set %export=%export_sep_"""Type"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
     Set $extract(sep,1)=","
   }
-  Set value=..MenuDetailDr
+  Set value=..MenuDr
   If value'="" {
-    Set %export=%export_sep_"""MenuDetailDr"":"""_$zcvt(value.%Id(),"O","JSON")_""""
+    Set %export=%export_sep_"""MenuDr"":"""_$zcvt(value.%Id(),"O","JSON")_""""
     Set $extract(sep,1)=","
   }
   Set value=..PreGroupMenuDr
@@ -457,14 +457,14 @@ CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
       Set ..Type=data
     }
   } Else { Goto %JSONImportRequired }
-  Set proplist("MenuDetailDr")=""
-  Set field="MenuDetailDr" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  Set proplist("MenuDr")=""
+  Set field="MenuDr" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
   If jsontype'="unassigned" {
     If jsontype="null" {
       Goto %JSONImportRequired
     } Else {
       If jsontype'="string",jsontype'="number" Goto %JSONImportError
-      Do ..MenuDetailDrSetObjectId(%JSONObject.MenuDetailDr)
+      Do ..MenuDrSetObjectId(%JSONObject.MenuDr)
     }
   } Else { Goto %JSONImportRequired }
   Set proplist("PreGroupMenuDr")=""
@@ -537,7 +537,7 @@ CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
 	}
 	If $d(^CBGroupMenuD(id),%s1)#2 {
 		If i%%Concurrency=2 { Lock -(^CBGroupMenuD(id)#"SIE") }
-		S i%SeqNo=$lg(%s1,2),i%GroupDr=$lg(%s1,3),i%Type=$lg(%s1,4),i%MenuDetailDr=$lg(%s1,5),i%PreGroupMenuDr=$lg(%s1,6),i%SafeClassificat=$lg(%s1,7),i%CreateDate=$lg(%s1,8),i%CreateUserDr=$lg(%s1,9)
+		S i%SeqNo=$lg(%s1,2),i%GroupDr=$lg(%s1,3),i%Type=$lg(%s1,4),i%MenuDr=$lg(%s1,5),i%PreGroupMenuDr=$lg(%s1,6),i%SafeClassificat=$lg(%s1,7),i%CreateDate=$lg(%s1,8),i%CreateUserDr=$lg(%s1,9)
 		s:$ze="" $ze=userze
 		Quit 1
 	} Else {
@@ -550,24 +550,24 @@ CatchError	set $ZTrap = "" if $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) }
 	if '('sc) { set sc=$$Error^%apiOBJ(5809,$classname(),id) }
 	s:$ze="" $ze=userze
 	return sc
-init	Set i%CreateDate="",i%CreateUserDr="",i%GroupDr="",i%MenuDetailDr="",i%PreGroupMenuDr="",i%SafeClassificat="",i%SeqNo="",i%Type=""
+init	Set i%CreateDate="",i%CreateUserDr="",i%GroupDr="",i%MenuDr="",i%PreGroupMenuDr="",i%SafeClassificat="",i%SeqNo="",i%Type=""
 	quit }
 %LoadDataFromMemory(id,objstate,obj) public {
 	New %s1
 	If $d(objstate(id)) {
 		Set %s1=$g(objstate(id))
-		S i%SeqNo=$lg(%s1,2),i%GroupDr=$lg(%s1,3),i%Type=$lg(%s1,4),i%MenuDetailDr=$lg(%s1,5),i%PreGroupMenuDr=$lg(%s1,6),i%SafeClassificat=$lg(%s1,7),i%CreateDate=$lg(%s1,8),i%CreateUserDr=$lg(%s1,9)
+		S i%SeqNo=$lg(%s1,2),i%GroupDr=$lg(%s1,3),i%Type=$lg(%s1,4),i%MenuDr=$lg(%s1,5),i%PreGroupMenuDr=$lg(%s1,6),i%SafeClassificat=$lg(%s1,7),i%CreateDate=$lg(%s1,8),i%CreateUserDr=$lg(%s1,9)
 		Quit 1
 	} Else {
-		Set i%CreateDate="",i%CreateUserDr="",i%GroupDr="",i%MenuDetailDr="",i%PreGroupMenuDr="",i%SafeClassificat="",i%SeqNo="",i%Type=""
+		Set i%CreateDate="",i%CreateUserDr="",i%GroupDr="",i%MenuDr="",i%PreGroupMenuDr="",i%SafeClassificat="",i%SeqNo="",i%Type=""
 		Quit $$Error^%apiOBJ(5809,$classname(),id)
 	} }
 %LoadInit(oid="",concurrency="",reset=0) public {
 	If concurrency'="" Set i%%Concurrency=concurrency
 	If reset {
-		Kill i%CreateUserDr,i%GroupDr,i%MenuDetailDr,i%PreGroupMenuDr,i%SafeClassificat
+		Kill i%CreateUserDr,i%GroupDr,i%MenuDr,i%PreGroupMenuDr,i%SafeClassificat
 	}
-	Set r%CreateUserDr="",r%GroupDr="",r%MenuDetailDr="",r%PreGroupMenuDr="",r%SafeClassificat=""
+	Set r%CreateUserDr="",r%GroupDr="",r%MenuDr="",r%PreGroupMenuDr="",r%SafeClassificat=""
 	If 'reset { Set gbl=..#DATALOCATIONGLOBAL If gbl="" { Set oref=$zobjoid("",$listget(oid)),sfn=$zu(40,0,41) } Else { Set oref=$zobjoid("",$listget(oid),@gbl,.sfn) } Set $zobjoid("",$listget(oid),,sfn)=$this,i%"%%OID"=oid }
 	Quit 1 }
 %LockExtent(shared=0) public {
@@ -713,7 +713,7 @@ init	Set i%CreateDate="",i%CreateUserDr="",i%GroupDr="",i%MenuDetailDr="",i%PreG
 		set:$d(%d(1)) %f("ID")=%d(1)
 		QUIT
 	}
-	set:$d(%d(1)) %f("ID")=%d(1) set:$a(%e,2)&&$d(%d(2)) %f("SeqNo")=%d(2) set:$a(%e,3)&&$d(%d(3)) %f("Group_Dr")=%d(3) set:$a(%e,4)&&$d(%d(4)) %f("Type")=%d(4) set:$a(%e,5)&&$d(%d(5)) %f("MenuDetail_Dr")=%d(5) set:$a(%e,6)&&$d(%d(6)) %f("PreGroupMenu_Dr")=%d(6) set:$a(%e,7)&&$d(%d(7)) %f("SafeClassificat")=%d(7) set:$a(%e,8)&&$d(%d(8)) %f("CreateDate")=%d(8) set:$a(%e,9)&&$d(%d(9)) %f("CreateUser_Dr")=%d(9) set:$a(%e,10)&&$d(%d(10)) %f("x__classname")=%d(10)
+	set:$d(%d(1)) %f("ID")=%d(1) set:$a(%e,2)&&$d(%d(2)) %f("SeqNo")=%d(2) set:$a(%e,3)&&$d(%d(3)) %f("Group_Dr")=%d(3) set:$a(%e,4)&&$d(%d(4)) %f("Type")=%d(4) set:$a(%e,5)&&$d(%d(5)) %f("Menu_Dr")=%d(5) set:$a(%e,6)&&$d(%d(6)) %f("PreGroupMenu_Dr")=%d(6) set:$a(%e,7)&&$d(%d(7)) %f("SafeClassificat")=%d(7) set:$a(%e,8)&&$d(%d(8)) %f("CreateDate")=%d(8) set:$a(%e,9)&&$d(%d(9)) %f("CreateUser_Dr")=%d(9) set:$a(%e,10)&&$d(%d(10)) %f("x__classname")=%d(10)
 	QUIT
 %SQLDefineiDjVars(%d,subs,master)
 	QUIT
@@ -779,14 +779,14 @@ ERRORDelete	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 		set tOid=..%ComposeOid(%rowid)
 		if ''..%OnDetermineClass(tOid,.tClass),tClass'=$classname() {
 			set tF=1 do $classmethod(tClass,"%SQLGetOldIndex",%rowid,,.tF,.sqlcode)
-			set:$d(tF("Group_Dr")) %d(3)=tF("Group_Dr") set:$d(tF("x__classname")) %d(10)=tF("x__classname") set:$d(tF("MenuDetail_Dr")) %d(5)=tF("MenuDetail_Dr") set:$d(tF("PreGroupMenu_Dr")) %d(6)=tF("PreGroupMenu_Dr") set:$d(tF("Type")) %d(4)=tF("Type") 
+			set:$d(tF("Group_Dr")) %d(3)=tF("Group_Dr") set:$d(tF("x__classname")) %d(10)=tF("x__classname") set:$d(tF("Menu_Dr")) %d(5)=tF("Menu_Dr") set:$d(tF("PreGroupMenu_Dr")) %d(6)=tF("PreGroupMenu_Dr") set:$d(tF("Type")) %d(4)=tF("Type") 
 			RETURN
 		}
 	}
 	catch { }
 	new s set %d(1)=%rowid,s="" if '$d(^CBGroupMenuD(%d(1)),s) { set sqlcode=100 quit  }
 	 S $lg(%e(10),,%e(3),%e(4),%e(5),%e(6))=s
-	if pF { set:$d(%d(3)) pF("Group_Dr")=%d(3) set:$d(%d(10)) pF("x__classname")=%d(10) set:$d(%d(5)) pF("MenuDetail_Dr")=%d(5) set:$d(%d(6)) pF("PreGroupMenu_Dr")=%d(6) set:$d(%d(4)) pF("Type")=%d(4)  }
+	if pF { set:$d(%d(3)) pF("Group_Dr")=%d(3) set:$d(%d(10)) pF("x__classname")=%d(10) set:$d(%d(5)) pF("Menu_Dr")=%d(5) set:$d(%d(6)) pF("PreGroupMenu_Dr")=%d(6) set:$d(%d(4)) pF("Type")=%d(4)  }
 	set sqlcode=0
 	QUIT
 %SQLInsert(%d,%check,%inssel,%vco,%tstart=1,%mv=0)
@@ -929,7 +929,7 @@ ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 	if $g(%d(2))'="",'($select(%d(2)=$c(0)&&$zu(115,13):1,$isvalidnum(%d(2),0):1,1:$$Error^%apiOBJ(7207,%d(2)))) { set sqlcode=..%SQLInvalid(2+1,%d(2)) } 
 	QUIT 'sqlcode
 %SQLnBuild() public {
-	set %n=$lb(,"ID","SeqNo","Group_Dr","Type","MenuDetail_Dr","PreGroupMenu_Dr","SafeClassificat","CreateDate","CreateUser_Dr","x__classname")
+	set %n=$lb(,"ID","SeqNo","Group_Dr","Type","Menu_Dr","PreGroupMenu_Dr","SafeClassificat","CreateDate","CreateUser_Dr","x__classname")
 	QUIT }
 %Save(related=1) public {
 	Set $ZTrap="%SaveERR"
@@ -982,9 +982,9 @@ ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 			if insert {
 				if ('lockok&&..%Concurrency&&$tlevel)||(i%%Concurrency=4) {  lock +(^CBGroupMenuD(id)#"E"):$zu(115,4) set lockok=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,2:2,4:2,:0)) set:(lockok=2&&(i%%Concurrency'=4)) %0CacheLock($classname(),"E")=1 set:lockok lock=1 if 'lockok { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
 				if i%%Concurrency=3 { lock +(^CBGroupMenuD(id)#"ES") set tSharedLock=1 }
-				set ^CBGroupMenuD(id)=$lb("",i%SeqNo,i%GroupDr,i%Type,i%MenuDetailDr,i%PreGroupMenuDr,i%SafeClassificat,i%CreateDate,i%CreateUserDr)
+				set ^CBGroupMenuD(id)=$lb("",i%SeqNo,i%GroupDr,i%Type,i%MenuDr,i%PreGroupMenuDr,i%SafeClassificat,i%CreateDate,i%CreateUserDr)
 				set ^CBGroupMenuI("Group",i%GroupDr,id)=""
-				set ^CBGroupMenuI("Menu",i%MenuDetailDr,id)=""
+				set ^CBGroupMenuI("Menu",i%MenuDr,id)=""
 				set ^CBGroupMenuI("PreMenu",zzc10v2,id)=""
 				set ^CBGroupMenuI("Type",zzc10v1,id)=""
 			}
@@ -998,9 +998,9 @@ ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 					kill ^CBGroupMenuI("Group",zzc31v5,id)
 					set ^CBGroupMenuI("Group",i%GroupDr,id)=""
 				}
-				if (i%MenuDetailDr'=zzc31v4) {
+				if (i%MenuDr'=zzc31v4) {
 					kill ^CBGroupMenuI("Menu",zzc31v4,id)
-					set ^CBGroupMenuI("Menu",i%MenuDetailDr,id)=""
+					set ^CBGroupMenuI("Menu",i%MenuDr,id)=""
 				}
 				if (i%PreGroupMenuDr'=zzc31v3) {
 					kill ^CBGroupMenuI("PreMenu",$s(zzc31v3'="":zzc31v3,1:-1E14),id)
@@ -1010,7 +1010,7 @@ ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 					kill ^CBGroupMenuI("Type",$zu(28,zzc31v2,5),id)
 					set ^CBGroupMenuI("Type",zzc10v1,id)=""
 				}
-				set ^CBGroupMenuD(id)=$lb("",i%SeqNo,i%GroupDr,i%Type,i%MenuDetailDr,i%PreGroupMenuDr,i%SafeClassificat,i%CreateDate,i%CreateUserDr)
+				set ^CBGroupMenuD(id)=$lb("",i%SeqNo,i%GroupDr,i%Type,i%MenuDr,i%PreGroupMenuDr,i%SafeClassificat,i%CreateDate,i%CreateUserDr)
 			}
 			set tStatus = 1
 		}
@@ -1128,8 +1128,8 @@ CatchError	Set $ZTrap=""
 		If i%CreateUserDr="" Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5659,$classname()_"::"_"CreateUserDr"))
 		If r%GroupDr'="" { Set:'$data(%objTX(0,+r%GroupDr)) %objTX(0,+r%GroupDr)=$i(%objTX(1)),%objTX(1,%objTX(0,+r%GroupDr))=r%GroupDr,%objTX(1,%objTX(0,+r%GroupDr),1)=..GroupDrGetObject(1),%objTX(1,%objTX(0,+r%GroupDr),6)=1 Set M%GroupDr=1,i%GroupDr=$listget(%objTX(1,%objTX(0,+r%GroupDr),1)) }
 		If i%GroupDr="" Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5659,$classname()_"::"_"GroupDr"))
-		If r%MenuDetailDr'="" { Set:'$data(%objTX(0,+r%MenuDetailDr)) %objTX(0,+r%MenuDetailDr)=$i(%objTX(1)),%objTX(1,%objTX(0,+r%MenuDetailDr))=r%MenuDetailDr,%objTX(1,%objTX(0,+r%MenuDetailDr),1)=..MenuDetailDrGetObject(1),%objTX(1,%objTX(0,+r%MenuDetailDr),6)=1 Set M%MenuDetailDr=1,i%MenuDetailDr=$listget(%objTX(1,%objTX(0,+r%MenuDetailDr),1)) }
-		If i%MenuDetailDr="" Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5659,$classname()_"::"_"MenuDetailDr"))
+		If r%MenuDr'="" { Set:'$data(%objTX(0,+r%MenuDr)) %objTX(0,+r%MenuDr)=$i(%objTX(1)),%objTX(1,%objTX(0,+r%MenuDr))=r%MenuDr,%objTX(1,%objTX(0,+r%MenuDr),1)=..MenuDrGetObject(1),%objTX(1,%objTX(0,+r%MenuDr),6)=1 Set M%MenuDr=1,i%MenuDr=$listget(%objTX(1,%objTX(0,+r%MenuDr),1)) }
+		If i%MenuDr="" Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5659,$classname()_"::"_"MenuDr"))
 		If r%PreGroupMenuDr'="" { Set:'$data(%objTX(0,+r%PreGroupMenuDr)) %objTX(0,+r%PreGroupMenuDr)=$i(%objTX(1)),%objTX(1,%objTX(0,+r%PreGroupMenuDr))=r%PreGroupMenuDr,%objTX(1,%objTX(0,+r%PreGroupMenuDr),1)=..PreGroupMenuDrGetObject(1),%objTX(1,%objTX(0,+r%PreGroupMenuDr),6)=1 Set M%PreGroupMenuDr=1,i%PreGroupMenuDr=$listget(%objTX(1,%objTX(0,+r%PreGroupMenuDr),1)) }
 		If r%SafeClassificat'="" { Set:'$data(%objTX(0,+r%SafeClassificat)) %objTX(0,+r%SafeClassificat)=$i(%objTX(1)),%objTX(1,%objTX(0,+r%SafeClassificat))=r%SafeClassificat,%objTX(1,%objTX(0,+r%SafeClassificat),1)=..SafeClassificatGetObject(1),%objTX(1,%objTX(0,+r%SafeClassificat),6)=1 Set M%SafeClassificat=1,i%SafeClassificat=$listget(%objTX(1,%objTX(0,+r%SafeClassificat),1)) }
 		s:$g(%objtxSTATUS)=2 %objtxLIST(+$this)=$this
@@ -1152,7 +1152,7 @@ CatchError	Set $ZTrap=""
 	Set serial=i%"%%OID",%objTX(0,intOref)=$i(%objTX(1)),%objTX(1,%objTX(1))=$this,%objTX(1,%objTX(1),1)=serial,%objTX(1,%objTX(1),6)=1 If (serial '= "") && (depth<2) { Quit 1 } Else { Set %objTX(7,%objTX(1))=$lb(intOref,1) }
 	Set Poref=r%CreateUserDr If Poref'="" Set:'$data(%objTX(0,+Poref)) %objTX(6,$i(%objTX(6)))=Poref Set %objTX(8,$i(%objTX(8)))=$lb(+Poref,intOref,2)
 	Set Poref=r%GroupDr If Poref'="" Set:'$data(%objTX(0,+Poref)) %objTX(6,$i(%objTX(6)))=Poref Set %objTX(8,$i(%objTX(8)))=$lb(+Poref,intOref,2)
-	Set Poref=r%MenuDetailDr If Poref'="" Set:'$data(%objTX(0,+Poref)) %objTX(6,$i(%objTX(6)))=Poref Set %objTX(8,$i(%objTX(8)))=$lb(+Poref,intOref,2)
+	Set Poref=r%MenuDr If Poref'="" Set:'$data(%objTX(0,+Poref)) %objTX(6,$i(%objTX(6)))=Poref Set %objTX(8,$i(%objTX(8)))=$lb(+Poref,intOref,2)
 	Set Poref=r%PreGroupMenuDr If Poref'="" Set:'$data(%objTX(0,+Poref)) %objTX(6,$i(%objTX(6)))=Poref Set %objTX(8,$i(%objTX(8)))=$lb(+Poref,intOref,2)
 	Set Poref=r%SafeClassificat If Poref'="" Set:'$data(%objTX(0,+Poref)) %objTX(6,$i(%objTX(6)))=Poref Set %objTX(8,$i(%objTX(8)))=$lb(+Poref,intOref,2)
 exit	Quit sc }
@@ -1208,7 +1208,7 @@ exit	Quit sc }
 	set sc=1
 	If r%CreateUserDr="",i%CreateUserDr="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::CreateUserDr("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
 	If r%GroupDr="",i%GroupDr="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::GroupDr("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
-	If r%MenuDetailDr="",i%MenuDetailDr="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::MenuDetailDr("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
+	If r%MenuDr="",i%MenuDr="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::MenuDr("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
 	If '$system.CLS.GetModified() Quit sc
 	Set iv=..CreateDate If iv="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::CreateDate("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
 	If m%CreateDate Set rc=(..CreateDateIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"CreateDate",iv)
@@ -1252,11 +1252,11 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
-		if (pDynamicObject.%IsDefined("MenuDetailDr")) {
+		if (pDynamicObject.%IsDefined("MenuDr")) {
 			try {
-				set newIdvalue=pDynamicObject."MenuDetailDr"
-				set existingIdValue=..MenuDetailDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"MenuDetailDr")=##class(User.CBMenuDetail).%OpenId(newIdvalue)
+				set newIdvalue=pDynamicObject."MenuDr"
+				set existingIdValue=..MenuDrGetObjectId()
+				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"MenuDr")=##class(User.CBMenu).%OpenId(newIdvalue)
 			} catch(ex) {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
@@ -1309,7 +1309,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"CreateDate":(..GetLogicalToXSDValue($This,"CreateDate",..CreateDate)),"CreateUserDr":($CASE($ISOBJECT(..CreateUserDr),1:..CreateUserDr.%Id(),:"")),"GroupDr":($CASE($ISOBJECT(..GroupDr),1:..GroupDr.%Id(),:"")),"MenuDetailDr":($CASE($ISOBJECT(..MenuDetailDr),1:..MenuDetailDr.%Id(),:"")),"PreGroupMenuDr":($CASE($ISOBJECT(..PreGroupMenuDr),1:..PreGroupMenuDr.%Id(),:"")),"SafeClassificat":($CASE($ISOBJECT(..SafeClassificat),1:..SafeClassificat.%Id(),:"")),"SeqNo":(..SeqNo),"Type":(..GetLogicalToXSDValue($This,"Type",..Type))}
+		set pDynamicObject={"ID":(..%Id()),"CreateDate":(..GetLogicalToXSDValue($This,"CreateDate",..CreateDate)),"CreateUserDr":($CASE($ISOBJECT(..CreateUserDr),1:..CreateUserDr.%Id(),:"")),"GroupDr":($CASE($ISOBJECT(..GroupDr),1:..GroupDr.%Id(),:"")),"MenuDr":($CASE($ISOBJECT(..MenuDr),1:..MenuDr.%Id(),:"")),"PreGroupMenuDr":($CASE($ISOBJECT(..PreGroupMenuDr),1:..PreGroupMenuDr.%Id(),:"")),"SafeClassificat":($CASE($ISOBJECT(..SafeClassificat),1:..SafeClassificat.%Id(),:"")),"SeqNo":(..SeqNo),"Type":(..GetLogicalToXSDValue($This,"Type",..Type))}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}
@@ -1385,18 +1385,18 @@ zXMLExportInternal()
  If val'="" {
    Set %xmlmsg=currentIndent_beginprefix_"Type"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"Type>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
  }
- Set val=..MenuDetailDr
+ Set val=..MenuDr
  If $IsObject(val) , deepFlag {
    Set id=""
    If encoded,'inlineFlag {
-     Set temp=$select($parameter("User.CBMenuDetail","XMLSUMMARY")'="":-1,1:1)
+     Set temp=$select($parameter("User.CBMenu","XMLSUMMARY")'="":-1,1:1)
      Set id=+$get(idlist(temp*val))
      If 'soap12 , (id=0) Set id=$increment(idlist),oreflist(temp*id)=val,idlist(temp*val)=id
    }
    If +id'=0 {
-     Set %xmlmsg=currentIndent_beginprefix_"MenuDetailDr "_$select(soap12:soapPrefix_"ref=""",1:"href=""#")_"id"_id_""" />" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+     Set %xmlmsg=currentIndent_beginprefix_"MenuDr "_$select(soap12:soapPrefix_"ref=""",1:"href=""#")_"id"_id_""" />" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
    } Else { if id=0 Set id=$increment(idlist)
-     Set topArg="MenuDetailDr",summaryArg=1,group=0,createId=$get(id),typeAttr=$select(encoded||xsitype:"*",1:"User.CBMenuDetail"),local=1,savexsiAttrs=xsiAttrs
+     Set topArg="MenuDr",summaryArg=1,group=0,createId=$get(id),typeAttr=$select(encoded||xsitype:"*",1:"User.CBMenu"),local=1,savexsiAttrs=xsiAttrs
      Set sc=val.XMLExportInternal() Goto:'sc XMLExportExit Set xsiAttrs=savexsiAttrs
    }
  }
@@ -1518,7 +1518,7 @@ zXMLImportInternal()
    If '$data(exists("CreateDate")) Set nodelist=nodelist_"CreateDate, "
    If '$data(exists("CreateUserDr")) Set nodelist=nodelist_"CreateUserDr, "
    If '$data(exists("GroupDr")) Set nodelist=nodelist_"GroupDr, "
-   If '$data(exists("MenuDetailDr")) Set nodelist=nodelist_"MenuDetailDr, "
+   If '$data(exists("MenuDr")) Set nodelist=nodelist_"MenuDr, "
    If '$data(exists("Type")) Set nodelist=nodelist_"Type, "
    If nodelist'="" Set sc=$$Error^%apiOBJ(6318,$extract(nodelist,1,*-2))
  }
@@ -1599,20 +1599,20 @@ XMLLOOP2 If child="" Quit sc
    If encoded Set child=savechild,childlist=savechildlist
    Set ..Type=data
    Goto XMLLOOP } }
- If tag="MenuDetailDr" {
+ If tag="MenuDr" {
    If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
-   Set exists("MenuDetailDr")=1
+   Set exists("MenuDr")=1
    If encoded Set savechild=child,savechildlist=childlist
    If encoded,$$XMLImportIdChild() {
      Set data=idlist(child)
    } Else { Goto:'sc XMLImportExit
      Do XMLImportAttrchild()
      Set class=$select(($zwascii($get(attributeList("type")),9)=1):$case($data(@(tree)@("d",$zlascii(attributeList("type"),13))),1:@(tree)@("d",$zlascii(attributeList("type"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("type"))),1:"")
-     If (class="") || (class="CBMenuDetail") {
-       Set class="User.CBMenuDetail"
+     If (class="") || (class="CBMenu") {
+       Set class="User.CBMenu"
      } Else {
        If $length(class,":")=2 Set class=$piece(class,":",2)
-       Set class=$get(^oddCOM("User.CBMenuDetail",85,"s",class))_$get(^oddXML("User.CBMenuDetail","s",class)) If class="" Set class=0
+       Set class=$get(^oddCOM("User.CBMenu",85,"s",class))_$get(^oddXML("User.CBMenu","s",class)) If class="" Set class=0
        Set tmp=$get(@(tree)@("n",$zwascii(attributeList("type"),11)))
        If (class=0)||(($listlength(class)>1)&&(tmp="")) Set class=$case($data(@(tree)@("d",$zlascii(attributeList("type"),13))),1:@(tree)@("d",$zlascii(attributeList("type"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("type"))) Goto XMLImportBadTypechild
        If $listlength(class)>1 {
@@ -1627,7 +1627,7 @@ XMLLOOP2 If child="" Quit sc
      If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
    }
    If encoded Set child=savechild,childlist=savechildlist
-   If data'="" Set ..MenuDetailDr=data
+   If data'="" Set ..MenuDr=data
    Goto XMLLOOP } }
  If tag="PreGroupMenuDr" {
    If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
@@ -1819,7 +1819,7 @@ zXMLIsObjectEmpty(ignoreNull)
  If ..SeqNo'="" Quit 0
  If $IsObject(..GroupDr) Quit 0
  If ..Type'="" Quit 0
- If $IsObject(..MenuDetailDr) Quit 0
+ If $IsObject(..MenuDr) Quit 0
  If $IsObject(..PreGroupMenuDr) Quit 0
  If $IsObject(..SafeClassificat) Quit 0
  If ..CreateDate'="" Quit 0
@@ -1920,33 +1920,33 @@ zGroupDrUnSwizzle(force=0) public {
 	Set modstate=$system.CLS.GetModifiedBits() Set r%GroupDr="" Do $system.CLS.SetModifiedBits(modstate)
 	Set i%GroupDr=$listget(newvalue)
 	Quit 1 }
-zMenuDetailDrGetObject(force=0) public {
-	Quit $select(r%MenuDetailDr=""||(i%MenuDetailDr'=""):$select(i%MenuDetailDr="":"",1:$listbuild(i%MenuDetailDr_"")),(''..MenuDetailDr.%GetSwizzleObject(force,.oid)):oid,1:"") }
-zMenuDetailDrGetObjectId(force=0) public {
-	Quit $listget(..MenuDetailDrGetObject(force)) }
-zMenuDetailDrGetStored(id) public {
+zMenuDrGetObject(force=0) public {
+	Quit $select(r%MenuDr=""||(i%MenuDr'=""):$select(i%MenuDr="":"",1:$listbuild(i%MenuDr_"")),(''..MenuDr.%GetSwizzleObject(force,.oid)):oid,1:"") }
+zMenuDrGetObjectId(force=0) public {
+	Quit $listget(..MenuDrGetObject(force)) }
+zMenuDrGetStored(id) public {
 	Quit $Select(id'="":$listget($g(^CBGroupMenuD(id)),5),1:"") }
-zMenuDetailDrGetSwizzled(noswizzle=0) public {
-	If noswizzle Quit r%MenuDetailDr
-	If i%MenuDetailDr="" Quit ""
-	Set oref=##class(User.CBMenuDetail).%Open($select(i%MenuDetailDr="":"",1:$listbuild(i%MenuDetailDr_"")),,.sc) If ('sc) Do:$get(^%SYS("ThrowSwizzleError"),0) $zutil(96,3,19,1) Quit ""
-	Set modstate=$system.CLS.GetModifiedBits() Set r%MenuDetailDr=oref Do $system.CLS.SetModifiedBits(modstate)
+zMenuDrGetSwizzled(noswizzle=0) public {
+	If noswizzle Quit r%MenuDr
+	If i%MenuDr="" Quit ""
+	Set oref=##class(User.CBMenu).%Open($select(i%MenuDr="":"",1:$listbuild(i%MenuDr_"")),,.sc) If ('sc) Do:$get(^%SYS("ThrowSwizzleError"),0) $zutil(96,3,19,1) Quit ""
+	Set modstate=$system.CLS.GetModifiedBits() Set r%MenuDr=oref Do $system.CLS.SetModifiedBits(modstate)
 	Quit oref }
-zMenuDetailDrNewObject() public {
-	Set newobject=##class(User.CBMenuDetail).%New() If newobject="" Quit ""
-	Set ..MenuDetailDr=newobject
+zMenuDrNewObject() public {
+	Set newobject=##class(User.CBMenu).%New() If newobject="" Quit ""
+	Set ..MenuDr=newobject
 	Quit newobject }
-zMenuDetailDrSetObject(newvalue) public {
-	If newvalue'="",$data(i%MenuDetailDr,tmp),tmp=$listget(newvalue) Quit 1
-	Set i%MenuDetailDr=$listget(newvalue),r%MenuDetailDr=0,r%MenuDetailDr=""
+zMenuDrSetObject(newvalue) public {
+	If newvalue'="",$data(i%MenuDr,tmp),tmp=$listget(newvalue) Quit 1
+	Set i%MenuDr=$listget(newvalue),r%MenuDr=0,r%MenuDr=""
 	Quit 1 }
-zMenuDetailDrSetObjectId(newid) public {
-	Quit ..MenuDetailDrSetObject($select(newid="":"",1:$listbuild(newid_""))) }
-zMenuDetailDrUnSwizzle(force=0) public {
-	If r%MenuDetailDr="" Quit 1
-	Set sc=..MenuDetailDr.%GetSwizzleObject(force,.newvalue) Quit:('sc) sc
-	Set modstate=$system.CLS.GetModifiedBits() Set r%MenuDetailDr="" Do $system.CLS.SetModifiedBits(modstate)
-	Set i%MenuDetailDr=$listget(newvalue)
+zMenuDrSetObjectId(newid) public {
+	Quit ..MenuDrSetObject($select(newid="":"",1:$listbuild(newid_""))) }
+zMenuDrUnSwizzle(force=0) public {
+	If r%MenuDr="" Quit 1
+	Set sc=..MenuDr.%GetSwizzleObject(force,.newvalue) Quit:('sc) sc
+	Set modstate=$system.CLS.GetModifiedBits() Set r%MenuDr="" Do $system.CLS.SetModifiedBits(modstate)
+	Set i%MenuDr=$listget(newvalue)
 	Quit 1 }
 zPreGroupMenuDrGetObject(force=0) public {
 	Quit $select(r%PreGroupMenuDr=""||(i%PreGroupMenuDr'=""):$select(i%PreGroupMenuDr="":"",1:$listbuild(i%PreGroupMenuDr_"")),(''..PreGroupMenuDr.%GetSwizzleObject(force,.oid)):oid,1:"") }
@@ -2254,7 +2254,7 @@ zIDKEYSQLFindPKeyByConstraint(%con)
 zIDKEYSQLFindRowIDByConstraint(%con,pInternal=0)
  QUIT $$Error^%apiOBJ(5758,"%Persistent::IDKEYSQLFindRowIDByConstraint")
 zMenuExists(K1,id="") [ K1,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
-	 ;---&sql(SELECT %ID INTO :id FROM SQLUser.CB_GroupMenu WHERE (:K1 is not null and MenuDetail_Dr = :K1) OR (:K1 IS NULL AND MenuDetail_Dr IS NULL))
+	 ;---&sql(SELECT %ID INTO :id FROM SQLUser.CB_GroupMenu WHERE (:K1 is not null and Menu_Dr = :K1) OR (:K1 IS NULL AND Menu_Dr IS NULL))
  	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, K1, SQLCODE, id
 	do %0No
 	Quit $select('SQLCODE:1,1:0) }
@@ -2300,9 +2300,9 @@ zMenuExists(K1,id="") [ K1,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,SQLCO
  n context,tmp,count,total,mean s context=$system.Context.SQL()
  if $d(%sqltime) { s %sqltime=$g(sqldata21d)+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
- s tmp=$g(context.Stats($namespace,"JSLGk/+XPolHbFWOF4NA14+YC1A="))
+ s tmp=$g(context.Stats($namespace,"pHjYEJxuakA/UvrWjDeVYAL+V+U="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
- s context.Stats($namespace,"JSLGk/+XPolHbFWOF4NA14+YC1A=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ s context.Stats($namespace,"pHjYEJxuakA/UvrWjDeVYAL+V+U=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
  q
 %0Nerr s $zt=""
  d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)

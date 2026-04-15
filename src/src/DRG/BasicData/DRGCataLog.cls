@@ -260,19 +260,16 @@ ClassMethod DownloadDRGsTemplate(jsonObj) As %Library.DynamicObject
 	{
 		// 创建模板内容
 		set templateContent="DRG代码,DRG描述,行政区划"_$c(10)
-		set templateContent=templateContent_"ES23,呼吸系统肿瘤,110"_$c(10)
-		set templateContent=templateContent_"FB23,心脏介入治疗,110"_$c(10)
-		set templateContent=templateContent_"IC13,关节置换,110"_$c(10)
+		set templateContent=templateContent_"ES23,呼吸系统肿瘤,110100"_$c(10)
+		set templateContent=templateContent_"FB23,心脏介入治疗,110100"_$c(10)
+		set templateContent=templateContent_"IC13,关节置换,110100"_$c(10)	
 		
-		// 将内容转换为UTF-8编码
-		set utf8Content=$zcvt(templateContent,"O","UTF8")
-		
-		// Base64编码
-		set base64Data=$zcvt(utf8Content,"O","BASE64")
+        // Base64编码 - 使用%SYSTEM.Encryption.Base64Encode
+        set base64Data = ##class(%SYSTEM.Encryption).Base64Encode(templateContent)
 		
 		set resultObj.result.fileName="DRG目录导入模板.csv"
 		set resultObj.result.fileData=base64Data
-		set resultObj.result.contentType="text/csv; charset=utf-8"
+		set resultObj.result.contentType="text/csv"
 		
 	}catch(e){
 		set status=e.AsStatus()

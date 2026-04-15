@@ -108,6 +108,96 @@ ClassMethod DRGGroup(postObj) As %Library.DynamicObject
 	quit ##class(src.DRG.GroupDevice).GetDRGGroup(postObj)
 }
 
+/// Creator:     系统
+/// CreatDate:   2026-03-19
+/// Description: 查询系统用户列表
+/// Code: 02010401
+ClassMethod QuerySystemUsers(postObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+    new (postObj)
+	quit ##class(src.DRG.User).QuerySystemUsers(postObj)
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-03-19
+/// Description: 保存系统用户
+/// Code: 02010402
+ClassMethod SaveSystemUser(postObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+    new (postObj)
+	quit ##class(src.DRG.User).SaveSystemUser(postObj)
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-03-19
+/// Description: 查询系统菜单
+/// Code: 02010403
+ClassMethod QuerySystemMenus(postObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+   	new (postObj)
+	quit ##class(src.DRG.User).QuerySystemMenus(postObj)
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-03-19
+/// Description: 获取用户菜单权限
+/// Code: 02010408
+ClassMethod GetUserMenus(postObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+   	new (postObj)
+	quit ##class(src.DRG.User).GetUserMenus(postObj)
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-03-19
+/// Description: 查询系统角色
+/// Code: 02010406
+ClassMethod QuerySystemRoles(postObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+   	new (postObj)
+	quit ##class(src.DRG.User).QuerySystemRoles(postObj)
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-03-19
+/// Description: 保存系统角色
+/// Code: 02010407
+ClassMethod SaveSystemRole(postObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+   	new (postObj)
+	quit ##class(src.DRG.User).SaveSystemRole(postObj)
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-03-19
+/// Description: 保存角色菜单权限
+/// Code: 02010409
+ClassMethod SaveRoleMenu(postObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+   	new (postObj)
+	quit ##class(src.DRG.User).SaveRoleMenu(postObj)
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-03-19
+/// Description: 用户登录
+/// Code: 02010410
+ClassMethod UserLogin(postObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+   	new (postObj)
+	quit ##class(src.DRG.User).UserLogin(postObj)
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-03-19
+/// Description: 用户登出
+/// Code: 02010411
+ClassMethod UserLogout(postObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+   	new (postObj)
+	quit ##class(src.DRG.User).UserLogout(postObj)
+}
+
 /// 通用方法根据起始和截至时间判断有效/失效
 ClassMethod IsRecordActive(startDate As %Date, stopDate As %Date) As %Boolean
 {

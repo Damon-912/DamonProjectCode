@@ -201,12 +201,7 @@ ClassMethod CheckGroupQY(jsonObj As %Library.DynamicObject) As %Library.DynamicO
         set mainDiagMDC = params.mdc //主诊断MDC
         set mainOprnMDC = ""  //主手术MDC
                 
-        if (mainOperationCode = "")||(mainDiagMDC = "")
-        {
-		    set resultObj = ..SetErrorResult("-1", "主手术操作代码或主诊断MDC不能为空！")
-		    quit    
-	    }
-	    else
+        if (mainOperationCode '= "")
 	    {
 		    //set cc = $EXTRACT(mdc,4) Left(ADRG, 1)=:cc
 		    set adrg=""
@@ -1031,11 +1026,14 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
         set params = jsonObj.params.%Get(0)
         set adrgCode = params.adrg  // ADRG代码
         set adrgInfo = params.adrgInfo // ADRG数组对象
+        set hospInfo = params.hospInfo  // 医疗机构-数组对象  
         set complication = params.complication  // 并发症 CC/MCC        
         set complicationInfo = params.complicationInfo  // 并发症 CC/MCC        
 		set mainDiagCode = params.mainDiagnosisCode  // 主诊断代码
-        set age = params.age                     // 年龄(默认0)	
-        set dischargeType = params.dischargeType //离院方式	
+        set age = params.age                         // 年龄(默认0)	
+        set dischargeType = params.dischargeType     //离院方式	
+        
+        if (hospInfo = "") || ('$ISOBJECT(hospInfo)) set hospInfo = []	
 						
 		//遍历并发症信息-MCC覆盖CC
 		for i = 0:1:complicationInfo.%Size()-1 
@@ -1059,11 +1057,7 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
         {
             set item = adrgInfo.%Get(i)
             set adrgCode = item.code
-            set adrgDesc = item.desc
-            
-            //根据细分规则判断第四位编码
-            set iCount=0
-            &sql(SELECT count(*) into :iCount FROM CB_DRGCoreGroupsList Where ADRG=:adrgCode AND SegmentationFlag=0)
+            set adrgDesc = item.desc                                 
             
 		    set num="9"
 		    if (age>=17)
@@ -1089,17 +1083,79 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
 		    {
 		        set num="0"			
 		    }
-		    
+		    		    
 		    //判断离院方式
 		    if (dischargeType="2")||(dischargeType="5")
 		    {
 			    set num="7"	
 			}
-
-		    set drg =adrgCode_num 
-		    set desc=..GetComplicationDesc(num)		
-		    set drgDesc= adrgDesc_"："_desc	    
-
+			
+			/*						
+		    //方式一：基于CHS-DRG国家医保局发布细分规则为0表示该ADRG第四位编码确定为9，不再根据其它因素继续判断分组
+            //先根据细分规则判断第四位编码
+            set segFlag=0
+            &sql(SELECT SegmentationFlag into :segFlag FROM HB_DRGSegmentationRules Where ADRG=:adrgCode)		    
+		    if (segFlag="0")
+		    {			  
+		        set drg =adrgCode_"9" 
+		        set desc=..GetComplicationDesc("9")		
+		        set drgDesc= adrgDesc_"："_desc	  			    			    
+		    }
+		    else
+		    {
+		        set drg =adrgCode_num 
+		        set desc=..GetComplicationDesc(num)		
+		        set drgDesc= adrgDesc_"："_desc	  			    
+			}
+			*/
+		
+			set drg =adrgCode_num
+			set desc=..GetComplicationDesc(num)	
+			set drgDesc= adrgDesc_"："_desc		
+		
+		    //方式二：基于地方查找各地方的DRGs目录表，判断是否存在；优先匹配地方DRGs目录
+		    //传医疗机构信息则查找对应机构所在地区维护的DRGs目录
+		    if (hospInfo.%Size()>0) 
+		    {			    
+                for i = 0:1:hospInfo.%Size()-1 
+                {
+                    set itemObj = hospInfo.%Get(i)           
+                    set hospCode = itemObj.code
+                                        
+                    set (provID,cityID)=""
+                    &sql(SELECT ProvID_Dr,CityID_Dr into :provID,:cityID FROM CB_Hospital where OrganizationCode=:hospCode)
+                		    
+		            set iCount=0
+                    &sql(SELECT Count(*) into :iCount FROM HB_DRGCataLog Where Code=:drg and Province_Dr=:provID AND City_Dr=:cityID)
+                    if (iCount = 0)
+	                {
+		                //地方DRG目录没有这个DRGs编码,参考CHS-DRG国家医保局DRGs目录
+                        //先根据细分规则判断第四位编码
+                        set segFlag=0
+                        &sql(SELECT SegmentationFlag into :segFlag FROM HB_DRGSegmentationRules Where ADRG=:adrgCode)		    
+		                if (segFlag=0)
+		                {			  
+		                    set drg =adrgCode_"9" 
+		                    set desc=..GetComplicationDesc("9")		
+		                    set drgDesc= adrgDesc_"："_desc	  			    			    
+		                }		                		                
+		            }	                                  
+                }   
+			}
+			else //没有传医疗机构信息，按CHS-DRG国家医保局DRGs目录处理
+			{   
+		        //地方DRG目录没有这个DRGs编码,参考CHS-DRG国家医保局DRGs目录 
+                //先根据细分规则判断第四位编码
+                set segFlag=0
+                &sql(SELECT SegmentationFlag into :segFlag FROM HB_DRGSegmentationRules Where ADRG=:adrgCode)		    
+		        if (segFlag="0")
+		        {			  
+		            set drg =adrgCode_"9" 
+		            set desc=..GetComplicationDesc("9")		
+		            set drgDesc= adrgDesc_"："_desc	  			    			    
+		        }       
+		    }
+                		                		 		      
             set row={}
             set row.code = drg
             set row.desc = drgDesc                    
@@ -1288,6 +1344,13 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
             &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
                  WHERE FixmedinsCode=:hospCode AND DRG=:DRG)
             
+		    if (payStandard="0.00")||(payStandard="")		    
+		    {
+			    set (points,pipValue,dgdov,payStandard)="0.00"			    
+			}        
+			
+			//continue:(payStandard ="0.00")||(payStandard ="")
+            
             set jo={}
             set jo.hisHospCode = hisHospCode
             set jo.hospCode = hospCode
@@ -1300,9 +1363,18 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
             set jo.payStandard = payStandard                        
             set jo.totalCost = totalCost                                 
 
-            //差异率（相对差异） = （实际费用 - 预估费用） / 预估费用 × 100%               
-            set discrepancyRate = $FNUMBER(($ZABS(totalCost - payStandard)/payStandard)*100,"L",2)                       
-            set discrepancyAmt = payStandard - totalCost
+            //差异率（相对差异） = （实际费用 - 预估费用） / 预估费用 × 100%                           
+            if (payStandard="0.00")||(payStandard="")
+            {
+                set discrepancyRate = 100                    
+                set discrepancyAmt = payStandard - totalCost
+	        }
+	        else
+	        {
+                set discrepancyRate = $FNUMBER(($ZABS(totalCost - payStandard)/payStandard)*100,"L",2)                       
+                set discrepancyAmt = payStandard - totalCost   
+		    }
+                        
             if (discrepancyAmt > 0)
             {
 	            set jo.preProfit = $FNUMBER(discrepancyAmt,"L",2) //盈利
@@ -1320,8 +1392,8 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 		    }
 		    	
 		    set jo.discrepancyRate = discrepancyRate //差异率%
-		    	                                        
-            do jaAlgorithm.%Push(jo)                       
+		    
+			do jaAlgorithm.%Push(jo)     	                                                                     
         }
        
         //第七步：封装返回值

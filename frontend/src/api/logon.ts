@@ -6,6 +6,7 @@
 
 import { invoke } from './request';
 import type { ApiResponse, Pagination, PageResult } from './basicData';
+import type { MenuItem } from './menu';
 
 // ========== 接口类型定义 ==========
 
@@ -64,6 +65,8 @@ export interface LogonResult {
   errorMessageTime?: string;
   language?: string;
   messageTime?: number;
+  /** 用户菜单列表(登录成功后从后端获取) */
+  menus?: MenuItem[];
 }
 
 /** 用户登录权限项 */

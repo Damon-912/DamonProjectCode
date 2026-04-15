@@ -68,7 +68,7 @@ ClassMethod FindUserDetail(postObj)
 	}
 	
 	// 构建用户ID过滤条件 - 只查询在授权医院中有关联的用户
-	Set userFilterSql="SELECT DISTINCT User_Dr FROM SQLUSER.HB_UserLinkHosp WHERE Hosp_Dr in ("_hospInfo_")"
+	Set userFilterSql="SELECT DISTINCT User_Dr FROM HB_UserLinkHosp WHERE Hosp_Dr in ("_hospInfo_")"
 	Set:code'="" userFilterSql=userFilterSql_" AND User_Dr->Code like '%"_code_"%'"
 	Set:(active'="")&(active'="all") userFilterSql=userFilterSql_" AND User_Dr->Active = '"_active_"'"
 	Set:desc'="" userFilterSql=userFilterSql_" AND User_Dr->Descripts like '%"_desc_"%'"
@@ -79,7 +79,7 @@ ClassMethod FindUserDetail(postObj)
 				  "Image, Introduce, CreatedBy_Dr, CreatedBy_Dr->Descripts as creatUserDesc, "_
 				  "CreatedDate, CreatedTime, StartDate, StopDate, Active as statusFlag, "_
 				  "Nickname, Email as mail, WorkMobile, BirthDate "_
-				  "FROM SQLUSER.HB_User WHERE ID IN ("_userFilterSql_")"
+				  "FROM HB_User WHERE ID IN ("_userFilterSql_")"
 	
 	set st = ##class(%SQL.Statement).%New(1)
 	set status = st.%Prepare(sqlString)
@@ -165,7 +165,7 @@ ClassMethod AddUserConf(postObj)
 	set Code=""
 	if userDr=""
 	{
-		set tmpuserID=$o(^HBUserI("jsonObj.mobile",mobile,""))
+		set tmpuserID=$o(^HBUserI("Mobile",mobile,""))
 		if tmpuserID'=""
 		{
 			set resultJson={}
@@ -173,36 +173,49 @@ ClassMethod AddUserConf(postObj)
 			set resultJson.errorMessage="此电话"_mobile_"已注册用户"
 			quit resultJson
 		}
-		set userName=jsonObj.userName
-		set Code=##class(src.Interface.ChineseCharacter).GetQPLinkCodeByDesc(jsonObj.userName)
-		set tmpUserDr=$o(^HBUserI("Code",Code,""))
-		if tmpUserDr'=""
+		// 检查证件号是否已存在
+		set credNo=jsonObj.credNo
+		if credNo'=""
 		{
-			set Code=$zcvt(Code,"L")_$e(mobile,7,11)
+			set tmpuserIDByCred=$o(^HBUserI("CredNo",credNo,""))
+			if tmpuserIDByCred'=""
+			{
+				set resultJson={}
+				set resultJson.errorCode="-1"
+				set resultJson.errorMessage="此证件号"_credNo_"已注册用户"
+				quit resultJson
+			}
 		}
-		else{
-			set Code=$zcvt(Code,"L")
+		// 生成6位数字用户编码
+		set Code=##class(src.User.User).GenUserCode()
+		set tmpUserDr=$o(^HBUserI("Code",Code,""))
+		while tmpUserDr'=""
+		{
+			set Code=##class(src.User.User).GenUserCode()
+			set tmpUserDr=$o(^HBUserI("Code",Code,""))
 		}
-		//set mobile
 	}
 	set password=""
 	if userDr=""
 	{
 		;//新添加用户默认密码
-		set passwordname="PRyk123!"
+		set passwordname="123456"
 		set passwordinfo=##class(src.Encryption.HBUser).FromatPassword(passwordname)
-		if (+passwordinfo'="0"){
+		if (+passwordinfo'="0")
+		{
 			set resultJson={}
 			set resultJson.errorCode=+passwordinfo
 			set resultJson.errorMessage=$p(passwordinfo,"^",2)
 			quit resultJson
-		}else{
-			set password=$p(passwordinfo,"^",2)
 		}
-		
+		else
+		{
+			set password=$p(passwordinfo,"^",2)
+		}		
 	}
-	Try{
-		
+	
+	Try
+	{		
 		TSTART
 		set userID=jsonObj.userID
 		Set json={}
@@ -238,14 +251,18 @@ ClassMethod AddUserConf(postObj)
 
 		do data.%Push(newJsonObj)
 		Set json.data=data
-		b ;11112323232232323
+
 		if userDr=""
 		{
 			Set rtn=##class(src.util.operatetable).Insert(json)
-		}else{
+		}
+		else
+		{
 			Set rtn=##class(src.util.operatetable).Update(json)
 		}
-		if rtn.errorCode'=0{
+		
+		if rtn.errorCode'=0
+		{
 			TROLLBACK
 			Set resultJson.errorCode=rtn.errorCode
 			Set resultJson.errorMessage=rtn.errorMessage
@@ -254,7 +271,7 @@ ClassMethod AddUserConf(postObj)
 		Set saveUserID=rtn.rowIDArr.%Get(0)
 		
 		set extData=[]
-		if jsonObj.hospID'=""
+		if jsonObj.hospID '=""
 		{
 			//所属医院
 			set hospitalID=jsonObj.hospID
@@ -275,7 +292,8 @@ ClassMethod AddUserConf(postObj)
 				do data.%Push(newJsonObj)
 				Set json.data=data
 				Set rtn=##class(src.util.operatetable).Insert(json)
-				if rtn.errorCode'=0{
+				if rtn.errorCode'=0
+				{
 					TROLLBACK
 					Set resultJson.errorCode=rtn.errorCode
 					Set resultJson.errorMessage=rtn.errorMessage
@@ -507,6 +525,19 @@ ClassMethod SaveUserExtData(paraObj)
 		}	
 	}
 	Quit resultObj
+}
+
+/// Creator:     CodeBuddy
+/// CreatDate:   2026-04-14
+/// Description: 生成6位数字用户编码
+/// Return:      6位数字字符串
+/// Debug:       w ##class(src.User.User).GenUserCode()
+ClassMethod GenUserCode() As %String
+{
+	new
+	// 生成100000-999999之间的随机数
+	set random=$Random(900000)+100000
+	quit random
 }
 
 }

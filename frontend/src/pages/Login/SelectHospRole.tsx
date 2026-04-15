@@ -21,7 +21,9 @@ import {
   clearTempUserInfo,
   setSession
 } from '../../utils/auth';
+import { useMenu } from '../../context/MenuContext';
 import type { UserLogonLocItem } from '../../api/logon';
+import type { MenuItem } from '../../api/menu';
 
 interface SelectHospRoleProps {
   onSelectSuccess?: () => void;
@@ -38,6 +40,7 @@ const SelectHospRole: React.FC<SelectHospRoleProps> = ({ onSelectSuccess, onBack
     userName: string;
   } | null>(null);
   const [permissions, setPermissions] = useState<UserLogonLocItem[]>([]);
+  const { loadMenusFromLogin } = useMenu();
 
   // 初始化加载
   useEffect(() => {
@@ -104,9 +107,32 @@ const SelectHospRole: React.FC<SelectHospRoleProps> = ({ onSelectSuccess, onBack
       });
 
       if (String(res.errorCode) === '0' && res.result && res.result.length > 0) {
-        const session = res.result[0];
-        setSession(session);
+        const sessionData = res.result[0] as any;
+        console.log('登录接口返回的sessionData:', JSON.stringify(sessionData, null, 2));
+        
+        // 合并选择页面传入的角色和医院信息到sessionData
+        if (permission.groupDesc && !sessionData.groupDesc) {
+          sessionData.groupDesc = permission.groupDesc;
+        }
+        if (permission.hospDesc && !sessionData.hospDesc) {
+          sessionData.hospDesc = permission.hospDesc;
+        }
+        if (permission.groupID && !sessionData.groupID) {
+          sessionData.groupID = String(permission.groupID);
+        }
+        if (permission.hospID && !sessionData.hospID) {
+          sessionData.hospID = String(permission.hospID);
+        }
+        
+        console.log('合并后的sessionData:', JSON.stringify(sessionData, null, 2));
+        setSession(sessionData);
         clearTempUserInfo();
+        
+        // 登录成功后保存用户菜单
+        if (sessionData.menus && sessionData.menus.length > 0) {
+          loadMenusFromLogin(sessionData.menus as MenuItem[]);
+        }
+        
         message.success('登录成功');
         onSelectSuccess?.();
       } else {

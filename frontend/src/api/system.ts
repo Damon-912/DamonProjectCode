@@ -323,13 +323,60 @@ export const getUserDetail = (
   return invoke('01030111', [params]);
 };
 
-// ========== 角色管理 API 函数 ==========
+/** 删除用户医院关联记录 (01030112)
+ * 删除 HB_UserLinkHosp 表中的记录
+ * 在删除用户角色时同步调用
+ */
+export const deleteUserLinkHosp = (
+  params: {
+    userID: number;          // 用户ID
+    hospID: number;          // 医院ID
+  }
+): Promise<ApiResponse> => {
+  return invoke('01030112', [params]);
+};
+
+/** 保存用户医院关联记录 (01030113)
+ * 新增或更新 HB_UserLinkHosp 表中的记录
+ * 在保存用户角色时同步调用
+ */
+export const saveUserLinkHosp = (
+  params: {
+    userID: number;          // 用户ID
+    hospID: number;          // 医院ID
+  }
+): Promise<ApiResponse> => {
+  return invoke('01030113', [params]);
+};
+
+// ========== 角色管理 API 函数 (01010031-01010037, 01010057) ==========
+
+/** 角色项 - 01010032接口返回 */
+export interface GroupItem {
+  id: number;                // 角色ID
+  code: string;             // 角色编码
+  descripts: string;        // 角色名称
+  enDesc?: string;           // 英文名称
+  mainInterface?: string;    // 主界面
+  mainInterfaceTitle?: string; // 主界面名称
+  operCodeTable?: string;    // 操作码表
+  sendMsgToAllUser?: string; // 发送消息给所有用户
+  safeClassificat?: string;  // 安全级别
+  safeClassificatCode?: string; // 安全级别代码
+  safeClassificatDesc?: string; // 安全级别描述
+  columnEdit?: string;      // 允许列编辑
+  layoutEdit?: string;       // 允许布局编辑
+  defaultMenuType?: string;  // 默认菜单类型
+  tokenOverTime?: string;    // token超时时间
+  startDate?: string;        // 启用日期
+  endDate?: string;         // 停用日期
+}
 
 /** 角色下拉选项项 */
 export interface GroupOptionItem {
   id: number;               // 角色ID
   code: string;             // 角色编码
-  descripts: string;        // 角色名称
+  descripts: string;       // 角色名称
 }
 
 /** 查询角色下拉列表 (01010057)
@@ -341,4 +388,77 @@ export const queryGroupOptions = (
   } = {}
 ): Promise<ApiResponse<GroupOptionItem[]>> => {
   return invoke('01010057', [params]);
+};
+
+/** 查询角色列表 (01010032) - 服务端分页
+ * 支持按角色编码、角色名称过滤
+ */
+export const queryGroupList = (
+  params: {
+    code?: string;           // 角色编码
+    descripts?: string;      // 角色名称
+  },
+  pagination: Pagination
+): Promise<ApiResponse<PageResult<GroupItem>>> => {
+  return invoke('01010032', [params], undefined, pagination);
+};
+
+/** 保存角色 (01010031)
+ * id为空时新增，有值时编辑
+ */
+export const saveGroup = (
+  params: {
+    id?: string;             // 角色ID（为空则新增）
+    code: string;            // 角色编码（必填）
+    descripts: string;       // 角色名称（必填）
+    enDesc?: string;        // 英文名称
+    mainInterface?: string;  // 主界面
+    operCodeTable?: string;  // 操作码表 Y/N
+    sendMsgToAllUser?: string; // 发送消息给所有用户 Y/N
+    safeClassificat?: string; // 安全级别
+    columnEdit?: string;     // 允许列编辑 Y/N
+    layoutEdit?: string;     // 允许布局编辑 Y/N
+    defaultMenuType?: string; // 默认菜单类型
+    startDate?: string;      // 启用日期
+    endDate?: string;        // 停用日期
+  }
+): Promise<ApiResponse> => {
+  return invoke('01010031', [params]);
+};
+
+/** 查询角色菜单详情 (01010033)
+ * 获取指定角色的菜单列表
+ * 返回格式: { result: { total, rows: [{ menuDetailID, menuDetailCode, ... }] } }
+ */
+export const getGroupMenuDetail = (
+  params: {
+    groupID: string;        // 角色ID（必填）
+    type?: string;          // 类型
+  }
+): Promise<ApiResponse<{ total: number; rows: Array<{ menuDetailID: string }> }>> => {
+  return invoke('01010033', [params]);
+};
+
+/** 保存角色菜单 (01010037)
+ * 批量保存角色的菜单权限
+ * 格式: { groupID, type: "1", preMenuGroupID: "", menuDetail: [{ menuDetailID, seqNo, preMenuGroupID }] }
+ */
+export const saveGroupMenu = (
+  params: {
+    groupID: string;        // 角色ID（必填）
+    type?: string;          // 类型，默认为"1"
+    preMenuGroupID?: string; // 上级菜单组ID
+    menuDetail: Array<{     // 菜单详情数组
+      menuDetailID: string; // 菜单ID
+      seqNo?: string;
+      preMenuGroupID?: string;
+    }>;
+  }
+): Promise<ApiResponse> => {
+  return invoke('01010037', [{
+    groupID: params.groupID,
+    type: params.type || '1',
+    preMenuGroupID: params.preMenuGroupID || '',
+    menuDetail: params.menuDetail
+  }]);
 };

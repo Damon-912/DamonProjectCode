@@ -1,7 +1,7 @@
 ROUTINE src.Logon.Logon.1 [Type=INT,Generated]
  ;src.Logon.Logon.1
- ;Generated for class src.Logon.Logon.  Do NOT edit. 04/10/2026 07:52:04PM
- ;;57506942;src.Logon.Logon
+ ;Generated for class src.Logon.Logon.  Do NOT edit. 04/14/2026 11:53:11AM
+ ;;2F467949;src.Logon.Logon
  ;
 zExcuteQuery(tableName)
 	Set sqlString="SELECT ID, Code, Descripts FROM SQLUser."_tableName
@@ -235,7 +235,8 @@ zLogon(postObj)
 		set longonObj=postObj.params
 		set iter = longonObj.%GetIterator()
 		set (userID,userCode,passWord,loginLocID,loginGroupID,loginHospID,deviceID,IP,userLogonType,mac,phoneCheck)=""
-		while iter.%GetNext(.key , .value ) {
+		while iter.%GetNext(.key , .value ) 
+		{
 			set userID=longonObj.%Get(key).userID
 			set userCode=longonObj.%Get(key).userName	; 工号
 			set passWord=longonObj.%Get(key).passWord
@@ -335,6 +336,12 @@ zLogon(postObj)
 			Set sessionStr=$ListGet(sessionObj,2)
 			//Set ^TMP("session")=sessionStr
 			set resultobj.sessionID=sessionStr //session
+			; 登录成功后获取用户菜单
+			set menuPostObj={}
+			set menuPostObj.userCode=$p(userInfo,"^",3)
+			set menuPostObj.groupID=loginGroupID
+			set menuResult=##class(src.Menu.Service).GetUserMenusByGroup(menuPostObj)
+			set resultobj.menus=menuResult
 			do result.%Push(resultobj)
 			set outputobj.result=result
 			; 登录成功更新用户信息

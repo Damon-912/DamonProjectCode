@@ -64,7 +64,7 @@ export interface SessionInfo {
  * 获取默认 Session 信息
  * 从 localStorage 中读取或使用默认值
  */
-const getDefaultSession = (): SessionInfo => {
+export const getDefaultSession = (): SessionInfo => {
   try {
     const sessionStr = localStorage.getItem('drg_session');
     if (sessionStr) {

@@ -1,0 +1,5 @@
+name: menu-system-integration
+description: 将菜单配置与现有系统中的用户管理、角色管理、角色权限数据关联整合
+created: 2026-04-14T11:41:00
+dependsOn:
+  - role-based-menu-permission

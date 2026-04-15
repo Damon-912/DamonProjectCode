@@ -107,4 +107,24 @@ ClassMethod GetUserDetail(postObj) As %Library.DynamicObject
 	quit ##class(src.User.UserLogonLoc).GetGroupByUserId(postObj)
 }
 
+/// Creator:     Damon
+/// CreatDate:   2026-04-14
+/// Description: 删除用户医院关联记录
+/// code: 01030112
+ClassMethod DeleteUserLinkHosp(postObj) As %Library.DynamicObject
+{
+	new (postObj)
+	quit ##class(src.User.UserLogonLoc).DeleteUserLinkHosp(postObj)
+}
+
+/// Creator:     Damon
+/// CreatDate:   2026-04-14
+/// Description: 保存用户医院关联记录
+/// code: 01030113
+ClassMethod SaveUserLinkHosp(postObj) As %Library.DynamicObject
+{
+	new (postObj)
+	quit ##class(src.User.UserLogonLoc).SaveUserLinkHosp(postObj)
+}
+
 }

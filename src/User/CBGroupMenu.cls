@@ -18,9 +18,9 @@ Property Type As %String(COLLATION = "UPPER", MAXLEN = 2, TRUNCATE = 1) [ Requir
 Index Type On Type;
 
 /// 菜单id 指向菜单明细表
-Property MenuDetailDr As CBMenuDetail [ Required, SqlColumnNumber = 5, SqlFieldName = MenuDetail_Dr ];
+Property MenuDr As CBMenu [ Required, SqlColumnNumber = 5, SqlFieldName = Menu_Dr ];
 
-Index Menu On MenuDetailDr;
+Index Menu On MenuDr;
 
 /// 上一级菜单
 Property PreGroupMenuDr As CBGroupMenu [ SqlColumnNumber = 6, SqlFieldName = PreGroupMenu_Dr ];
@@ -52,7 +52,7 @@ Storage Default
 <Value>Type</Value>
 </Value>
 <Value name="5">
-<Value>MenuDetailDr</Value>
+<Value>MenuDr</Value>
 </Value>
 <Value name="6">
 <Value>PreGroupMenuDr</Value>

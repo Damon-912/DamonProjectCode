@@ -261,4 +261,184 @@ ClassMethod GetGroupByUserId(postObj) [ Internal ]
 	Return outputobj
 }
 
+/// Creator:     Damon
+/// CreatDate:   2026-04-14
+/// Description: 保存用户医院关联记录
+/// Table:     	 HB_UserLinkHosp   
+/// Input:		{"params":[{"userID":"1","hospID":"11"}]} 
+/// Return:  	 	 
+/// Debug:   w ##Class(src.User.UserLogonLoc).SaveUserLinkHosp({"params":[{"userID":"1","hospID":"11"}],"session":[{"userID":"158","locID":1,"groupID":"1","hospID":"8"}]}).%ToJSON()
+ClassMethod SaveUserLinkHosp(postObj)
+{
+	new (postObj)
+	Set jsonObj=postObj.params.%Get(0)
+	Set session=postObj.session.%Get(0)
+	Set resultJson={}
+	Set resultJson.errorCode=0
+	Set resultJson.errorMessage="成功"
+	
+	Try{
+		Set userID=jsonObj.userID
+		Set hospID=jsonObj.hospID
+		
+		if userID=""{
+			Set resultJson.errorCode=1
+			Set resultJson.errorMessage="用户ID不能为空"
+			Return resultJson
+		}
+		if hospID=""{
+			Set resultJson.errorCode=1
+			Set resultJson.errorMessage="医院ID不能为空"
+			Return resultJson
+		}
+		
+		// 先查询是否存在记录
+		Set json={}
+		Set json.className="User.HBUserLinkHosp"
+		Set data=[]
+		Set queryObj={}
+		Set queryObj.UserDr=userID
+		Set queryObj.HospDr=hospID
+		Set queryObj.StopDate=""
+		do data.%Push(queryObj)
+		Set json.data=data
+		Set rtn=##class(src.util.operatetable).Select(json)
+		
+		if rtn.errorCode=0{
+			Set existID=""
+			if rtn.result'="",rtn.result.rows'=""{
+				Set existID=rtn.result.rows.%Get(0)
+			}
+		}
+		
+		// 使用 operatetable 进行新增或更新
+		Set json={}
+		Set json.className="User.HBUserLinkHosp"
+		Set json.updateUserID=session.userID
+		Set data=[]
+		Set obj={}
+		Set obj.UserDr=userID
+		Set obj.HospDr=hospID
+		Set obj.StartDate=$zd(+$h,3)
+		Set obj.CreatedByDr=session.userID
+		Set obj.CreatedDate=$zd(+$h,3)
+		Set obj.CreatedTime=$zt($p($h,",",2))
+		
+		if existID'=""{
+			// 记录已存在，更新为有效状态
+			Set obj.ID=existID
+			Set obj.StopDate=""
+			do data.%Push(obj)
+			Set json.data=data
+			Set rtn=##class(src.util.operatetable).Update(json)
+		}else{
+			// 新增记录
+			do data.%Push(obj)
+			Set json.data=data
+			Set rtn=##class(src.util.operatetable).Insert(json)
+		}
+		
+		if rtn.errorCode'=0{
+			Set resultJson.errorCode=rtn.errorCode
+			Set resultJson.errorMessage=rtn.errorMessage
+		}
+	}Catch(e){
+		set status=e.AsStatus()
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorInfo="保存用户医院关联异常:w ##class("_$ClassName()_").SaveUserLinkHosp("")"
+		do ##class(src.Interface.Message).InsErrRecord("05000001",errorInfo,errorMessage)
+		set resultJson.errorCode="05000001"
+		set resultJson.errorMessage=##class(src.Interface.Message).GetErrorMessage("05000001")
+	}
+	
+	Return resultJson
+}
+
+/// Creator:     Damon
+/// CreatDate:   2026-04-14
+/// Description: 删除用户医院关联记录
+/// Table:     	 HB_UserLinkHosp   
+/// Input:		{"params":[{"userID":"1","hospID":"11"}]} 
+/// Return:  	 	 
+/// Debug:   w ##Class(src.User.UserLogonLoc).DeleteUserLinkHosp({"params":[{"userID":"1","hospID":"11"}],"session":[{"userID":"158","locID":1,"groupID":"1","hospID":"8"}]}).%ToJSON()
+ClassMethod DeleteUserLinkHosp(postObj)
+{
+	new (postObj)
+	Set jsonObj=postObj.params.%Get(0)
+	Set session=postObj.session.%Get(0)
+	Set resultJson={}
+	Set resultJson.errorCode=0
+	Set resultJson.errorMessage="成功"
+	
+	Try{
+		Set userID=jsonObj.userID
+		Set hospID=jsonObj.hospID
+		
+		if userID=""{
+			Set resultJson.errorCode=1
+			Set resultJson.errorMessage="用户ID不能为空"
+			Return resultJson
+		}
+		if hospID=""{
+			Set resultJson.errorCode=1
+			Set resultJson.errorMessage="医院ID不能为空"
+			Return resultJson
+		}
+		
+		// 先查询记录ID
+		Set json={}
+		Set json.className="User.HBUserLinkHosp"
+		Set data=[]
+		Set queryObj={}
+		Set queryObj.UserDr=userID
+		Set queryObj.HospDr=hospID
+		Set queryObj.StopDate=""
+		do data.%Push(queryObj)
+		Set json.data=data
+		Set rtn=##class(src.util.operatetable).Select(json)
+		
+		if rtn.errorCode'=0{
+			Set resultJson.errorCode=rtn.errorCode
+			Set resultJson.errorMessage="查询用户医院关联失败"
+			Return resultJson
+		}
+		
+		if rtn.result="",rtn.result.rows=""{
+			// 没有找到记录，直接返回成功
+			Return resultJson
+		}
+		
+		// 获取记录ID进行删除
+		Set existID=rtn.result.rows.%Get(0)
+		
+		// 使用 operatetable 进行软删除（更新StopDate）
+		Set json={}
+		Set json.className="User.HBUserLinkHosp"
+		Set json.updateUserID=session.userID
+		Set data=[]
+		Set obj={}
+		Set obj.ID=existID
+		Set obj.StopDate=$zd(+$h-1,3)
+		do data.%Push(obj)
+		Set json.data=data
+		Set rtn=##class(src.util.operatetable).Update(json)
+		
+		if rtn.errorCode'=0{
+			Set resultJson.errorCode=rtn.errorCode
+			Set resultJson.errorMessage=rtn.errorMessage
+		}
+	}Catch(e){
+		set status=e.AsStatus()
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorInfo="删除用户医院关联异常:w ##class("_$ClassName()_").DeleteUserLinkHosp("")"
+		do ##class(src.Interface.Message).InsErrRecord("05000001",errorInfo,errorMessage)
+		set resultJson.errorCode="05000001"
+		set resultJson.errorMessage=##class(src.Interface.Message).GetErrorMessage("05000001")
+	}
+	
+	Return resultJson
+}
+
 }

@@ -1,0 +1,3 @@
+name: role-based-menu-permission
+description: 将导航栏菜单保存到后端表中，根据用户角色配置菜单权限，登录后区分显示
+created: 2026-04-14T10:34:00

@@ -1,7 +1,7 @@
 ROUTINE src.DRG.GroupDevice.1 [Type=INT,Generated]
  ;src.DRG.GroupDevice.1
- ;Generated for class src.DRG.GroupDevice.  Do NOT edit. 04/08/2026 06:41:52PM
- ;;6F352B33;src.DRG.GroupDevice
+ ;Generated for class src.DRG.GroupDevice.  Do NOT edit. 04/13/2026 05:54:20PM
+ ;;32374B2B;src.DRG.GroupDevice
  ;
 zCheckGroupQY(jsonObj)
 	new (jsonObj)
@@ -23,12 +23,7 @@ zCheckGroupQY(jsonObj)
         set mainOperationCode = params.mainOperationCode  // 主手术代码
         set mainDiagMDC = params.mdc //主诊断MDC
         set mainOprnMDC = ""  //主手术MDC
-        if (mainOperationCode = "")||(mainDiagMDC = "")
-        {
-		    set resultObj = ..SetErrorResult("-1", "主手术操作代码或主诊断MDC不能为空！")
-		    quit    
-	    }
-	    else
+        if (mainOperationCode '= "")
 	    {
 		    //set cc = $EXTRACT(mdc,4) Left(ADRG, 1)=:cc
 		    set adrg=""
@@ -376,6 +371,11 @@ zDevice(jsonObj)
               ;---                 WHERE FixmedinsCode=:hospCode AND DRG=:DRG)
               ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, DRG, SQLCODE, dgdov, hospCode, payStandard, pipValue, points
             do %0Eo
+		    if (payStandard="0.00")||(payStandard="")		    
+		    {
+			    set (points,pipValue,dgdov,payStandard)="0.00"			    
+			}        
+			//continue:(payStandard ="0.00")||(payStandard ="")
             set jo={}
             set jo.hisHospCode = hisHospCode
             set jo.hospCode = hospCode
@@ -387,9 +387,17 @@ zDevice(jsonObj)
             set jo.dgdov = dgdov
             set jo.payStandard = payStandard                        
             set jo.totalCost = totalCost                                 
-            //差异率（相对差异） = （实际费用 - 预估费用） / 预估费用 × 100%               
-            set discrepancyRate = $FNUMBER(($ZABS(totalCost - payStandard)/payStandard)*100,"L",2)                       
-            set discrepancyAmt = payStandard - totalCost
+            //差异率（相对差异） = （实际费用 - 预估费用） / 预估费用 × 100%                           
+            if (payStandard="0.00")||(payStandard="")
+            {
+                set discrepancyRate = 100                    
+                set discrepancyAmt = payStandard - totalCost
+	        }
+	        else
+	        {
+                set discrepancyRate = $FNUMBER(($ZABS(totalCost - payStandard)/payStandard)*100,"L",2)                       
+                set discrepancyAmt = payStandard - totalCost   
+		    }
             if (discrepancyAmt > 0)
             {
 	            set jo.preProfit = $FNUMBER(discrepancyAmt,"L",2) //盈利
@@ -406,7 +414,7 @@ zDevice(jsonObj)
 	            set jo.preLoss = "0.00" //亏损   
 		    }
 		    set jo.discrepancyRate = discrepancyRate //差异率%
-            do jaAlgorithm.%Push(jo)                       
+			do jaAlgorithm.%Push(jo)     	                                                                     
         }
         //第七步：封装返回值
 		set DRG=joRtn.result.code
@@ -1856,11 +1864,13 @@ zGroupDRG(jsonObj)
         set params = jsonObj.params.%Get(0)
         set adrgCode = params.adrg  // ADRG代码
         set adrgInfo = params.adrgInfo // ADRG数组对象
+        set hospInfo = params.hospInfo  // 医疗机构-数组对象  
         set complication = params.complication  // 并发症 CC/MCC        
         set complicationInfo = params.complicationInfo  // 并发症 CC/MCC        
 		set mainDiagCode = params.mainDiagnosisCode  // 主诊断代码
-        set age = params.age                     // 年龄(默认0)	
-        set dischargeType = params.dischargeType //离院方式	
+        set age = params.age                         // 年龄(默认0)	
+        set dischargeType = params.dischargeType     //离院方式	
+        if (hospInfo = "") || ('$ISOBJECT(hospInfo)) set hospInfo = []	
 		//遍历并发症信息-MCC覆盖CC
 		for i = 0:1:complicationInfo.%Size()-1 
 		{
@@ -1881,12 +1891,7 @@ zGroupDRG(jsonObj)
         {
             set item = adrgInfo.%Get(i)
             set adrgCode = item.code
-            set adrgDesc = item.desc
-            //根据细分规则判断第四位编码
-            set iCount=0
-             ;---&sql(SELECT count(*) into :iCount FROM CB_DRGCoreGroupsList Where ADRG=:adrgCode AND SegmentationFlag=0)
-              ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, adrgCode, iCount
-            do %06o
+            set adrgDesc = item.desc                                 
 		    set num="9"
 		    if (age>=17)
 		    {
@@ -1916,9 +1921,75 @@ zGroupDRG(jsonObj)
 		    {
 			    set num="7"	
 			}
-		    set drg =adrgCode_num 
-		    set desc=..GetComplicationDesc(num)		
-		    set drgDesc= adrgDesc_"："_desc	    
+			/*						
+		    //方式一：基于CHS-DRG国家医保局发布细分规则为0表示该ADRG第四位编码确定为9，不再根据其它因素继续判断分组
+            //先根据细分规则判断第四位编码
+            set segFlag=0
+            &sql(SELECT SegmentationFlag into :segFlag FROM HB_DRGSegmentationRules Where ADRG=:adrgCode)		    
+		    if (segFlag="0")
+		    {			  
+		        set drg =adrgCode_"9" 
+		        set desc=..GetComplicationDesc("9")		
+		        set drgDesc= adrgDesc_"："_desc	  			    			    
+		    }
+		    else
+		    {
+		        set drg =adrgCode_num 
+		        set desc=..GetComplicationDesc(num)		
+		        set drgDesc= adrgDesc_"："_desc	  			    
+			}
+			*/
+			set drg =adrgCode_num
+			set desc=..GetComplicationDesc(num)	
+			set drgDesc= adrgDesc_"："_desc		
+		    //方式二：基于地方查找各地方的DRGs目录表，判断是否存在；优先匹配地方DRGs目录
+		    //传医疗机构信息则查找对应机构所在地区维护的DRGs目录
+		    if (hospInfo.%Size()>0) 
+		    {			    
+                for i = 0:1:hospInfo.%Size()-1 
+                {
+                    set itemObj = hospInfo.%Get(i)           
+                    set hospCode = itemObj.code
+                    set (provID,cityID)=""
+                     ;---&sql(SELECT ProvID_Dr,CityID_Dr into :provID,:cityID FROM CB_Hospital where OrganizationCode=:hospCode)
+                      ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, cityID, hospCode, provID
+                    do %06o
+		            set iCount=0
+                     ;---&sql(SELECT Count(*) into :iCount FROM HB_DRGCataLog Where Code=:drg and Province_Dr=:provID AND City_Dr=:cityID)
+                      ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, cityID, drg, iCount, provID
+                    do %08o
+                    if (iCount = 0)
+	                {
+		                //地方DRG目录没有这个DRGs编码,参考CHS-DRG国家医保局DRGs目录
+                        //先根据细分规则判断第四位编码
+                        set segFlag=0
+                         ;---&sql(SELECT SegmentationFlag into :segFlag FROM HB_DRGSegmentationRules Where ADRG=:adrgCode)		    
+                          ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, adrgCode, segFlag
+                        do %0ao		    
+		                if (segFlag=0)
+		                {			  
+		                    set drg =adrgCode_"9" 
+		                    set desc=..GetComplicationDesc("9")		
+		                    set drgDesc= adrgDesc_"："_desc	  			    			    
+		                }		                		                
+		            }	                                  
+                }   
+			}
+			else //没有传医疗机构信息，按CHS-DRG国家医保局DRGs目录处理
+			{   
+		        //地方DRG目录没有这个DRGs编码,参考CHS-DRG国家医保局DRGs目录 
+                //先根据细分规则判断第四位编码
+                set segFlag=0
+                 ;---&sql(SELECT SegmentationFlag into :segFlag FROM HB_DRGSegmentationRules Where ADRG=:adrgCode)		    
+                  ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, adrgCode, segFlag
+                do %0co		    
+		        if (segFlag="0")
+		        {			  
+		            set drg =adrgCode_"9" 
+		            set desc=..GetComplicationDesc("9")		
+		            set drgDesc= adrgDesc_"："_desc	  			    			    
+		        }       
+		    }
             set row={}
             set row.code = drg
             set row.desc = drgDesc                    
@@ -1940,116 +2011,184 @@ zGroupDRG(jsonObj)
     }
     quit resultObj
  q
-%06mBm2l0t(start,end,args)
-	new ptr,var,sc,ipq,SQLCODE,%msg,%ROWCOUNT,tmp,pos,%sqlout1
-	set ptr=0,sc=1,ipq=$system.Context.WorkMgr().IPQ
-	S %sqlparm1=$lg(args)
-	 ;---&sql(DECLARE p06mBm2l0t CURSOR FOR SELECT count(*) 
- 	 ;---	INTO  :%sqlout1
- 	 ;---	FROM  %NOPARALLEL SQLUser.CB_DRGCoreGroupsList T1 where ((UPPER(T1.ADRG) = {fn UCASE(?)}))AND((%SQLUPPER(T1.SegmentationFlag) = %SQLUPPER(((0))))) %PARTITION BY T1.ID > :start AND T1.ID <= :end  /*#OPTIONS {"fastFetchPut":"%sqlout1"} */)
-	
-	 ;---&sql(OPEN p06mBm2l0t)
-	do %p06mBm2l0t0o
-	 ;---&sql(FETCH p06mBm2l0t)
-	try { do %p06mBm2l0t0f if SQLCODE'=0 { quit } } catch { do %07err }
-	if SQLCODE,SQLCODE'=100 { set sc=$$Error^%apiOBJ(5540,SQLCODE,$g(%msg)) }
-	 ;---&sql(close p06mBm2l0t)
-	do %p06mBm2l0t0c
-	if (''sc),SQLCODE,SQLCODE'=100 { set sc=$$Error^%apiOBJ(5540,SQLCODE,$g(%msg)) }
-	set var="%sqldata" for  { set var=$o(@(var)) quit:$e(var,1,8)'="%sqldata"  kill @var }
-	quit sc
- q
-%p06mBm2l0t0o 
- try { s SQLCODE=$s($g(%sqldata0d):-101,1:0) q:SQLCODE'=0 
- s %sqldata15d=0
- s %sqldata16d=$zu(115,2)
- d:$zu(115,15) $system.ECP.Sync()
- s %sqldata5d=$g(%sqlparm1),%sqldata12d=$s($g(start)="":"",$isvalidnum(start):+start,1:start),%sqldata13d=$s($g(end)="":"",$isvalidnum(end):+end,1:end)
- s %sqldata6d=$zcvt(%sqldata5d,"U")
- s %sqldata10d=$zu(28,0,7)
- s %sqldata0d=1,SQLCODE=0
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)  }
- q
-%07first 
- s %sqlout1=0
- d %07mBMod
- ; asl MOD# 4
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%sqldata15d),%sqldata0d=10
- if ipq.Put($lb(%sqlout1)) { set %sqldata20d=1 goto %p06mBm2l0t0f }
- else { set SQLCODE=-400,%msg="IPQ error in worker" quit }
- //-- FETCH Output
- quit
-%p06mBm2l0t0f //-- FETCH tag
- i '$g(%sqldata0d) { s SQLCODE=-102 q  } i %sqldata0d=100 { s SQLCODE=100 q  } s SQLCODE=0
- g %07first:%sqldata0d=1
-%07mDdun 
-%07mAdun 
- s %ROWCOUNT=%sqldata15d,SQLCODE=100,%sqldata0d=100
- //-- no [more] data
- quit
-%p06mBm2l0t0c i '$g(%sqldata0d) { s SQLCODE=-102 q  }
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%sqldata15d),1:0)
- k %sqldata0d s:$g(SQLCODE)'<0 SQLCODE=0
- kill %sqldata21d
- quit  // close
-%07err d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %sqldata0d=100
- quit  // error
-%07mBMod ; asl MOD# 2
- s %sqldata11d=%sqldata12d
-%07mBk1 s %sqldata18d="" s %sqldata11d=$o(^CBDRGCoreGroupsListD(%sqldata11d),1,%sqldata18d)
- i %sqldata11d="" g %07mBdun
- i %sqldata11d]]%sqldata13d g %07mBdun
- S %sqldata7d=$lg(%sqldata18d,25)
- s %sqldata8d=$zu(28,%sqldata7d,7)
- g:'(%sqldata8d=%sqldata10d) %07mBk1
- g:'(%sqldata8d'=" ") %07mBk1
- S %sqldata3d=$lg(%sqldata18d,2)
- s %sqldata4d=$zu(28,%sqldata3d,5)
- g:'(%sqldata4d=%sqldata6d) %07mBk1
- ; asl MOD# 3
-%07mCdun d $i(%sqlout1)
- g %07mBk1
-%07mBdun q
-%06o n sqldata15d,sqldata16d,sqldata17d,sqldata18d,sqldata4d,sqldata13d,sqldata14d
+%06o n sqldata13d,sqldata14d,sqldata15d,sqldata17d,sqldata21d,sqldata22d,sqldata6d,sqldata10d,sqldata5d,sqldata8d,sqldata9d,sqldata11d,sqldata12d
  s $zt="%06err"
  n %sqltime s %sqltime=$zh
- s sqldata15d=$zu(115,2)
+ s sqldata13d=$zu(115,2)
+ s sqldata14d=0,sqldata15d=""
  d:$zu(115,15) $system.ECP.Sync()
- s sqldata4d=$g(adrgCode)
+ s sqldata6d=$g(hospCode)
  s SQLCODE=100
- s iCount=0
- d %06mBMod
- ; asl MOD# 5
+ s sqldata9d=$zu(28,sqldata6d,5)
+ ; asl MOD# 2
+ s sqldata10d=""
+%06mBk1 s sqldata17d="" s sqldata10d=$o(^CBHospitalD(sqldata10d),1,sqldata17d)
+ i sqldata10d="" g %06mBdun
+ S sqldata5d=$lg(sqldata17d,11)
+ s sqldata8d=$zu(28,sqldata5d,5)
+ g:'(sqldata8d=sqldata9d) %06mBk1
+ S provID=$lg(sqldata17d,7),cityID=$lg(sqldata17d,8)
+ goto:sqldata13d'=1 %06mBuncommitted
+ if sqldata13d=1 {
+ 	lock +^CBHospitalD($p(sqldata10d,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata15d=$name(^CBHospitalD($p(sqldata10d,"||",1)))_"#""SI""",sqldata14d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_Hospital for RowID value: "_sqldata10d ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata11d=$zlist(sqldata8d)
+ i sqldata10d'="" s sqldata21d="" i $d(^CBHospitalD(sqldata10d),sqldata21d)
+ e  g %06mCdun
+ S $lg(,,,,,,provID,cityID,,,sqldata5d)=sqldata21d
+ s sqldata8d=$zu(28,sqldata5d,5)
+ s sqldata12d=$zlist(sqldata8d)
+ g:sqldata11d'=sqldata12d %06mCdun
+%06mBuncommitted ;
  s SQLCODE=0 g %06c
-%06mEdun 
+%06mCdun if $g(sqldata13d)=1 { if $g(sqldata14d)=1 { l -@sqldata15d s sqldata14d=0 } elseif $g(sqldata14d)=2 { do $classmethod($li(sqldata15d),"%UnlockId",$li(sqldata15d,2),1,1)  s sqldata14d=0 }}
+ g %06mBk1
+%06mBdun 
 %06mAdun 
 %06c set %ROWCOUNT='SQLCODE
+ if $g(sqldata13d)=1 {
+ 	if $g(sqldata14d)=1 { l -@sqldata15d s sqldata14d=0 } elseif $g(sqldata14d)=2 { do $classmethod($li(sqldata15d),"%UnlockId",$li(sqldata15d,2),1,1)  s sqldata14d=0 }
+ }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(sqldata18d)+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(sqldata22d)+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
- s tmp=$g(context.Stats($namespace,"Y/jHPBW7ynvX8XJWZlMsq5nuzFU="))
+ s tmp=$g(context.Stats($namespace,"EKKVw0GWX2KNjumz5vb1MHjIl3E="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
- s context.Stats($namespace,"Y/jHPBW7ynvX8XJWZlMsq5nuzFU=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ s context.Stats($namespace,"EKKVw0GWX2KNjumz5vb1MHjIl3E=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
  q
 %06err s $zt=""
  d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
  g %06c
-%06mBMod ; asl MOD# 2
- s sqldata16d=##class(%SQL.Agent).%RunWork2(2,$name(^CBDRGCoreGroupsListD),"","",$system.Rtn.GetCurrent(),"$$%06mBm2l0t",$lb(sqldata4d),0)
- ; asl MOD# 3
- s sqldata13d=1
-%06mCk1 	for {
- 		try { s sqldata17d=sqldata16d.Get(20) } catch { i '$isobject($g(sqldata16d)) { s sqldata13d=""  g %06mCdun q } throw }
- 		i $e(sqldata17d,1,8)'=$c(0,0,0,0,0,0,0,0),sqldata17d'="" q
- 		i ($a(sqldata17d,9)=1&&($i(sqldata16d.WorkQueueCount,-1)=0))||(sqldata17d="")||($a(sqldata17d,10)=1),sqldata16d.SQLDecode2('sqldata16d.WorkQueueCount) { s sqldata13d="",sqldata17d="" k sqldata16d  g %06mCdun q }
- 	}
- S sqldata14d=$lg(sqldata17d)
+%08o n sqldata13d,sqldata21d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata5d,sqldata7d,sqldata12d
+ s $zt="%08err"
+ n %sqltime s %sqltime=$zh
+ s sqldata13d=$zu(115,2)
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(drg),sqldata6d=$s($g(provID)="":"",$isvalidnum(provID):+provID,1:provID),sqldata8d=$s($g(cityID)="":"",$isvalidnum(cityID):+cityID,1:cityID)
+ s SQLCODE=100
+ s sqldata11d=$zu(28,sqldata4d,5)
+ s iCount=0
+ d %08mBMod
  ; asl MOD# 4
- d:sqldata14d'="" $i(iCount,sqldata14d)
-%06mDdun g %06mCk1
-%06mCdun 
-%06mBdun q
+ s SQLCODE=0 g %08c
+%08mDdun 
+%08mAdun 
+%08c set %ROWCOUNT='SQLCODE
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata21d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"DUiADE+oFOLC9uowAf3V/XZr+G4="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"DUiADE+oFOLC9uowAf3V/XZr+G4=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%08err s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %08c
+%08mBMod ; asl MOD# 2
+ s sqldata10d=sqldata11d
+ s sqldata5d=sqldata6d
+ s sqldata7d=sqldata8d
+ i sqldata10d="" g %08mBdun
+ i sqldata5d="" g %08mBdun
+ i sqldata7d="" g %08mBdun
+ s sqldata12d=""
+%08mBk1 s sqldata12d=$o(^HBDRGCataLogI("DataIndex",sqldata10d,sqldata5d,sqldata7d,sqldata12d))
+ i sqldata12d="" g %08mBdun
+ ; asl MOD# 3
+%08mCdun d $i(iCount)
+ g %08mBk1
+%08mBdun q
+%0ao n sqldata11d,sqldata12d,sqldata13d,sqldata21d,sqldata24d,sqldata4d,sqldata6d,sqldata7d,sqldata8d,sqldata9d,sqldata3d,sqldata10d
+ s $zt="%0aerr"
+ s sqldata11d=$zu(115,2)
+ s sqldata12d=0,sqldata13d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(adrgCode)
+ s SQLCODE=100
+ s sqldata7d=$zu(28,sqldata4d,5)
+ ; asl MOD# 2
+ s sqldata6d=sqldata7d
+ i sqldata6d="" g %0amBdun
+ s sqldata8d=""
+ s sqldata8d=$o(^HBDRGSegmentationRulesI("ADRGIdx",sqldata6d,sqldata8d))
+ i sqldata8d="" g %0amBdun
+ s sqldata21d="" i $d(^HBDRGSegmentationRulesD(sqldata8d),sqldata21d)
+ e  g %0amBdun
+ S segFlag=$lg(sqldata21d,8)
+ goto:sqldata11d'=1 %0amBuncommitted
+ if sqldata11d=1 {
+ 	lock +^HBDRGSegmentationRulesD($p(sqldata8d,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata13d=$name(^HBDRGSegmentationRulesD($p(sqldata8d,"||",1)))_"#""SI""",sqldata12d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGSegmentationRules for RowID value: "_sqldata8d ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata9d=$zlist(sqldata6d)
+ i sqldata8d'="" s sqldata24d="" i $d(^HBDRGSegmentationRulesD(sqldata8d),sqldata24d)
+ e  g %0amCdun
+ S sqldata3d=$lg(sqldata24d,2),segFlag=$lg(sqldata24d,8)
+ s sqldata6d=$zu(28,sqldata3d,5)
+ s sqldata10d=$zlist(sqldata6d)
+ g:sqldata9d'=sqldata10d %0amCdun
+%0amBuncommitted ;
+ s SQLCODE=0 g %0ac
+%0amCdun if $g(sqldata11d)=1 { if $g(sqldata12d)=1 { l -@sqldata13d s sqldata12d=0 } elseif $g(sqldata12d)=2 { do $classmethod($li(sqldata13d),"%UnlockId",$li(sqldata13d,2),1,1)  s sqldata12d=0 }}
+%0amBdun 
+%0amAdun 
+%0ac set %ROWCOUNT='SQLCODE
+ if $g(sqldata11d)=1 {
+ 	if $g(sqldata12d)=1 { l -@sqldata13d s sqldata12d=0 } elseif $g(sqldata12d)=2 { do $classmethod($li(sqldata13d),"%UnlockId",$li(sqldata13d,2),1,1)  s sqldata12d=0 }
+ }
+ q
+%0aerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0ac
+%0co n sqldata11d,sqldata12d,sqldata13d,sqldata21d,sqldata24d,sqldata4d,sqldata6d,sqldata7d,sqldata8d,sqldata9d,sqldata3d,sqldata10d
+ s $zt="%0cerr"
+ s sqldata11d=$zu(115,2)
+ s sqldata12d=0,sqldata13d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(adrgCode)
+ s SQLCODE=100
+ s sqldata7d=$zu(28,sqldata4d,5)
+ ; asl MOD# 2
+ s sqldata6d=sqldata7d
+ i sqldata6d="" g %0cmBdun
+ s sqldata8d=""
+ s sqldata8d=$o(^HBDRGSegmentationRulesI("ADRGIdx",sqldata6d,sqldata8d))
+ i sqldata8d="" g %0cmBdun
+ s sqldata21d="" i $d(^HBDRGSegmentationRulesD(sqldata8d),sqldata21d)
+ e  g %0cmBdun
+ S segFlag=$lg(sqldata21d,8)
+ goto:sqldata11d'=1 %0cmBuncommitted
+ if sqldata11d=1 {
+ 	lock +^HBDRGSegmentationRulesD($p(sqldata8d,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata13d=$name(^HBDRGSegmentationRulesD($p(sqldata8d,"||",1)))_"#""SI""",sqldata12d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGSegmentationRules for RowID value: "_sqldata8d ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata9d=$zlist(sqldata6d)
+ i sqldata8d'="" s sqldata24d="" i $d(^HBDRGSegmentationRulesD(sqldata8d),sqldata24d)
+ e  g %0cmCdun
+ S sqldata3d=$lg(sqldata24d,2),segFlag=$lg(sqldata24d,8)
+ s sqldata6d=$zu(28,sqldata3d,5)
+ s sqldata10d=$zlist(sqldata6d)
+ g:sqldata9d'=sqldata10d %0cmCdun
+%0cmBuncommitted ;
+ s SQLCODE=0 g %0cc
+%0cmCdun if $g(sqldata11d)=1 { if $g(sqldata12d)=1 { l -@sqldata13d s sqldata12d=0 } elseif $g(sqldata12d)=2 { do $classmethod($li(sqldata13d),"%UnlockId",$li(sqldata13d,2),1,1)  s sqldata12d=0 }}
+%0cmBdun 
+%0cmAdun 
+%0cc set %ROWCOUNT='SQLCODE
+ if $g(sqldata11d)=1 {
+ 	if $g(sqldata12d)=1 { l -@sqldata13d s sqldata12d=0 } elseif $g(sqldata12d)=2 { do $classmethod($li(sqldata13d),"%UnlockId",$li(sqldata13d,2),1,1)  s sqldata12d=0 }
+ }
+ q
+%0cerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0cc
 zGroupPreMDC(jsonObj)
 	new (jsonObj)
 	set params = ##class(%Library.DynamicArray).%New()	

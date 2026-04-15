@@ -4,18 +4,17 @@ import {
   Table,
   Button,
   Input,
-  Select,
   Modal,
   message,
   Space,
-  Tag,
   Popconfirm,
   Row,
   Col,
   Form,
-  Tree,
   TreeSelect,
-  Typography
+  Typography,
+  Radio,
+  Switch
 } from 'antd';
 import {
   PlusOutlined,
@@ -27,26 +26,35 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { DataNode } from 'antd/es/tree';
-import { queryHospitals, type HospitalItem } from '../../api/hospital';
-import CustomPagination from '../../components/CustomPagination';
+import { getMenuTree, saveMenu, deleteMenu as deleteMenuApi, initDefaultMenus } from '../../api/menu';
+// import CustomPagination from '../../components/CustomPagination'; // 暂时不使用，已注释
 
 const { Title } = Typography;
-const { Option } = Select;
-const { TreeNode } = TreeSelect;
 
-// 菜单项定义
-interface MenuItem {
-  menuID: number;
-  parentID: number;
-  menuCode: string;
-  menuName: string;
-  menuType: 'module' | 'page' | 'button';
+// 菜单项定义(兼容新旧格式)
+interface MenuItemLocal {
+  id?: number;
+  menuID?: number;
+  parentID?: number;
+  parentCode?: string;
+  menuCode?: string;
+  code?: string;
+  menuName?: string;
+  label?: string;
+  menuType?: 'module' | 'page' | 'button';
   menuIcon?: string;
+  icon?: string;
   menuPath?: string;
-  sortNo: number;
-  active: string;
-  hospitalIDs?: number[];
-  children?: MenuItem[];
+  linkPath?: string;
+  routePath?: string;
+  sortNo?: number;
+  seqNo?: number;
+  active?: string;
+  isActive?: string;
+  isVisible?: string;
+  menuGroup?: string;
+  level?: number;  // 新增：层级信息
+  children?: MenuItemLocal[];
 }
 
 // 分页参数
@@ -56,132 +64,137 @@ interface PaginationParams {
   total: number;
 }
 
-// 菜单类型选项
-const menuTypeOptions = [
-  { value: 'module', label: '模块' },
-  { value: 'page', label: '页面' },
-  { value: 'button', label: '按钮' },
-];
-
 const Menus: React.FC = () => {
   const [modalForm] = Form.useForm();
-  const [menuData, setMenuData] = useState<MenuItem[]>([]);
-  const [flatMenuData, setFlatMenuData] = useState<MenuItem[]>([]);
+  const [menuData, setMenuData] = useState<MenuItemLocal[]>([]);
+  const [mainTableData, setMainTableData] = useState<MenuItemLocal[]>([]); // 主表：一级菜单
+  const [subTableData, setSubTableData] = useState<MenuItemLocal[]>([]);   // 副表：当前选中菜单的子菜单
+  const [selectedMainMenuItem, setSelectedMainMenuItem] = useState<MenuItemLocal | null>(null);
   const [loading, setLoading] = useState(false);
-  const [pagination, setPagination] = useState<PaginationParams>({
-    current: 1,
-    pageSize: 10,
-    total: 0
-  });
+  // 由于分主副表显示，暂时不使用分页
+  // const [pagination, setPagination] = useState<PaginationParams>({
+  //   current: 1,
+  //   pageSize: 20,
+  //   total: 0
+  // });
   const [modalVisible, setModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState('新增菜单');
-  const [editingMenu, setEditingMenu] = useState<MenuItem | null>(null);
-  const [hospitals, setHospitals] = useState<HospitalItem[]>([]);
-  const [hospitalLoading, setHospitalLoading] = useState(false);
+  const [editingMenu, setEditingMenu] = useState<MenuItemLocal | null>(null);
   const [searchName, setSearchName] = useState('');
-  const [searchType, setSearchType] = useState('');
-  const [searchActive, setSearchActive] = useState('');
+  const [initLoading, setInitLoading] = useState(false);
 
-  // 查询医疗机构列表
-  const fetchHospitals = async () => {
-    setHospitalLoading(true);
-    try {
-      const res = await queryHospitals({ active: 'Y' }, { pageSize: 1000, currentPage: 1 });
-      if (res.errorCode === '0' && res.result) {
-        setHospitals(res.result.rows || []);
-      } else {
-        message.error(res.errorMessage || '获取医疗机构列表失败');
-      }
-    } catch (error) {
-      console.error('获取医疗机构列表失败:', error);
-      message.error('获取医疗机构列表失败');
-    } finally {
-      setHospitalLoading(false);
-    }
+  // 转换菜单数据格式
+  const convertMenu = (item: any, parentCode: string = ''): MenuItemLocal => {
+    const hasChildren = item.children && item.children.length > 0;
+    
+    // 计算当前菜单的层级
+    const currentLevel = item.parentCode ? 2 : 1;
+    
+    return {
+      id: item.id || item.menuDetailID,
+      menuID: item.id || item.menuDetailID,
+      code: item.code,
+      menuCode: item.code,
+      label: item.label,
+      menuName: item.label,
+      icon: item.icon,
+      menuIcon: item.icon,
+      linkPath: item.routePath,
+      routePath: item.routePath,
+      menuPath: item.routePath,
+      seqNo: item.sortNo ? parseInt(item.sortNo) : 1,
+      sortNo: item.sortNo ? parseInt(item.sortNo) : 1,
+      parentCode: item.parentCode || parentCode || '',
+      isActive: item.isActive,
+      active: item.isActive,
+      isVisible: item.isVisible,
+      menuGroup: hasChildren ? 'Y' : 'N',
+      level: currentLevel,
+      children: item.children?.map((child: any) => convertMenu(child, item.code)) || []
+    };
   };
 
-  // 加载菜单数据（模拟数据）
+  // 加载菜单数据
   const fetchMenus = async () => {
     setLoading(true);
     try {
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('开始获取菜单数据...');
+      // 调用后端API获取菜单树
+      const res = await getMenuTree({});
+      const errorCode = res.errorCode as string | number;
       
-      // 模拟数据
-      const mockMenus: MenuItem[] = [
-        {
-          menuID: 1,
-          parentID: 0,
-          menuCode: 'system',
-          menuName: '系统管理',
-          menuType: 'module',
-          menuIcon: 'SettingOutlined',
-          sortNo: 100,
-          active: 'Y',
-          children: [
-            {
-              menuID: 2,
-              parentID: 1,
-              menuCode: 'system-user',
-              menuName: '用户管理',
-              menuType: 'page',
-              menuIcon: 'UserOutlined',
-              menuPath: '/system/users',
-              sortNo: 1,
-              active: 'Y'
-            },
-            {
-              menuID: 3,
-              parentID: 1,
-              menuCode: 'system-role',
-              menuName: '角色权限',
-              menuType: 'page',
-              menuIcon: 'SafetyOutlined',
-              menuPath: '/system/roles',
-              sortNo: 2,
-              active: 'Y'
-            },
-            {
-              menuID: 4,
-              parentID: 1,
-              menuCode: 'system-menu',
-              menuName: '菜单配置',
-              menuType: 'page',
-              menuIcon: 'MenuOutlined',
-              menuPath: '/system/menus',
-              sortNo: 3,
-              active: 'Y'
-            },
-            {
-              menuID: 5,
-              parentID: 1,
-              menuCode: 'system-hospital',
-              menuName: '医疗机构管理',
-              menuType: 'page',
-              menuIcon: 'HospitalOutlined',
-              menuPath: '/system/hospitals',
-              sortNo: 4,
-              active: 'Y',
-              hospitalIDs: [1, 2] // 关联的医院ID
-            }
-          ]
-        }
-      ];
-
-      setMenuData(mockMenus);
-      // 展平数据用于表格显示
-      const flattenData: MenuItem[] = [];
-      const flatten = (menus: MenuItem[]) => {
+      // 后端可能返回 data 或 result 字段，需要兼容处理
+      const responseData = res as any;
+      const menuList = (responseData.data || responseData.result) as any[];
+      console.log('后端返回的完整响应:', responseData);
+      console.log('后端返回的菜单数据:', menuList);
+      
+      if ((errorCode === 0 || errorCode === '0') && menuList) {
+        const menus = menuList.map(item => convertMenu(item));
+        setMenuData(menus);
+        
+        // 分离主表数据（一级菜单）和副表数据（二级菜单）
+        const mainData: MenuItemLocal[] = []; // 主表：一级菜单
+        const allSubData: MenuItemLocal[] = []; // 所有二级菜单
+        
         menus.forEach(menu => {
-          flattenData.push({ ...menu, children: undefined });
+          // 一级菜单加入主表
+          const mainItem: MenuItemLocal = {
+            ...menu,
+            children: undefined
+          };
+          mainData.push(mainItem);
+          
+          // 二级菜单加入副表
           if (menu.children && menu.children.length > 0) {
-            flatten(menu.children);
+            menu.children.forEach((child: MenuItemLocal) => {
+              const subItem: MenuItemLocal = {
+                ...child,
+                children: undefined,
+                parentCode: menu.code,
+                level: 2
+              };
+              allSubData.push(subItem);
+            });
           }
         });
-      };
-      flatten(mockMenus);
-      setFlatMenuData(flattenData);
-      setPagination(prev => ({ ...prev, total: flattenData.length }));
+        
+        console.log('主表数据（一级菜单）:', mainData);
+        console.log('所有副表数据（二级菜单）:', allSubData);
+        
+        // 设置主表数据
+        setMainTableData(mainData);
+        
+        // 处理搜索过滤
+        let filteredMainData = mainData;
+        if (searchName) {
+          filteredMainData = mainData.filter(item => {
+            const menuName = (item.menuName || item.label || '').toLowerCase();
+            const searchTerm = searchName.toLowerCase();
+            return menuName.includes(searchTerm);
+          });
+        }
+        
+        // 设置主表数据（支持搜索）
+        setMainTableData(filteredMainData);
+        
+        // 默认选中第一个主表项
+        if (filteredMainData.length > 0) {
+          setSelectedMainMenuItem(filteredMainData[0]);
+          const subData = allSubData.filter(item => item.parentCode === filteredMainData[0].code);
+          setSubTableData(subData);
+        } else {
+          setSelectedMainMenuItem(null);
+          setSubTableData([]);
+        }
+        
+        // 由于分主副表显示，暂时不使用分页
+        // 设置分页总数为主表数据数量
+        // setPagination(prev => ({ ...prev, total: filteredMainData.length }));
+      } else {
+        console.error('获取菜单失败:', res.errorMessage);
+        message.error(res.errorMessage || '获取菜单列表失败');
+      }
     } catch (error) {
       console.error('加载菜单数据失败:', error);
       message.error('加载菜单数据失败');
@@ -190,39 +203,169 @@ const Menus: React.FC = () => {
     }
   };
 
-  // 表格列定义
-  const columns: ColumnsType<MenuItem> = [
+  // 初始化默认菜单
+  const handleInitMenus = async () => {
+    setInitLoading(true);
+    try {
+      const res = await initDefaultMenus({});
+      const errorCode = res.errorCode as string | number;
+      if (errorCode === 0 || errorCode === '0') {
+        message.success('菜单初始化成功');
+        fetchMenus();
+      } else {
+        message.error(res.errorMessage || '菜单初始化失败');
+      }
+    } catch (error) {
+      console.error('菜单初始化失败:', error);
+      message.error('菜单初始化失败');
+    } finally {
+      setInitLoading(false);
+    }
+  };
+
+  // 处理主表项选择
+  const handleMainTableSelect = (record: MenuItemLocal) => {
+    setSelectedMainMenuItem(record);
+    
+    // 从所有菜单数据中过滤出当前选中菜单的子菜单
+    const allSubData: MenuItemLocal[] = [];
+    menuData.forEach(menu => {
+      if (menu.children && menu.children.length > 0) {
+        menu.children.forEach((child: MenuItemLocal) => {
+          const subItem: MenuItemLocal = {
+            ...child,
+            children: undefined,
+            parentCode: menu.code,
+            level: 2
+          };
+          allSubData.push(subItem);
+        });
+      }
+    });
+    
+    const subData = allSubData.filter(item => item.parentCode === record.code);
+    setSubTableData(subData);
+    console.log('选中主表项:', record.menuName, '对应的副表数据:', subData);
+  };
+
+  // 处理菜单状态切换
+  const handleStatusChange = async (record: MenuItemLocal, checked: boolean) => {
+    try {
+      console.log('切换菜单状态:', record.menuName, '当前状态:', record.active, '新状态:', checked ? 'Y' : 'N');
+      
+      // 构建更新参数，格式要与saveMenu期望的一致
+      const params = {
+        menuID: record.menuID || record.id ? String(record.menuID || record.id) : undefined,
+        code: record.code || record.menuCode || '',
+        label: record.label || record.menuName || '',
+        parentCode: record.parentCode || '',
+        menuLevel: record.parentCode ? 2 : 1,
+        sortNo: record.sortNo || record.seqNo || 1,
+        icon: record.icon || record.menuIcon || '',
+        routePath: record.linkPath || record.routePath || record.menuPath || '',
+        isVisible: 'Y',
+        isActive: checked ? 'Y' : 'N'
+      };
+      
+      // 调用保存菜单API
+      const res = await saveMenu(params);
+      const errorCode = res.errorCode as string | number;
+      
+      if (errorCode === 0 || errorCode === '0') {
+        message.success(checked ? '已启用' : '已停用');
+        
+        // 更新本地数据
+        const updatedSubTableData = subTableData.map(item => {
+          if (item.code === record.code) {
+            return { ...item, active: checked ? 'Y' : 'N', isActive: checked ? 'Y' : 'N' };
+          }
+          return item;
+        });
+        
+        // 更新主表数据
+        const updatedMainTableData = mainTableData.map(item => {
+          if (item.code === record.code) {
+            return { ...item, active: checked ? 'Y' : 'N', isActive: checked ? 'Y' : 'N' };
+          }
+          return item;
+        });
+        
+        setSubTableData(updatedSubTableData);
+        setMainTableData(updatedMainTableData);
+        
+        // 如果更新的是当前选中的主表项，也更新其状态
+        if (selectedMainMenuItem && selectedMainMenuItem.code === record.code) {
+          setSelectedMainMenuItem({
+            ...selectedMainMenuItem,
+            active: checked ? 'Y' : 'N',
+            isActive: checked ? 'Y' : 'N'
+          });
+        }
+        
+        // 重新加载数据确保一致性
+        fetchMenus();
+      } else {
+        message.error(res.errorMessage || '状态更新失败');
+      }
+    } catch (error) {
+      console.error('切换菜单状态失败:', error);
+      message.error('切换菜单状态失败');
+    }
+  };
+
+  // 主表列定义（只显示序号、菜单编码、菜单名称）
+  const mainTableColumns: ColumnsType<MenuItemLocal> = [
     {
       title: '序号',
       key: 'index',
-      width: 60,
-      render: (_, __, index) => (pagination.current - 1) * pagination.pageSize + index + 1
+      width: 80,
+      render: (_, __, index) => (
+        <div style={{ textAlign: 'center' }}>{index + 1}</div>
+      )
     },
     {
       title: '菜单编码',
       dataIndex: 'menuCode',
       key: 'menuCode',
-      width: 120
+      width: 150
     },
     {
       title: '菜单名称',
       dataIndex: 'menuName',
       key: 'menuName',
+      width: 200,
+      render: (text: string) => (
+        <span style={{ fontWeight: 'bold', fontSize: '14px' }}>{text}</span>
+      )
+    }
+  ];
+
+  // 副表列定义（显示二级菜单）
+  const subTableColumns: ColumnsType<MenuItemLocal> = [
+    {
+      title: '序号',
+      key: 'index',
+      width: 60,
+      render: (_, __, index) => index + 1
+    },
+    {
+      title: '菜单编码',
+      dataIndex: 'menuCode',
+      key: 'menuCode',
       width: 150
     },
     {
-      title: '菜单类型',
-      dataIndex: 'menuType',
-      key: 'menuType',
-      width: 80,
-      render: (type: string) => {
-        const typeMap: Record<string, string> = {
-          'module': '模块',
-          'page': '页面',
-          'button': '按钮'
-        };
-        return typeMap[type] || type;
-      }
+      title: '菜单名称',
+      dataIndex: 'menuName',
+      key: 'menuName',
+      width: 180
+    },
+    {
+      title: '父菜单',
+      dataIndex: 'parentCode',
+      key: 'parentCode',
+      width: 120,
+      render: (parentCode: string) => parentCode || '-'
     },
     {
       title: '菜单路径',
@@ -230,22 +373,6 @@ const Menus: React.FC = () => {
       key: 'menuPath',
       width: 200,
       ellipsis: true
-    },
-    {
-      title: '关联医院',
-      key: 'hospitals',
-      width: 200,
-      ellipsis: true,
-      render: (record: MenuItem) => {
-        if (!record.hospitalIDs || record.hospitalIDs.length === 0) {
-          return '全部医院';
-        }
-        const hospitalNames = record.hospitalIDs.map(id => {
-          const hospital = hospitals.find(h => h.hospitalID === String(id));
-          return hospital ? hospital.descripts : `ID: ${id}`;
-        });
-        return hospitalNames.join(', ');
-      }
     },
     {
       title: '排序号',
@@ -257,18 +384,20 @@ const Menus: React.FC = () => {
       title: '状态',
       dataIndex: 'active',
       key: 'active',
-      width: 80,
-      render: (active: string) => (
-        <Tag color={active === 'Y' ? 'green' : 'red'}>
-          {active === 'Y' ? '启用' : '停用'}
-        </Tag>
+      width: 100,
+      render: (active: string, record: MenuItemLocal) => (
+        <Switch
+          checked={active === 'Y' || active === '1'}
+          checkedChildren="启用"
+          unCheckedChildren="停用"
+          onChange={(checked) => handleStatusChange(record, checked)}
+        />
       )
     },
     {
       title: '操作',
       key: 'action',
-      fixed: 'right',
-      width: 180,
+      width: 120,
       render: (_, record) => (
         <Space size="small">
           <Button
@@ -295,17 +424,16 @@ const Menus: React.FC = () => {
     }
   ];
 
-  // 搜索
-  const handleSearch = () => {
-    // 这里可以实现搜索逻辑
-    message.info('搜索功能待实现');
-  };
 
-  // 重置
-  const handleReset = () => {
-    setSearchName('');
-    setSearchType('');
-    setSearchActive('');
+
+  // 构建树形选择器数据
+  const buildTreeSelectData = (menus: MenuItemLocal[]): DataNode[] => {
+    return menus.map(menu => ({
+      title: `${menu.menuName || menu.label} (${menu.menuCode || menu.code})`,
+      value: menu.code || menu.menuCode || '',
+      key: menu.code || menu.menuCode || '',
+      children: menu.children && menu.children.length > 0 ? buildTreeSelectData(menu.children) : undefined
+    }));
   };
 
   // 新增菜单
@@ -322,65 +450,90 @@ const Menus: React.FC = () => {
   };
 
   // 编辑菜单
-  const handleEdit = (record: MenuItem) => {
+  const handleEdit = (record: MenuItemLocal) => {
     setEditingMenu(record);
     setModalTitle('编辑菜单');
     modalForm.setFieldsValue({
-      menuCode: record.menuCode,
-      menuName: record.menuName,
-      menuType: record.menuType,
-      menuIcon: record.menuIcon,
-      menuPath: record.menuPath,
-      parentID: record.parentID,
-      sortNo: record.sortNo,
-      active: record.active,
-      hospitalIDs: record.hospitalIDs || []
+      menuCode: record.code || record.menuCode,
+      menuName: record.label || record.menuName,
+      menuType: record.menuType || 'page',
+      menuIcon: record.icon || record.menuIcon,
+      menuPath: record.linkPath || record.routePath || record.menuPath,
+      parentCode: record.parentCode,
+      sortNo: record.sortNo || record.seqNo,
+      active: record.active || record.isActive || 'Y'
     });
     setModalVisible(true);
   };
 
   // 删除菜单
-  const handleDelete = async (record: MenuItem) => {
+  const handleDelete = async (record: MenuItemLocal) => {
     try {
-      // 模拟删除操作
-      await new Promise(resolve => setTimeout(resolve, 500));
-      message.success('删除成功');
-      fetchMenus();
+      const code = record.code || record.menuCode;
+      const res = await deleteMenuApi({ code });
+      const errorCode = res.errorCode as string | number;
+      if (errorCode === 0 || errorCode === '0') {
+        message.success('删除成功');
+        fetchMenus();
+      } else {
+        message.error(res.errorMessage || '删除失败');
+      }
     } catch (error) {
       console.error('删除菜单失败:', error);
       message.error('删除菜单失败');
     }
   };
 
-  // 保存菜单
+  // 保存菜单 - 使用operatetable模式
   const handleSave = async () => {
     try {
       const values = await modalForm.validateFields();
       
-      // 模拟保存操作
-      await new Promise(resolve => setTimeout(resolve, 500));
-      message.success(editingMenu ? '修改成功' : '新增成功');
-      setModalVisible(false);
-      fetchMenus();
+      // 获取菜单ID用于编辑
+      const menuID = editingMenu ? (editingMenu.menuID || editingMenu.id)?.toString() : '';
+      
+      const params = {
+        menuID: menuID,
+        code: values.menuCode,
+        label: values.menuName,
+        parentCode: values.parentCode || '',
+        menuLevel: values.parentCode ? 2 : 1,
+        sortNo: values.sortNo || 1,
+        icon: values.menuIcon || '',
+        routePath: values.menuPath || '',
+        isVisible: 'Y',
+        isActive: values.active
+      };
+      
+      const res = await saveMenu(params);
+      const errorCode = res.errorCode as string | number;
+      if (errorCode === 0 || errorCode === '0') {
+        message.success(editingMenu ? '修改成功' : '新增成功');
+        setModalVisible(false);
+        fetchMenus();
+      } else {
+        message.error(res.errorMessage || '保存失败');
+      }
     } catch (error) {
       console.error('保存菜单失败:', error);
       message.error('保存菜单失败');
     }
   };
 
-  // 构建树形选择器数据
-  const buildTreeSelectData = (menus: MenuItem[]): DataNode[] => {
-    return menus.map(menu => ({
-      title: `${menu.menuName} (${menu.menuCode})`,
-      value: menu.menuID,
-      key: menu.menuID,
-      children: menu.children ? buildTreeSelectData(menu.children) : []
-    }));
+  // 搜索
+  const handleSearch = () => {
+    fetchMenus();
+  };
+
+  // 重置
+  const handleReset = () => {
+    setSearchName('');
+    setSelectedMainMenuItem(null);
+    fetchMenus();
   };
 
   // 初始化加载
   useEffect(() => {
-    fetchHospitals();
     fetchMenus();
   }, []);
 
@@ -396,70 +549,70 @@ const Menus: React.FC = () => {
               placeholder="菜单名称"
               value={searchName}
               onChange={e => setSearchName(e.target.value)}
-              style={{ width: 140 }}
+              onPressEnter={handleSearch}
+              style={{ width: 200 }}
               allowClear
             />
-          </Col>
-          <Col>
-            <Select
-              placeholder="菜单类型"
-              value={searchType || undefined}
-              onChange={v => setSearchType(v || '')}
-              style={{ width: 100 }}
-              allowClear
-            >
-              {menuTypeOptions.map(option => (
-                <Option key={option.value} value={option.value}>{option.label}</Option>
-              ))}
-            </Select>
-          </Col>
-          <Col>
-            <Select
-              placeholder="状态"
-              value={searchActive || undefined}
-              onChange={v => setSearchActive(v || '')}
-              style={{ width: 100 }}
-              allowClear
-            >
-              <Option value="Y">启用</Option>
-              <Option value="N">停用</Option>
-            </Select>
           </Col>
           <Col>
             <Space>
               <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>查询</Button>
               <Button icon={<ReloadOutlined />} onClick={handleReset}>重置</Button>
+              <Button 
+                icon={<MenuOutlined />} 
+                onClick={handleInitMenus}
+                loading={initLoading}
+              >
+                初始化菜单
+              </Button>
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>新增菜单</Button>
             </Space>
           </Col>
         </Row>
       </Card>
-
-      {/* 工具栏 + 表格 */}
-      <Card size="small">
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>新增菜单</Button>
-          <span>共 {pagination.total} 条记录</span>
-        </div>
-        <Table
-          columns={columns}
-          dataSource={flatMenuData}
-          rowKey="menuID"
-          loading={loading}
-          scroll={{ x: 1200 }}
-          size="small"
-          pagination={false}
-        />
-        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
-          <CustomPagination
-            current={pagination.current}
-            pageSize={pagination.pageSize}
-            total={pagination.total}
-            onChange={(page, size) => {
-              setPagination(prev => ({ ...prev, current: page, pageSize: size }));
-            }}
+      
+      <div style={{ display: 'flex', gap: 16 }}>
+        {/* 主表：一级菜单 */}
+        <Card 
+          size="small" 
+          style={{ width: '40%', marginBottom: 16 }}
+          title="主表 - 一级菜单"
+        >
+          <Table
+            columns={mainTableColumns}
+            dataSource={mainTableData}
+            rowKey="code"
+            loading={loading}
+            scroll={{ x: 800 }}
+            size="small"
+            pagination={false}
+            onRow={(record) => ({
+              onClick: () => handleMainTableSelect(record),
+              style: { 
+                cursor: 'pointer',
+                backgroundColor: selectedMainMenuItem?.code === record.code ? '#f0f0f0' : 'transparent'
+              }
+            })}
           />
-        </div>
-      </Card>
+        </Card>
+
+        {/* 副表：二级菜单 */}
+        <Card 
+          size="small" 
+          style={{ width: '60%', marginBottom: 16 }}
+          title={selectedMainMenuItem ? `副表 - ${selectedMainMenuItem.menuName} 的子菜单` : '副表 - 子菜单'}
+        >
+          <Table
+            columns={subTableColumns}
+            dataSource={subTableData}
+            rowKey="code"
+            loading={loading}
+            scroll={{ x: 1000 }}
+            size="small"
+            pagination={false}
+          />
+        </Card>
+      </div>
 
       {/* 新增/编辑弹窗 */}
       <Modal
@@ -470,7 +623,7 @@ const Menus: React.FC = () => {
         okText="确定"
         cancelText="取消"
         width={600}
-        destroyOnClose
+
       >
         <Form
           form={modalForm}
@@ -484,7 +637,7 @@ const Menus: React.FC = () => {
                 label="菜单编码"
                 rules={[{ required: true, message: '请输入菜单编码' }]}
               >
-                <Input placeholder="请输入菜单编码" maxLength={50} />
+                <Input placeholder="请输入菜单编码" maxLength={50} disabled={!!editingMenu} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -493,7 +646,7 @@ const Menus: React.FC = () => {
                 label="菜单名称"
                 rules={[{ required: true, message: '请输入菜单名称' }]}
               >
-                <Input placeholder="请输入菜单名称" maxLength={50} />
+                <Input placeholder="请输入菜单名称" maxLength={100} />
               </Form.Item>
             </Col>
           </Row>
@@ -501,28 +654,24 @@ const Menus: React.FC = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="menuType"
-                label="菜单类型"
-                rules={[{ required: true, message: '请选择菜单类型' }]}
-              >
-                <Select placeholder="请选择菜单类型">
-                  {menuTypeOptions.map(option => (
-                    <Option key={option.value} value={option.value}>{option.label}</Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="parentID"
+                name="parentCode"
                 label="上级菜单"
               >
                 <TreeSelect
-                  placeholder="请选择上级菜单"
+                  placeholder="请选择上级菜单(不选则为顶级)"
                   treeData={buildTreeSelectData(menuData)}
                   allowClear
                   treeDefaultExpandAll
                 />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="sortNo"
+                label="排序号"
+                rules={[{ required: true, message: '请输入排序号' }]}
+              >
+                <Input type="number" placeholder="请输入排序号" min={1} />
               </Form.Item>
             </Col>
           </Row>
@@ -533,27 +682,7 @@ const Menus: React.FC = () => {
                 name="menuIcon"
                 label="菜单图标"
               >
-                <Input placeholder="请输入图标名称（如：UserOutlined）" maxLength={50} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="menuPath"
-                label="菜单路径"
-              >
-                <Input placeholder="请输入菜单路径（如：/system/users）" maxLength={200} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="sortNo"
-                label="排序号"
-                rules={[{ required: true, message: '请输入排序号' }]}
-              >
-                <Input type="number" placeholder="请输入排序号" min={0} />
+                <Input placeholder="请输入图标名称(如: UserOutlined)" maxLength={50} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -562,36 +691,24 @@ const Menus: React.FC = () => {
                 label="状态"
                 rules={[{ required: true, message: '请选择状态' }]}
               >
-                <Select placeholder="请选择状态">
-                  <Option value="Y">启用</Option>
-                  <Option value="N">停用</Option>
-                </Select>
+                <Radio.Group>
+                  <Radio value="Y">启用</Radio>
+                  <Radio value="N">停用</Radio>
+                </Radio.Group>
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item
-            name="hospitalIDs"
-            label="关联医疗机构"
-            extra="不选择表示所有医院可见"
-          >
-            <Select
-              mode="multiple"
-              placeholder="请选择关联的医疗机构"
-              loading={hospitalLoading}
-              allowClear
-              showSearch
-              filterOption={(input, option) =>
-                String(option?.children ?? '').toLowerCase().indexOf(input.toLowerCase()) >= 0
-              }
-            >
-              {hospitals.map(hospital => (
-                <Option key={hospital.hospitalID} value={hospital.hospitalID}>
-                  {hospital.descripts} ({hospital.code})
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item
+                name="menuPath"
+                label="菜单路径/路由"
+              >
+                <Input placeholder="请输入菜单路径(如: /system/users)" maxLength={200} />
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
     </div>

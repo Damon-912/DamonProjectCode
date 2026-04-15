@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Layout, Menu, Card, Row, Col, Statistic, Table, Tag, Progress, List, Avatar, Typography, Tabs, Input, Dropdown, Badge, Button, Popconfirm, message } from 'antd';
+import { Layout, Menu, Card, Row, Col, Statistic, Table, Tag, Progress, List, Avatar, Typography, Tabs, Input, Dropdown, Badge, Button, Popconfirm, message, Modal, Form } from 'antd';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import {
@@ -23,10 +23,18 @@ import {
   CalculatorOutlined,
   CloseOutlined,
   HomeOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  DownOutlined,
+  LockOutlined,
+  SyncOutlined
 } from '@ant-design/icons';
 import type { MenuProps, TabsProps } from 'antd';
 import './App.css';
+import { invoke } from './api/request';
+import { getUserMenus } from './api/menu';
+import { getSession } from './utils/auth';
+import { encryptPassword } from './utils/encryption';
+import { MenuProvider, useMenu, defaultMenuItems } from './context/MenuContext';
 import DRGCustomQuery from './pages/DRG/CustomQuery';
 import Login from './pages/Login';
 import SelectHospRole from './pages/Login/SelectHospRole';
@@ -64,7 +72,7 @@ import ProfitCostStructure from './pages/Profit/CostStructure';
 import SystemUsers from './pages/System/Users';
 import SystemUserApply from './pages/System/UserApply';
 import SystemRoles from './pages/System/Roles';
-import SystemRoleManage from './pages/System/RoleManage';
+// import SystemRoleManage from './pages/System/RoleManage'; // 文件不存在，已注释
 import SystemMenus from './pages/System/Menus';
 import SystemInterfaces from './pages/System/Interfaces';
 import SystemInterfaceLogs from './pages/System/InterfaceLogs';
@@ -159,7 +167,6 @@ const menuTitleMap: Record<string, string> = {
   'basic-data-segmentation-rules': 'ADRG细分规则表',
   'system-user': '用户管理',
   'system-role': '角色权限',
-  'system-role-manage': '角色管理',
   'system-menu': '菜单配置',
   'system-hospital': '医疗机构管理',
   'system-api': '接口服务配置',
@@ -255,7 +262,6 @@ const menuItems: MenuProps['items'] = [
     label: '用户管理',
     children: [
       { key: 'system-user', label: '用户管理' },
-      { key: 'system-role-manage', label: '角色管理' },
       { key: 'system-role', label: '角色权限' },
       { key: 'system-menu', label: '菜单配置' },
     ],
@@ -308,7 +314,12 @@ function App() {
 
   // 登录状态管理
   const [authState, setAuthState] = useState<AuthState>('login');
-  const [userInfo, setUserInfo] = useState<{ userName: string; hospName: string } | null>(null);
+  const [userInfo, setUserInfo] = useState<{ userName: string; hospName: string; roleName: string; userID?: string } | null>(null);
+
+  // 修改密码弹窗状态
+  const [pwdModalVisible, setPwdModalVisible] = useState(false);
+  const [pwdForm] = Form.useForm();
+  const [pwdLoading, setPwdLoading] = useState(false);
 
   // 主应用状态（必须在条件渲染之前声明所有hooks）
   const [collapsed, setCollapsed] = useState(false);
@@ -316,31 +327,174 @@ function App() {
   const [menuSearch, setMenuSearch] = useState('');
   const [searchVisible, setSearchVisible] = useState(false);
 
+  // 使用菜单上下文获取动态菜单
+  const { menuItems: dynamicMenuItems, clearMenus, isLoaded, loadMenusFromLogin } = useMenu();
+
+  // 使用动态菜单（如果有）或默认菜单
+  const menuItems = isLoaded && dynamicMenuItems.length > 0 ? dynamicMenuItems : defaultMenuItems;
+
+  // 获取用户菜单的函数
+  const fetchUserMenus = async (session: NonNullable<ReturnType<typeof getSession>>) => {
+    try {
+      const res = await getUserMenus({
+        userCode: session.userCode || '',
+        groupID: session.groupID || ''
+      });
+      
+      // getUserMenus 返回的是 MenuItem[] 或 ApiResponse<MenuItem[]>
+      const menus = Array.isArray(res.result) ? res.result : (res.result as any)?.rows;
+      if (String(res.errorCode) === '0' && menus && menus.length > 0) {
+        console.log('[App] 从后端获取到用户菜单:', menus.length, '项');
+        loadMenusFromLogin(menus);
+      } else {
+        console.warn('[App] 获取用户菜单失败或无权限菜单:', res.errorMessage);
+      }
+    } catch (error) {
+      console.error('[App] 获取用户菜单异常:', error);
+    }
+  };
+
   // 检查登录状态
   useEffect(() => {
-    const sessionStr = localStorage.getItem('drg_session');
-    if (sessionStr) {
-      try {
-        const session = JSON.parse(sessionStr);
-        if (session.sessionID) {
-          setAuthState('authenticated');
-          setUserInfo({
-            userName: session.userName || '管理员',
-            hospName: session.hospDesc || ''
-          });
+    const session = getSession();
+    console.log('检查登录状态 - Session数据:', JSON.stringify(session, null, 2));
+    
+    if (session && session.sessionID) {
+      console.log('Session loaded, 设置用户信息:', {
+        userName: session.userName,
+        hospName: session.hospDesc,
+        roleName: session.groupDesc,
+        userID: session.userID
+      });
+      
+      setAuthState('authenticated');
+      setUserInfo({
+        userName: session.userName || '管理员',
+        hospName: session.hospDesc || session.hospID || '',
+        roleName: session.groupDesc || session.groupID || '',
+        userID: session.userID || ''
+      });
+      
+      // 刷新后如果菜单未加载，尝试从session恢复或重新获取
+      if (!isLoaded) {
+        console.log('[App] 刷新后菜单未加载，尝试恢复...');
+        
+        // 优先从session恢复菜单
+        if (session.menus && session.menus.length > 0) {
+          console.log('[App] 从session恢复菜单:', session.menus.length, '项');
+          loadMenusFromLogin(session.menus);
+        } else {
+          // session中没有菜单，重新从后端获取
+          console.log('[App] session中无菜单，重新从后端获取...');
+          fetchUserMenus(session);
         }
-      } catch (e) {
-        console.error('解析session失败:', e);
       }
     }
-  }, []);
+  }, [isLoaded]);
 
   // 处理登出
   const handleLogout = () => {
     localStorage.removeItem('drg_session');
+    clearMenus(); // 清空菜单
     setAuthState('login');
     setUserInfo(null);
     message.success('已登出');
+  };
+
+  // 处理打开修改密码弹窗
+  const handleOpenPwdModal = () => {
+    pwdForm.resetFields();
+    setPwdModalVisible(true);
+  };
+
+  // 处理修改密码
+  const handleChangePassword = async () => {
+    try {
+      const values = await pwdForm.validateFields();
+      setPwdLoading(true);
+
+      // 从 session 获取 userID
+      const session = getSession();
+      const userID = session?.userID || userInfo?.userID;
+      
+      console.log('修改密码 - userID:', userID);
+      console.log('修改密码 - session:', session);
+      
+      if (!userID) {
+        message.error('获取用户信息失败，请重新登录');
+        setPwdLoading(false);
+        return;
+      }
+
+      // 加密密码（与登录时一致）
+      const encryptedOldPassword = encryptPassword(values.oldPassword);
+      const encryptedNewPassword = encryptPassword(values.newPassword);
+      const encryptedConfirmPassword = encryptPassword(values.confirmPassword);
+      
+      console.log('原密码加密:', encryptedOldPassword);
+      console.log('新密码加密:', encryptedNewPassword);
+
+      // 调用修改密码接口 01040090
+      const res = await invoke('01040090', [{
+        userID: String(userID),
+        originPassword: encryptedOldPassword,
+        password: encryptedNewPassword,
+        confirmPassword: encryptedConfirmPassword
+      }]);
+
+      if (String(res.errorCode) === '0') {
+        message.success('密码修改成功，请重新登录');
+        setPwdModalVisible(false);
+        // 修改成功后登出
+        handleLogout();
+      } else {
+        message.error(res.errorMessage || '密码修改失败');
+      }
+    } catch (error) {
+      console.error('修改密码失败:', error);
+      message.error('修改密码失败');
+    } finally {
+      setPwdLoading(false);
+    }
+  };
+
+  // 处理初始化登录密码
+  const handleInitPassword = () => {
+    Modal.confirm({
+      title: '确认初始化',
+      content: `确定要将您的登录密码初始化为"123456"吗？`,
+      okText: '确定',
+      cancelText: '取消',
+      async onOk() {
+        setPwdLoading(true);
+        try {
+          const session = getSession();
+          const userID = session?.userID || userInfo?.userID;
+
+          if (!userID) {
+            message.error('获取用户信息失败，请重新登录');
+            setPwdLoading(false);
+            return;
+          }
+
+          const res = await invoke('InitUserPassword', [{
+            userID: userID
+          }]);
+
+          if (String(res.errorCode) === '0') {
+            message.success('密码初始化成功，已设置为"123456"');
+            setPwdModalVisible(false);
+          } else {
+            message.error(res.errorMessage || '密码初始化失败');
+          }
+        } catch (error) {
+          console.error('初始化密码失败:', error);
+          message.error('初始化密码失败');
+        } finally {
+          setPwdLoading(false);
+        }
+      }
+    });
   };
 
 
@@ -520,8 +674,6 @@ function App() {
         return <SystemUsers />;
       case 'system-user-apply':
         return <SystemUserApply />;
-      case 'system-role-manage':
-        return <SystemRoleManage />;
       case 'system-role':
         return <SystemRoles />;
       case 'system-menu':
@@ -591,7 +743,25 @@ function App() {
   if (authState === 'select') {
     return (
       <SelectHospRole
-        onSelectSuccess={() => setAuthState('authenticated')}
+        onSelectSuccess={() => {
+          // 登录成功后，从 session 中读取用户信息并设置
+          const session = getSession();
+          if (session) {
+            console.log('登录成功，设置用户信息:', {
+              userName: session.userName,
+              hospName: session.hospDesc,
+              roleName: session.groupDesc,
+              userID: session.userID
+            });
+            setUserInfo({
+              userName: session.userName || '管理员',
+              hospName: session.hospDesc || session.hospID || '',
+              roleName: session.groupDesc || session.groupID || '',
+              userID: session.userID || ''
+            });
+          }
+          setAuthState('authenticated');
+        }}
         onBack={() => setAuthState('login')}
       />
     );
@@ -730,29 +900,45 @@ function App() {
           alignItems: 'center', 
           justifyContent: 'space-between',
           borderBottom: '1px solid #f0f0f0',
-          flexShrink: 0
+          flexShrink: 0,
+          width: '100%'
         }}>
-          <Title level={4} style={{ margin: 0 }}>{menuTitleMap[currentMenu] || '监控仪表盘'}</Title>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 14, fontWeight: 500 }}>{userInfo?.userName || '管理员'}</div>
-              <div style={{ fontSize: 12, color: '#8c8c8c' }}>{userInfo?.hospName || ''}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Title level={4} style={{ margin: 0 }}>{menuTitleMap[currentMenu] || '监控仪表盘'}</Title>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+            <div style={{ textAlign: 'right', lineHeight: 1.5 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap' }}>{userInfo?.userName || '管理员'}</div>
+              <div style={{ fontSize: 12, color: '#8c8c8c', whiteSpace: 'nowrap' }}>
+                {userInfo?.roleName || '未分配角色'} | {userInfo?.hospName || '未选择医院'}
+              </div>
             </div>
-            <Popconfirm
-              title="确认登出"
-              description="确定要退出登录吗？"
-              onConfirm={handleLogout}
-              okText="确定"
-              cancelText="取消"
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'password',
+                    icon: <LockOutlined />,
+                    label: '修改密码',
+                    onClick: handleOpenPwdModal
+                  },
+                  {
+                    type: 'divider'
+                  },
+                  {
+                    key: 'logout',
+                    icon: <LogoutOutlined />,
+                    label: '退出登录',
+                    onClick: handleLogout
+                  }
+                ]
+              }}
+              placement="bottomRight"
             >
-              <Button 
-                type="text" 
-                icon={<LogoutOutlined />} 
-                style={{ color: '#8c8c8c' }}
-              >
-                登出
+              <Button type="text" icon={<DownOutlined />} style={{ color: '#8c8c8c' }}>
+                操作
               </Button>
-            </Popconfirm>
+            </Dropdown>
           </div>
         </Header>
         <Content style={{ 
@@ -778,8 +964,81 @@ function App() {
           />
         </Content>
       </Layout>
+
+      {/* 修改密码弹窗 */}
+      <Modal
+        title="修改密码"
+        open={pwdModalVisible}
+        onCancel={() => setPwdModalVisible(false)}
+        width={400}
+        footer={[
+          <Button            
+            key="init" 
+            icon={<SyncOutlined />} 
+            onClick={handleInitPassword}
+            loading={pwdLoading}
+            danger
+          >
+            初始化登录密码
+          </Button>,
+          <Button key="submit" type="primary" onClick={handleChangePassword} loading={pwdLoading}>
+            确定
+          </Button>,
+          <Button key="cancel" onClick={() => setPwdModalVisible(false)}>
+            取消
+          </Button>          
+        ]}
+      >
+        <Form
+          form={pwdForm}
+          layout="vertical"
+          style={{ marginTop: 16 }}
+        >
+          <Form.Item
+            name="oldPassword"
+            label="原密码"
+            rules={[{ required: true, message: '请输入原密码' }]}
+          >
+            <Input.Password placeholder="请输入原密码" />
+          </Form.Item>
+          <Form.Item
+            name="newPassword"
+            label="新密码"
+            rules={[
+              { required: true, message: '请输入新密码' },
+              { min: 6, message: '密码长度不能少于6位' }
+            ]}
+          >
+            <Input.Password placeholder="请输入新密码" />
+          </Form.Item>
+          <Form.Item
+            name="confirmPassword"
+            label="确认新密码"
+            rules={[
+              { required: true, message: '请确认新密码' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('newPassword') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('两次输入的密码不一致'));
+                },
+              }),
+            ]}
+          >
+            <Input.Password placeholder="请再次输入新密码" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </Layout>
   );
 }
 
-export default App;
+// 使用 MenuProvider 包裹导出
+const AppWithProvider = () => (
+  <MenuProvider>
+    <App />
+  </MenuProvider>
+);
+
+export default AppWithProvider;

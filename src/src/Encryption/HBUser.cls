@@ -31,6 +31,10 @@ ClassMethod IsValidUser(userCode As %String, password As %String, expstr As %Str
 		set userID=$o(^HBUserI("Mobile",userCode,""))	; 手机号
 		set userLogonType="01"
 	}
+	if userID="" {
+		set userID=$o(^HBUserI("CredNo",userCode,""))	; 证件号
+		set userLogonType="04"
+	}
 	Return:userID="" "XYS1001^用户或密码错误"
 	set currentPwd=$lg($g(^HBUserD(userID)),4)
 	b ;23234234
@@ -236,7 +240,7 @@ ClassMethod GetLoginAuth(expStr)
 	quit:groupDr="" "03020043@"
 	
 	set (locDesc,groupDesc,hospDesc,DefaultMenuType)=""
-	set locDesc="HCRM平台" //$lg($g(^HBLocD(locDr)),6)
+	set locDesc="DRG平台" //$lg($g(^HBLocD(locDr)),6)
 	set groupDesc=$lg($g(^CBGroupD(groupDr)),3)
 	set defaultMenuType=$lg($g(^CBGroupD(groupDr)),10)
 	set mainInterface=$lg($g(^CBGroupD(groupDr)),4)
@@ -286,7 +290,10 @@ ClassMethod GetUserLogonLocByUserId(postData)
 	b ;2
 	set userLogonLoc=##class(src.Encryption.HBUser).GetUserLogonLoc(logonLoc,paramsObj.language)
 	b ;3
-	set resultObj.result={"rows":userLogonLoc.logonLocAry,"deptActive":userLogonLoc.deptActive}
+	set resultObj=##class(%DynamicObject).%New()
+	set resultObj.result=##class(%DynamicObject).%New()
+	set resultObj.result.rows=userLogonLoc.logonLocAry
+	set resultObj.result.deptActive=userLogonLoc.deptActive
 	quit resultObj
 }
 
@@ -307,7 +314,7 @@ ClassMethod FromatPassword(password)
 	quit encryptObj.errorCode_"^"_ encryptObj.passWord
 }
 
-/// w ##class(src.Encryption.HBUser).UpdateUserPassword(a)
+/// w ##class(src.Encryption.HBUser).UpdateUserPassword(a) originPassword
 ClassMethod UpdateUserPassword(jsonObj)
 {
 	new (jsonObj)
@@ -342,7 +349,8 @@ ClassMethod UpdateUserPassword(jsonObj)
 	}else{
 		set passWord=encryptObj.passWord
 	}
-	if passWord'=""{
+	if passWord'=""
+	{
 		// 更新密码
 		set dataObj={},dataArr=[]
 		set dataObj.ID=userID
@@ -354,10 +362,11 @@ ClassMethod UpdateUserPassword(jsonObj)
 		set operateObj.className="User.HBUser"			
 		set operateObj.data=dataArr		
 		set rtn=##class(src.util.operatetable).Update(.operateObj)
-	set resultObj.errorCode=rtn.errorCode
-	set resultObj.errorMessage=rtn.errorMessage
-}
-quit resultObj
+	    set resultObj.errorCode=rtn.errorCode
+    	set resultObj.errorMessage=rtn.errorMessage
+    }
+    
+    quit resultObj
 }
 
 /// Creator:     CodeBuddy

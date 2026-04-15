@@ -13,6 +13,7 @@ export interface ApiResponse<T = any> {
   errorCode: string;
   errorMessage: string;
   result?: T;
+  rowIDArr?: any[];  // 新增/保存操作返回的记录ID数组
 }
 
 /** 分页参数 */

@@ -142,17 +142,35 @@ ClassMethod SaveGroup(jsonObj) As %Library.DynamicObject
 		set session=jsonObj.session.%Get(0)
 		set dataObj={},dataArr=[]
 		set dataObj.ID=params.id
-		set dataObj.Code=params.code
-		set groupID=$o(^CBGroupI("Code",$ZCVT(params.code,"U"),0)) 
-		b ;???
-		if (params.id="")&&(groupID'=""){
-			set resultObj.errorCode="-118"
-			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("-118")
-			quit
-		}  
+		
+		// 如果code为空，自动生成6位数字编码
+		if params.code=""
+		{
+			// 生成不重复的6位编码
+			for i=1:1:100
+			{
+				set newCode=$random(900000)+100000
+				set existID=$o(^CBGroupI("Code",newCode,0))
+				if existID="" quit
+			}
+			set dataObj.Code=newCode
+		}
+		else
+		{
+			set dataObj.Code=params.code
+			set groupID=$o(^CBGroupI("Code",$ZCVT(params.code,"U"),0)) 
+			if (params.id="")&&(groupID'="")
+			{
+				set resultObj.errorCode="-118"
+				set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("-118")
+				quit
+			}
+		}
+		  
 		set dataObj.Descripts=params.descripts
 		set groupID=$o(^CBGroupI("Desc",$ZCVT(params.descripts,"U"),0)) 
-		if (params.id="")&&(groupID'=""){
+		if (params.id="")&&(groupID'="")
+		{
 			set resultObj.errorCode="-118"
 			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("-118")
 			quit
@@ -167,7 +185,8 @@ ClassMethod SaveGroup(jsonObj) As %Library.DynamicObject
 		set dataObj.ENDesc=params.enDesc
 		set dataObj.StartDate=$zdh(params.startDate,3)
 		set:params.endDate'="" dataObj.StopDate=$zdh(params.endDate,3)
-		if params.id=""{
+		if params.id=""
+		{
 			set dataObj.CreateDate=+$h
 			set dataObj.CreateUserDr=session.userID
 		}
@@ -176,10 +195,13 @@ ClassMethod SaveGroup(jsonObj) As %Library.DynamicObject
 		set operateObj.updateUserID=session.userID
 		set operateObj.className="User.CBGroup"			
 		set operateObj.data=dataArr		
-		b ;3234234234234
-		if params.id=""{
+
+		if params.id=""
+		{
 			set rtn=##class(src.util.operatetable).Insert(.operateObj) ;调用公共类方法记录修改日记
-		}else{				
+		}
+		else
+		{				
 			set rtn=##class(src.util.operatetable).Update(.operateObj) ;调用公共类方法记录修改日记
 		}
 		set errorCode=rtn.errorCode
@@ -210,8 +232,10 @@ ClassMethod GetGroupList(jsonObj) As %Library.DynamicObject
 	new (jsonObj)
 	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
 	set pageSize="",currentPage=1,count=0,dataArr=[]
-	try{
-		if (jsonObj.%IsDefined("pagination")'=0) {
+	try
+	{
+		if (jsonObj.%IsDefined("pagination")'=0) 
+		{
 			set pagationObj=jsonObj.pagination.%Get(0)
 			set pageSize=pagationObj.pageSize
 			set currentPage=pagationObj.currentPage
@@ -290,10 +314,11 @@ ClassMethod GetGroupList(jsonObj) As %Library.DynamicObject
 
 /// Creator:     TC
 /// CreatDate:   2022-6-30
-/// Description: 根据角色查询菜单
-/// code:		 
-/// Input:		{"params":[{"":""}]}
-/// w ##class(src.BasicData.Group).GetGroupMenuDetail({"params":[{"groupID":"1","type":"2","descripts":"dd"}]}).%ToJSON()
+/// Description: 根据角色查询菜单（使用CB_Menu表）
+/// code:		 01010033
+/// Input:		{"params":[{"groupID":"1","type":"1"}]}
+/// Debug:		w ##class(src.BasicData.Group).GetGroupMenuDetail({"params":[{"groupID":"1","type":"1"}]}).%ToJSON()
+/// Modified: 2026-04-14 改为使用 CB_GroupMenu.MenuDr -> CB_Menu
 ClassMethod GetGroupMenuDetail(inputobj)
 {
 	new (inputobj)
@@ -310,31 +335,38 @@ ClassMethod GetGroupMenuDetail(inputobj)
 		}
 		set resultObj={}
 		set dataArr=[]
-		set menuId=0
 		set totalCount=0
-		set child=0
 		set subJsonArr=[]
 		kill menuSortArr
+		
+		// 使用索引遍历 CB_GroupMenu 表
 		set groupMenuID=""
 		for{
 			set groupMenuID=$o(^CBGroupMenuI("Group",groupID,groupMenuID))
 			quit:groupMenuID=""	
 			continue:$g(^CBGroupMenuD(groupMenuID))=""
+			
 			set groupMenuobj=##class(User.CBGroupMenu).%OpenId(groupMenuID)
 			set menuType=groupMenuobj.Type
-			continue:(menuType'=type)&&(type'="")
+			continue:(type'="")&&(menuType'=type)
+			
 			set preMenuGroupID=groupMenuobj.PreGroupMenuDr	
 			continue:preMenuGroupID'=""
-			set menuDetailobj=groupMenuobj.MenuDetailDr
-			continue:menuDetailobj=""
+			
+			// 使用 MenuDr 字段（指向 CB_Menu 表）
+			set menuobj=groupMenuobj.MenuDr
+			continue:menuobj=""
+			
+			set menuID=menuobj.%Id()
 			set safeClassificatobj=groupMenuobj.SafeClassificat
 			set seqNo=groupMenuobj.SeqNo
+			
 			set subJson={}
 			set subJson.id=groupMenuID
 			set subJson.key=groupMenuID
-			set subJson.menuDetailDesc=menuDetailobj.Descripts
-			set subJson.menuDetailCode=menuDetailobj.Code
-			set subJson.menuDetailID=menuDetailobj.%Id()
+			set subJson.menuDetailDesc=menuobj.Descripts
+			set subJson.menuDetailCode=menuobj.Code
+			set subJson.menuDetailID=menuID              // CB_Menu 的 ID
 			set subJson.seqNo=seqNo
 			set subJson.safeClassificat=""
 			set subJson.safeClassificatCode=""
@@ -346,28 +378,23 @@ ClassMethod GetGroupMenuDetail(inputobj)
 				set subJson.safeClassificatDec=safeClassificatobj.Descripts
 			}
 			
-			
-			set menuGroupFlag=menuDetailobj.MenuGroup
-			if menuGroupFlag="Y"{
+			set menuGroupFlag=menuobj.MenuLevel
+			if menuGroupFlag=1{
 				set subJson.menuGroup="是"	
 			}else{
 				set subJson.menuGroup=""	
 			}
-			b	;??	
-			if menuGroupFlag="Y"{
-				set retJson=..GetChildMenu(groupMenuID,desc)
-				if desc'=""{
-					if retJson.%Size()>0{
-						set subJson.children=retJson
-					}else{
-						set subJson.children=[]
-					}	
+			
+			// 获取子菜单
+			set retJson=..GetChildMenuByGroup(groupMenuID,menuID,desc)
+			if menuGroupFlag=1{
+				if retJson.%Size()>0{
+					set subJson.children=retJson
 				}else{
-					set subJson.children=retJson		
-				}
-			}else{
-				continue:(desc'="")&&(menuDetailobj.Descripts'[desc)
+					set subJson.children=[]
+				}	
 			}
+			
 			set groupMenuAuthArr=[]
 			set groupMenuAuthID=""
 			for
@@ -422,16 +449,17 @@ ClassMethod GetChildMenu(preMenuID As %String, desc As %String)
 		continue:$g(^CBGroupMenuD(groupMenuID))=""
 		set groupMenuobj=##class(User.CBGroupMenu).%OpenId(groupMenuID)
 		set menuType=groupMenuobj.Type
-		set menuDetailobj=groupMenuobj.MenuDetailDr
-		continue:menuDetailobj=""
+		// 使用 MenuDr 字段（指向 CB_Menu 表）
+		set menuobj=groupMenuobj.MenuDr
+		continue:menuobj=""
 		set safeClassificatobj=groupMenuobj.SafeClassificat
 		set seqNo=groupMenuobj.SeqNo
 		set subJson={}
 		set subJson.id=groupMenuID
 		set subJson.key=groupMenuID
-		set subJson.menuDetailCode=menuDetailobj.Code
-		set subJson.menuDetailDesc=menuDetailobj.Descripts
-		set subJson.menuDetailDr=menuDetailobj.%Id()
+		set subJson.menuDetailCode=menuobj.Code
+		set subJson.menuDetailDesc=menuobj.Descripts
+		set subJson.menuDetailDr=menuobj.%Id()
 		set subJson.seqNo=seqNo
 		set subJson.safeClassificat=""
 		set subJson.safeClassificatCode=""
@@ -442,16 +470,15 @@ ClassMethod GetChildMenu(preMenuID As %String, desc As %String)
 			set subJson.safeClassificatCode=safeClassificatobj.Code
 			set subJson.safeClassificatDec=safeClassificatobj.Descripts
 		}
-		set menuGroupFlag=menuDetailobj.MenuGroup
-		if menuGroupFlag="Y"{
+		set menuGroupFlag=menuobj.MenuLevel
+		if menuGroupFlag=1{
 			set subJson.menuGroup="是"	
 		}else{
 			set subJson.menuGroup=""	
 		}
 			
-		if menuGroupFlag="Y"{
+		if menuGroupFlag=1{
 			set retJson=..GetChildMenu(groupMenuID,desc)
-			b	;??
 			if desc'=""{
 				if retJson.%Size()>0{
 					if (desc'="")&&((subJson.menuDetailDrDesc[desc)){
@@ -466,7 +493,7 @@ ClassMethod GetChildMenu(preMenuID As %String, desc As %String)
 				set subJson.children=retJson		
 			}
 		}else{
-			continue:(desc'="")&&(menuDetailobj.Descripts'[desc)
+			continue:(desc'="")&&(menuobj.Descripts'[desc)
 		}
 		set:seqNo="" seqNo=0
 		set groupMenuAuthArr=[]
@@ -496,13 +523,89 @@ ClassMethod GetChildMenu(preMenuID As %String, desc As %String)
 	quit childarr
 }
 
+/// 根据角色ID和父菜单获取子菜单（修改版）
+ClassMethod GetChildMenuByGroup(preMenuID As %String, parentMenuID As %String, desc As %String)
+{
+	new (preMenuID,parentMenuID,desc)
+	set childarr=[]
+	kill menuSortArr
+	set groupMenuID=""
+	for{
+		set groupMenuID=$o(^CBGroupMenuI("PreMenu",preMenuID,groupMenuID))
+		quit:groupMenuID=""	
+		continue:$g(^CBGroupMenuD(groupMenuID))=""
+		
+		set groupMenuobj=##class(User.CBGroupMenu).%OpenId(groupMenuID)
+		// 使用 MenuDr 字段
+		set menuobj=groupMenuobj.MenuDr
+		continue:menuobj=""
+		
+		set menuID=menuobj.%Id()
+		set safeClassificatobj=groupMenuobj.SafeClassificat
+		set seqNo=groupMenuobj.SeqNo
+		
+		set subJson={}
+		set subJson.id=groupMenuID
+		set subJson.key=groupMenuID
+		set subJson.menuDetailCode=menuobj.Code
+		set subJson.menuDetailDesc=menuobj.Descripts
+		set subJson.menuDetailID=menuID
+		set subJson.seqNo=seqNo
+		set subJson.safeClassificat=""
+		set subJson.safeClassificatCode=""
+		set subJson.safeClassificatDec=""
+		
+		if safeClassificatobj'=""
+		{
+			set subJson.safeClassificat=safeClassificatobj.%Id()
+			set subJson.safeClassificatCode=safeClassificatobj.Code
+			set subJson.safeClassificatDec=safeClassificatobj.Descripts
+		}
+		
+		set menuLevel=menuobj.MenuLevel
+		if menuLevel=1{
+			set subJson.menuGroup="是"	
+		}else{
+			set subJson.menuGroup=""	
+		}
+		
+		// 递归获取子菜单
+		set retJson=..GetChildMenuByGroup(groupMenuID,menuID,desc)
+		if menuLevel=1{
+			if retJson.%Size()>0{
+				set subJson.children=retJson
+			}else{
+				set subJson.children=[]
+			}	
+		}else{
+			set subJson.children=retJson		
+		}
+		
+		set:seqNo="" seqNo=0
+		set menuSortArr(seqNo,groupMenuID)=subJson
+	}
+	
+	set seqNo="" 
+	for{
+		set seqNo=$o(menuSortArr(seqNo))
+		quit:seqNo=""
+		set id=0
+		for{
+			set id=$o(menuSortArr(seqNo,id))
+			quit:id=""
+			do childarr.%Push(menuSortArr(seqNo,id))		
+		}
+	}
+	quit childarr
+}
+
 /// Creator:     TC
 /// CreatDate:   2022-07-04
-/// Description: 保存角色菜单
-/// code:		 
-/// Input:		{"params":[{"":""}]}
-/// w ##class(src.BasicData.Group).SaveGroupMenu({"params":[{"groupID":"3"}]}).%ToJSON()
-/// w ##class(src.BasicData.Group).SaveGroupMenu({"params":[{"groupID":"4","type":"1","preMenuGroupID":"","menuDetail":[{"menuDetailID":"6","seqNo":"","preMenuGroupID":""}]}],"code":"2602","session":[{"userID":"1","locID":"1","groupID":"1","hospID":"1","sessionID":"7dhKx1yBwc","hospCode":"PCI","language":"CN","hostName":"","ipv4":"","ipv6":"","mac":""}]}).%ToJSON()
+/// Description: 保存角色菜单（修改为直接使用SQL插入）
+/// code:		 01010037
+/// Input:		{"params":[{"groupID":"4","type":"1","menuDetail":[{"menuDetailID":"6"}]}]}
+/// Debug:		w ##class(src.BasicData.Group).SaveGroupMenu({"params":[{"groupID":"4","type":"1","preMenuGroupID":"","menuDetail":[{"menuDetailID":"6","seqNo":"","preMenuGroupID":""}]}],"code":"01010037","session":[{"userID":"1","locID":"1","groupID":"1","hospID":"1","sessionID":"7dhKx1yBwc","hospCode":"PCI","language":"CN","hostName":"","ipv4":"","ipv6":"","mac":""}]}).%ToJSON()
+/// Modified: 2026-04-14 改为使用SQL直接插入，避免operatetable对象引用问题
 ClassMethod SaveGroupMenu(inputobj)
 {
 	new (inputobj)
@@ -514,20 +617,9 @@ ClassMethod SaveGroupMenu(inputobj)
 		set resultJson.errorCode=0
 		set type=jsonObj.type
 		set groupID=jsonObj.groupID
-		set seqNo=jsonObj.seqNo
 		set preGroupMenuID=jsonObj.preMenuGroupID
 		set userID=session.userID
-		if preGroupMenuID'=""{
-			set preMenuID=$lg(^CBGroupMenuD(preGroupMenuID),5)	
-			if preMenuID'=""{
-				set menuGroupFlag=$lg(^CBMenuDetailD(preMenuID),8)	
-				if menuGroupFlag'="Y"{
-					set errorCode="01040009"
-					set errorMessage=##class(src.Interface.Message).GetErrorMessage("01040009")
-					quit 		
-				}
-			}
-		}
+		
 		if type=""{
 			set errorCode="01040008"
 			set errorMessage=##class(src.Interface.Message).GetErrorMessage("01040008")
@@ -538,40 +630,38 @@ ClassMethod SaveGroupMenu(inputobj)
 			set errorMessage=##class(src.Interface.Message).GetErrorMessage("01040001")
 			quit
 		}
+		
+		// 先删除该角色该类型的所有旧权限
+		set delSql="DELETE FROM SQLUSER.CB_GroupMenu WHERE Group_Dr = "_groupID_" AND Type = '"_type_"'"
+		set delRS=##class(%SQL.Statement).%ExecDirect(,delSql)
+		
 	    Tstart
-	    set dataArr=[]
 		set menuDetailArr=jsonObj.menuDetail
 		for i=0:1:menuDetailArr.%Size()-1{
 			quit:errorCode'=0
 			set itemDataObj=menuDetailArr.%Get(i)	
 			set menuDetailID=itemDataObj.menuDetailID
-			set safeClassificat=$o(^CBDataAuthorityTypeI("Code","USER",""))  ;//默认是个人属性
 			if menuDetailID=""{
-				set errorCode="01040010"
-				set errorMessage=##class(src.Interface.Message).GetErrorMessage("01040010")
-				quit
+				continue
 			}
 			
-			set dataObj={}
-			set dataObj.SeqNo=""
-			set dataObj.GroupDr=groupID
-			set dataObj.Type=type
-			set dataObj.MenuDetailDr=menuDetailID
-			set dataObj.PreGroupMenuDr=preGroupMenuID
-			set dataObj.SafeClassificat=safeClassificat
-			set dataObj.CreateDate=+$h
-			set dataObj.CreateUserDr=userID
-			do dataArr.%Push(dataObj)
+			// 使用SQL直接插入，避免对象引用问题
+			set insertSql="INSERT INTO SQLUSER.CB_GroupMenu (SeqNo, Group_Dr, Type, Menu_Dr, PreGroupMenu_Dr, SafeClassificat, CreateDate, CreateUser_Dr) VALUES (?,?,?,?,?,?,?,?)"
 			
+			set seqNo=$s(itemDataObj.seqNo'="":itemDataObj.seqNo,1:"")
+			set preMenuID=$s(preGroupMenuID'="":preGroupMenuID,1:"")
+			set safeClassID=$o(^CBDataAuthorityTypeI("Code","USER",""))
+			set createDate=+$h
+			
+			set rs=##class(%SQL.Statement).%ExecDirect(,insertSql,seqNo,groupID,type,menuDetailID,preMenuID,safeClassID,createDate,userID)
+			
+			if rs.%SQLCODE<0{
+				set errorCode=rs.%SQLCODE
+				set errorMessage=rs.%Message
+				quit
+			}
 		}
-		b	;12121
-		set operateObj={}
-		set operateObj.updateUserID=userID
-		set operateObj.className="User.CBGroupMenu"
-		set operateObj.data=dataArr		
-		set rtn=##class(src.util.operatetable).Insert(.operateObj) ;调用公共类方法记录修改日记
-		set errorCode=rtn.errorCode
-		set errorMessage=rtn.errorMessage
+		
 		if errorCode'=0{
 			Trollback 1
 		}else{

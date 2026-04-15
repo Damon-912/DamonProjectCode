@@ -24,16 +24,22 @@ import {
   EditOutlined,
   EyeOutlined,
   DeleteOutlined,
-  SafetyOutlined
+  SafetyOutlined,
+  KeyOutlined,
+  SyncOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
+import { invoke } from '../../api/request';
+import { encryptPassword } from '../../utils/encryption';
 import {
   queryUsers,
   saveUser,
   getUserDetail,
   saveUserLogonLoc,
   deleteUserLogonLoc,
+  deleteUserLinkHosp,
+  saveUserLinkHosp,
   queryGroupOptions,
   type UserItem,
   type UserLogonLocItem,
@@ -113,6 +119,12 @@ const Users: React.FC = () => {
   const [groups, setGroups] = useState<GroupOptionItem[]>([]);
   const [groupLoading, setGroupLoading] = useState(false);
 
+  // 修改密码弹窗
+  const [pwdModalVisible, setPwdModalVisible] = useState(false);
+  const [pwdForm] = Form.useForm();
+  const [pwdLoading, setPwdLoading] = useState(false);
+  const [pwdUserId, setPwdUserId] = useState<string>('');
+
   // 加载医院列表
   const fetchHospitals = async () => {
     setHospitalLoading(true);
@@ -142,6 +154,80 @@ const Users: React.FC = () => {
     } finally {
       setGroupLoading(false);
     }
+  };
+
+  // 打开修改密码弹窗
+  const handleOpenPwdModal = (record: UserItem) => {
+    setPwdUserId(String(record.userDr));
+    pwdForm.resetFields();
+    setPwdModalVisible(true);
+  };
+
+  // 修改密码
+  const handleChangePassword = async () => {
+    try {
+      const values = await pwdForm.validateFields();
+      
+      if (values.newPassword !== values.confirmPassword) {
+        message.error('两次输入的新密码不一致');
+        return;
+      }
+
+      setPwdLoading(true);
+      
+      // 密码加密处理
+      const encryptedOldPassword = encryptPassword(values.oldPassword);
+      const encryptedNewPassword = encryptPassword(values.newPassword);
+
+      const res = await invoke('01040090', [{
+        userID: pwdUserId,
+        originPassword: encryptedOldPassword,
+        password: encryptedNewPassword,
+        confirmPassword: encryptPassword(values.confirmPassword)
+      }]);
+
+      if (String(res.errorCode) === '0') {
+        message.success('密码修改成功');
+        setPwdModalVisible(false);
+      } else {
+        message.error(res.errorMessage || '密码修改失败');
+      }
+    } catch (error) {
+      console.error('修改密码失败:', error);
+      message.error('修改密码失败');
+    } finally {
+      setPwdLoading(false);
+    }
+  };
+
+  // 初始化登录密码
+  const handleInitPassword = async () => {
+    Modal.confirm({
+      title: '确认初始化',
+      content: `确定要将该用户密码初始化为"123456"吗？`,
+      okText: '确定',
+      cancelText: '取消',
+      async onOk() {
+        setPwdLoading(true);
+        try {
+          const res = await invoke('InitUserPassword', [{
+            userID: pwdUserId
+          }]);
+
+          if (String(res.errorCode) === '0') {
+            message.success('密码初始化成功，已设置为"123456"');
+            setPwdModalVisible(false);
+          } else {
+            message.error(res.errorMessage || '密码初始化失败');
+          }
+        } catch (error) {
+          console.error('初始化密码失败:', error);
+          message.error('初始化密码失败');
+        } finally {
+          setPwdLoading(false);
+        }
+      }
+    });
   };
 
   // 表格列定义
@@ -216,7 +302,7 @@ const Users: React.FC = () => {
       title: '操作',
       key: 'action',
       fixed: 'right',
-      width: 180,
+      width: 240,
       render: (_, record) => (
         <Space size="small">
           <Button
@@ -234,6 +320,14 @@ const Users: React.FC = () => {
             onClick={() => handleEdit(record)}
           >
             编辑
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            icon={<KeyOutlined />}
+            onClick={() => handleOpenPwdModal(record)}
+          >
+            修改密码
           </Button>
         </Space>
       )
@@ -374,6 +468,12 @@ const Users: React.FC = () => {
   // 保存用户
   const handleSave = async () => {
     try {
+      // 验证医院角色信息不能为空
+      if (editUserRoles.length === 0) {
+        message.error('请至少添加一个医院角色信息');
+        return;
+      }
+
       const values = await modalForm.validateFields();
 
       const params: SaveUserParams = {
@@ -398,7 +498,7 @@ const Users: React.FC = () => {
       const res = await saveUser(params);
 
       if (String(res.errorCode) === '0') {
-        const savedUserDr = res.rowIDArr?.[0] || editingRecord?.userDr;
+        const savedUserDr = (res as any).rowIDArr?.[0] || editingRecord?.userDr;
         
         // 保存用户角色信息
         if (savedUserDr && editUserRoles.length > 0) {
@@ -420,6 +520,9 @@ const Users: React.FC = () => {
   // 保存用户角色信息
   const handleSaveUserRoles = async (userDr: number) => {
     try {
+      // 用于记录已保存的医院ID，避免重复保存 HB_UserLinkHosp
+      const savedHospSet = new Set<number>();
+      
       for (const role of editUserRoles) {
         if (!role.userLogonLocID) {
           // 新增角色
@@ -430,6 +533,15 @@ const Users: React.FC = () => {
             isDefault: role.isDefault ? 'Y' : 'N'
           };
           await saveUserLogonLoc(params);
+        }
+        
+        // 调用01030113接口保存用户医院关联记录
+        if (role.hospID && !savedHospSet.has(role.hospID)) {
+          await saveUserLinkHosp({
+            userID: userDr,
+            hospID: role.hospID
+          });
+          savedHospSet.add(role.hospID);
         }
       }
     } catch (error) {
@@ -548,6 +660,10 @@ const Users: React.FC = () => {
       try {
         const res = await deleteUserLogonLoc({ userLogonLocID: role.userLogonLocID });
         if (String(res.errorCode) === '0') {
+          // 同步删除 HB_UserLinkHosp 表记录
+          if (role.userID && role.hospID) {
+            await deleteUserLinkHosp({ userID: role.userID, hospID: role.hospID });
+          }
           setEditUserRoles(prev => prev.filter(r => r.userLogonLocID !== role.userLogonLocID));
           message.success('删除成功');
         } else {
@@ -628,6 +744,13 @@ const Users: React.FC = () => {
 
       const res = await saveUserLogonLoc(params);
       if (String(res.errorCode) === '0') {
+        // 同步更新 HB_UserLinkHosp 表
+        if (detailRecord.userDr && values.hospID) {
+          await saveUserLinkHosp({
+            userID: detailRecord.userDr,
+            hospID: Number(values.hospID)
+          });
+        }
         message.success(editingRole ? '修改成功' : '添加成功');
         setRoleModalVisible(false);
         // 刷新角色列表
@@ -650,6 +773,10 @@ const Users: React.FC = () => {
     try {
       const res = await deleteUserLogonLoc({ userLogonLocID: role.userLogonLocID! });
       if (String(res.errorCode) === '0') {
+        // 同步删除 HB_UserLinkHosp 表记录
+        if (role.userID && role.hospID) {
+          await deleteUserLinkHosp({ userID: role.userID, hospID: role.hospID });
+        }
         message.success('删除成功');
         // 刷新角色列表
         const detailRes = await getUserDetail({ userID: detailRecord.userDr });
@@ -833,12 +960,14 @@ const Users: React.FC = () => {
         okText="确定"
         cancelText="取消"
         width={700}
+        styles={{ body: { maxHeight: 'calc(70vh - 115px)', overflowY: 'auto' } }}
       >
         <Form
           form={modalForm}
           layout="vertical"
+          style={{ marginBottom: 8 }}
         >
-          <Row gutter={16}>
+          <Row gutter={12}>
             <Col span={12}>
               <Form.Item
                 name="userName"
@@ -862,7 +991,7 @@ const Users: React.FC = () => {
             </Col>
           </Row>
 
-          <Row gutter={16}>
+          <Row gutter={12}>
             <Col span={12}>
               <Form.Item
                 name="sexID"
@@ -889,7 +1018,7 @@ const Users: React.FC = () => {
             </Col>
           </Row>
 
-          <Row gutter={16}>
+          <Row gutter={12}>
             <Col span={12}>
               <Form.Item
                 name="credTypeID"
@@ -908,7 +1037,7 @@ const Users: React.FC = () => {
             </Col>
           </Row>
 
-          <Row gutter={16}>
+          <Row gutter={12}>
             <Col span={12}>
               <Form.Item
                 name="birthDate"
@@ -927,7 +1056,7 @@ const Users: React.FC = () => {
             </Col>
           </Row>
 
-          <Row gutter={16}>
+          <Row gutter={12}>
             <Col span={12}>
               <Form.Item
                 name="mail"
@@ -946,7 +1075,7 @@ const Users: React.FC = () => {
             </Col>
           </Row>
 
-          <Row gutter={16}>
+          <Row gutter={12}>
             <Col span={12}>
               <Form.Item
                 name="startDate"
@@ -966,17 +1095,10 @@ const Users: React.FC = () => {
             </Col>
           </Row>
 
-          <Form.Item
-            name="introduce"
-            label="简介"
-          >
-            <Input.TextArea placeholder="请输入简介" maxLength={200} rows={3} />
-          </Form.Item>
-
           {/* 角色管理区域 */}
-          <div style={{ marginTop: 24, borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
+          <div style={{ marginBottom: 24, borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <h4 style={{ margin: 0, fontWeight: 'bold' }}>医院角色信息</h4>
+              <h4 style={{ margin: 0, fontWeight: 'bold' }}>医院角色信息 <span style={{ color: '#ff4d4f' }}>*</span></h4>
               <Button 
                 type="primary" 
                 icon={<PlusOutlined />} 
@@ -1067,9 +1189,17 @@ const Users: React.FC = () => {
               loading={editRoleLoading}
               size="small"
               pagination={false}
-              scroll={{ y: 200 }}
+              scroll={{ y: 280 }}
+              locale={{ emptyText: '请添加至少一个医院角色' }}
             />
           </div>
+
+          <Form.Item
+            name="introduce"
+            label="简介"
+          >
+            <Input.TextArea placeholder="请输入简介" maxLength={200} rows={2} />
+          </Form.Item>
         </Form>
       </Modal>
 
@@ -1158,7 +1288,7 @@ const Users: React.FC = () => {
               tab={<span><SafetyOutlined />权限角色</span>} 
               key="roles"
             >
-              <div style={{ marginBottom: 16 }}>
+              <div style={{ marginBottom: 14 }}>
                 <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRole}>
                   添加角色
                 </Button>
@@ -1284,6 +1414,72 @@ const Users: React.FC = () => {
               checkedChildren="是"
               unCheckedChildren="否"
             />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* 修改密码弹窗 */}
+      <Modal
+        title="修改密码"
+        open={pwdModalVisible}
+        onOk={handleChangePassword}
+        onCancel={() => setPwdModalVisible(false)}
+        okText="确定"
+        cancelText="取消"
+        confirmLoading={pwdLoading}
+        width={400}
+        footer={[
+          <Button
+            key="init"
+            icon={<SyncOutlined />}
+            onClick={handleInitPassword}
+            loading={pwdLoading}
+          >
+            初始化登录密码
+          </Button>,
+          <Button key="cancel" onClick={() => setPwdModalVisible(false)}>
+            取消
+          </Button>,
+          <Button key="submit" type="primary" onClick={handleChangePassword} loading={pwdLoading}>
+            确定
+          </Button>
+        ]}
+      >
+        <Form form={pwdForm} layout="vertical">
+          <Form.Item
+            name="oldPassword"
+            label="原密码"
+            rules={[{ required: true, message: '请输入原密码' }]}
+          >
+            <Input.Password placeholder="请输入原密码" maxLength={20} />
+          </Form.Item>
+          <Form.Item
+            name="newPassword"
+            label="新密码"
+            rules={[
+              { required: true, message: '请输入新密码' },
+              { min: 6, message: '密码至少6位' },
+              { max: 20, message: '密码最多20位' }
+            ]}
+          >
+            <Input.Password placeholder="请输入新密码" maxLength={20} />
+          </Form.Item>
+          <Form.Item
+            name="confirmPassword"
+            label="确认密码"
+            rules={[
+              { required: true, message: '请再次输入新密码' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('newPassword') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('两次输入的密码不一致'));
+                },
+              }),
+            ]}
+          >
+            <Input.Password placeholder="请再次输入新密码" maxLength={20} />
           </Form.Item>
         </Form>
       </Modal>

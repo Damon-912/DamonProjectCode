@@ -1,7 +1,7 @@
 ROUTINE src.Encryption.HBUser.1 [Type=INT,Generated]
  ;src.Encryption.HBUser.1
- ;Generated for class src.Encryption.HBUser.  Do NOT edit. 04/10/2026 07:47:15PM
- ;;644F657A;src.Encryption.HBUser
+ ;Generated for class src.Encryption.HBUser.  Do NOT edit. 04/14/2026 09:51:23AM
+ ;;5237695A;src.Encryption.HBUser
  ;
 zFromatPassword(password)
 	new (password)
@@ -24,7 +24,7 @@ zGetLoginAuth(expStr)
 	quit:locDr="" "01040046@"
 	quit:groupDr="" "03020043@"
 	set (locDesc,groupDesc,hospDesc,DefaultMenuType)=""
-	set locDesc="HCRM平台" //$lg($g(^HBLocD(locDr)),6)
+	set locDesc="DRG平台" //$lg($g(^HBLocD(locDr)),6)
 	set groupDesc=$lg($g(^CBGroupD(groupDr)),3)
 	set defaultMenuType=$lg($g(^CBGroupD(groupDr)),10)
 	set mainInterface=$lg($g(^CBGroupD(groupDr)),4)
@@ -116,7 +116,10 @@ zGetUserLogonLocByUserId(postData)
 	b ;2
 	set userLogonLoc=##class(src.Encryption.HBUser).GetUserLogonLoc(logonLoc,paramsObj.language)
 	b ;3
-	set resultObj.result={"rows":userLogonLoc.logonLocAry,"deptActive":userLogonLoc.deptActive}
+	set resultObj=##class(%Library.DynamicObject).%New()
+	set resultObj.result=##class(%Library.DynamicObject).%New()
+	set resultObj.result.rows=userLogonLoc.logonLocAry
+	set resultObj.result.deptActive=userLogonLoc.deptActive
 	quit resultObj
 zGetUserPlainPassword(userCode)
 	new (userCode)
@@ -255,7 +258,8 @@ zUpdateUserPassword(jsonObj)
 	}else{
 		set passWord=encryptObj.passWord
 	}
-	if passWord'=""{
+	if passWord'=""
+	{
 		// 更新密码
 		set dataObj={},dataArr=[]
 		set dataObj.ID=userID
@@ -267,10 +271,10 @@ zUpdateUserPassword(jsonObj)
 		set operateObj.className="User.HBUser"			
 		set operateObj.data=dataArr		
 		set rtn=##class(src.util.operatetable).Update(.operateObj)
-	set resultObj.errorCode=rtn.errorCode
-	set resultObj.errorMessage=rtn.errorMessage
-}
-quit resultObj
+	    set resultObj.errorCode=rtn.errorCode
+    	set resultObj.errorMessage=rtn.errorMessage
+    }
+    quit resultObj
 zXMLDTD(top,format,input,dtdlist)
  Quit ##class(%XML.Implementation).XMLDTD("src.Encryption.HBUser",.top,.format,.input,.dtdlist)
 zXMLExportInternal()

@@ -119,7 +119,8 @@ ClassMethod Logon(postObj) As %Library.DynamicAbstractObject
 		set longonObj=postObj.params
 		set iter = longonObj.%GetIterator()
 		set (userID,userCode,passWord,loginLocID,loginGroupID,loginHospID,deviceID,IP,userLogonType,mac,phoneCheck)=""
-		while iter.%GetNext(.key , .value ) {
+		while iter.%GetNext(.key , .value ) 
+		{
 			set userID=longonObj.%Get(key).userID
 			set userCode=longonObj.%Get(key).userName	; 工号
 			set passWord=longonObj.%Get(key).passWord
@@ -226,6 +227,14 @@ ClassMethod Logon(postObj) As %Library.DynamicAbstractObject
 			Set sessionStr=$ListGet(sessionObj,2)
 			//Set ^TMP("session")=sessionStr
 			set resultobj.sessionID=sessionStr //session
+			
+			; 登录成功后获取用户菜单
+			set menuPostObj={}
+			set menuPostObj.userCode=$p(userInfo,"^",3)
+			set menuPostObj.groupID=loginGroupID
+			set menuResult=##class(src.Menu.Service).GetUserMenusByGroup(menuPostObj)
+			set resultobj.menus=menuResult
+			
 			do result.%Push(resultobj)
 			set outputobj.result=result
 			
