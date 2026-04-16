@@ -150,19 +150,21 @@ ClassMethod Logon(postObj) As %Library.DynamicAbstractObject
 			quit
 		}*/
 
-	set expStr="^"
-	; 验证用户名密码是否正确（密码为空则跳过验证，第一步已验证）
-	if passWord'="" {
-		set isValid=##class(src.Encryption.HBUser).IsValidUser(userCode,passWord,expStr)
-		if $p($g(isValid),"^",1)'=0 {
-			set outputobj.errorCode=$p(isValid,"^",1)
-			set outputobj.errorMessage=$p(isValid,"^",2)
-			quit
-		}
-		set userID=$p(isValid,"^",2)
-	}
+	    set expStr="^"
+	    ; 验证用户名密码是否正确（密码为空则跳过验证，第一步已验证）
+	    if passWord'="" 
+	    {
+		    set isValid=##class(src.Encryption.HBUser).IsValidUser(userCode,passWord,expStr)
+		    if $p($g(isValid),"^",1)'=0 
+		    {
+		    	set outputobj.errorCode=$p(isValid,"^",1)
+		    	set outputobj.errorMessage=$p(isValid,"^",2)
+		    	quit
+	    	}
+	    	set userID=$p(isValid,"^",2)
+	    }
 
-	set result=[],resultobj={}		; {} Library.DynamicObject,  [] Library.DynamicArray
+    	set result=[],resultobj={}		; {} Library.DynamicObject,  [] Library.DynamicArray
 		
 		;登录方式验证
 		if (userLogonType'="")&&("^01^02^03^04^05^06^"'[("^"_userLogonType_"^")) {
@@ -175,21 +177,34 @@ ClassMethod Logon(postObj) As %Library.DynamicAbstractObject
 		; userID 已从前端参数获取（密码为空时）或从验证结果获取（密码不为空时）
 		//b ;2
 		set userInfo=##class(src.Encryption.HBUser).getUserInfo(userID)	
-		if +$g(userInfo)'=0 {
+		if +$g(userInfo)'=0 
+		{
 			set outputobj.errorCode=$p(userInfo,"^",1)
 			set outputobj.errorMessage=$p(userInfo,"^",2)
 			quit
 		}
-
-		set expStr=userID_"^"_loginLocID_"^"_loginGroupID_"^"_loginHospID
+		
+		set (fixmedinsCode,fixmedinsName,provID,cityID)=""
+		if (loginHospID '="")
+		{
+		    set hospInfo=##class(User.CBHospital).%OpenId(loginHospID)
+		    set fixmedinsCode= hospInfo.OrganizationCode
+		    set fixmedinsName=hospInfo.Descripts
+		    set provID=hospInfo.ProvIDDr.%Id()
+		    set cityID=hospInfo.CityIDDr.%Id()	
+		}
+		
+		set expStr = userID_"^"_loginLocID_"^"_loginGroupID_"^"_loginHospID
 		//w loginGroupID,!
 		set authInfo=##class(src.Encryption.HBUser).GetLoginAuth(expStr)
-		if (authInfo["@") {
+		if (authInfo["@") 
+		{
 			//do ##class(src.Interface.Message).GetErrorMessageByCode(+authInfo,.outputobj)
 			quit
 		}
 		set outputobj={},result=[],resultobj={}
-		if $p(userInfo,"^",1)=0 {
+		if $p(userInfo,"^",1)=0 
+		{
 			set outputobj.errorCode="0"
 			set outputobj.errorMessage="成功"
 			set resultobj.userID=$p(userInfo,"^",2)
@@ -201,7 +216,12 @@ ClassMethod Logon(postObj) As %Library.DynamicAbstractObject
 			set resultobj.groupDesc=$p(authInfo,"^",3)
 			set resultobj.hospID=loginHospID
 			set resultobj.hospCode=$p(authInfo,"^",6)
-			set resultobj.hospDesc=$p(authInfo,"^",4)
+			set resultobj.hospDesc=$p(authInfo,"^",4)			
+			set resultobj.hospYBCode= fixmedinsCode	
+					
+			set resultobj.provID= provID
+			set resultobj.cityID= cityID
+			
 			set resultobj.langID=1 //$p(userInfo,"^",11)
 			set resultobj.langDesc="简体中文" //$p(userInfo,"^",12)
 			set resultobj.changeFlag=$p(userInfo,"^",13)
@@ -214,7 +234,9 @@ ClassMethod Logon(postObj) As %Library.DynamicAbstractObject
 				//菜单路径查询
 				Set linkPath=##Class(src.Group.MenuDetail).parentGroupMenu(resultobj.mainInterface)
 				set resultobj.path=linkPath
-			}else{
+			}
+			else
+			{
 				set resultobj.path=""
 			}
 			//TODO 生成session
@@ -252,11 +274,15 @@ ClassMethod Logon(postObj) As %Library.DynamicAbstractObject
 			set rtn=##class(src.util.operatetable).Update(.updObj)*/
 			//b ;1
 			//do ..SetLogonLog(userID, postObj, %session.SessionId)
-		}else{
+		}
+		else
+		{
 			set outputobj.errorCode=$p(userInfo,"^",1)
 			set outputobj.errorMessage=$p(userInfo,"^",2)
 		}
-	}catch(e){
+	}
+	catch(e)
+	{
 		set status=e.AsStatus()
 		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
 	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
@@ -324,7 +350,7 @@ ClassMethod GetLogonGroupByUserId(postObj) As %Library.DynamicAbstractObject
 	
 	Set sqlString="SELECT ID, User_Dr,User_Dr->Descripts userDesc, Hosp_Dr,Hosp_Dr->Descripts hospDesc,Hosp_Dr->Code hospCode, "_
 				  " Group_Dr, Group_Dr->Descripts groupDesc, IsDefault, UpdateDate, UpdateTime, UpdateUser_Dr "_
-				  " FROM SQLUser.HB_UserLogonLoc Where User_Dr="_params.userID
+				  " FROM HB_UserLogonLoc Where User_Dr="_params.userID
 	Set st = ##class(%SQL.Statement).%New(1)
 	Set sc = st.%Prepare(sqlString)
 	Set rs = st.%Execute()

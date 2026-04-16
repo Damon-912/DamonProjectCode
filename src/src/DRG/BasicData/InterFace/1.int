@@ -1,7 +1,7 @@
 ROUTINE src.DRG.BasicData.InterFace.1 [Type=INT,Generated]
  ;src.DRG.BasicData.InterFace.1
- ;Generated for class src.DRG.BasicData.InterFace.  Do NOT edit. 04/13/2026 11:32:57AM
- ;;2B436D4E;src.DRG.BasicData.InterFace
+ ;Generated for class src.DRG.BasicData.InterFace.  Do NOT edit. 04/16/2026 03:22:38PM
+ ;;6F723842;src.DRG.BasicData.InterFace
  ;
 zConfirmImportDRGs(jsonObj)
 	new (jsonObj)
@@ -67,7 +67,7 @@ zGetMedInsuICDInfo(jsonObj)
 	quit ##class(src.DRG.BasicData.ICDInfo).GetMedInsuICDInfo(jsonObj)
 zPreviewImportDRGs(jsonObj)
 	new (jsonObj)
-	quit ##class(src.DRG.BasicData.DRGCataLog).PreviewImportDrg(jsonObj)
+	quit ##class(src.DRG.BasicData.DRGCataLog).PreviewImportDRGs(jsonObj)
 zPreviewImportICD(jsonObj)
 	new (jsonObj)
 	quit ##class(src.DRG.BasicData.ICDInfo).PreviewImportICD(jsonObj)

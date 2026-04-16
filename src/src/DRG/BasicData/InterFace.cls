@@ -294,7 +294,7 @@ ClassMethod DeleteDRGSegmentationRules(jsonObj) As %Library.DynamicObject
 ClassMethod PreviewImportDRGs(jsonObj) As %Library.DynamicObject
 {
 	new (jsonObj)
-	quit ##class(src.DRG.BasicData.DRGCataLog).PreviewImportDrg(jsonObj)
+	quit ##class(src.DRG.BasicData.DRGCataLog).PreviewImportDRGs(jsonObj)
 }
 
 /// Creator:     CM

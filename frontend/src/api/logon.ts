@@ -60,6 +60,10 @@ export interface LogonResult {
   titleDesc?: string;
   userYBCode?: string;
   hospYBCode?: string;
+
+  provID:string;
+  cityID:string;
+  areaCode:string;
   path?: string;
   sessionID: string;
   errorMessageTime?: string;

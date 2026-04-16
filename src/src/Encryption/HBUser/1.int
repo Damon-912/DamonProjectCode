@@ -1,7 +1,7 @@
 ROUTINE src.Encryption.HBUser.1 [Type=INT,Generated]
  ;src.Encryption.HBUser.1
- ;Generated for class src.Encryption.HBUser.  Do NOT edit. 04/14/2026 09:51:23AM
- ;;5237695A;src.Encryption.HBUser
+ ;Generated for class src.Encryption.HBUser.  Do NOT edit. 04/14/2026 03:20:36PM
+ ;;61694844;src.Encryption.HBUser
  ;
 zFromatPassword(password)
 	new (password)
@@ -200,6 +200,10 @@ zIsValidUser(userCode,password,expstr)
 	if userID="" {
 		set userID=$o(^HBUserI("Mobile",userCode,""))	; 手机号
 		set userLogonType="01"
+	}
+	if userID="" {
+		set userID=$o(^HBUserI("CredNo",userCode,""))	; 证件号
+		set userLogonType="04"
 	}
 	Return:userID="" "XYS1001^用户或密码错误"
 	set currentPwd=$lg($g(^HBUserD(userID)),4)

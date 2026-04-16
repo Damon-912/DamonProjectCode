@@ -53,6 +53,10 @@ export interface SessionInfo {
   titleDesc: string;
   userYBCode: string;
   hospYBCode: string;
+
+  provID: string;
+  cityID: string;
+  areaCode:string;
   path: string;
   sessionID: string;
   errorMessageTime: string;
@@ -91,6 +95,9 @@ export const getDefaultSession = (): SessionInfo => {
         titleDesc: session.titleDesc || '',
         userYBCode: session.userYBCode || '',
         hospYBCode: session.hospYBCode || '',
+        provID: session.provID || '',
+        cityID: session.cityID || '',
+        areaCode: session.areaCode || '',
         path: session.path || '',
         sessionID: session.sessionID || '',
         errorMessageTime: session.errorMessageTime || '',
@@ -124,6 +131,10 @@ export const getDefaultSession = (): SessionInfo => {
     titleDesc: '',
     userYBCode: '',
     hospYBCode: '',
+
+    provID: '',
+    cityID: '',
+    areaCode:'',
     path: '',
     sessionID: '',
     errorMessageTime: '',

@@ -1,3 +1,5 @@
+Import SQLUSER
+
 Class src.User.UserLogonLoc Extends (%RegisteredObject, %XML.Adaptor) [ Not ProcedureBlock ]
 {
 
@@ -293,23 +295,7 @@ ClassMethod SaveUserLinkHosp(postObj)
 		}
 		
 		// 先查询是否存在记录
-		Set json={}
-		Set json.className="User.HBUserLinkHosp"
-		Set data=[]
-		Set queryObj={}
-		Set queryObj.UserDr=userID
-		Set queryObj.HospDr=hospID
-		Set queryObj.StopDate=""
-		do data.%Push(queryObj)
-		Set json.data=data
-		Set rtn=##class(src.util.operatetable).Select(json)
-		
-		if rtn.errorCode=0{
-			Set existID=""
-			if rtn.result'="",rtn.result.rows'=""{
-				Set existID=rtn.result.rows.%Get(0)
-			}
-		}
+		&sql(SELECT ID into :existID from HB_UserLinkHosp WHERE User_Dr=:userID and Hosp_Dr=:hospID)					
 		
 		// 使用 operatetable 进行新增或更新
 		Set json={}
@@ -324,14 +310,17 @@ ClassMethod SaveUserLinkHosp(postObj)
 		Set obj.CreatedDate=$zd(+$h,3)
 		Set obj.CreatedTime=$zt($p($h,",",2))
 		
-		if existID'=""{
+		if existID'=""
+		{
 			// 记录已存在，更新为有效状态
 			Set obj.ID=existID
 			Set obj.StopDate=""
 			do data.%Push(obj)
 			Set json.data=data
 			Set rtn=##class(src.util.operatetable).Update(json)
-		}else{
+		}
+		else
+		{
 			// 新增记录
 			do data.%Push(obj)
 			Set json.data=data
@@ -386,31 +375,13 @@ ClassMethod DeleteUserLinkHosp(postObj)
 			Return resultJson
 		}
 		
-		// 先查询记录ID
-		Set json={}
-		Set json.className="User.HBUserLinkHosp"
-		Set data=[]
-		Set queryObj={}
-		Set queryObj.UserDr=userID
-		Set queryObj.HospDr=hospID
-		Set queryObj.StopDate=""
-		do data.%Push(queryObj)
-		Set json.data=data
-		Set rtn=##class(src.util.operatetable).Select(json)
+		&sql(SELECT ID into :existID from HB_UserLinkHosp WHERE User_Dr=:userID and Hosp_Dr=:hospID)			
 		
-		if rtn.errorCode'=0{
-			Set resultJson.errorCode=rtn.errorCode
-			Set resultJson.errorMessage="查询用户医院关联失败"
-			Return resultJson
-		}
-		
-		if rtn.result="",rtn.result.rows=""{
+		if existID=""
+		{
 			// 没有找到记录，直接返回成功
 			Return resultJson
-		}
-		
-		// 获取记录ID进行删除
-		Set existID=rtn.result.rows.%Get(0)
+		}		
 		
 		// 使用 operatetable 进行软删除（更新StopDate）
 		Set json={}
@@ -422,9 +393,10 @@ ClassMethod DeleteUserLinkHosp(postObj)
 		Set obj.StopDate=$zd(+$h-1,3)
 		do data.%Push(obj)
 		Set json.data=data
-		Set rtn=##class(src.util.operatetable).Update(json)
+		Set rtn=##class(src.util.operatetable).Delete(json)
 		
-		if rtn.errorCode'=0{
+		if rtn.errorCode'=0
+		{
 			Set resultJson.errorCode=rtn.errorCode
 			Set resultJson.errorMessage=rtn.errorMessage
 		}

@@ -1,8 +1,105 @@
 ROUTINE src.User.UserLogonLoc.1 [Type=INT,Generated]
  ;src.User.UserLogonLoc.1
- ;Generated for class src.User.UserLogonLoc.  Do NOT edit. 12/24/2025 03:50:28PM
- ;;6E654164;src.User.UserLogonLoc
+ ;Generated for class src.User.UserLogonLoc.  Do NOT edit. 04/14/2026 05:24:17PM
+ ;;48796661;src.User.UserLogonLoc
  ;
+zDeleteUserLinkHosp(postObj)
+	new (postObj)
+	Set jsonObj=postObj.params.%Get(0)
+	Set session=postObj.session.%Get(0)
+	Set resultJson={}
+	Set resultJson.errorCode=0
+	Set resultJson.errorMessage="成功"
+	Try{
+		Set userID=jsonObj.userID
+		Set hospID=jsonObj.hospID
+		if userID=""{
+			Set resultJson.errorCode=1
+			Set resultJson.errorMessage="用户ID不能为空"
+			Return resultJson
+		}
+		if hospID=""{
+			Set resultJson.errorCode=1
+			Set resultJson.errorMessage="医院ID不能为空"
+			Return resultJson
+		}
+		 ;---&sql(SELECT ID into :existID from HB_UserLinkHosp WHERE User_Dr=:userID and Hosp_Dr=:hospID)			
+ 		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, existID, hospID, userID
+		do %0Ao			
+		if existID=""
+		{
+			// 没有找到记录，直接返回成功
+			Return resultJson
+		}		
+		// 使用 operatetable 进行软删除（更新StopDate）
+		Set json={}
+		Set json.className="User.HBUserLinkHosp"
+		Set json.updateUserID=session.userID
+		Set data=[]
+		Set obj={}
+		Set obj.ID=existID
+		Set obj.StopDate=$zd(+$h-1,3)
+		do data.%Push(obj)
+		Set json.data=data
+		Set rtn=##class(src.util.operatetable).Delete(json)
+		if rtn.errorCode'=0
+		{
+			Set resultJson.errorCode=rtn.errorCode
+			Set resultJson.errorMessage=rtn.errorMessage
+		}
+	}Catch(e){
+		set status=e.AsStatus()
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorInfo="删除用户医院关联异常:w ##class("_$ClassName()_").DeleteUserLinkHosp("")"
+		do ##class(src.Interface.Message).InsErrRecord("05000001",errorInfo,errorMessage)
+		set resultJson.errorCode="05000001"
+		set resultJson.errorMessage=##class(src.Interface.Message).GetErrorMessage("05000001")
+	}
+	Return resultJson
+	Quit
+ q
+%0Ao n sqldata10d,sqldata11d,sqldata12d,sqldata21d,sqldata4d,sqldata6d,sqldata5d,sqldata3d,sqldata8d,sqldata9d
+ s $zt="%0Aerr"
+ s sqldata10d=$zu(115,2)
+ s sqldata11d=0,sqldata12d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$s($g(userID)="":"",$isvalidnum(userID):+userID,1:userID),sqldata6d=$s($g(hospID)="":"",$isvalidnum(hospID):+hospID,1:hospID)
+ s SQLCODE=100
+ ; asl MOD# 2
+ s sqldata5d=sqldata6d
+ s sqldata3d=sqldata4d
+ i sqldata5d="" g %0AmBdun
+ i sqldata3d="" g %0AmBdun
+ s existID=""
+ s existID=$o(^HBUserLinkHospI("HospUser",sqldata5d,sqldata3d,existID))
+ i existID="" g %0AmBdun
+ goto:sqldata10d'=1 %0AmBuncommitted
+ if sqldata10d=1 {
+ 	lock +^HBUserLinkHospD($p(existID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata12d=$name(^HBUserLinkHospD($p(existID,"||",1)))_"#""SI""",sqldata11d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_UserLinkHosp for RowID value: "_existID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata8d=$zlist(sqldata5d,sqldata3d)
+ i existID'="" s sqldata21d="" i $d(^HBUserLinkHospD(existID),sqldata21d)
+ e  g %0AmCdun
+ S sqldata3d=$lg(sqldata21d,2),sqldata5d=$lg(sqldata21d,3)
+ s sqldata9d=$zlist(sqldata5d,sqldata3d)
+ g:sqldata8d'=sqldata9d %0AmCdun
+%0AmBuncommitted ;
+ s SQLCODE=0 g %0Ac
+%0AmCdun if $g(sqldata10d)=1 { if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }}
+%0AmBdun 
+%0AmAdun 
+%0Ac set %ROWCOUNT='SQLCODE
+ if $g(sqldata10d)=1 {
+ 	if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }
+ }
+ q
+%0Aerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Ac
 zDeleteUserLogon(postObj)
 	new (postObj) 
 	Set resultJson={}
@@ -116,6 +213,115 @@ zGetLogonGroupByUserId(postObj)
 	Set outputobj.result.rows=list
 	Return outputobj
 	Quit
+zSaveUserLinkHosp(postObj)
+	new (postObj)
+	Set jsonObj=postObj.params.%Get(0)
+	Set session=postObj.session.%Get(0)
+	Set resultJson={}
+	Set resultJson.errorCode=0
+	Set resultJson.errorMessage="成功"
+	Try{
+		Set userID=jsonObj.userID
+		Set hospID=jsonObj.hospID
+		if userID=""{
+			Set resultJson.errorCode=1
+			Set resultJson.errorMessage="用户ID不能为空"
+			Return resultJson
+		}
+		if hospID=""{
+			Set resultJson.errorCode=1
+			Set resultJson.errorMessage="医院ID不能为空"
+			Return resultJson
+		}
+		// 先查询是否存在记录
+		 ;---&sql(SELECT ID into :existID from HB_UserLinkHosp WHERE User_Dr=:userID and Hosp_Dr=:hospID)					
+ 		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, existID, hospID, userID
+		do %0Co					
+		// 使用 operatetable 进行新增或更新
+		Set json={}
+		Set json.className="User.HBUserLinkHosp"
+		Set json.updateUserID=session.userID
+		Set data=[]
+		Set obj={}
+		Set obj.UserDr=userID
+		Set obj.HospDr=hospID
+		Set obj.StartDate=$zd(+$h,3)
+		Set obj.CreatedByDr=session.userID
+		Set obj.CreatedDate=$zd(+$h,3)
+		Set obj.CreatedTime=$zt($p($h,",",2))
+		if existID'=""
+		{
+			// 记录已存在，更新为有效状态
+			Set obj.ID=existID
+			Set obj.StopDate=""
+			do data.%Push(obj)
+			Set json.data=data
+			Set rtn=##class(src.util.operatetable).Update(json)
+		}
+		else
+		{
+			// 新增记录
+			do data.%Push(obj)
+			Set json.data=data
+			Set rtn=##class(src.util.operatetable).Insert(json)
+		}
+		if rtn.errorCode'=0{
+			Set resultJson.errorCode=rtn.errorCode
+			Set resultJson.errorMessage=rtn.errorMessage
+		}
+	}Catch(e){
+		set status=e.AsStatus()
+		set errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorInfo="保存用户医院关联异常:w ##class("_$ClassName()_").SaveUserLinkHosp("")"
+		do ##class(src.Interface.Message).InsErrRecord("05000001",errorInfo,errorMessage)
+		set resultJson.errorCode="05000001"
+		set resultJson.errorMessage=##class(src.Interface.Message).GetErrorMessage("05000001")
+	}
+	Return resultJson
+	Quit
+ q
+%0Co n sqldata10d,sqldata11d,sqldata12d,sqldata21d,sqldata4d,sqldata6d,sqldata5d,sqldata3d,sqldata8d,sqldata9d
+ s $zt="%0Cerr"
+ s sqldata10d=$zu(115,2)
+ s sqldata11d=0,sqldata12d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$s($g(userID)="":"",$isvalidnum(userID):+userID,1:userID),sqldata6d=$s($g(hospID)="":"",$isvalidnum(hospID):+hospID,1:hospID)
+ s SQLCODE=100
+ ; asl MOD# 2
+ s sqldata5d=sqldata6d
+ s sqldata3d=sqldata4d
+ i sqldata5d="" g %0CmBdun
+ i sqldata3d="" g %0CmBdun
+ s existID=""
+ s existID=$o(^HBUserLinkHospI("HospUser",sqldata5d,sqldata3d,existID))
+ i existID="" g %0CmBdun
+ goto:sqldata10d'=1 %0CmBuncommitted
+ if sqldata10d=1 {
+ 	lock +^HBUserLinkHospD($p(existID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata12d=$name(^HBUserLinkHospD($p(existID,"||",1)))_"#""SI""",sqldata11d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_UserLinkHosp for RowID value: "_existID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata8d=$zlist(sqldata5d,sqldata3d)
+ i existID'="" s sqldata21d="" i $d(^HBUserLinkHospD(existID),sqldata21d)
+ e  g %0CmCdun
+ S sqldata3d=$lg(sqldata21d,2),sqldata5d=$lg(sqldata21d,3)
+ s sqldata9d=$zlist(sqldata5d,sqldata3d)
+ g:sqldata8d'=sqldata9d %0CmCdun
+%0CmBuncommitted ;
+ s SQLCODE=0 g %0Cc
+%0CmCdun if $g(sqldata10d)=1 { if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }}
+%0CmBdun 
+%0CmAdun 
+%0Cc set %ROWCOUNT='SQLCODE
+ if $g(sqldata10d)=1 {
+ 	if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }
+ }
+ q
+%0Cerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Cc
 zSaveUserLogonLoc(postObj,userSaveID)
 	new (postObj,userSaveID)
 	Set jsonObj=postObj.params.%Get(0)

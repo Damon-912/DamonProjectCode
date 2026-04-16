@@ -1,7 +1,7 @@
 ROUTINE src.User.Interface.1 [Type=INT,Generated]
  ;src.User.Interface.1
- ;Generated for class src.User.Interface.  Do NOT edit. 12/24/2025 10:04:04AM
- ;;456C6343;src.User.Interface
+ ;Generated for class src.User.Interface.  Do NOT edit. 04/14/2026 04:46:48PM
+ ;;6C586839;src.User.Interface
  ;
 zAddUserConf(postObj)
 	new (postObj)
@@ -9,6 +9,9 @@ zAddUserConf(postObj)
 zAduit(postObj)
 	new (postObj)
 	quit ##class(src.User.UserAuditLog).Aduit(postObj)
+zDeleteUserLinkHosp(postObj)
+	new (postObj)
+	quit ##class(src.User.UserLogonLoc).DeleteUserLinkHosp(postObj)
 zDeleteUserLogon(postObj)
 	new (postObj)
 	quit ##class(src.User.UserLogonLoc).DeleteUserLogon(postObj)
@@ -21,6 +24,9 @@ zFindUserDetail(postObj)
 zGetUserDetail(postObj)
 	new (postObj)
 	quit ##class(src.User.UserLogonLoc).GetGroupByUserId(postObj)
+zSaveUserLinkHosp(postObj)
+	new (postObj)
+	quit ##class(src.User.UserLogonLoc).SaveUserLinkHosp(postObj)
 zSaveUserLogonLoc(postObj)
 	new (postObj)
 	Set jsonObj=postObj.params.%Get(0)

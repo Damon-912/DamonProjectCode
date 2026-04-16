@@ -254,24 +254,24 @@ ClassMethod DeleteDRGCataLog(jsonObj) As %Library.DynamicObject
 /// Debug:       w ##class(src.DRG.BasicData.DRGCataLog).DownloadDrgTemplate({}).%ToJSON()
 ClassMethod DownloadDRGsTemplate(jsonObj) As %Library.DynamicObject
 {
+	
 	new (jsonObj)
 	set resultObj={"errorCode":"0","errorMessage":"下载成功","result":{}}
 	try
-	{
+	{	
 		// 创建模板内容
-		set templateContent="DRG代码,DRG描述,行政区划"_$c(10)
-		set templateContent=templateContent_"ES23,呼吸系统肿瘤,110100"_$c(10)
-		set templateContent=templateContent_"FB23,心脏介入治疗,110100"_$c(10)
-		set templateContent=templateContent_"IC13,关节置换,110100"_$c(10)	
+		set Content = "Code,Descripts"_$c(13,10)
+		set Content = Content_"DRGCode,DRGDesc"_$c(13,10)
+		//set Content = Content_"CB59,晶状体手术"_$c(10)	
 		
-        // Base64编码 - 使用%SYSTEM.Encryption.Base64Encode
-        set base64Data = ##class(%SYSTEM.Encryption).Base64Encode(templateContent)
-		
+        //// Base64编码 - 使用%SYSTEM.Encryption.Base64Encode
+        set base64Data = ##class(%SYSTEM.Encryption).Base64Encode(Content)		
 		set resultObj.result.fileName="DRG目录导入模板.csv"
 		set resultObj.result.fileData=base64Data
-		set resultObj.result.contentType="text/csv"
-		
-	}catch(e){
+		set resultObj.result.contentType="text/csv"		
+	}
+	catch(e)
+	{
 		set status=e.AsStatus()
 		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
 		set errorInfo="下载DRG目录导入模板出现问题:w ##class("_$ClassName()_").DownloadDrgTemplate("_jsonObj.%ToJSON()_")"
@@ -319,7 +319,7 @@ ClassMethod PreviewImportDRGs(jsonObj) As %Library.DynamicObject
 			set resultObj.errorMessage="接口入参省、市代码不能为空！"
 			quit	
 		}
-		
+						
 		if fileData=""
 		{
 			set resultObj.errorCode="02010003"
@@ -372,6 +372,12 @@ ClassMethod PreviewImportDRGs(jsonObj) As %Library.DynamicObject
 			set code=$piece(line,",",1)
 			set descripts=$piece(line,",",2)
 			set admvs=$piece(line,",",3)
+			
+	    	if admvs=""
+		    {
+		        set joAdmvs=##class(User.CBCity).%OpenId(cityID)
+		        set admvs=joAdmvs.Code	
+		    }			
 			
 			set previewObj={}
 			set previewObj.rowNum=rowNum
@@ -536,6 +542,12 @@ ClassMethod ConfirmImportDRGs(jsonObj) As %Library.DynamicObject
 			set code=$piece(line,",",1)
 			set descripts=$piece(line,",",2)
 			set admvs=$piece(line,",",3)
+			
+	    	if admvs=""
+		    {
+		        set joAdmvs=##class(User.CBCity).%OpenId(cityID)
+		        set admvs=joAdmvs.Code	
+		    }			
 			
 			// 必填校验
 			if (code="")||(descripts="")||(admvs="")

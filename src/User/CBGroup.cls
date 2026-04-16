@@ -26,7 +26,7 @@ Property OperCodeTable As %String(DISPLAYLIST = ",Yes,No", TRUNCATE = 1, VALUELI
 Property SendMsgToAllUser As %String(DISPLAYLIST = ",Yes,No", TRUNCATE = 1, VALUELIST = ",Y,N") [ SqlColumnNumber = 6, SqlFieldName = SendMsgToAllUser ];
 
 /// 安全等级 1,2,3
-Property SafeClassificat As User.CBDataAuthorityType [ Required, SqlColumnNumber = 7, SqlFieldName = SafeClassificat ];
+Property SafeClassificat As User.CBDataAuthorityType [ SqlColumnNumber = 7, SqlFieldName = SafeClassificat ];
 
 /// 允许列编辑权限 Y 允许对列进行编辑
 Property ColumnEdit As %String(DISPLAYLIST = ",Yes,No", TRUNCATE = 1, VALUELIST = ",Y,N") [ SqlColumnNumber = 8, SqlFieldName = ColumnEdit ];

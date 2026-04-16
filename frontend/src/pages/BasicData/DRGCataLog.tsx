@@ -843,9 +843,9 @@ const DRGCataLog: React.FC = () => {
                 message="导入说明"
                 description={
                   <ul style={{ margin: 0, paddingLeft: 16 }}>
-                    <li>必填列：DRG代码、DRG描述、行政区划</li>
-                    <li>行政区划：使用对应市的三位代码</li>             
+                    <li>必填列：DRG代码、DRG描述</li>                     
                     <li>重复处理：DRG代码+省市相同则更新，否则新增</li>
+                    <li>模板规范：模板列名不可变更</li>  
                   </ul>
                 }
                 type="info"

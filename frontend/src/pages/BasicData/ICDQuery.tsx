@@ -703,6 +703,7 @@ const ICDQuery: React.FC = () => {
                     <li>必填列：ICD代码、ICD描述、版本</li>
                     <li>版本值：ICD-9 或 ICD-10</li>             
                     <li>重复处理：ICD代码+省市相同则更新，否则新增</li>
+                    <li>模板规范：模板列名不可变更</li>                      
                   </ul>
                 }
                 type="info"
