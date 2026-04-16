@@ -297,13 +297,13 @@ const DRGSegmentationRules: React.FC = () => {
     {
       title: '行政区划',
       dataIndex: 'admvs',
-      width: 100,
+      width: 60,
       render: (text: string) => text || '-',
     },
     {
       title: '联合标志',
       dataIndex: 'unionFlag',
-      width: 80,
+      width: 60,
       align: 'center',
       render: (val: string, record: HBDRGSegmentationRulesItem) => (
         <Switch
@@ -316,7 +316,7 @@ const DRGSegmentationRules: React.FC = () => {
     {
       title: '细分标志',
       dataIndex: 'segmentationFlag',
-      width: 80,
+      width: 60,
       align: 'center',
       render: (val: string, record: HBDRGSegmentationRulesItem) => (
         <Switch
@@ -335,7 +335,7 @@ const DRGSegmentationRules: React.FC = () => {
     },
     {
       title: '操作',
-      width: 120,
+      width: 60,
       //fixed: 'right',
       align: 'center',
       render: (_, record) => (

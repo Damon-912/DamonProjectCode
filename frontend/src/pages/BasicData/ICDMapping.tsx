@@ -29,7 +29,7 @@ const ICDMapping: React.FC = () => {
   const [dataSource, setDataSource] = useState<IcdMappingItem[]>([]);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(15);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [editVisible, setEditVisible] = useState(false);
   const [editRecord, setEditRecord] = useState<IcdMappingItem | null>(null);

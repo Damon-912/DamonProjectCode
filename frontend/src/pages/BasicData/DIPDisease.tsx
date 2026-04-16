@@ -18,7 +18,7 @@ const DIPDisease: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(15);
 
   // 查询条件
   const [principalDiagnosisName, setPrincipalDiagnosisName] = useState('');
@@ -138,7 +138,7 @@ const DIPDisease: React.FC = () => {
     {
       title: '序号',
       dataIndex: 'num',
-      width: 80,
+      width: 50,
     },
     {
       title: '主要诊断编码',
@@ -165,22 +165,22 @@ const DIPDisease: React.FC = () => {
     {
       title: '省',
       dataIndex: 'provinceDesc',
-      width: 80,
+      width: 100,
     },
     {
       title: '市',
       dataIndex: 'cityDesc',
-      width: 80,
+      width: 100,
     },
     {
       title: '生效日期',
       dataIndex: 'startDate',
-      width: 100,
+      width: 80,
     },
     {
       title: '状态',
       dataIndex: 'statusDesc',
-      width: 70,
+      width: 40,
       render: (v: string) => (
         <Tag color={v === '有效' ? 'green' : 'red'}>{v || '无效'}</Tag>
       ),
@@ -188,7 +188,7 @@ const DIPDisease: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 120,
+      width: 100,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">

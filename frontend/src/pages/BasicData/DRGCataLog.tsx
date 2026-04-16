@@ -46,7 +46,7 @@ const DRGCataLog: React.FC = () => {
   const [dataSource, setDataSource] = useState<HBDRGCataLogItem[]>([]);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(15);
 
   // 省、市下拉数据
   const [provinceList, setProvinceList] = useState<ProvinceItem[]>([]);
@@ -520,23 +520,22 @@ const DRGCataLog: React.FC = () => {
       width:300,
     },
     {
-        
-      title:'行政区划',
-      dataIndex:'admvs',
-      width:160,
-      render:(Text:string)=>Text||'-',
-    },
-    {
       title: '省市',
-      width: 160,
+      width: 180,
       render: (_, record) => `${record.provinceDesc || ''} ${record.cityDesc || ''}`.trim(),
       ellipsis: true,
+    },
+    {        
+      title:'行政区划',
+      dataIndex:'admvs',
+      width:60,
+      render:(Text:string)=>Text||'-',
     },
     {
 
 
       title: '操作',
-      width: 120,
+      width: 100,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">

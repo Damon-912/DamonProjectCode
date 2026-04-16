@@ -41,7 +41,7 @@ const ICDQuery: React.FC = () => {
   const [dataSource, setDataSource] = useState<IcdInfoItem[]>([]);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(15);
 
   // 省、市下拉数据
   const [provinceList, setProvinceList] = useState<ProvinceItem[]>([]);

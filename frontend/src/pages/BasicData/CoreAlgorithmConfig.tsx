@@ -21,7 +21,7 @@ const CoreAlgorithmConfig: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(15);
 
   // 查询条件
   const [drg, setDrg] = useState('');
