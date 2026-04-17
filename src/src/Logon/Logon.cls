@@ -184,14 +184,16 @@ ClassMethod Logon(postObj) As %Library.DynamicAbstractObject
 			quit
 		}
 		
-		set (fixmedinsCode,fixmedinsName,provID,cityID)=""
+		set (fixmedinsCode,fixmedinsName,provID,cityID,areaCode,medinsLv)=""
 		if (loginHospID '="")
 		{
 		    set hospInfo=##class(User.CBHospital).%OpenId(loginHospID)
 		    set fixmedinsCode= hospInfo.OrganizationCode
 		    set fixmedinsName=hospInfo.Descripts
 		    set provID=hospInfo.ProvIDDr.%Id()
-		    set cityID=hospInfo.CityIDDr.%Id()	
+		    set cityID=hospInfo.CityIDDr.%Id()
+		    set medinsLv=hospInfo.HospGradeDr.%Id()
+		    set areaCode=hospInfo.CityIDDr.Code	
 		}
 		
 		set expStr = userID_"^"_loginLocID_"^"_loginGroupID_"^"_loginHospID
@@ -221,6 +223,8 @@ ClassMethod Logon(postObj) As %Library.DynamicAbstractObject
 					
 			set resultobj.provID= provID
 			set resultobj.cityID= cityID
+			set resultobj.areaCode= areaCode
+			set resultobj.medinsLv= medinsLv
 			
 			set resultobj.langID=1 //$p(userInfo,"^",11)
 			set resultobj.langDesc="简体中文" //$p(userInfo,"^",12)

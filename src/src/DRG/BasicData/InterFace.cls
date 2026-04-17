@@ -317,4 +317,34 @@ ClassMethod DownloadDRGsTemplate(jsonObj) As %Library.DynamicObject
 	quit ##class(src.DRG.BasicData.DRGCataLog).DownloadDRGsTemplate(jsonObj)
 }
 
+/// Creator:     System
+/// CreatDate:   2026-04-17
+/// Description: DRG核心算法配置导入预览
+/// 02010050
+ClassMethod PreviewImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.CoreAlgorithm).PreviewImportDRGCoreAlgorithm(jsonObj)
+}
+
+/// Creator:     System
+/// CreatDate:   2026-04-17
+/// Description: 确认导入DRG核心算法配置
+/// 02010051
+ClassMethod ConfirmImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.CoreAlgorithm).ConfirmImportDRGCoreAlgorithm(jsonObj)
+}
+
+/// Creator:     System
+/// CreatDate:   2026-04-17
+/// Description: 下载DRG核心算法配置导入模板
+/// 02010052
+ClassMethod DownloadDRGCoreAlgorithmTemplate(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.CoreAlgorithm).DownloadDRGCoreAlgorithmTemplate(jsonObj)
+}
+
 }

@@ -347,4 +347,454 @@ ClassMethod IsRecordActive(startDate As %Date, stopDate As %Date) As %Boolean
     Quit (effectiveStart <= currentDate) && (effectiveEnd >= currentDate)
 }
 
+/// Creator:     System
+/// CreatDate:   2026-04-17
+/// Description: 下载DRG核心算法配置导入模板
+/// Output:      CSV格式模板内容（Base64编码）
+/// Return:      接口响应对象
+/// Debug:       w ##class(src.DRG.BasicData.CoreAlgorithm).DownloadDRGCoreAlgorithmTemplate({}).%ToJSON()
+ClassMethod DownloadDRGCoreAlgorithmTemplate(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+    new (jsonObj)
+    set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+    
+    try {
+        // 生成CSV内容
+        set csvContent = "DRGCode,DRGDesc,Points,PipValue,DGDOV,PayStandard"_$c(13,10)
+        set csvContent = csvContent_"AA01,急性心肌梗死,120.50,1.2,0.95,15000.00"_$c(13,10)
+        set csvContent = csvContent_"BB02,肺炎伴并发症,85.30,1.0,1.05,9800.00"_$c(13,10)
+        
+        // Base64编码
+        set base64Data = ##class(%SYSTEM.Encryption).Base64Encode(csvContent)
+        
+        set resultObj.result.fileName = "DRG核心算法配置导入模板.csv"
+        set resultObj.result.fileData = base64Data
+        set resultObj.result.contentType = "text/csv"
+        
+    } catch e {
+        set status = e.AsStatus()
+        set resultObj.errorCode = "04000007"
+        set resultObj.errorMessage = "下载模板失败: "_$system.Status.GetErrorText(status)
+    }
+    
+    quit resultObj
+}
+
+/// Creator:     System
+/// CreatDate:   2026-04-17
+/// Description: DRG核心算法配置导入预览（校验数据并返回预览结果）
+/// Table:       HB_DRGCoreAlgorithmData (User.HBDRGCoreAlgorithmData)
+/// Input:       provinceID, cityID, medicalInstitution, fileData(Base64)
+/// Output:      预览结果（含重复数据标记）
+/// Return:      接口响应对象
+/// Debug:       w ##class(src.DRG.BasicData.CoreAlgorithm).PreviewImportDRGCoreAlgorithm({}).%ToJSON()
+ClassMethod PreviewImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
+{
+    new (jsonObj)
+    set resultObj={"errorCode":"0","errorMessage":"","result":{"totalCount":0,"validCount":0,"invalidCount":0,"duplicateCount":0,"previewList":[]}}
+    
+    set totalCount=0,validCount=0,invalidCount=0,duplicateCount=0
+    set previewList=[]
+    
+    try 
+    {
+        set params=jsonObj.params.%Get(0)
+        set provinceID=params.provinceID
+        set cityID=params.cityID
+        set fileData=params.fileData
+        set mdtrtArea=params.mdtrtArea
+        set fixmedinsCode=params.fixmedinsCode
+        set fixmedinsName=params.fixmedinsName
+        set medinsLv=params.medinsLv
+        
+        // 参数校验
+        if provinceID="" {
+            set resultObj.errorCode="01000007"
+            set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000007")
+            quit
+        }
+        if cityID="" {
+            set resultObj.errorCode="01000008"
+            set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000008")
+            quit
+        }
+        if fileData="" {
+            set resultObj.errorCode="02010001"
+            set resultObj.errorMessage="导入文件不能为空"
+            quit
+        }
+        
+        // Base64解码 - 尝试多种方法
+        set csvContent = ""
+        
+        // 方法1: 使用$zcvt函数
+        try {
+            set csvContent = $zcvt(fileData, "I", "BASE64")
+        } catch e1 {
+            // 不输出调试信息
+        }
+        
+        // 如果方法1失败，尝试方法2: 使用%SYSTEM.Encryption.Base64Decode
+        if csvContent="" {
+            try {
+                set binaryData = ##class(%SYSTEM.Encryption).Base64Decode(fileData)
+                set csvContent = $zcvt(binaryData, "I", "UTF8")
+                if csvContent["?" {
+                    set csvContent = $zcvt(binaryData, "I", "GB18030")
+                }
+                if csvContent["?" {
+                    set csvContent = binaryData
+                }
+            } catch e2 {
+                // 不输出调试信息
+            }
+        }
+        
+        if csvContent="" 
+        {
+            set resultObj.errorCode="02010003"
+            set resultObj.errorMessage="文件解码失败，请提供有效的CSV文件"
+            quit
+        }
+        
+        // 解析CSV内容
+        set lineNum=0
+        set ptr=1
+        set csvContent=$replace(csvContent,$c(13,10),$c(10))
+        set csvContent=$replace(csvContent,$c(13),$c(10))
+        
+        for 
+        {
+            set line=$piece(csvContent,$c(10),ptr)
+            quit:line=""
+            set ptr=ptr+1
+            set lineNum=lineNum+1
+            continue:lineNum=1
+            continue:line=""
+            
+            set totalCount=totalCount+1
+            set rowNum=lineNum-1
+            
+            // 解析CSV列
+            set errorMsg=""
+            try { set drgCode=$piece(line,",",1) } catch { set drgCode="",errorMsg="字段解析错误" }
+            try { set drgDesc=$piece(line,",",2) } catch { set drgDesc="" }
+            try { set points=$piece(line,",",3) } catch { set points="" }
+            try { set pipValue=$piece(line,",",4) } catch { set pipValue="" }
+            try { set dgdov=$piece(line,",",5) } catch { set dgdov="" }
+            try { set payStandard=$piece(line,",",6) } catch { set payStandard="" }
+            
+            set previewObj={}
+            set previewObj.rowNum=rowNum
+            set previewObj.drgCode=drgCode
+            set previewObj.drgDesc=drgDesc
+            set previewObj.points=points
+            set previewObj.pipValue=pipValue
+            set previewObj.dgdov=dgdov
+            set previewObj.payStandard=payStandard
+            set previewObj.errorMsg=errorMsg
+            
+            // 数据校验
+            if (errorMsg '="")
+            {
+                set invalidCount=invalidCount+1
+                set previewObj.status="invalid"
+                set previewObj.statusDesc="解析错误"
+            } 		
+            elseif drgCode="" 
+            {
+                set previewObj.status="invalid"
+                set previewObj.statusDesc="错误"
+                set previewObj.errorMsg="DRG代码不能为空"
+                set invalidCount=invalidCount+1
+                do previewList.%Push(previewObj)
+                continue
+            }
+            elseif drgDesc=""
+            {
+                set previewObj.status="invalid"
+                set previewObj.statusDesc="错误"
+                set previewObj.errorMsg="DRG描述不能为空"
+                set invalidCount=invalidCount+1
+                do previewList.%Push(previewObj)
+                continue
+            }
+            elseif (points="")||(##class(%SYSTEM.Util).IsNumeric(points)=0)
+            {
+                set previewObj.status="invalid"
+                set previewObj.statusDesc="错误"
+                set previewObj.errorMsg="基准点数必须是数值"
+                set invalidCount=invalidCount+1
+                do previewList.%Push(previewObj)
+                continue
+            }
+            elseif (pipValue="")||(##class(%SYSTEM.Util).IsNumeric(pipValue)=0)
+            {
+                set previewObj.status="invalid"
+                set previewObj.statusDesc="错误"
+                set previewObj.errorMsg="预估点值必须是数值"
+                set invalidCount=invalidCount+1
+                do previewList.%Push(previewObj)
+                continue
+            }
+            elseif (dgdov="")||(##class(%SYSTEM.Util).IsNumeric(dgdov)=0)
+            {
+                set previewObj.status="invalid"
+                set previewObj.statusDesc="错误"
+                set previewObj.errorMsg="病组差异系数必须是数值"
+                set invalidCount=invalidCount+1
+                do previewList.%Push(previewObj)
+                continue
+            }
+            elseif (payStandard="")||(##class(%SYSTEM.Util).IsNumeric(payStandard)=0)
+            {
+                set previewObj.status="invalid"
+                set previewObj.statusDesc="错误"
+                set previewObj.errorMsg="支付标准必须是数值"
+                set invalidCount=invalidCount+1
+                do previewList.%Push(previewObj)
+                continue
+            }
+            
+            // 检查是否已存在（DRG代码+行政区划+机构代码）
+            set existingID=""
+            &sql(SELECT ID INTO :existingID FROM SQLUser.HB_DRGCoreAlgorithmData 
+                 WHERE DRG=:drgCode AND MdtrtArea=:mdtrtArea AND FixmedinsCode=:fixmedinsCode)
+            
+            if existingID'="" 
+            {
+                set previewObj.status="duplicate"
+                set previewObj.statusDesc="重复"
+                set previewObj.errorMsg="该DRG配置已存在，导入将执行更新操作"
+                set duplicateCount=duplicateCount+1
+            } 
+            else 
+            {
+                set previewObj.status="valid"
+                set previewObj.statusDesc="正常"
+                set validCount=validCount+1
+            }
+            
+            do previewList.%Push(previewObj)
+                
+        }
+        
+        set resultObj.result.totalCount=totalCount
+        set resultObj.result.validCount=validCount
+        set resultObj.result.invalidCount=invalidCount
+        set resultObj.result.duplicateCount=duplicateCount
+        set resultObj.result.previewList=previewList
+        
+    } 
+    catch(e) 
+    {
+        set status=e.AsStatus()
+        set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+        set resultObj.errorCode="04000007"
+        set resultObj.errorMessage="预览失败："_errorMessage
+    }
+    
+    quit resultObj
+}
+
+/// Creator:     System
+/// CreatDate:   2026-04-17
+/// Description: 确认导入DRG核心算法配置
+/// Table:       HB_DRGCoreAlgorithmData (User.HBDRGCoreAlgorithmData)
+/// Input:       provinceID, cityID, medicalInstitution, fileData(Base64)
+/// Output:      详细导入结果报告
+/// Return:      接口响应对象
+/// Debug:       w ##class(src.DRG.BasicData.CoreAlgorithm).ConfirmImportDRGCoreAlgorithm({}).%ToJSON()
+ClassMethod ConfirmImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
+{
+    new (jsonObj)
+    set resultObj={"errorCode":"0","errorMessage":"","result":{"totalCount":0,"successCount":0,"failCount":0,"duplicateCount":0,"newCount":0,"failList":[]}}
+    
+    set (totalCount,successCount,failCount,duplicateCount,newCount)=0
+    set failList=[]
+    
+    try {
+        set params=jsonObj.params.%Get(0)
+        
+        // 检查必需参数
+        if '$isobject(params) {
+            set resultObj.errorCode="02010001"
+            set resultObj.errorMessage="参数错误：缺少params参数"
+            quit
+        }
+        
+        set fileData=params.fileData
+        set provinceID=params.provinceID
+        set cityID=params.cityID
+        set mdtrtArea=params.mdtrtArea
+        set fixmedinsCode=params.fixmedinsCode
+        set fixmedinsName=params.fixmedinsName
+        set medinsLv=params.medinsLv
+        
+        if (provinceID="")||(cityID="")||
+        {
+            set resultObj.errorCode="-1"
+            set resultObj.errorMessage="接口入参省、市代码不能为空！"
+            quit	
+        }
+        
+        // 创建用户ID
+        set createUserDr=""
+        if $isobject(jsonObj.session) 
+        {
+            set session=jsonObj.session.%Get(0)
+            set:session'="" createUserDr=session.userID
+        }
+        set:createUserDr="" createUserDr="158"
+        
+        // Base64解码
+        set csvContent = ""
+        try {
+            set csvContent = $zcvt(fileData, "I", "BASE64")
+        } catch e1 {
+        }
+        
+        if csvContent="" {
+            try {
+                set binaryData = ##class(%SYSTEM.Encryption).Base64Decode(fileData)
+                set csvContent = $zcvt(binaryData, "I", "UTF8")
+                if csvContent["?" {
+                    set csvContent = $zcvt(binaryData, "I", "GB18030")
+                }
+                if csvContent["?" {
+                    set csvContent = binaryData
+                }
+            } catch e2 {
+            }
+        }
+        
+        if csvContent="" {
+            set resultObj.errorCode="02010003"
+            set resultObj.errorMessage="文件解码失败，请提供有效的CSV文件"
+            quit
+        }
+        
+        // 解析CSV并执行导入
+        set lineNum=0
+        set ptr=1
+        set csvContent=$replace(csvContent,$c(13,10),$c(10))
+        set csvContent=$replace(csvContent,$c(13),$c(10))
+        
+        for 
+        {
+            set line=$piece(csvContent,$c(10),ptr)
+            quit:line=""
+            set ptr=ptr+1
+            set lineNum=lineNum+1
+            continue:lineNum=1
+            continue:line=""
+            
+            set totalCount=totalCount+1
+            set rowNum=lineNum-1
+            
+            // 解析CSV列
+            try { set drgCode=$piece(line,",",1) } catch { set drgCode="" }
+            try { set drgDesc=$piece(line,",",2) } catch { set drgDesc="" }
+            try { set points=$piece(line,",",3) } catch { set points="" }
+            try { set pipValue=$piece(line,",",4) } catch { set pipValue="" }
+            try { set dgdov=$piece(line,",",5) } catch { set dgdov="" }
+            try { set payStandard=$piece(line,",",6) } catch { set payStandard="" }
+            
+            // 跳过校验失败的行
+            if (drgCode="")||(drgDesc="")||(points="")||(pipValue="")||(dgdov="")||(payStandard="")||
+            {
+                set failCount=failCount+1
+                set failObj={}
+                set failObj.rowNum=rowNum
+                set failObj.drgCode=drgCode
+                set failObj.errorMsg="必填字段为空"
+                do failList.%Push(failObj)
+                continue
+            }
+            
+            // 检查是否已存在
+            set existingID=""
+            &sql(SELECT ID INTO :existingID FROM HB_DRGCoreAlgorithmData 
+                 WHERE DRG=:drgCode AND MdtrtArea=:mdtrtArea AND FixmedinsCode=:fixmedinsCode)
+            
+            // 构建数据对象
+            set dataObj={}
+            set dataObj.DRG=drgCode
+            set dataObj.DRGDESC=drgDesc
+            set dataObj.Points=points
+            set dataObj.PipValue=pipValue
+            set dataObj.DGDOV=dgdov
+            set dataObj.PayStandard=payStandard
+            set dataObj.ProvinceDr=provinceID
+            set dataObj.CityDr=cityID
+            set dataObj.MdtrtArea=mdtrtArea
+            set dataObj.FixmedinsCode=fixmedinsCode
+            set dataObj.FixmedinsName=fixmedinsName
+            set dataObj.MedinsLv=medinsLv
+            set dataObj.StartDate=$zd($h,3)
+            set dataObj.StopDate=""
+            set dataObj.CreateDate=$zd($h,3)
+            set dataObj.CreateTime=$zt($p($h,",",2),1)
+            set dataObj.CreateUserDr=createUserDr
+            
+            set insObj={},data=[]
+            set insObj.className="User.HBDRGCoreAlgorithmData"
+            do data.%Push(dataObj)
+            set insObj.data=data
+            
+            set operationType=""
+            if existingID'="" 
+            {
+                set dataObj.ID=existingID
+                set rtn=##class(src.util.operatetable).Update(.insObj)
+                set operationType="更新"
+                set duplicateCount=duplicateCount+1
+            } 
+            else 
+            {
+                set rtn=##class(src.util.operatetable).Insert(.insObj)
+                set operationType="新增"
+                set newCount=newCount+1
+            }
+            
+            if rtn.errorCode'=0 
+            {
+                set failCount=failCount+1
+                set failObj={}
+                set failObj.rowNum=rowNum
+                set failObj.drgCode=drgCode
+                set failObj.errorMsg=rtn.errorMessage
+                do failList.%Push(failObj)
+            } 
+            else 
+            {
+                set successCount=successCount+1
+            }
+        }
+        
+        set resultObj.result.totalCount=totalCount
+        set resultObj.result.successCount=successCount
+        set resultObj.result.failCount=failCount
+        set resultObj.result.duplicateCount=duplicateCount
+        set resultObj.result.newCount=newCount
+        set resultObj.result.failList=failList
+        
+        if failCount>0 
+        {
+            set resultObj.errorCode="02010002"
+            set resultObj.errorMessage="导入完成，部分数据导入失败，请查看失败列表"
+        }
+        
+    } catch(e) {
+        set status=e.AsStatus()
+        set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+        set errorInfo="导入DRG核心算法配置出现问题:w ##class("_$ClassName_").ConfirmImportDRGCoreAlgorithm("_jsonObj.%ToJSON()")"
+        set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+        set resultObj.errorCode="04000007"
+        set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+    }
+    
+    quit resultObj
+}
+
 }

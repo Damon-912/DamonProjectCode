@@ -657,19 +657,28 @@ export interface HospitalInfoItem {
   descriptsSPCode: string;
   MedinsLv?: string;
   medinsLv?: string;
+  provinceId?: string;  // 省的id
+  cityId?: string;      // 市的id
 }
 
 /** 查询医疗机构参数 */
 export interface QueryHospitalInfoParams {
   active: string;
   descripts: string;
+  provinceID?: string;  // 省代码，用于过滤
+  cityID?: string;     // 市代码，用于过滤
 }
 
 /** 查询医疗机构信息 (01010064) */
 export const queryHospitalInfo = (
   params: QueryHospitalInfoParams
 ): Promise<ApiResponse<HospitalInfoItem[]>> => {
-  return invoke('01010064', [params]);
+  return invoke('01010064', [{
+    active: params.active,
+    descripts: params.descripts,
+    provinceID: params.provinceID || '',
+    cityID: params.cityID || ''
+  }]);
 };
 
 // ========== ICD编码导入 (02010038, 02010039, 02010040) ==========
@@ -913,4 +922,75 @@ export const deleteHBDRGSegmentationRules = (
   id: string
 ): Promise<ApiResponse> => {
   return invoke('02010046', [{ id }]);
+};
+
+// ========== DRG核心算法配置导入 (02010050, 02010051, 02010052) ==========
+
+/** DRG核心算法导入预览数据项 */
+export interface DrgCoreAlgorithmImportPreviewItem {
+  rowNum: number;
+  drgCode: string;
+  drgDesc: string;
+  points: string;
+  pipValue: string;
+  dgdov: string;
+  payStandard: string;
+  status: 'valid' | 'duplicate' | 'invalid';
+  statusDesc: string;
+  errorMsg?: string;
+}
+
+/** DRG核心算法导入预览结果 */
+export interface DrgCoreAlgorithmImportPreviewResult {
+  totalCount: number;
+  validCount: number;
+  invalidCount: number;
+  duplicateCount: number;
+  previewList: DrgCoreAlgorithmImportPreviewItem[];
+}
+
+/** DRG核心算法导入结果 */
+export interface DrgCoreAlgorithmImportResult {
+  totalCount: number;
+  successCount: number;
+  failCount: number;
+  duplicateCount: number;
+  newCount: number;
+  failList: Array<{
+    rowNum: number;
+    drgCode: string;
+    errorMsg: string;
+  }>;
+  reportUrl?: string;
+}
+
+/** DRG核心算法导入参数 */
+export interface DrgCoreAlgorithmImportParams {
+  provinceID: string;
+  cityID: string;
+  mdtrtArea: string;        // 行政区划代码（来自市的code）
+  fixmedinsCode: string;   // 医疗机构代码（来自医疗机构的OrganizationCode）
+  fixmedinsName: string;  // 医疗机构名称（来自医疗机构的Descripts）
+  medinsLv: string;        // 机构等级（来自医疗机构的HospGrade_Dr）
+  fileData: string;
+  fileName: string;
+}
+
+/** 下载DRG核心算法配置导入模板 (02010052) */
+export const downloadDrgCoreAlgorithmTemplate = (): Promise<ApiResponse<{ fileName: string; fileData: string; contentType: string }>> => {
+  return invoke('02010052', []);
+};
+
+/** DRG核心算法配置导入预览 (02010050) */
+export const previewDrgCoreAlgorithmImport = (
+  params: DrgCoreAlgorithmImportParams
+): Promise<ApiResponse<DrgCoreAlgorithmImportPreviewResult>> => {
+  return invoke('02010050', [params]);
+};
+
+/** DRG核心算法配置确认导入 (02010051) */
+export const confirmDrgCoreAlgorithmImport = (
+  params: DrgCoreAlgorithmImportParams
+): Promise<ApiResponse<DrgCoreAlgorithmImportResult>> => {
+  return invoke('02010051', [params]);
 };

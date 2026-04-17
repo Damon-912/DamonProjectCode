@@ -57,6 +57,7 @@ export interface SessionInfo {
   provID: string;
   cityID: string;
   areaCode:string;
+  medinsLv:string;
   path: string;
   sessionID: string;
   errorMessageTime: string;
@@ -98,6 +99,7 @@ export const getDefaultSession = (): SessionInfo => {
         provID: session.provID || '',
         cityID: session.cityID || '',
         areaCode: session.areaCode || '',
+        medinsLv:session.medinsLv || '',
         path: session.path || '',
         sessionID: session.sessionID || '',
         errorMessageTime: session.errorMessageTime || '',
@@ -135,6 +137,7 @@ export const getDefaultSession = (): SessionInfo => {
     provID: '',
     cityID: '',
     areaCode:'',
+    medinsLv:'',
     path: '',
     sessionID: '',
     errorMessageTime: '',

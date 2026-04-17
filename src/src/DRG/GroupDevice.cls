@@ -204,20 +204,15 @@ ClassMethod CheckGroupQY(jsonObj As %Library.DynamicObject) As %Library.DynamicO
         if (mainOperationCode '= "")
 	    {
 		    //set cc = $EXTRACT(mdc,4) Left(ADRG, 1)=:cc
-		    set adrg=""
-		    &sql(SELECT DISTINCT ADRG into :adrg FROM CB_DRGCoreGroupsList WHERE MajorProcedure=:mainOperationCode 
-		         AND SelectionCriteria='包含以下主要手术或操作' AND UnionFlag=0)
-		    if (SQLCODE =0) && (adrg '="")
+		    set leftMDC = $EXTRACT(mainDiagMDC,4) 
+		    set iCount=""
+		    &sql(SELECT COUNT(*) into :iCount FROM CB_DRGCoreGroupsList WHERE MajorProcedure=:mainOperationCode 
+		         AND SelectionCriteria='包含以下主要手术或操作' AND UnionFlag=0 AND LEFT(ADRG,1)=:leftMDC)
+		         		 	    
+		    if (SQLCODE =0) && (iCount =0)
 		    {			    
-			    //成功查询到主手术对应的MDC
-			    set mainOprnMDC = "MDC"_$EXTRACT(adrg, 1)
+			     set resultObj = ..SetErrorResult("-1", "进入QY组,主手术操作与主诊断对应MDC：【"_mainDiagMDC_"】不匹配！")	
 			}
-			
-			//比对主诊断MDC和主手术MDC,确认歧义组
-			if (mainDiagMDC '= mainOprnMDC)
-			{
-		        set resultObj = ..SetErrorResult("-1", "本次就诊进入QY组,主手术操作对应MDC：【"_mainOprnMDC_"】,主诊断对应MDC：【"_mainDiagMDC_"】")		
-			}		    
 		}	    	                   	   	        	
 	}
     catch(e) 
@@ -1264,7 +1259,7 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 		if (joRtn.errorCode '= "0")
 		{	
 		    //返回不为0表示 进入歧义组		
-            set resultObj = ..SetErrorResult("-3", "3.QY歧义组判断：" + joRtn.errorMessage)
+            set resultObj = ..SetErrorResult("-3", "3.QY歧义组判断："_joRtn.errorMessage)
             quit
 		}
 
@@ -1275,7 +1270,7 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 		
 		if (joRtn.errorCode '= "0")
 		{
-            set resultObj = ..SetErrorResult("-4", "4.1 ADRG分组失败：" + joRtn.errorMessage)
+            set resultObj = ..SetErrorResult("-4", "4.1 ADRG分组失败："_joRtn.errorMessage)
             quit
 		}
 		else
@@ -1296,7 +1291,7 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 				
 		if (joRtn.errorCode '= "0")
 		{
-            set resultObj = ..SetErrorResult("-5", "5.1 并发症确认CC/MCC失败：" + joRtn.errorMessage)
+            set resultObj = ..SetErrorResult("-5", "5.1 并发症确认CC/MCC失败："_joRtn.errorMessage)
             quit
 		}
 		else
@@ -1311,7 +1306,7 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 		set joRtn=..GroupDRG(jsonObj)								
 		if (joRtn.errorCode '= "0")
 		{
-            set resultObj = ..SetErrorResult("-7", "7.1 DRG分组失败：" + joRtn.errorMessage)
+            set resultObj = ..SetErrorResult("-7", "7.1 DRG分组失败："_joRtn.errorMessage)
             quit
 		}
 		else
@@ -1321,7 +1316,7 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 			set jaDRG= joRtn.result	
 			if (totalCount =0)
 			{
-			    set resultObj=..SetErrorResult("-7","7.2 DRG分组失败：" + joRtn.errorMessage)	
+			    set resultObj=..SetErrorResult("-7","7.2 DRG分组失败："_joRtn.errorMessage)	
 			    quit
 			}
 			

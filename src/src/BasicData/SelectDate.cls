@@ -281,15 +281,34 @@ ClassMethod GetCredTypeData(postJson) As %Library.DynamicObject
 ClassMethod FindHospDetail(postObj)
 {
 		
-    new (postJson)
+    new (postObj)
 	set resultObj={}
 	set resultObj.errorCode="0"
 	set resultObj.errorMessage="成功"
 	set resultObj.result={}
 	set dataArr=[]
-	try{
+	
+	set params=postObj.params.%Get(0)
+	set provID=params.provID
+	set cityID=params.cityID	
+	try
+	{
 		set tStatement = ##class(%SQL.Statement).%New(1)
-		set sql="SELECT ID, OrganizationCode as Code, Descripts, HospGrade_Dr AS MedinsLv,HospGrade_Dr->Descripts gradeDesc, HospType_Dr,HospType_Dr->descripts typeDesc, HospNature_Dr, HospNature_Dr->descripts natureDesc, ProvID_Dr,ProvID_Dr->Descripts proDesc, CityID_Dr, CityID_Dr->Descripts cityDesc,AreaID_Dr, AreaID_Dr->Descripts areaDesc, Active, Businesslicense, CreateDate, CreateTime, CreateUser_Dr FROM CB_Hospital where 1=1"
+		set sql= " SELECT ID, OrganizationCode as Code, Descripts, HospGrade_Dr AS MedinsLv,"
+		       _ " HospGrade_Dr->Descripts gradeDesc, HospType_Dr,HospType_Dr->descripts typeDesc, "
+		       _ " HospNature_Dr, HospNature_Dr->descripts natureDesc, ProvID_Dr,ProvID_Dr->Descripts proDesc, "
+		       _ " CityID_Dr, CityID_Dr->Descripts cityDesc,AreaID_Dr, AreaID_Dr->Descripts areaDesc, Active, "
+		       _ " Businesslicense, CreateDate, CreateTime, CreateUser_Dr FROM CB_Hospital where 1=1"
+		       
+		if (provID '="")
+		{
+			set sql=sql_" AND ProvID_Dr= "_provID
+	    }
+		if (cityID '="")
+		{
+			set sql=sql_" AND CityID_Dr= "_cityID
+		}
+		       
 		do tStatement.%Prepare(sql)
 		set result=tStatement.%Execute()
 		while result.%Next(.sc){
@@ -297,6 +316,10 @@ ClassMethod FindHospDetail(postObj)
 			set dataObj.id=result.%Get("ID")
 			set dataObj.code=result.%Get("Code")
 			set dataObj.descripts=result.%Get("Descripts")
+			
+			set dataObj.provinceId=result.%Get("ProvID_Dr")
+			set dataObj.cityId=result.%Get("CityID_Dr")			
+			
 			set dataObj.medinsLv=result.%Get("MedinsLv")
 			set dataObj.descriptsSPCode=result.%Get("gradeDesc")
 			set dataObj.descriptsSPCode=##class(src.Interface.ChineseCharacter).GetSPCodeByDescNew(result.%Get("Descripts"))

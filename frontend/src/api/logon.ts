@@ -64,6 +64,7 @@ export interface LogonResult {
   provID:string;
   cityID:string;
   areaCode:string;
+  medinsLv:string;
   path?: string;
   sessionID: string;
   errorMessageTime?: string;
