@@ -1,7 +1,7 @@
 ROUTINE User.CBMenuDetail.1 [Type=INT,Generated]
  ;User.CBMenuDetail.1
- ;Generated for class User.CBMenuDetail.  Do NOT edit. 12/24/2025 10:01:32AM
- ;;6F2F4449;User.CBMenuDetail
+ ;Generated for class User.CBMenuDetail.  Do NOT edit. 04/21/2026 04:19:01PM
+ ;;376C4D2B;User.CBMenuDetail
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
 ALPHAUP(v,r) { quit $zu(28,v,6) }
@@ -173,71 +173,71 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext0250d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03822d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext0250d(1)=0,%ext0250d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext0250d(3)=$zu(115,2)
- s %ext0250d(4)=0,%ext0250d(5)=""
+ s %ext03822d(1)=0,%ext03822d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03822d(3)=$zu(115,2)
+ s %ext03822d(4)=0,%ext03822d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext0250d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext0250d(6)=$g(%ext0250d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext0250d }
+ s %ext03822d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03822d(6)=$g(%ext03822d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03822d }
  q
 %0Cfirst 
  ; asl MOD# 2
- s %ext0250d(7)=""
-%0CmBk1 s %ext0250d(7)=$o(^CBMenuDetailI("SeqNo",%ext0250d(7)))
- i %ext0250d(7)="" g %0CmBdun
- s %ext0250d(8)=$s(%ext0250d(7)=-1E14:"",1:%ext0250d(7))
+ s %ext03822d(7)=""
+%0CmBk1 s %ext03822d(7)=$o(^CBMenuDetailI("SeqNo",%ext03822d(7)))
+ i %ext03822d(7)="" g %0CmBdun
+ s %ext03822d(8)=$s(%ext03822d(7)=-1E14:"",1:%ext03822d(7))
  s tID=""
-%0CmBk2 s tID=$o(^CBMenuDetailI("SeqNo",%ext0250d(7),tID))
+%0CmBk2 s tID=$o(^CBMenuDetailI("SeqNo",%ext03822d(7),tID))
  i tID="" g %0CmBk1
- goto:%ext0250d(3)'=1 %0CmBuncommitted
- if %ext0250d(3)=1 {
+ goto:%ext03822d(3)'=1 %0CmBuncommitted
+ if %ext03822d(3)=1 {
  	lock +^CBMenuDetailD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext0250d(5)=$name(^CBMenuDetailD($p(tID,"||",1)))_"#""SI""",%ext0250d(4)=1 }
+ 	if $t { set %ext03822d(5)=$name(^CBMenuDetailD($p(tID,"||",1)))_"#""SI""",%ext03822d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_MenuDetail for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^CBMenuDetailD(tID))
  e  g %0CmCdun
 %0CmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext0250d(1)),%ROWID=tID,%ext0250d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03822d(1)),%ROWID=tID,%ext03822d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext0250d(6)=$g(%ext0250d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03822d(6)=$g(%ext03822d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext0250d(0)) { s SQLCODE=-102 q  } i %ext0250d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext0250d(2),%ext0250d(1)'<%ext0250d(2) { s SQLCODE=100,%ROWCOUNT=%ext0250d(1),%ext0250d(0)=100 q }
+ i '$g(%ext03822d(0)) { s SQLCODE=-102 q  } i %ext03822d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03822d(2),%ext03822d(1)'<%ext03822d(2) { s SQLCODE=100,%ROWCOUNT=%ext03822d(1),%ext03822d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Cfirst:%ext0250d(0)=1
-%0CmCdun if $g(%ext0250d(3))=1 { if $g(%ext0250d(4))=1 { l -@%ext0250d(5) s %ext0250d(4)=0 } elseif $g(%ext0250d(4))=2 { do $classmethod($li(%ext0250d(5)),"%UnlockId",$li(%ext0250d(5),2),1,1)  s %ext0250d(4)=0 }}
+ g %0Cfirst:%ext03822d(0)=1
+%0CmCdun if $g(%ext03822d(3))=1 { if $g(%ext03822d(4))=1 { l -@%ext03822d(5) s %ext03822d(4)=0 } elseif $g(%ext03822d(4))=2 { do $classmethod($li(%ext03822d(5)),"%UnlockId",$li(%ext03822d(5),2),1,1)  s %ext03822d(4)=0 }}
  g %0CmBk2
 %0CmBdun 
 %0CmAdun 
- s %ROWCOUNT=%ext0250d(1),SQLCODE=100,%ext0250d(0)=100
- s:$d(%sqltime) %ext0250d(6)=$g(%ext0250d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03822d(1),SQLCODE=100,%ext03822d(0)=100
+ s:$d(%sqltime) %ext03822d(6)=$g(%ext03822d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext0250d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03822d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext0250d(1)),1:0)
- if $g(%ext0250d(3))=1 {
- 	if $g(%ext0250d(4))=1 { l -@%ext0250d(5) s %ext0250d(4)=0 } elseif $g(%ext0250d(4))=2 { do $classmethod($li(%ext0250d(5)),"%UnlockId",$li(%ext0250d(5),2),1,1)  s %ext0250d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03822d(1)),1:0)
+ if $g(%ext03822d(3))=1 {
+ 	if $g(%ext03822d(4))=1 { l -@%ext03822d(5) s %ext03822d(4)=0 } elseif $g(%ext03822d(4))=2 { do $classmethod($li(%ext03822d(5)),"%UnlockId",$li(%ext03822d(5),2),1,1)  s %ext03822d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext0250d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03822d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"pJJlN66NCyuw/ZcL3a43i6uNp7k="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"pJJlN66NCyuw/ZcL3a43i6uNp7k=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext0250d
+ k %ext03822d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext0250d(9)
+ kill %ext03822d(9)
  quit  // close
 %0Cerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext0250d(0)=100
+ s %ext03822d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^CBMenuDetailD(id)),1)
@@ -1966,24 +1966,6 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
-		if (pDynamicObject.%IsDefined("ProductCatDr")) {
-			try {
-				set newIdvalue=pDynamicObject."ProductCatDr"
-				set existingIdValue=..ProductCatDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"ProductCatDr")=##class(User.CBProductCat).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
-		if (pDynamicObject.%IsDefined("ProductModuleDr")) {
-			try {
-				set newIdvalue=pDynamicObject."ProductModuleDr"
-				set existingIdValue=..ProductModuleDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"ProductModuleDr")=##class(User.CBProductModule).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
 		if (pDynamicObject.%IsDefined("SeqNo")) && (..SeqNo'=pDynamicObject."SeqNo") {
 			try {
 				set value=pDynamicObject."SeqNo"
@@ -2052,15 +2034,6 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
-		if (pDynamicObject.%IsDefined("UpdateUserDr")) {
-			try {
-				set newIdvalue=pDynamicObject."UpdateUserDr"
-				set existingIdValue=..UpdateUserDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"UpdateUserDr")=##class(User.HBUser).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
 		if (pDynamicObject.%IsDefined("WinPosition")) && (..WinPosition'=pDynamicObject."WinPosition") {
 			try {
 				try {
@@ -2083,7 +2056,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"BackMethod":(..GetLogicalToXSDValue($This,"BackMethod",..BackMethod)),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"CondExpress":(..GetLogicalToXSDValue($This,"CondExpress",..CondExpress)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"ENDesc":(..GetLogicalToXSDValue($This,"ENDesc",..ENDesc)),"EndDate":(..GetLogicalToXSDValue($This,"EndDate",..EndDate)),"Image":(..GetLogicalToXSDValue($This,"Image",..Image)),"JSMethod":(..GetLogicalToXSDValue($This,"JSMethod",..JSMethod)),"LinkAddress":(..GetLogicalToXSDValue($This,"LinkAddress",..LinkAddress)),"LinkPath":(..GetLogicalToXSDValue($This,"LinkPath",..LinkPath)),"MainMenuDr":($CASE($ISOBJECT(..MainMenuDr),1:..MainMenuDr.%Id(),:"")),"MenuGroup":(..GetLogicalToXSDValue($This,"MenuGroup",..MenuGroup)),"Paras":(..GetLogicalToXSDValue($This,"Paras",..Paras)),"ProductCatDr":($CASE($ISOBJECT(..ProductCatDr),1:..ProductCatDr.%Id(),:"")),"ProductModuleDr":($CASE($ISOBJECT(..ProductModuleDr),1:..ProductModuleDr.%Id(),:"")),"SeqNo":(..SeqNo),"ShortcutKey":(..GetLogicalToXSDValue($This,"ShortcutKey",..ShortcutKey)),"Tooltip":(..GetLogicalToXSDValue($This,"Tooltip",..Tooltip)),"UpdateDate":(..GetLogicalToXSDValue($This,"UpdateDate",..UpdateDate)),"UpdateTime":(..GetLogicalToXSDValue($This,"UpdateTime",..UpdateTime)),"UpdateUserDr":($CASE($ISOBJECT(..UpdateUserDr),1:..UpdateUserDr.%Id(),:"")),"WinPosition":(..GetLogicalToXSDValue($This,"WinPosition",..WinPosition))}
+		set pDynamicObject={"ID":(..%Id()),"BackMethod":(..GetLogicalToXSDValue($This,"BackMethod",..BackMethod)),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"CondExpress":(..GetLogicalToXSDValue($This,"CondExpress",..CondExpress)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"ENDesc":(..GetLogicalToXSDValue($This,"ENDesc",..ENDesc)),"EndDate":(..GetLogicalToXSDValue($This,"EndDate",..EndDate)),"Image":(..GetLogicalToXSDValue($This,"Image",..Image)),"JSMethod":(..GetLogicalToXSDValue($This,"JSMethod",..JSMethod)),"LinkAddress":(..GetLogicalToXSDValue($This,"LinkAddress",..LinkAddress)),"LinkPath":(..GetLogicalToXSDValue($This,"LinkPath",..LinkPath)),"MainMenuDr":($CASE($ISOBJECT(..MainMenuDr),1:..MainMenuDr.%Id(),:"")),"MenuGroup":(..GetLogicalToXSDValue($This,"MenuGroup",..MenuGroup)),"Paras":(..GetLogicalToXSDValue($This,"Paras",..Paras)),"ProductCatDr":(..ProductCatDr),"ProductModuleDr":(..ProductModuleDr),"SeqNo":(..SeqNo),"ShortcutKey":(..GetLogicalToXSDValue($This,"ShortcutKey",..ShortcutKey)),"Tooltip":(..GetLogicalToXSDValue($This,"Tooltip",..Tooltip)),"UpdateDate":(..GetLogicalToXSDValue($This,"UpdateDate",..UpdateDate)),"UpdateTime":(..GetLogicalToXSDValue($This,"UpdateTime",..UpdateTime)),"UpdateUserDr":(..UpdateUserDr),"WinPosition":(..GetLogicalToXSDValue($This,"WinPosition",..WinPosition))}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}

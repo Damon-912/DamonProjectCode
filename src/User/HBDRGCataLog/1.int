@@ -1,6 +1,6 @@
 ROUTINE User.HBDRGCataLog.1 [Type=INT,Generated]
  ;User.HBDRGCataLog.1
- ;Generated for class User.HBDRGCataLog.  Do NOT edit. 04/09/2026 06:06:39PM
+ ;Generated for class User.HBDRGCataLog.  Do NOT edit. 04/21/2026 04:19:04PM
  ;;677A794A;User.HBDRGCataLog
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
@@ -106,70 +106,70 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext02385d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03872d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext02385d(1)=0,%ext02385d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext02385d(3)=$zu(115,2)
- s %ext02385d(4)=0,%ext02385d(5)=""
+ s %ext03872d(1)=0,%ext03872d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03872d(3)=$zu(115,2)
+ s %ext03872d(4)=0,%ext03872d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext02385d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext02385d(6)=$g(%ext02385d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext02385d }
+ s %ext03872d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03872d(6)=$g(%ext03872d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03872d }
  q
 %0Afirst 
  ; asl MOD# 2
- s %ext02385d(7)=""
-%0AmBk1 s %ext02385d(7)=$o(^HBDRGCataLogI("Code",%ext02385d(7)))
- i %ext02385d(7)="" g %0AmBdun
+ s %ext03872d(7)=""
+%0AmBk1 s %ext03872d(7)=$o(^HBDRGCataLogI("Code",%ext03872d(7)))
+ i %ext03872d(7)="" g %0AmBdun
  s tID=""
-%0AmBk2 s tID=$o(^HBDRGCataLogI("Code",%ext02385d(7),tID))
+%0AmBk2 s tID=$o(^HBDRGCataLogI("Code",%ext03872d(7),tID))
  i tID="" g %0AmBk1
- goto:%ext02385d(3)'=1 %0AmBuncommitted
- if %ext02385d(3)=1 {
+ goto:%ext03872d(3)'=1 %0AmBuncommitted
+ if %ext03872d(3)=1 {
  	lock +^HBDRGCataLogD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext02385d(5)=$name(^HBDRGCataLogD($p(tID,"||",1)))_"#""SI""",%ext02385d(4)=1 }
+ 	if $t { set %ext03872d(5)=$name(^HBDRGCataLogD($p(tID,"||",1)))_"#""SI""",%ext03872d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGCataLog for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^HBDRGCataLogD(tID))
  e  g %0AmCdun
 %0AmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext02385d(1)),%ROWID=tID,%ext02385d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03872d(1)),%ROWID=tID,%ext03872d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext02385d(6)=$g(%ext02385d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03872d(6)=$g(%ext03872d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext02385d(0)) { s SQLCODE=-102 q  } i %ext02385d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext02385d(2),%ext02385d(1)'<%ext02385d(2) { s SQLCODE=100,%ROWCOUNT=%ext02385d(1),%ext02385d(0)=100 q }
+ i '$g(%ext03872d(0)) { s SQLCODE=-102 q  } i %ext03872d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03872d(2),%ext03872d(1)'<%ext03872d(2) { s SQLCODE=100,%ROWCOUNT=%ext03872d(1),%ext03872d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Afirst:%ext02385d(0)=1
-%0AmCdun if $g(%ext02385d(3))=1 { if $g(%ext02385d(4))=1 { l -@%ext02385d(5) s %ext02385d(4)=0 } elseif $g(%ext02385d(4))=2 { do $classmethod($li(%ext02385d(5)),"%UnlockId",$li(%ext02385d(5),2),1,1)  s %ext02385d(4)=0 }}
+ g %0Afirst:%ext03872d(0)=1
+%0AmCdun if $g(%ext03872d(3))=1 { if $g(%ext03872d(4))=1 { l -@%ext03872d(5) s %ext03872d(4)=0 } elseif $g(%ext03872d(4))=2 { do $classmethod($li(%ext03872d(5)),"%UnlockId",$li(%ext03872d(5),2),1,1)  s %ext03872d(4)=0 }}
  g %0AmBk2
 %0AmBdun 
 %0AmAdun 
- s %ROWCOUNT=%ext02385d(1),SQLCODE=100,%ext02385d(0)=100
- s:$d(%sqltime) %ext02385d(6)=$g(%ext02385d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03872d(1),SQLCODE=100,%ext03872d(0)=100
+ s:$d(%sqltime) %ext03872d(6)=$g(%ext03872d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext02385d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03872d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext02385d(1)),1:0)
- if $g(%ext02385d(3))=1 {
- 	if $g(%ext02385d(4))=1 { l -@%ext02385d(5) s %ext02385d(4)=0 } elseif $g(%ext02385d(4))=2 { do $classmethod($li(%ext02385d(5)),"%UnlockId",$li(%ext02385d(5),2),1,1)  s %ext02385d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03872d(1)),1:0)
+ if $g(%ext03872d(3))=1 {
+ 	if $g(%ext03872d(4))=1 { l -@%ext03872d(5) s %ext03872d(4)=0 } elseif $g(%ext03872d(4))=2 { do $classmethod($li(%ext03872d(5)),"%UnlockId",$li(%ext03872d(5),2),1,1)  s %ext03872d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext02385d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03872d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"SZHnckF+R1mC1kjGb4BeYfSnlpM="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"SZHnckF+R1mC1kjGb4BeYfSnlpM=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext02385d
+ k %ext03872d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext02385d(8)
+ kill %ext03872d(8)
  quit  // close
 %0Aerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext02385d(0)=100
+ s %ext03872d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^HBDRGCataLogD(id)),1)
@@ -1229,15 +1229,6 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
-		if (pDynamicObject.%IsDefined("UpdateUserDr")) {
-			try {
-				set newIdvalue=pDynamicObject."UpdateUserDr"
-				set existingIdValue=..UpdateUserDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"UpdateUserDr")=##class(User.HBUser).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}
@@ -1245,7 +1236,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"Admvs":(..GetLogicalToXSDValue($This,"Admvs",..Admvs)),"CityDr":($CASE($ISOBJECT(..CityDr),1:..CityDr.%Id(),:"")),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"ProvinceDr":($CASE($ISOBJECT(..ProvinceDr),1:..ProvinceDr.%Id(),:"")),"UpdateDate":(..GetLogicalToXSDValue($This,"UpdateDate",..UpdateDate)),"UpdateTime":(..GetLogicalToXSDValue($This,"UpdateTime",..UpdateTime)),"UpdateUserDr":($CASE($ISOBJECT(..UpdateUserDr),1:..UpdateUserDr.%Id(),:""))}
+		set pDynamicObject={"ID":(..%Id()),"Admvs":(..GetLogicalToXSDValue($This,"Admvs",..Admvs)),"CityDr":($CASE($ISOBJECT(..CityDr),1:..CityDr.%Id(),:"")),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"ProvinceDr":($CASE($ISOBJECT(..ProvinceDr),1:..ProvinceDr.%Id(),:"")),"UpdateDate":(..GetLogicalToXSDValue($This,"UpdateDate",..UpdateDate)),"UpdateTime":(..GetLogicalToXSDValue($This,"UpdateTime",..UpdateTime)),"UpdateUserDr":(..UpdateUserDr)}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}

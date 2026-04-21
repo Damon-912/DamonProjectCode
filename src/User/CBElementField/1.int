@@ -1,6 +1,6 @@
 ROUTINE User.CBElementField.1 [Type=INT,Generated]
  ;User.CBElementField.1
- ;Generated for class User.CBElementField.  Do NOT edit. 12/24/2025 10:04:03AM
+ ;Generated for class User.CBElementField.  Do NOT edit. 04/21/2026 04:18:59PM
  ;;76366C75;User.CBElementField
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
@@ -179,73 +179,73 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext0266d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03795d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext0266d(1)=0,%ext0266d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext0266d(3)=$zu(115,2)
- s %ext0266d(4)=0,%ext0266d(5)=""
+ s %ext03795d(1)=0,%ext03795d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03795d(3)=$zu(115,2)
+ s %ext03795d(4)=0,%ext03795d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext0266d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext0266d(6)=$g(%ext0266d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext0266d }
+ s %ext03795d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03795d(6)=$g(%ext03795d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03795d }
  q
 %0Cfirst 
  ; asl MOD# 2
- s %ext0266d(7)=""
-%0CmBk1 s %ext0266d(7)=$o(^CBElementFieldI("ClassCode",%ext0266d(7)))
- i %ext0266d(7)="" g %0CmBdun
- s %ext0266d(8)=""
-%0CmBk2 s %ext0266d(8)=$o(^CBElementFieldI("ClassCode",%ext0266d(7),%ext0266d(8)))
- i %ext0266d(8)="" g %0CmBk1
+ s %ext03795d(7)=""
+%0CmBk1 s %ext03795d(7)=$o(^CBElementFieldI("ClassCode",%ext03795d(7)))
+ i %ext03795d(7)="" g %0CmBdun
+ s %ext03795d(8)=""
+%0CmBk2 s %ext03795d(8)=$o(^CBElementFieldI("ClassCode",%ext03795d(7),%ext03795d(8)))
+ i %ext03795d(8)="" g %0CmBk1
  s tID=""
- s tID=$o(^CBElementFieldI("ClassCode",%ext0266d(7),%ext0266d(8),tID))
+ s tID=$o(^CBElementFieldI("ClassCode",%ext03795d(7),%ext03795d(8),tID))
  i tID="" g %0CmBk2
- goto:%ext0266d(3)'=1 %0CmBuncommitted
- if %ext0266d(3)=1 {
+ goto:%ext03795d(3)'=1 %0CmBuncommitted
+ if %ext03795d(3)=1 {
  	lock +^CBElementFieldD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext0266d(5)=$name(^CBElementFieldD($p(tID,"||",1)))_"#""SI""",%ext0266d(4)=1 }
+ 	if $t { set %ext03795d(5)=$name(^CBElementFieldD($p(tID,"||",1)))_"#""SI""",%ext03795d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_ElementField for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^CBElementFieldD(tID))
  e  g %0CmCdun
 %0CmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext0266d(1)),%ROWID=tID,%ext0266d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03795d(1)),%ROWID=tID,%ext03795d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext0266d(6)=$g(%ext0266d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03795d(6)=$g(%ext03795d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext0266d(0)) { s SQLCODE=-102 q  } i %ext0266d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext0266d(2),%ext0266d(1)'<%ext0266d(2) { s SQLCODE=100,%ROWCOUNT=%ext0266d(1),%ext0266d(0)=100 q }
+ i '$g(%ext03795d(0)) { s SQLCODE=-102 q  } i %ext03795d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03795d(2),%ext03795d(1)'<%ext03795d(2) { s SQLCODE=100,%ROWCOUNT=%ext03795d(1),%ext03795d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Cfirst:%ext0266d(0)=1
-%0CmCdun if $g(%ext0266d(3))=1 { if $g(%ext0266d(4))=1 { l -@%ext0266d(5) s %ext0266d(4)=0 } elseif $g(%ext0266d(4))=2 { do $classmethod($li(%ext0266d(5)),"%UnlockId",$li(%ext0266d(5),2),1,1)  s %ext0266d(4)=0 }}
+ g %0Cfirst:%ext03795d(0)=1
+%0CmCdun if $g(%ext03795d(3))=1 { if $g(%ext03795d(4))=1 { l -@%ext03795d(5) s %ext03795d(4)=0 } elseif $g(%ext03795d(4))=2 { do $classmethod($li(%ext03795d(5)),"%UnlockId",$li(%ext03795d(5),2),1,1)  s %ext03795d(4)=0 }}
  g %0CmBk2
 %0CmBdun 
 %0CmAdun 
- s %ROWCOUNT=%ext0266d(1),SQLCODE=100,%ext0266d(0)=100
- s:$d(%sqltime) %ext0266d(6)=$g(%ext0266d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03795d(1),SQLCODE=100,%ext03795d(0)=100
+ s:$d(%sqltime) %ext03795d(6)=$g(%ext03795d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext0266d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03795d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext0266d(1)),1:0)
- if $g(%ext0266d(3))=1 {
- 	if $g(%ext0266d(4))=1 { l -@%ext0266d(5) s %ext0266d(4)=0 } elseif $g(%ext0266d(4))=2 { do $classmethod($li(%ext0266d(5)),"%UnlockId",$li(%ext0266d(5),2),1,1)  s %ext0266d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03795d(1)),1:0)
+ if $g(%ext03795d(3))=1 {
+ 	if $g(%ext03795d(4))=1 { l -@%ext03795d(5) s %ext03795d(4)=0 } elseif $g(%ext03795d(4))=2 { do $classmethod($li(%ext03795d(5)),"%UnlockId",$li(%ext03795d(5),2),1,1)  s %ext03795d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext0266d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03795d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"3pc45x1MdEKef+EnPq9Q/Yoo4zk="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"3pc45x1MdEKef+EnPq9Q/Yoo4zk=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext0266d
+ k %ext03795d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext0266d(9)
+ kill %ext03795d(9)
  quit  // close
 %0Cerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext0266d(0)=100
+ s %ext03795d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^CBElementFieldD(id)),1)
@@ -1537,15 +1537,6 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
-		if (pDynamicObject.%IsDefined("CreateUserDr")) {
-			try {
-				set newIdvalue=pDynamicObject."CreateUserDr"
-				set existingIdValue=..CreateUserDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"CreateUserDr")=##class(User.HBUser).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
 		if (pDynamicObject.%IsDefined("CustomDataDr")) {
 			try {
 				set newIdvalue=pDynamicObject."CustomDataDr"
@@ -1625,7 +1616,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"CreateDate":(..GetLogicalToXSDValue($This,"CreateDate",..CreateDate)),"CreateUserDr":($CASE($ISOBJECT(..CreateUserDr),1:..CreateUserDr.%Id(),:"")),"CustomDataDr":($CASE($ISOBJECT(..CustomDataDr),1:..CustomDataDr.%Id(),:"")),"CustomDataStr":(..GetLogicalToXSDValue($This,"CustomDataStr",..CustomDataStr)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"Doubt":(..GetLogicalToXSDValue($This,"Doubt",..Doubt)),"FieldClassDr":($CASE($ISOBJECT(..FieldClassDr),1:..FieldClassDr.%Id(),:"")),"FieldTypeDr":($CASE($ISOBJECT(..FieldTypeDr),1:..FieldTypeDr.%Id(),:""))}
+		set pDynamicObject={"ID":(..%Id()),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"CreateDate":(..GetLogicalToXSDValue($This,"CreateDate",..CreateDate)),"CreateUserDr":(..CreateUserDr),"CustomDataDr":($CASE($ISOBJECT(..CustomDataDr),1:..CustomDataDr.%Id(),:"")),"CustomDataStr":(..GetLogicalToXSDValue($This,"CustomDataStr",..CustomDataStr)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"Doubt":(..GetLogicalToXSDValue($This,"Doubt",..Doubt)),"FieldClassDr":($CASE($ISOBJECT(..FieldClassDr),1:..FieldClassDr.%Id(),:"")),"FieldTypeDr":($CASE($ISOBJECT(..FieldTypeDr),1:..FieldTypeDr.%Id(),:""))}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}

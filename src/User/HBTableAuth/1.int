@@ -1,6 +1,6 @@
 ROUTINE User.HBTableAuth.1 [Type=INT,Generated]
  ;User.HBTableAuth.1
- ;Generated for class User.HBTableAuth.  Do NOT edit. 12/24/2025 10:04:04AM
+ ;Generated for class User.HBTableAuth.  Do NOT edit. 04/21/2026 04:19:06PM
  ;;43696C6E;User.HBTableAuth
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
@@ -160,80 +160,80 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext0291d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03894d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext0291d(1)=0,%ext0291d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext0291d(3)=$zu(115,2)
- s %ext0291d(4)=0,%ext0291d(5)=""
+ s %ext03894d(1)=0,%ext03894d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03894d(3)=$zu(115,2)
+ s %ext03894d(4)=0,%ext03894d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext0291d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext0291d(6)=$g(%ext0291d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext0291d }
+ s %ext03894d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03894d(6)=$g(%ext03894d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03894d }
  q
 %0Cfirst 
  ; asl MOD# 2
- s %ext0291d(7)=""
-%0CmBk1 s %ext0291d(7)=$o(^HBTableAuthI("Type",%ext0291d(7)))
- i %ext0291d(7)="" g %0CmBdun
- s %ext0291d(8)=""
-%0CmBk2 s %ext0291d(8)=$o(^HBTableAuthI("Type",%ext0291d(7),%ext0291d(8)))
- i %ext0291d(8)="" g %0CmBk1
- s %ext0291d(9)=$s(%ext0291d(8)=-1E14:"",1:%ext0291d(8))
- s %ext0291d(10)=""
-%0CmBk3 s %ext0291d(10)=$o(^HBTableAuthI("Type",%ext0291d(7),%ext0291d(8),%ext0291d(10)))
- i %ext0291d(10)="" g %0CmBk2
- s %ext0291d(11)=""
-%0CmBk4 s %ext0291d(11)=$o(^HBTableAuthI("Type",%ext0291d(7),%ext0291d(8),%ext0291d(10),%ext0291d(11)))
- i %ext0291d(11)="" g %0CmBk3
+ s %ext03894d(7)=""
+%0CmBk1 s %ext03894d(7)=$o(^HBTableAuthI("Type",%ext03894d(7)))
+ i %ext03894d(7)="" g %0CmBdun
+ s %ext03894d(8)=""
+%0CmBk2 s %ext03894d(8)=$o(^HBTableAuthI("Type",%ext03894d(7),%ext03894d(8)))
+ i %ext03894d(8)="" g %0CmBk1
+ s %ext03894d(9)=$s(%ext03894d(8)=-1E14:"",1:%ext03894d(8))
+ s %ext03894d(10)=""
+%0CmBk3 s %ext03894d(10)=$o(^HBTableAuthI("Type",%ext03894d(7),%ext03894d(8),%ext03894d(10)))
+ i %ext03894d(10)="" g %0CmBk2
+ s %ext03894d(11)=""
+%0CmBk4 s %ext03894d(11)=$o(^HBTableAuthI("Type",%ext03894d(7),%ext03894d(8),%ext03894d(10),%ext03894d(11)))
+ i %ext03894d(11)="" g %0CmBk3
  s tID=""
-%0CmBk5 s tID=$o(^HBTableAuthI("Type",%ext0291d(7),%ext0291d(8),%ext0291d(10),%ext0291d(11),tID))
+%0CmBk5 s tID=$o(^HBTableAuthI("Type",%ext03894d(7),%ext03894d(8),%ext03894d(10),%ext03894d(11),tID))
  i tID="" g %0CmBk4
- goto:%ext0291d(3)'=1 %0CmBuncommitted
- if %ext0291d(3)=1 {
+ goto:%ext03894d(3)'=1 %0CmBuncommitted
+ if %ext03894d(3)=1 {
  	lock +^HBTableAuthD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext0291d(5)=$name(^HBTableAuthD($p(tID,"||",1)))_"#""SI""",%ext0291d(4)=1 }
+ 	if $t { set %ext03894d(5)=$name(^HBTableAuthD($p(tID,"||",1)))_"#""SI""",%ext03894d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_TableAuth for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^HBTableAuthD(tID))
  e  g %0CmCdun
 %0CmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext0291d(1)),%ROWID=tID,%ext0291d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03894d(1)),%ROWID=tID,%ext03894d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext0291d(6)=$g(%ext0291d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03894d(6)=$g(%ext03894d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext0291d(0)) { s SQLCODE=-102 q  } i %ext0291d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext0291d(2),%ext0291d(1)'<%ext0291d(2) { s SQLCODE=100,%ROWCOUNT=%ext0291d(1),%ext0291d(0)=100 q }
+ i '$g(%ext03894d(0)) { s SQLCODE=-102 q  } i %ext03894d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03894d(2),%ext03894d(1)'<%ext03894d(2) { s SQLCODE=100,%ROWCOUNT=%ext03894d(1),%ext03894d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Cfirst:%ext0291d(0)=1
-%0CmCdun if $g(%ext0291d(3))=1 { if $g(%ext0291d(4))=1 { l -@%ext0291d(5) s %ext0291d(4)=0 } elseif $g(%ext0291d(4))=2 { do $classmethod($li(%ext0291d(5)),"%UnlockId",$li(%ext0291d(5),2),1,1)  s %ext0291d(4)=0 }}
+ g %0Cfirst:%ext03894d(0)=1
+%0CmCdun if $g(%ext03894d(3))=1 { if $g(%ext03894d(4))=1 { l -@%ext03894d(5) s %ext03894d(4)=0 } elseif $g(%ext03894d(4))=2 { do $classmethod($li(%ext03894d(5)),"%UnlockId",$li(%ext03894d(5),2),1,1)  s %ext03894d(4)=0 }}
  g %0CmBk5
 %0CmBdun 
 %0CmAdun 
- s %ROWCOUNT=%ext0291d(1),SQLCODE=100,%ext0291d(0)=100
- s:$d(%sqltime) %ext0291d(6)=$g(%ext0291d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03894d(1),SQLCODE=100,%ext03894d(0)=100
+ s:$d(%sqltime) %ext03894d(6)=$g(%ext03894d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext0291d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03894d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext0291d(1)),1:0)
- if $g(%ext0291d(3))=1 {
- 	if $g(%ext0291d(4))=1 { l -@%ext0291d(5) s %ext0291d(4)=0 } elseif $g(%ext0291d(4))=2 { do $classmethod($li(%ext0291d(5)),"%UnlockId",$li(%ext0291d(5),2),1,1)  s %ext0291d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03894d(1)),1:0)
+ if $g(%ext03894d(3))=1 {
+ 	if $g(%ext03894d(4))=1 { l -@%ext03894d(5) s %ext03894d(4)=0 } elseif $g(%ext03894d(4))=2 { do $classmethod($li(%ext03894d(5)),"%UnlockId",$li(%ext03894d(5),2),1,1)  s %ext03894d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext0291d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03894d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"WZ7ZqvpjZmjuTUBTYpOF0MLV1Hw="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"WZ7ZqvpjZmjuTUBTYpOF0MLV1Hw=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext0291d
+ k %ext03894d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext0291d(12)
+ kill %ext03894d(12)
  quit  // close
 %0Cerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext0291d(0)=100
+ s %ext03894d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^HBTableAuthD(id)),1)
@@ -1739,15 +1739,6 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
-		if (pDynamicObject.%IsDefined("UserDr")) {
-			try {
-				set newIdvalue=pDynamicObject."UserDr"
-				set existingIdValue=..UserDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"UserDr")=##class(User.HBUser).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
 		if (pDynamicObject.%IsDefined("Width")) && (..Width'=pDynamicObject."Width") {
 			try {
 				try {
@@ -1770,7 +1761,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"Align":(..GetLogicalToXSDValue($This,"Align",..Align)),"ComTableDr":($CASE($ISOBJECT(..ComTableDr),1:..ComTableDr.%Id(),:"")),"ComponentDr":($CASE($ISOBJECT(..ComponentDr),1:..ComponentDr.%Id(),:"")),"DataID":(..GetLogicalToXSDValue($This,"DataID",..DataID)),"Display":(..GetLogicalToXSDValue($This,"Display",..Display)),"ENDesc":(..GetLogicalToXSDValue($This,"ENDesc",..ENDesc)),"Encrypt":(..GetLogicalToXSDValue($This,"Encrypt",..Encrypt)),"Export":(..GetLogicalToXSDValue($This,"Export",..Export)),"Fixed":(..GetLogicalToXSDValue($This,"Fixed",..Fixed)),"HospitalDr":($CASE($ISOBJECT(..HospitalDr),1:..HospitalDr.%Id(),:"")),"Print":(..GetLogicalToXSDValue($This,"Print",..Print)),"SeqNo":(..SeqNo),"Title":(..GetLogicalToXSDValue($This,"Title",..Title)),"Type":(..GetLogicalToXSDValue($This,"Type",..Type)),"UserDr":($CASE($ISOBJECT(..UserDr),1:..UserDr.%Id(),:"")),"Width":(..GetLogicalToXSDValue($This,"Width",..Width))}
+		set pDynamicObject={"ID":(..%Id()),"Align":(..GetLogicalToXSDValue($This,"Align",..Align)),"ComTableDr":($CASE($ISOBJECT(..ComTableDr),1:..ComTableDr.%Id(),:"")),"ComponentDr":($CASE($ISOBJECT(..ComponentDr),1:..ComponentDr.%Id(),:"")),"DataID":(..GetLogicalToXSDValue($This,"DataID",..DataID)),"Display":(..GetLogicalToXSDValue($This,"Display",..Display)),"ENDesc":(..GetLogicalToXSDValue($This,"ENDesc",..ENDesc)),"Encrypt":(..GetLogicalToXSDValue($This,"Encrypt",..Encrypt)),"Export":(..GetLogicalToXSDValue($This,"Export",..Export)),"Fixed":(..GetLogicalToXSDValue($This,"Fixed",..Fixed)),"HospitalDr":($CASE($ISOBJECT(..HospitalDr),1:..HospitalDr.%Id(),:"")),"Print":(..GetLogicalToXSDValue($This,"Print",..Print)),"SeqNo":(..SeqNo),"Title":(..GetLogicalToXSDValue($This,"Title",..Title)),"Type":(..GetLogicalToXSDValue($This,"Type",..Type)),"UserDr":(..UserDr),"Width":(..GetLogicalToXSDValue($This,"Width",..Width))}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}

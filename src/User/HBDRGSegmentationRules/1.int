@@ -1,6 +1,6 @@
 ROUTINE User.HBDRGSegmentationRules.1 [Type=INT,Generated]
  ;User.HBDRGSegmentationRules.1
- ;Generated for class User.HBDRGSegmentationRules.  Do NOT edit. 04/10/2026 11:41:57AM
+ ;Generated for class User.HBDRGSegmentationRules.  Do NOT edit. 04/21/2026 04:19:05PM
  ;;72516145;User.HBDRGSegmentationRules
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
@@ -151,70 +151,70 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext02503d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03879d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext02503d(1)=0,%ext02503d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext02503d(3)=$zu(115,2)
- s %ext02503d(4)=0,%ext02503d(5)=""
+ s %ext03879d(1)=0,%ext03879d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03879d(3)=$zu(115,2)
+ s %ext03879d(4)=0,%ext03879d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext02503d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext02503d(6)=$g(%ext02503d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext02503d }
+ s %ext03879d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03879d(6)=$g(%ext03879d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03879d }
  q
 %0Cfirst 
  ; asl MOD# 2
- s %ext02503d(7)=""
-%0CmBk1 s %ext02503d(7)=$o(^HBDRGSegmentationRulesI("ADRGIdx",%ext02503d(7)))
- i %ext02503d(7)="" g %0CmBdun
+ s %ext03879d(7)=""
+%0CmBk1 s %ext03879d(7)=$o(^HBDRGSegmentationRulesI("ADRGIdx",%ext03879d(7)))
+ i %ext03879d(7)="" g %0CmBdun
  s tID=""
- s tID=$o(^HBDRGSegmentationRulesI("ADRGIdx",%ext02503d(7),tID))
+ s tID=$o(^HBDRGSegmentationRulesI("ADRGIdx",%ext03879d(7),tID))
  i tID="" g %0CmBk1
- goto:%ext02503d(3)'=1 %0CmBuncommitted
- if %ext02503d(3)=1 {
+ goto:%ext03879d(3)'=1 %0CmBuncommitted
+ if %ext03879d(3)=1 {
  	lock +^HBDRGSegmentationRulesD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext02503d(5)=$name(^HBDRGSegmentationRulesD($p(tID,"||",1)))_"#""SI""",%ext02503d(4)=1 }
+ 	if $t { set %ext03879d(5)=$name(^HBDRGSegmentationRulesD($p(tID,"||",1)))_"#""SI""",%ext03879d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGSegmentationRules for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^HBDRGSegmentationRulesD(tID))
  e  g %0CmCdun
 %0CmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext02503d(1)),%ROWID=tID,%ext02503d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03879d(1)),%ROWID=tID,%ext03879d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext02503d(6)=$g(%ext02503d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03879d(6)=$g(%ext03879d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext02503d(0)) { s SQLCODE=-102 q  } i %ext02503d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext02503d(2),%ext02503d(1)'<%ext02503d(2) { s SQLCODE=100,%ROWCOUNT=%ext02503d(1),%ext02503d(0)=100 q }
+ i '$g(%ext03879d(0)) { s SQLCODE=-102 q  } i %ext03879d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03879d(2),%ext03879d(1)'<%ext03879d(2) { s SQLCODE=100,%ROWCOUNT=%ext03879d(1),%ext03879d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Cfirst:%ext02503d(0)=1
-%0CmCdun if $g(%ext02503d(3))=1 { if $g(%ext02503d(4))=1 { l -@%ext02503d(5) s %ext02503d(4)=0 } elseif $g(%ext02503d(4))=2 { do $classmethod($li(%ext02503d(5)),"%UnlockId",$li(%ext02503d(5),2),1,1)  s %ext02503d(4)=0 }}
+ g %0Cfirst:%ext03879d(0)=1
+%0CmCdun if $g(%ext03879d(3))=1 { if $g(%ext03879d(4))=1 { l -@%ext03879d(5) s %ext03879d(4)=0 } elseif $g(%ext03879d(4))=2 { do $classmethod($li(%ext03879d(5)),"%UnlockId",$li(%ext03879d(5),2),1,1)  s %ext03879d(4)=0 }}
  g %0CmBk1
 %0CmBdun 
 %0CmAdun 
- s %ROWCOUNT=%ext02503d(1),SQLCODE=100,%ext02503d(0)=100
- s:$d(%sqltime) %ext02503d(6)=$g(%ext02503d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03879d(1),SQLCODE=100,%ext03879d(0)=100
+ s:$d(%sqltime) %ext03879d(6)=$g(%ext03879d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext02503d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03879d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext02503d(1)),1:0)
- if $g(%ext02503d(3))=1 {
- 	if $g(%ext02503d(4))=1 { l -@%ext02503d(5) s %ext02503d(4)=0 } elseif $g(%ext02503d(4))=2 { do $classmethod($li(%ext02503d(5)),"%UnlockId",$li(%ext02503d(5),2),1,1)  s %ext02503d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03879d(1)),1:0)
+ if $g(%ext03879d(3))=1 {
+ 	if $g(%ext03879d(4))=1 { l -@%ext03879d(5) s %ext03879d(4)=0 } elseif $g(%ext03879d(4))=2 { do $classmethod($li(%ext03879d(5)),"%UnlockId",$li(%ext03879d(5),2),1,1)  s %ext03879d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext02503d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03879d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"/vzb5MZRcBrOF6W31FnCkws/asA="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"/vzb5MZRcBrOF6W31FnCkws/asA=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext02503d
+ k %ext03879d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext02503d(8)
+ kill %ext03879d(8)
  quit  // close
 %0Cerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext02503d(0)=100
+ s %ext03879d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^HBDRGSegmentationRulesD(id)),1)
@@ -1508,15 +1508,6 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
-		if (pDynamicObject.%IsDefined("UpdateUserDr")) {
-			try {
-				set newIdvalue=pDynamicObject."UpdateUserDr"
-				set existingIdValue=..UpdateUserDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"UpdateUserDr")=##class(User.HBUser).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}
@@ -1524,7 +1515,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"ADRG":(..GetLogicalToXSDValue($This,"ADRG",..ADRG)),"ADRGDesc":(..GetLogicalToXSDValue($This,"ADRGDesc",..ADRGDesc)),"Admvs":(..GetLogicalToXSDValue($This,"Admvs",..Admvs)),"CityDr":($CASE($ISOBJECT(..CityDr),1:..CityDr.%Id(),:"")),"ProvinceDr":($CASE($ISOBJECT(..ProvinceDr),1:..ProvinceDr.%Id(),:"")),"SegmentationFlag":(..GetLogicalToXSDValue($This,"SegmentationFlag",..SegmentationFlag)),"SelectionCriteria":(..GetLogicalToXSDValue($This,"SelectionCriteria",..SelectionCriteria)),"UnionFlag":(..GetLogicalToXSDValue($This,"UnionFlag",..UnionFlag)),"UpdateDate":(..GetLogicalToXSDValue($This,"UpdateDate",..UpdateDate)),"UpdateTime":(..GetLogicalToXSDValue($This,"UpdateTime",..UpdateTime)),"UpdateUserDr":($CASE($ISOBJECT(..UpdateUserDr),1:..UpdateUserDr.%Id(),:""))}
+		set pDynamicObject={"ID":(..%Id()),"ADRG":(..GetLogicalToXSDValue($This,"ADRG",..ADRG)),"ADRGDesc":(..GetLogicalToXSDValue($This,"ADRGDesc",..ADRGDesc)),"Admvs":(..GetLogicalToXSDValue($This,"Admvs",..Admvs)),"CityDr":($CASE($ISOBJECT(..CityDr),1:..CityDr.%Id(),:"")),"ProvinceDr":($CASE($ISOBJECT(..ProvinceDr),1:..ProvinceDr.%Id(),:"")),"SegmentationFlag":(..GetLogicalToXSDValue($This,"SegmentationFlag",..SegmentationFlag)),"SelectionCriteria":(..GetLogicalToXSDValue($This,"SelectionCriteria",..SelectionCriteria)),"UnionFlag":(..GetLogicalToXSDValue($This,"UnionFlag",..UnionFlag)),"UpdateDate":(..GetLogicalToXSDValue($This,"UpdateDate",..UpdateDate)),"UpdateTime":(..GetLogicalToXSDValue($This,"UpdateTime",..UpdateTime)),"UpdateUserDr":(..UpdateUserDr)}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}

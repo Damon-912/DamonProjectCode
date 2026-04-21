@@ -1,6 +1,6 @@
 ROUTINE User.CBBasicDictionarySub.1 [Type=INT,Generated]
  ;User.CBBasicDictionarySub.1
- ;Generated for class User.CBBasicDictionarySub.  Do NOT edit. 12/24/2025 10:04:04AM
+ ;Generated for class User.CBBasicDictionarySub.  Do NOT edit. 04/21/2026 04:19:07PM
  ;;7656377A;User.CBBasicDictionarySub
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
@@ -164,75 +164,75 @@ BSLoopDun
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext0305d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03910d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext0305d(1)=0,%ext0305d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext0305d(3)=$zu(115,2)
- s %ext0305d(4)=0,%ext0305d(5)=""
+ s %ext03910d(1)=0,%ext03910d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03910d(3)=$zu(115,2)
+ s %ext03910d(4)=0,%ext03910d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext0305d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext0305d(6)=$g(%ext0305d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext0305d }
+ s %ext03910d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03910d(6)=$g(%ext03910d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03910d }
  q
 %0Cfirst 
  ; asl MOD# 2
- s %ext0305d(7)=""
-%0CmBk1 s %ext0305d(7)=$o(^CBBasicDictionarySubI("Code",%ext0305d(7)))
- i %ext0305d(7)="" g %0CmBdun
- s %ext0305d(8)=""
-%0CmBk2 s %ext0305d(8)=$o(^CBBasicDictionarySubI("Code",%ext0305d(7),%ext0305d(8)))
- i %ext0305d(8)="" g %0CmBk1
- s %ext0305d(9)=""
- s %ext0305d(9)=$o(^CBBasicDictionarySubI("Code",%ext0305d(7),%ext0305d(8),%ext0305d(9)))
- i %ext0305d(9)="" g %0CmBk2
- s tID=(%ext0305d(8))_"||"_(%ext0305d(9))
- goto:%ext0305d(3)'=1 %0CmBuncommitted
- if %ext0305d(3)=1 {
+ s %ext03910d(7)=""
+%0CmBk1 s %ext03910d(7)=$o(^CBBasicDictionarySubI("Code",%ext03910d(7)))
+ i %ext03910d(7)="" g %0CmBdun
+ s %ext03910d(8)=""
+%0CmBk2 s %ext03910d(8)=$o(^CBBasicDictionarySubI("Code",%ext03910d(7),%ext03910d(8)))
+ i %ext03910d(8)="" g %0CmBk1
+ s %ext03910d(9)=""
+ s %ext03910d(9)=$o(^CBBasicDictionarySubI("Code",%ext03910d(7),%ext03910d(8),%ext03910d(9)))
+ i %ext03910d(9)="" g %0CmBk2
+ s tID=(%ext03910d(8))_"||"_(%ext03910d(9))
+ goto:%ext03910d(3)'=1 %0CmBuncommitted
+ if %ext03910d(3)=1 {
  	lock +^CBBasicDictionaryD($p(tID,"||",1),"S",$p(tID,"||",2))#"S":$zu(115,4)
- 	if $t { set %ext0305d(5)=$name(^CBBasicDictionaryD($p(tID,"||",1),"S",$p(tID,"||",2)))_"#""SI""",%ext0305d(4)=1 }
+ 	if $t { set %ext03910d(5)=$name(^CBBasicDictionaryD($p(tID,"||",1),"S",$p(tID,"||",2)))_"#""SI""",%ext03910d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_BasicDictionarySub for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
- s %ext0305d(10)=$p(tID,"||"),%ext0305d(9)=$p(tID,"||",2,*)
- i %ext0305d(10)'="",%ext0305d(9)'="",$d(^CBBasicDictionaryD(%ext0305d(10),"S",%ext0305d(9)))
+ s %ext03910d(10)=$p(tID,"||"),%ext03910d(9)=$p(tID,"||",2,*)
+ i %ext03910d(10)'="",%ext03910d(9)'="",$d(^CBBasicDictionaryD(%ext03910d(10),"S",%ext03910d(9)))
  e  g %0CmCdun
 %0CmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext0305d(1)),%ROWID=tID,%ext0305d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03910d(1)),%ROWID=tID,%ext03910d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext0305d(6)=$g(%ext0305d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03910d(6)=$g(%ext03910d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext0305d(0)) { s SQLCODE=-102 q  } i %ext0305d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext0305d(2),%ext0305d(1)'<%ext0305d(2) { s SQLCODE=100,%ROWCOUNT=%ext0305d(1),%ext0305d(0)=100 q }
+ i '$g(%ext03910d(0)) { s SQLCODE=-102 q  } i %ext03910d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03910d(2),%ext03910d(1)'<%ext03910d(2) { s SQLCODE=100,%ROWCOUNT=%ext03910d(1),%ext03910d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Cfirst:%ext0305d(0)=1
-%0CmCdun if $g(%ext0305d(3))=1 { if $g(%ext0305d(4))=1 { l -@%ext0305d(5) s %ext0305d(4)=0 } elseif $g(%ext0305d(4))=2 { do $classmethod($li(%ext0305d(5)),"%UnlockId",$li(%ext0305d(5),2),1,1)  s %ext0305d(4)=0 }}
+ g %0Cfirst:%ext03910d(0)=1
+%0CmCdun if $g(%ext03910d(3))=1 { if $g(%ext03910d(4))=1 { l -@%ext03910d(5) s %ext03910d(4)=0 } elseif $g(%ext03910d(4))=2 { do $classmethod($li(%ext03910d(5)),"%UnlockId",$li(%ext03910d(5),2),1,1)  s %ext03910d(4)=0 }}
  g %0CmBk2
 %0CmBdun 
 %0CmAdun 
- s %ROWCOUNT=%ext0305d(1),SQLCODE=100,%ext0305d(0)=100
- s:$d(%sqltime) %ext0305d(6)=$g(%ext0305d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03910d(1),SQLCODE=100,%ext03910d(0)=100
+ s:$d(%sqltime) %ext03910d(6)=$g(%ext03910d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext0305d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03910d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext0305d(1)),1:0)
- if $g(%ext0305d(3))=1 {
- 	if $g(%ext0305d(4))=1 { l -@%ext0305d(5) s %ext0305d(4)=0 } elseif $g(%ext0305d(4))=2 { do $classmethod($li(%ext0305d(5)),"%UnlockId",$li(%ext0305d(5),2),1,1)  s %ext0305d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03910d(1)),1:0)
+ if $g(%ext03910d(3))=1 {
+ 	if $g(%ext03910d(4))=1 { l -@%ext03910d(5) s %ext03910d(4)=0 } elseif $g(%ext03910d(4))=2 { do $classmethod($li(%ext03910d(5)),"%UnlockId",$li(%ext03910d(5),2),1,1)  s %ext03910d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext0305d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03910d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"xyp1P9E+3YRRWKrDeuUmQHok2uU="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"xyp1P9E+3YRRWKrDeuUmQHok2uU=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext0305d
+ k %ext03910d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext0305d(11)
+ kill %ext03910d(11)
  quit  // close
 %0Cerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext0305d(0)=100
+ s %ext03910d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^CBBasicDictionaryD($p(id,"||",1),"S",$p(id,"||",2))),1)

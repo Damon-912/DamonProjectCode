@@ -74,7 +74,7 @@ ClassMethod UpdateDRGCoreAlgorithm(postObj) As %Library.DynamicObject
 			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01040016")
 			quit
 		}		
-																					
+																				
 		if (provinceID="")
 		{
 			set resultObj.errorCode="01000007"
@@ -238,7 +238,7 @@ ClassMethod GetDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
 		    set dataObj.fixmedinsName=result.%Get("FixmedinsName")
 		    set dataObj.identification=result.%Get("Identification")
 		    set dataObj.remark=result.%Get("Remark")				
-	
+
 			if startDate'=""{
 				set startDate=$zdh(startDate,3)
 			}
@@ -795,6 +795,301 @@ ClassMethod ConfirmImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
     }
     
     quit resultObj
+}
+
+/// Creator:     System
+/// CreatDate:   2026-04-21
+/// Description: 查询DIP核心算法配置
+/// Table:       HB_DIPCoreAlgorithmData (User.HBDIPCoreAlgorithmData)
+/// Input:       principalDiagnosis, majorProcedure, provinceID, cityID, medinsLv, pagination
+/// Output:      rows数组和total总数
+/// Return:      接口响应对象
+/// Debug:       w ##class(src.DRG.BasicData.CoreAlgorithm).QueryDIPCoreAlgorithm({}).%ToJSON()
+ClassMethod QueryDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{"rows":[],"total":0}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try
+	{
+		if (jsonObj.%IsDefined("pagination")'=0) 
+		{
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		
+		set params=jsonObj.params.%Get(0)
+		set principalDiagnosis=params.principalDiagnosis
+		set principalDiagnosisName=params.principalDiagnosisName
+		set majorProcedure=params.majorProcedure
+		set majorProcedureName=params.majorProcedureName
+		set provinceID=params.provinceID
+		set cityID=params.cityID
+		set medinsLv=params.medinsLv
+		
+		set sql =" SELECT ID,PrincipalDiagnosis,PrincipalDiagnosisName,"
+		        _" MajorProcedure,MajorProcedureName,"
+		        _" SecondaryProcedure,SecondaryProcedureName,"
+		        _" Province_Dr as ProvinceID,Province_Dr->Descripts as ProvinceDesc,"
+		        _" City_Dr as CityID,City_Dr->Descripts as CityDesc,"
+		        _" MdtrtArea,MedinsLv,"
+		        _" ScoreValue,AdjustCoefficient,"
+		        _" PrimaryAdjustCoefficient,SecondaryAdjustCoefficient,ThirdAdjustCoefficient,"
+		        _" CreateDate,CreateTime "
+		        _" FROM HB_DIPCoreAlgorithmData where 1=1"
+		
+		if principalDiagnosis'=""
+		{
+			set sql=sql_" and PrincipalDiagnosis like '%"_principalDiagnosis_"%'" 
+		}
+		if principalDiagnosisName'=""
+		{
+			set sql=sql_" and PrincipalDiagnosisName like '%"_principalDiagnosisName_"%'" 
+		}
+		if majorProcedure'=""
+		{
+			set sql=sql_" and MajorProcedure like '%"_majorProcedure_"%'" 
+		}
+		if majorProcedureName'=""
+		{
+			set sql=sql_" and MajorProcedureName like '%"_majorProcedureName_"%'" 
+		}
+		if provinceID'=""
+		{
+			set sql=sql_" and Province_Dr = "_provinceID 
+		}
+		if cityID'=""
+		{
+			set sql=sql_" and City_Dr = "_cityID 
+		}
+		if medinsLv'=""
+		{
+			set sql=sql_" and MedinsLv = '"_medinsLv_"'" 
+		}
+		
+		set sql=sql_" ORDER BY ID DESC"
+		
+		set sqlObj=##class(%SQL.Statement).%New(1)
+		set sc=sqlObj.%Prepare(sql)
+		set result=sqlObj.%Execute()
+		while result.%Next(sc)	
+		{
+			set dataObj={}
+			set dataObj.id=result.%Get("ID")
+			set dataObj.principalDiagnosis=result.%Get("PrincipalDiagnosis")
+			set dataObj.principalDiagnosisName=result.%Get("PrincipalDiagnosisName")
+			set dataObj.majorProcedure=result.%Get("MajorProcedure")
+			set dataObj.majorProcedureName=result.%Get("MajorProcedureName")
+			set dataObj.secondaryProcedure=result.%Get("SecondaryProcedure")
+			set dataObj.secondaryProcedureName=result.%Get("SecondaryProcedureName")
+			set dataObj.provinceID=result.%Get("ProvinceID")
+			set dataObj.provinceDesc=result.%Get("ProvinceDesc")
+			set dataObj.cityID=result.%Get("CityID")
+			set dataObj.cityDesc=result.%Get("CityDesc")
+			set dataObj.mdtrtArea=result.%Get("MdtrtArea")
+			set dataObj.medinsLv=result.%Get("MedinsLv")
+			set dataObj.scoreValue=result.%Get("ScoreValue")
+			set dataObj.adjustCoefficient=result.%Get("AdjustCoefficient")
+			set dataObj.primaryAdjustCoefficient=result.%Get("PrimaryAdjustCoefficient")
+			set dataObj.secondaryAdjustCoefficient=result.%Get("SecondaryAdjustCoefficient")
+			set dataObj.thirdAdjustCoefficient=result.%Get("ThirdAdjustCoefficient")
+			set dataObj.createDate=result.%Get("CreateDate")
+			set dataObj.createTime=result.%Get("CreateTime")
+			
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count
+	}
+	catch(e)
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询DIP核心算法配置数据出现问题:w ##class("_$ClassName()_").QueryDIPCoreAlgorithm("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+}
+
+/// Creator:     System
+/// CreatDate:   2026-04-21
+/// Description: 保存DIP核心算法配置（新增/更新）
+/// Table:       HB_DIPCoreAlgorithmData (User.HBDIPCoreAlgorithmData)
+/// Input:       DIP算法配置表单参数
+/// Output:      操作结果
+/// Return:      接口响应对象
+/// Debug:       w ##class(src.DRG.BasicData.CoreAlgorithm).SaveDIPCoreAlgorithm({}).%ToJSON()
+ClassMethod SaveDIPCoreAlgorithm(postObj) As %Library.DynamicObject
+{
+	new (postObj)
+	set resultObj={}
+	set resultObj.errorCode="0"
+	set resultObj.errorMessage="保存成功"
+	set resultObj.result={}
+	try{
+		set params=postObj.params.%Get(0)
+		
+		set dictID=params.id
+		set principalDiagnosis=params.principalDiagnosis
+		set principalDiagnosisName=params.principalDiagnosisName
+		set majorProcedure=params.majorProcedure
+		set majorProcedureName=params.majorProcedureName
+		set secondaryProcedure=params.secondaryProcedure
+		set secondaryProcedureName=params.secondaryProcedureName
+		set provinceID=params.provinceDr
+		set cityID=params.cityDr
+		set mdtrtArea=params.mdtrtArea
+		set medinsLv=params.medinsLv
+		set scoreValue=params.scoreValue
+		set adjustCoefficient=params.adjustCoefficient
+		set primaryAdjustCoefficient=params.primaryAdjustCoefficient
+		set secondaryAdjustCoefficient=params.secondaryAdjustCoefficient
+		set thirdAdjustCoefficient=params.thirdAdjustCoefficient
+		
+		// 必填校验
+		if (principalDiagnosis="")
+		{
+			set resultObj.errorCode="-1"
+			set resultObj.errorMessage="主要诊断代码不能为空！"
+			quit
+		}
+		if (principalDiagnosisName="")
+		{
+			set resultObj.errorCode="-1"
+			set resultObj.errorMessage="主要诊断名称不能为空！"
+			quit
+		}
+		if (provinceID="")
+		{
+			set resultObj.errorCode="01000007"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000007")
+			quit
+		}
+		if (cityID="")
+		{
+			set resultObj.errorCode="01000008"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000008")
+			quit
+		}
+		if (medinsLv="")
+		{
+			set resultObj.errorCode="-1"
+			set resultObj.errorMessage="医疗机构等级不能为空！"
+			quit
+		}
+		if (scoreValue="")
+		{
+			set resultObj.errorCode="-1"
+			set resultObj.errorMessage="基准分值不能为空！"
+			quit
+		}
+		
+		set data=[]
+		set dataObj={}
+		set dataObj.ID=dictID
+		set dataObj.PrincipalDiagnosis=principalDiagnosis
+		set dataObj.PrincipalDiagnosisName=principalDiagnosisName
+		set dataObj.MajorProcedure=majorProcedure
+		set dataObj.MajorProcedureName=majorProcedureName
+		set dataObj.SecondaryProcedure=secondaryProcedure
+		set dataObj.SecondaryProcedureName=secondaryProcedureName
+		set dataObj.ProvinceDr=provinceID
+		set dataObj.CityDr=cityID
+		set dataObj.MdtrtArea=mdtrtArea
+		set dataObj.MedinsLv=medinsLv
+		set dataObj.ScoreValue=scoreValue
+		set dataObj.AdjustCoefficient=adjustCoefficient
+		set dataObj.PrimaryAdjustCoefficient=primaryAdjustCoefficient
+		set dataObj.SecondaryAdjustCoefficient=secondaryAdjustCoefficient
+		set dataObj.ThirdAdjustCoefficient=thirdAdjustCoefficient
+		set dataObj.CreateDate=$zd($h,3)
+		set dataObj.CreateTime=$zt($p($h,",",2),1)
+		set dataObj.CreateUserDr="158" //userID
+		
+		set insObj={}
+		set insObj.className="User.HBDIPCoreAlgorithmData"
+		set insObj.updateUserID="0" //userID
+		set rtn=""
+		do data.%Push(dataObj)
+		set insObj.data=data
+		if dictID=""{
+			set rtn=##class(src.util.operatetable).Insert(.insObj)
+		}else{
+			set rtn=##class(src.util.operatetable).Update(.insObj)
+		}
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+	    if errorCode'=0{
+		    set resultObj.errorCode=errorCode
+	    	set resultObj.errorMessage=errorMessage
+	   	}
+	}
+	catch(e)
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="保存DIP核心算法配置数据出现问题:w ##class("_$ClassName()_").SaveDIPCoreAlgorithm("_postObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+ 	quit resultObj
+}
+
+/// Creator:     System
+/// CreatDate:   2026-04-21
+/// Description: 删除DIP核心算法配置
+/// Table:       HB_DIPCoreAlgorithmData (User.HBDIPCoreAlgorithmData)
+/// Input:       id: 记录ID
+/// Output:      操作结果
+/// Return:      接口响应对象
+/// Debug:       w ##class(src.DRG.BasicData.CoreAlgorithm).DeleteDIPCoreAlgorithm({}).%ToJSON()
+ClassMethod DeleteDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
+{
+    new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	try{
+		set params=jsonObj.params.%Get(0)
+		set session=jsonObj.session.%Get(0)
+		set userID=session.userID
+		if params.id="" 
+		{
+			set resultObj.errorCode="05100128"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("05100128")
+			quit
+		}
+		set delObj={},data=[]
+		set delObj.className="User.HBDIPCoreAlgorithmData"
+		set delObj.updateUserID=userID
+		set dataObj={}
+		set dataObj.ID=params.id
+		do data.%Push(dataObj)
+		set delObj.data=data
+		set rtn=##class(src.util.operatetable).Delete(.delObj)
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+		set resultObj.errorCode=errorCode
+		set resultObj.errorMessage=errorMessage
+		
+	}catch(e){
+		set status=e.AsStatus()
+		set resultObj.errorCode=$piece(##class(%SYSTEM.Status).GetErrorCodes(status),",")
+	    set resultObj.errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+	    set errorInfo="删除DIP核心算法配置数据出现问题:w ##class("_$ClassName()_").DeleteDIPCoreAlgorithm("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
 }
 
 }

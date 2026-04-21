@@ -1,6 +1,6 @@
 ROUTINE User.CBReactForm.1 [Type=INT,Generated]
  ;User.CBReactForm.1
- ;Generated for class User.CBReactForm.  Do NOT edit. 12/24/2025 10:04:03AM
+ ;Generated for class User.CBReactForm.  Do NOT edit. 04/21/2026 04:19:03PM
  ;;6D664C2B;User.CBReactForm
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
@@ -157,71 +157,71 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext0284d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03848d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext0284d(1)=0,%ext0284d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext0284d(3)=$zu(115,2)
- s %ext0284d(4)=0,%ext0284d(5)=""
+ s %ext03848d(1)=0,%ext03848d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03848d(3)=$zu(115,2)
+ s %ext03848d(4)=0,%ext03848d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext0284d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext0284d(6)=$g(%ext0284d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext0284d }
+ s %ext03848d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03848d(6)=$g(%ext03848d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03848d }
  q
 %0Cfirst 
  ; asl MOD# 2
- s %ext0284d(7)=""
-%0CmBk1 s %ext0284d(7)=$o(^CBReactFormI("ElementField",%ext0284d(7)))
- i %ext0284d(7)="" g %0CmBdun
- s %ext0284d(8)=$s(%ext0284d(7)=-1E14:"",1:%ext0284d(7))
+ s %ext03848d(7)=""
+%0CmBk1 s %ext03848d(7)=$o(^CBReactFormI("ElementField",%ext03848d(7)))
+ i %ext03848d(7)="" g %0CmBdun
+ s %ext03848d(8)=$s(%ext03848d(7)=-1E14:"",1:%ext03848d(7))
  s tID=""
-%0CmBk2 s tID=$o(^CBReactFormI("ElementField",%ext0284d(7),tID))
+%0CmBk2 s tID=$o(^CBReactFormI("ElementField",%ext03848d(7),tID))
  i tID="" g %0CmBk1
- goto:%ext0284d(3)'=1 %0CmBuncommitted
- if %ext0284d(3)=1 {
+ goto:%ext03848d(3)'=1 %0CmBuncommitted
+ if %ext03848d(3)=1 {
  	lock +^CBReactFormD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext0284d(5)=$name(^CBReactFormD($p(tID,"||",1)))_"#""SI""",%ext0284d(4)=1 }
+ 	if $t { set %ext03848d(5)=$name(^CBReactFormD($p(tID,"||",1)))_"#""SI""",%ext03848d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_ReactForm for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^CBReactFormD(tID))
  e  g %0CmCdun
 %0CmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext0284d(1)),%ROWID=tID,%ext0284d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03848d(1)),%ROWID=tID,%ext03848d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext0284d(6)=$g(%ext0284d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03848d(6)=$g(%ext03848d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext0284d(0)) { s SQLCODE=-102 q  } i %ext0284d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext0284d(2),%ext0284d(1)'<%ext0284d(2) { s SQLCODE=100,%ROWCOUNT=%ext0284d(1),%ext0284d(0)=100 q }
+ i '$g(%ext03848d(0)) { s SQLCODE=-102 q  } i %ext03848d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03848d(2),%ext03848d(1)'<%ext03848d(2) { s SQLCODE=100,%ROWCOUNT=%ext03848d(1),%ext03848d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Cfirst:%ext0284d(0)=1
-%0CmCdun if $g(%ext0284d(3))=1 { if $g(%ext0284d(4))=1 { l -@%ext0284d(5) s %ext0284d(4)=0 } elseif $g(%ext0284d(4))=2 { do $classmethod($li(%ext0284d(5)),"%UnlockId",$li(%ext0284d(5),2),1,1)  s %ext0284d(4)=0 }}
+ g %0Cfirst:%ext03848d(0)=1
+%0CmCdun if $g(%ext03848d(3))=1 { if $g(%ext03848d(4))=1 { l -@%ext03848d(5) s %ext03848d(4)=0 } elseif $g(%ext03848d(4))=2 { do $classmethod($li(%ext03848d(5)),"%UnlockId",$li(%ext03848d(5),2),1,1)  s %ext03848d(4)=0 }}
  g %0CmBk2
 %0CmBdun 
 %0CmAdun 
- s %ROWCOUNT=%ext0284d(1),SQLCODE=100,%ext0284d(0)=100
- s:$d(%sqltime) %ext0284d(6)=$g(%ext0284d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03848d(1),SQLCODE=100,%ext03848d(0)=100
+ s:$d(%sqltime) %ext03848d(6)=$g(%ext03848d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext0284d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03848d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext0284d(1)),1:0)
- if $g(%ext0284d(3))=1 {
- 	if $g(%ext0284d(4))=1 { l -@%ext0284d(5) s %ext0284d(4)=0 } elseif $g(%ext0284d(4))=2 { do $classmethod($li(%ext0284d(5)),"%UnlockId",$li(%ext0284d(5),2),1,1)  s %ext0284d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03848d(1)),1:0)
+ if $g(%ext03848d(3))=1 {
+ 	if $g(%ext03848d(4))=1 { l -@%ext03848d(5) s %ext03848d(4)=0 } elseif $g(%ext03848d(4))=2 { do $classmethod($li(%ext03848d(5)),"%UnlockId",$li(%ext03848d(5),2),1,1)  s %ext03848d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext0284d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03848d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"kkZOlO8oXrTbKErEg8KVn8kTORs="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"kkZOlO8oXrTbKErEg8KVn8kTORs=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext0284d
+ k %ext03848d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext0284d(9)
+ kill %ext03848d(9)
  quit  // close
 %0Cerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext0284d(0)=100
+ s %ext03848d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^CBReactFormD(id)),1)
@@ -1766,15 +1766,6 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
-		if (pDynamicObject.%IsDefined("CreateUserDr")) {
-			try {
-				set newIdvalue=pDynamicObject."CreateUserDr"
-				set existingIdValue=..CreateUserDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"CreateUserDr")=##class(User.HBUser).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
 		if (pDynamicObject.%IsDefined("Default")) && (..Default'=pDynamicObject."Default") {
 			try {
 				try {
@@ -2049,7 +2040,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"CBReactComDr":($CASE($ISOBJECT(..CBReactComDr),1:..CBReactComDr.%Id(),:"")),"Callback":(..GetLogicalToXSDValue($This,"Callback",..Callback)),"ClassName":(..GetLogicalToXSDValue($This,"ClassName",..ClassName)),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"Col":(..GetLogicalToXSDValue($This,"Col",..Col)),"CreateDate":(..GetLogicalToXSDValue($This,"CreateDate",..CreateDate)),"CreateUserDr":($CASE($ISOBJECT(..CreateUserDr),1:..CreateUserDr.%Id(),:"")),"Default":(..GetLogicalToXSDValue($This,"Default",..Default)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"Disabled":(..GetLogicalToXSDValue($This,"Disabled",..Disabled)),"Display":(..GetLogicalToXSDValue($This,"Display",..Display)),"Doubt":(..GetLogicalToXSDValue($This,"Doubt",..Doubt)),"ENDesc":(..GetLogicalToXSDValue($This,"ENDesc",..ENDesc)),"ElementFieldDr":($CASE($ISOBJECT(..ElementFieldDr),1:..ElementFieldDr.%Id(),:"")),"FieldTypeDr":($CASE($ISOBJECT(..FieldTypeDr),1:..FieldTypeDr.%Id(),:"")),"JumpDr":($CASE($ISOBJECT(..JumpDr),1:..JumpDr.%Id(),:"")),"LabelCol":(..GetLogicalToXSDValue($This,"LabelCol",..LabelCol)),"LinkCode":(..GetLogicalToXSDValue($This,"LinkCode",..LinkCode)),"LinkValueDr":(..GetLogicalToXSDValue($This,"LinkValueDr",..LinkValueDr)),"MethodName":(..GetLogicalToXSDValue($This,"MethodName",..MethodName)),"Params":(..GetLogicalToXSDValue($This,"Params",..Params)),"Placeholder":(..GetLogicalToXSDValue($This,"Placeholder",..Placeholder)),"Required":(..GetLogicalToXSDValue($This,"Required",..Required)),"SeqNo":(..GetLogicalToXSDValue($This,"SeqNo",..SeqNo)),"Valid":(..GetLogicalToXSDValue($This,"Valid",..Valid)),"WrapperCol":(..GetLogicalToXSDValue($This,"WrapperCol",..WrapperCol))}
+		set pDynamicObject={"ID":(..%Id()),"CBReactComDr":($CASE($ISOBJECT(..CBReactComDr),1:..CBReactComDr.%Id(),:"")),"Callback":(..GetLogicalToXSDValue($This,"Callback",..Callback)),"ClassName":(..GetLogicalToXSDValue($This,"ClassName",..ClassName)),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"Col":(..GetLogicalToXSDValue($This,"Col",..Col)),"CreateDate":(..GetLogicalToXSDValue($This,"CreateDate",..CreateDate)),"CreateUserDr":(..CreateUserDr),"Default":(..GetLogicalToXSDValue($This,"Default",..Default)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"Disabled":(..GetLogicalToXSDValue($This,"Disabled",..Disabled)),"Display":(..GetLogicalToXSDValue($This,"Display",..Display)),"Doubt":(..GetLogicalToXSDValue($This,"Doubt",..Doubt)),"ENDesc":(..GetLogicalToXSDValue($This,"ENDesc",..ENDesc)),"ElementFieldDr":($CASE($ISOBJECT(..ElementFieldDr),1:..ElementFieldDr.%Id(),:"")),"FieldTypeDr":($CASE($ISOBJECT(..FieldTypeDr),1:..FieldTypeDr.%Id(),:"")),"JumpDr":($CASE($ISOBJECT(..JumpDr),1:..JumpDr.%Id(),:"")),"LabelCol":(..GetLogicalToXSDValue($This,"LabelCol",..LabelCol)),"LinkCode":(..GetLogicalToXSDValue($This,"LinkCode",..LinkCode)),"LinkValueDr":(..GetLogicalToXSDValue($This,"LinkValueDr",..LinkValueDr)),"MethodName":(..GetLogicalToXSDValue($This,"MethodName",..MethodName)),"Params":(..GetLogicalToXSDValue($This,"Params",..Params)),"Placeholder":(..GetLogicalToXSDValue($This,"Placeholder",..Placeholder)),"Required":(..GetLogicalToXSDValue($This,"Required",..Required)),"SeqNo":(..GetLogicalToXSDValue($This,"SeqNo",..SeqNo)),"Valid":(..GetLogicalToXSDValue($This,"Valid",..Valid)),"WrapperCol":(..GetLogicalToXSDValue($This,"WrapperCol",..WrapperCol))}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}

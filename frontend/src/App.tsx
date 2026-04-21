@@ -47,6 +47,7 @@ import DIPDisease from './pages/BasicData/DIPDisease';
 import TableDataMaintenance from './pages/BasicData/TableDataMaintenance';
 import DRGCataLog from './pages/BasicData/DRGCataLog';
 import DRGSegmentationRules from './pages/BasicData/DRGSegmentationRules';
+import DIPCoreAlgorithmConfig from './pages/BasicData/DIPCoreAlgorithmConfig';
 
 // DRG pages
 import DRGWorkbench from './pages/DRG/Workbench';
@@ -70,7 +71,6 @@ import ProfitCostStructure from './pages/Profit/CostStructure';
 
 // System pages
 import SystemUsers from './pages/System/Users';
-import SystemUserApply from './pages/System/UserApply';
 import SystemRoles from './pages/System/Roles';
 // import SystemRoleManage from './pages/System/RoleManage'; // 文件不存在，已注释
 import SystemMenus from './pages/System/Menus';
@@ -165,6 +165,8 @@ const menuTitleMap: Record<string, string> = {
   'basic-data-dip': 'DIP付费病种库',
   'basic-data-drg-catalog': 'DRGs目录信息',
   'basic-data-segmentation-rules': 'ADRG细分规则',
+  'basic-data-dip-core-algorithm': 'DIP算法配置',
+  'dip-core-algorithm': 'DIP算法配置',
   'system-user': '用户管理',
   'system-role': '角色权限',
   'system-menu': '菜单配置',
@@ -254,6 +256,7 @@ const menuItems: MenuProps['items'] = [
       { key: 'basic-data-dip', label: 'DIP付费病种库' },
       { key: 'basic-data-drg-catalog', label: 'DRGs目录信息' },
       { key: 'basic-data-segmentation-rules', label: 'ADRG细分规则' },
+      { key: 'basic-data-dip-core-algorithm', label: 'DIP算法配置' },
     ],
   },
   {
@@ -670,10 +673,11 @@ function App() {
         return <DRGCataLog />;
       case 'basic-data-segmentation-rules':
         return <DRGSegmentationRules />;
+      case 'basic-data-dip-core-algorithm':
+      case 'dip-core-algorithm':
+        return <DIPCoreAlgorithmConfig />;
       case 'system-user':
         return <SystemUsers />;
-      case 'system-user-apply':
-        return <SystemUserApply />;
       case 'system-role':
         return <SystemRoles />;
       case 'system-menu':

@@ -1,6 +1,6 @@
 ROUTINE User.BSDRGFeeDetail.1 [Type=INT,Generated]
  ;User.BSDRGFeeDetail.1
- ;Generated for class User.BSDRGFeeDetail.  Do NOT edit. 01/22/2026 03:43:18PM
+ ;Generated for class User.BSDRGFeeDetail.  Do NOT edit. 04/21/2026 04:18:53PM
  ;;59517947;User.BSDRGFeeDetail
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
@@ -166,70 +166,70 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext02583d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03724d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext02583d(1)=0,%ext02583d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext02583d(3)=$zu(115,2)
- s %ext02583d(4)=0,%ext02583d(5)=""
+ s %ext03724d(1)=0,%ext03724d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03724d(3)=$zu(115,2)
+ s %ext03724d(4)=0,%ext03724d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext02583d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext02583d(6)=$g(%ext02583d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext02583d }
+ s %ext03724d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03724d(6)=$g(%ext03724d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03724d }
  q
 %0Afirst 
  ; asl MOD# 2
- s %ext02583d(7)=""
-%0AmBk1 s %ext02583d(7)=$o(^BSDRGFeeDetailI("Adm",%ext02583d(7)))
- i %ext02583d(7)="" g %0AmBdun
+ s %ext03724d(7)=""
+%0AmBk1 s %ext03724d(7)=$o(^BSDRGFeeDetailI("Adm",%ext03724d(7)))
+ i %ext03724d(7)="" g %0AmBdun
  s tID=""
-%0AmBk2 s tID=$o(^BSDRGFeeDetailI("Adm",%ext02583d(7),tID))
+%0AmBk2 s tID=$o(^BSDRGFeeDetailI("Adm",%ext03724d(7),tID))
  i tID="" g %0AmBk1
- goto:%ext02583d(3)'=1 %0AmBuncommitted
- if %ext02583d(3)=1 {
+ goto:%ext03724d(3)'=1 %0AmBuncommitted
+ if %ext03724d(3)=1 {
  	lock +^BSDRGFeeDetailD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext02583d(5)=$name(^BSDRGFeeDetailD($p(tID,"||",1)))_"#""SI""",%ext02583d(4)=1 }
+ 	if $t { set %ext03724d(5)=$name(^BSDRGFeeDetailD($p(tID,"||",1)))_"#""SI""",%ext03724d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_DRGFeeDetail for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^BSDRGFeeDetailD(tID))
  e  g %0AmCdun
 %0AmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext02583d(1)),%ROWID=tID,%ext02583d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03724d(1)),%ROWID=tID,%ext03724d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext02583d(6)=$g(%ext02583d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03724d(6)=$g(%ext03724d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext02583d(0)) { s SQLCODE=-102 q  } i %ext02583d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext02583d(2),%ext02583d(1)'<%ext02583d(2) { s SQLCODE=100,%ROWCOUNT=%ext02583d(1),%ext02583d(0)=100 q }
+ i '$g(%ext03724d(0)) { s SQLCODE=-102 q  } i %ext03724d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03724d(2),%ext03724d(1)'<%ext03724d(2) { s SQLCODE=100,%ROWCOUNT=%ext03724d(1),%ext03724d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Afirst:%ext02583d(0)=1
-%0AmCdun if $g(%ext02583d(3))=1 { if $g(%ext02583d(4))=1 { l -@%ext02583d(5) s %ext02583d(4)=0 } elseif $g(%ext02583d(4))=2 { do $classmethod($li(%ext02583d(5)),"%UnlockId",$li(%ext02583d(5),2),1,1)  s %ext02583d(4)=0 }}
+ g %0Afirst:%ext03724d(0)=1
+%0AmCdun if $g(%ext03724d(3))=1 { if $g(%ext03724d(4))=1 { l -@%ext03724d(5) s %ext03724d(4)=0 } elseif $g(%ext03724d(4))=2 { do $classmethod($li(%ext03724d(5)),"%UnlockId",$li(%ext03724d(5),2),1,1)  s %ext03724d(4)=0 }}
  g %0AmBk2
 %0AmBdun 
 %0AmAdun 
- s %ROWCOUNT=%ext02583d(1),SQLCODE=100,%ext02583d(0)=100
- s:$d(%sqltime) %ext02583d(6)=$g(%ext02583d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03724d(1),SQLCODE=100,%ext03724d(0)=100
+ s:$d(%sqltime) %ext03724d(6)=$g(%ext03724d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext02583d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03724d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext02583d(1)),1:0)
- if $g(%ext02583d(3))=1 {
- 	if $g(%ext02583d(4))=1 { l -@%ext02583d(5) s %ext02583d(4)=0 } elseif $g(%ext02583d(4))=2 { do $classmethod($li(%ext02583d(5)),"%UnlockId",$li(%ext02583d(5),2),1,1)  s %ext02583d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03724d(1)),1:0)
+ if $g(%ext03724d(3))=1 {
+ 	if $g(%ext03724d(4))=1 { l -@%ext03724d(5) s %ext03724d(4)=0 } elseif $g(%ext03724d(4))=2 { do $classmethod($li(%ext03724d(5)),"%UnlockId",$li(%ext03724d(5),2),1,1)  s %ext03724d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext02583d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03724d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"RNtUvyIbxhQMn7XvSESZdyvIVuA="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"RNtUvyIbxhQMn7XvSESZdyvIVuA=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext02583d
+ k %ext03724d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext02583d(8)
+ kill %ext03724d(8)
  quit  // close
 %0Aerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext02583d(0)=100
+ s %ext03724d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^BSDRGFeeDetailD(id)),1)
@@ -2899,15 +2899,6 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
-		if (pDynamicObject.%IsDefined("HospitalDr")) {
-			try {
-				set newIdvalue=pDynamicObject."HospitalDr"
-				set existingIdValue=..HospitalDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"HospitalDr")=##class(User.CBHospital).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
 		if (pDynamicObject.%IsDefined("InScopeAmount")) && (..InScopeAmount'=pDynamicObject."InScopeAmount") {
 			try {
 				set value=pDynamicObject."InScopeAmount"
@@ -3145,7 +3136,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"AcceptDepartmentCode":(..GetLogicalToXSDValue($This,"AcceptDepartmentCode",..AcceptDepartmentCode)),"AcceptDepartmentName":(..GetLogicalToXSDValue($This,"AcceptDepartmentName",..AcceptDepartmentName)),"AcceptDoctorCode":(..GetLogicalToXSDValue($This,"AcceptDoctorCode",..AcceptDoctorCode)),"AcceptDoctorName":(..GetLogicalToXSDValue($This,"AcceptDoctorName",..AcceptDoctorName)),"AdmID":(..AdmID),"BillID":(..BillID),"BillingDepartmentCode":(..GetLogicalToXSDValue($This,"BillingDepartmentCode",..BillingDepartmentCode)),"BillingDepartmentName":(..GetLogicalToXSDValue($This,"BillingDepartmentName",..BillingDepartmentName)),"BillingDoctorNO":(..GetLogicalToXSDValue($This,"BillingDoctorNO",..BillingDoctorNO)),"BillingDoctorName":(..GetLogicalToXSDValue($This,"BillingDoctorName",..BillingDoctorName)),"ChargeItemLevel":(..GetLogicalToXSDValue($This,"ChargeItemLevel",..ChargeItemLevel)),"ChineseMedicineUsingway":(..GetLogicalToXSDValue($This,"ChineseMedicineUsingway",..ChineseMedicineUsingway)),"ComponentNO":(..GetLogicalToXSDValue($This,"ComponentNO",..ComponentNO)),"Count":(..Count),"DischargeTakeDrugFlag":(..GetLogicalToXSDValue($This,"DischargeTakeDrugFlag",..DischargeTakeDrugFlag)),"DoctorOrderNO":(..GetLogicalToXSDValue($This,"DoctorOrderNO",..DoctorOrderNO)),"ExtendContent":(..GetLogicalToXSDValue($This,"ExtendContent",..ExtendContent)),"ExternalInspectionFlag":(..GetLogicalToXSDValue($This,"ExternalInspectionFlag",..ExternalInspectionFlag)),"ExternalInspectionHospCode":(..GetLogicalToXSDValue($This,"ExternalInspectionHospCode",..ExternalInspectionHospCode)),"FeeOccurTime":(..GetLogicalToXSDValue($This,"FeeOccurTime",..FeeOccurTime)),"FullOwnPayAmount":(..FullOwnPayAmount),"HISCode":(..GetLogicalToXSDValue($This,"HISCode",..HISCode)),"HospitalApprovalFlag":(..GetLogicalToXSDValue($This,"HospitalApprovalFlag",..HospitalApprovalFlag)),"HospitalDr":($CASE($ISOBJECT(..HospitalDr),1:..HospitalDr.%Id(),:"")),"InScopeAmount":(..InScopeAmount),"LimitUsedFlag":(..GetLogicalToXSDValue($This,"LimitUsedFlag",..LimitUsedFlag)),"MaternityFlag":(..GetLogicalToXSDValue($This,"MaternityFlag",..MaternityFlag)),"MdtrtID":(..GetLogicalToXSDValue($This,"MdtrtID",..MdtrtID)),"MedInsuNO":(..GetLogicalToXSDValue($This,"MedInsuNO",..MedInsuNO)),"MedicalChargeItemType":(..GetLogicalToXSDValue($This,"MedicalChargeItemType",..MedicalChargeItemType)),"MedicalType":(..GetLogicalToXSDValue($This,"MedicalType",..MedicalType)),"Memo":(..GetLogicalToXSDValue($This,"Memo",..Memo)),"OriginalSerialNO":(..GetLogicalToXSDValue($This,"OriginalSerialNO",..OriginalSerialNO)),"OverLimitAmount":(..OverLimitAmount),"PersonnelNO":(..GetLogicalToXSDValue($This,"PersonnelNO",..PersonnelNO)),"PreSelfPayAmount":(..PreSelfPayAmount),"Price":(..Price),"RecordID":(..RecordID),"RegisterDr":(..RegisterDr),"SelfPayProp":(..SelfPayProp),"SerialNO":(..GetLogicalToXSDValue($This,"SerialNO",..SerialNO)),"Sumamt":(..Sumamt),"UpLimitAmount":(..UpLimitAmount),"ValidFlag":(..ValidFlag)}
+		set pDynamicObject={"ID":(..%Id()),"AcceptDepartmentCode":(..GetLogicalToXSDValue($This,"AcceptDepartmentCode",..AcceptDepartmentCode)),"AcceptDepartmentName":(..GetLogicalToXSDValue($This,"AcceptDepartmentName",..AcceptDepartmentName)),"AcceptDoctorCode":(..GetLogicalToXSDValue($This,"AcceptDoctorCode",..AcceptDoctorCode)),"AcceptDoctorName":(..GetLogicalToXSDValue($This,"AcceptDoctorName",..AcceptDoctorName)),"AdmID":(..AdmID),"BillID":(..BillID),"BillingDepartmentCode":(..GetLogicalToXSDValue($This,"BillingDepartmentCode",..BillingDepartmentCode)),"BillingDepartmentName":(..GetLogicalToXSDValue($This,"BillingDepartmentName",..BillingDepartmentName)),"BillingDoctorNO":(..GetLogicalToXSDValue($This,"BillingDoctorNO",..BillingDoctorNO)),"BillingDoctorName":(..GetLogicalToXSDValue($This,"BillingDoctorName",..BillingDoctorName)),"ChargeItemLevel":(..GetLogicalToXSDValue($This,"ChargeItemLevel",..ChargeItemLevel)),"ChineseMedicineUsingway":(..GetLogicalToXSDValue($This,"ChineseMedicineUsingway",..ChineseMedicineUsingway)),"ComponentNO":(..GetLogicalToXSDValue($This,"ComponentNO",..ComponentNO)),"Count":(..Count),"DischargeTakeDrugFlag":(..GetLogicalToXSDValue($This,"DischargeTakeDrugFlag",..DischargeTakeDrugFlag)),"DoctorOrderNO":(..GetLogicalToXSDValue($This,"DoctorOrderNO",..DoctorOrderNO)),"ExtendContent":(..GetLogicalToXSDValue($This,"ExtendContent",..ExtendContent)),"ExternalInspectionFlag":(..GetLogicalToXSDValue($This,"ExternalInspectionFlag",..ExternalInspectionFlag)),"ExternalInspectionHospCode":(..GetLogicalToXSDValue($This,"ExternalInspectionHospCode",..ExternalInspectionHospCode)),"FeeOccurTime":(..GetLogicalToXSDValue($This,"FeeOccurTime",..FeeOccurTime)),"FullOwnPayAmount":(..FullOwnPayAmount),"HISCode":(..GetLogicalToXSDValue($This,"HISCode",..HISCode)),"HospitalApprovalFlag":(..GetLogicalToXSDValue($This,"HospitalApprovalFlag",..HospitalApprovalFlag)),"HospitalDr":(..HospitalDr),"InScopeAmount":(..InScopeAmount),"LimitUsedFlag":(..GetLogicalToXSDValue($This,"LimitUsedFlag",..LimitUsedFlag)),"MaternityFlag":(..GetLogicalToXSDValue($This,"MaternityFlag",..MaternityFlag)),"MdtrtID":(..GetLogicalToXSDValue($This,"MdtrtID",..MdtrtID)),"MedInsuNO":(..GetLogicalToXSDValue($This,"MedInsuNO",..MedInsuNO)),"MedicalChargeItemType":(..GetLogicalToXSDValue($This,"MedicalChargeItemType",..MedicalChargeItemType)),"MedicalType":(..GetLogicalToXSDValue($This,"MedicalType",..MedicalType)),"Memo":(..GetLogicalToXSDValue($This,"Memo",..Memo)),"OriginalSerialNO":(..GetLogicalToXSDValue($This,"OriginalSerialNO",..OriginalSerialNO)),"OverLimitAmount":(..OverLimitAmount),"PersonnelNO":(..GetLogicalToXSDValue($This,"PersonnelNO",..PersonnelNO)),"PreSelfPayAmount":(..PreSelfPayAmount),"Price":(..Price),"RecordID":(..RecordID),"RegisterDr":(..RegisterDr),"SelfPayProp":(..SelfPayProp),"SerialNO":(..GetLogicalToXSDValue($This,"SerialNO",..SerialNO)),"Sumamt":(..Sumamt),"UpLimitAmount":(..UpLimitAmount),"ValidFlag":(..ValidFlag)}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}

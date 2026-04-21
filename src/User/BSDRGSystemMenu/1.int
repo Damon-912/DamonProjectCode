@@ -1,6 +1,6 @@
 ROUTINE User.BSDRGSystemMenu.1 [Type=INT,Generated]
  ;User.BSDRGSystemMenu.1
- ;Generated for class User.BSDRGSystemMenu.  Do NOT edit. 03/29/2026 06:11:35PM
+ ;Generated for class User.BSDRGSystemMenu.  Do NOT edit. 04/21/2026 04:18:56PM
  ;;69767458;User.BSDRGSystemMenu
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
@@ -145,71 +145,71 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext01528d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03754d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext01528d(1)=0,%ext01528d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext01528d(3)=$zu(115,2)
- s %ext01528d(4)=0,%ext01528d(5)=""
+ s %ext03754d(1)=0,%ext03754d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03754d(3)=$zu(115,2)
+ s %ext03754d(4)=0,%ext03754d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext01528d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext01528d(6)=$g(%ext01528d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext01528d }
+ s %ext03754d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03754d(6)=$g(%ext03754d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03754d }
  q
 %0Cfirst 
  ; asl MOD# 2
- s %ext01528d(7)=""
-%0CmBk1 s %ext01528d(7)=$o(^User.BSDRGSystemMenuI("idxMenuType",%ext01528d(7)))
- i %ext01528d(7)="" g %0CmBdun
- s %ext01528d(8)=$s(%ext01528d(7)=-1E14:"",1:%ext01528d(7))
+ s %ext03754d(7)=""
+%0CmBk1 s %ext03754d(7)=$o(^User.BSDRGSystemMenuI("idxMenuType",%ext03754d(7)))
+ i %ext03754d(7)="" g %0CmBdun
+ s %ext03754d(8)=$s(%ext03754d(7)=-1E14:"",1:%ext03754d(7))
  s tID=""
-%0CmBk2 s tID=$o(^User.BSDRGSystemMenuI("idxMenuType",%ext01528d(7),tID))
+%0CmBk2 s tID=$o(^User.BSDRGSystemMenuI("idxMenuType",%ext03754d(7),tID))
  i tID="" g %0CmBk1
- goto:%ext01528d(3)'=1 %0CmBuncommitted
- if %ext01528d(3)=1 {
+ goto:%ext03754d(3)'=1 %0CmBuncommitted
+ if %ext03754d(3)=1 {
  	lock +^User.BSDRGSystemMenuD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext01528d(5)=$name(^User.BSDRGSystemMenuD($p(tID,"||",1)))_"#""SI""",%ext01528d(4)=1 }
+ 	if $t { set %ext03754d(5)=$name(^User.BSDRGSystemMenuD($p(tID,"||",1)))_"#""SI""",%ext03754d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_DRGSystemMenu for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^User.BSDRGSystemMenuD(tID))
  e  g %0CmCdun
 %0CmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext01528d(1)),%ROWID=tID,%ext01528d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03754d(1)),%ROWID=tID,%ext03754d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext01528d(6)=$g(%ext01528d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03754d(6)=$g(%ext03754d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext01528d(0)) { s SQLCODE=-102 q  } i %ext01528d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext01528d(2),%ext01528d(1)'<%ext01528d(2) { s SQLCODE=100,%ROWCOUNT=%ext01528d(1),%ext01528d(0)=100 q }
+ i '$g(%ext03754d(0)) { s SQLCODE=-102 q  } i %ext03754d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03754d(2),%ext03754d(1)'<%ext03754d(2) { s SQLCODE=100,%ROWCOUNT=%ext03754d(1),%ext03754d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Cfirst:%ext01528d(0)=1
-%0CmCdun if $g(%ext01528d(3))=1 { if $g(%ext01528d(4))=1 { l -@%ext01528d(5) s %ext01528d(4)=0 } elseif $g(%ext01528d(4))=2 { do $classmethod($li(%ext01528d(5)),"%UnlockId",$li(%ext01528d(5),2),1,1)  s %ext01528d(4)=0 }}
+ g %0Cfirst:%ext03754d(0)=1
+%0CmCdun if $g(%ext03754d(3))=1 { if $g(%ext03754d(4))=1 { l -@%ext03754d(5) s %ext03754d(4)=0 } elseif $g(%ext03754d(4))=2 { do $classmethod($li(%ext03754d(5)),"%UnlockId",$li(%ext03754d(5),2),1,1)  s %ext03754d(4)=0 }}
  g %0CmBk2
 %0CmBdun 
 %0CmAdun 
- s %ROWCOUNT=%ext01528d(1),SQLCODE=100,%ext01528d(0)=100
- s:$d(%sqltime) %ext01528d(6)=$g(%ext01528d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03754d(1),SQLCODE=100,%ext03754d(0)=100
+ s:$d(%sqltime) %ext03754d(6)=$g(%ext03754d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext01528d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03754d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext01528d(1)),1:0)
- if $g(%ext01528d(3))=1 {
- 	if $g(%ext01528d(4))=1 { l -@%ext01528d(5) s %ext01528d(4)=0 } elseif $g(%ext01528d(4))=2 { do $classmethod($li(%ext01528d(5)),"%UnlockId",$li(%ext01528d(5),2),1,1)  s %ext01528d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03754d(1)),1:0)
+ if $g(%ext03754d(3))=1 {
+ 	if $g(%ext03754d(4))=1 { l -@%ext03754d(5) s %ext03754d(4)=0 } elseif $g(%ext03754d(4))=2 { do $classmethod($li(%ext03754d(5)),"%UnlockId",$li(%ext03754d(5),2),1,1)  s %ext03754d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext01528d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03754d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"V2dz2teIBNRX7WLqnNg7qIdWIK4="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"V2dz2teIBNRX7WLqnNg7qIdWIK4=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext01528d
+ k %ext03754d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext01528d(9)
+ kill %ext03754d(9)
  quit  // close
 %0Cerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext01528d(0)=100
+ s %ext03754d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^User.BSDRGSystemMenuD(id)),1)

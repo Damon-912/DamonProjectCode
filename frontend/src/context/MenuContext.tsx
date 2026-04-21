@@ -302,6 +302,7 @@ export const defaultMenuItems: MenuProps['items'] = [
       { key: 'basic-data-dip', label: 'DIP付费病种库' },
       { key: 'basic-data-drg-catalog', label: 'DRGs目录信息表' },
       { key: 'basic-data-segmentation-rules', label: 'ADRG细分规则表' },
+      { key: 'basic-data-dip-core-algorithm', label: 'DIP算法配置' },
     ],
   },
   {

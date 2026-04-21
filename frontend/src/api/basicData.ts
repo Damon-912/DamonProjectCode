@@ -994,3 +994,82 @@ export const confirmDrgCoreAlgorithmImport = (
 ): Promise<ApiResponse<DrgCoreAlgorithmImportResult>> => {
   return invoke('02010051', [params]);
 };
+
+// ========== DIP核心算法配置 (02010053, 02010054, 02010055) ==========
+
+/** DIP核心算法配置记录 */
+export interface DipCoreAlgorithmItem {
+  id: string;
+  principalDiagnosis: string;
+  principalDiagnosisName: string;
+  majorProcedure: string;
+  majorProcedureName: string;
+  secondaryProcedure: string;
+  secondaryProcedureName: string;
+  provinceID: string;
+  provinceDesc: string;
+  cityID: string;
+  cityDesc: string;
+  mdtrtArea: string;
+  medinsLv: string;
+  scoreValue: string;
+  adjustCoefficient: string;
+  primaryAdjustCoefficient: string;
+  secondaryAdjustCoefficient: string;
+  thirdAdjustCoefficient: string;
+  createDate: string;
+  createTime: string;
+}
+
+/** 查询DIP核心算法配置参数 */
+export interface QueryDipCoreAlgorithmParams {
+  principalDiagnosis?: string;
+  principalDiagnosisName?: string;
+  majorProcedure?: string;
+  majorProcedureName?: string;
+  provinceID?: string;
+  cityID?: string;
+  medinsLv?: string;
+}
+
+/** 保存DIP核心算法配置参数 */
+export interface SaveDipCoreAlgorithmParams {
+  id?: string;
+  principalDiagnosis: string;
+  principalDiagnosisName: string;
+  majorProcedure?: string;
+  majorProcedureName?: string;
+  secondaryProcedure?: string;
+  secondaryProcedureName?: string;
+  provinceDr: string;
+  cityDr: string;
+  mdtrtArea?: string;
+  medinsLv: string;
+  scoreValue: string;
+  adjustCoefficient?: string;
+  primaryAdjustCoefficient?: string;
+  secondaryAdjustCoefficient?: string;
+  thirdAdjustCoefficient?: string;
+}
+
+/** 查询DIP核心算法配置 (02010053) */
+export const queryDipCoreAlgorithm = (
+  params: QueryDipCoreAlgorithmParams,
+  pagination: Pagination
+): Promise<ApiResponse<PageResult<DipCoreAlgorithmItem>>> => {
+  return invoke('02010053', [params], undefined, pagination);
+};
+
+/** 保存DIP核心算法配置 (02010054) */
+export const saveDipCoreAlgorithm = (
+  params: SaveDipCoreAlgorithmParams
+): Promise<ApiResponse> => {
+  return invoke('02010054', [params]);
+};
+
+/** 删除DIP核心算法配置 (02010055) */
+export const deleteDipCoreAlgorithm = (
+  id: string
+): Promise<ApiResponse> => {
+  return invoke('02010055', [{ id }]);
+};

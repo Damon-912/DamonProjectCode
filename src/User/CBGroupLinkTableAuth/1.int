@@ -1,6 +1,6 @@
 ROUTINE User.CBGroupLinkTableAuth.1 [Type=INT,Generated]
  ;User.CBGroupLinkTableAuth.1
- ;Generated for class User.CBGroupLinkTableAuth.  Do NOT edit. 12/24/2025 10:04:04AM
+ ;Generated for class User.CBGroupLinkTableAuth.  Do NOT edit. 04/21/2026 04:19:07PM
  ;;53477243;User.CBGroupLinkTableAuth
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
@@ -164,78 +164,78 @@ BSLoopDun
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext0306d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03915d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext0306d(1)=0,%ext0306d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext0306d(3)=$zu(115,2)
- s %ext0306d(4)=0,%ext0306d(5)=""
+ s %ext03915d(1)=0,%ext03915d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03915d(3)=$zu(115,2)
+ s %ext03915d(4)=0,%ext03915d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext0306d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext0306d(6)=$g(%ext0306d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext0306d }
+ s %ext03915d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03915d(6)=$g(%ext03915d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03915d }
  q
 %0Cfirst 
  ; asl MOD# 2
- s %ext0306d(7)=""
-%0CmBk1 s %ext0306d(7)=$o(^CBGroupLinkTableAuthI("HosOPAuth",%ext0306d(7)))
- i %ext0306d(7)="" g %0CmBdun
- s %ext0306d(8)=""
-%0CmBk2 s %ext0306d(8)=$o(^CBGroupLinkTableAuthI("HosOPAuth",%ext0306d(7),%ext0306d(8)))
- i %ext0306d(8)="" g %0CmBk1
- s %ext0306d(9)=""
-%0CmBk3 s %ext0306d(9)=$o(^CBGroupLinkTableAuthI("HosOPAuth",%ext0306d(7),%ext0306d(8),%ext0306d(9)))
- i %ext0306d(9)="" g %0CmBk2
- s %ext0306d(10)=""
- s %ext0306d(10)=$o(^CBGroupLinkTableAuthI("HosOPAuth",%ext0306d(7),%ext0306d(8),%ext0306d(9),%ext0306d(10)))
- i %ext0306d(10)="" g %0CmBk3
- s tID=(%ext0306d(7))_"||"_(%ext0306d(10))
- goto:%ext0306d(3)'=1 %0CmBuncommitted
- if %ext0306d(3)=1 {
+ s %ext03915d(7)=""
+%0CmBk1 s %ext03915d(7)=$o(^CBGroupLinkTableAuthI("HosOPAuth",%ext03915d(7)))
+ i %ext03915d(7)="" g %0CmBdun
+ s %ext03915d(8)=""
+%0CmBk2 s %ext03915d(8)=$o(^CBGroupLinkTableAuthI("HosOPAuth",%ext03915d(7),%ext03915d(8)))
+ i %ext03915d(8)="" g %0CmBk1
+ s %ext03915d(9)=""
+%0CmBk3 s %ext03915d(9)=$o(^CBGroupLinkTableAuthI("HosOPAuth",%ext03915d(7),%ext03915d(8),%ext03915d(9)))
+ i %ext03915d(9)="" g %0CmBk2
+ s %ext03915d(10)=""
+ s %ext03915d(10)=$o(^CBGroupLinkTableAuthI("HosOPAuth",%ext03915d(7),%ext03915d(8),%ext03915d(9),%ext03915d(10)))
+ i %ext03915d(10)="" g %0CmBk3
+ s tID=(%ext03915d(7))_"||"_(%ext03915d(10))
+ goto:%ext03915d(3)'=1 %0CmBuncommitted
+ if %ext03915d(3)=1 {
  	lock +^CBGroupLinkTableD($p(tID,"||",1),"A",$p(tID,"||",2))#"S":$zu(115,4)
- 	if $t { set %ext0306d(5)=$name(^CBGroupLinkTableD($p(tID,"||",1),"A",$p(tID,"||",2)))_"#""SI""",%ext0306d(4)=1 }
+ 	if $t { set %ext03915d(5)=$name(^CBGroupLinkTableD($p(tID,"||",1),"A",$p(tID,"||",2)))_"#""SI""",%ext03915d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_GroupLinkTableAuth for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
- s %ext0306d(11)=$p(tID,"||"),%ext0306d(10)=$p(tID,"||",2,*)
- i %ext0306d(11)'="",%ext0306d(10)'="",$d(^CBGroupLinkTableD(%ext0306d(11),"A",%ext0306d(10)))
+ s %ext03915d(11)=$p(tID,"||"),%ext03915d(10)=$p(tID,"||",2,*)
+ i %ext03915d(11)'="",%ext03915d(10)'="",$d(^CBGroupLinkTableD(%ext03915d(11),"A",%ext03915d(10)))
  e  g %0CmCdun
 %0CmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext0306d(1)),%ROWID=tID,%ext0306d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03915d(1)),%ROWID=tID,%ext03915d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext0306d(6)=$g(%ext0306d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03915d(6)=$g(%ext03915d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext0306d(0)) { s SQLCODE=-102 q  } i %ext0306d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext0306d(2),%ext0306d(1)'<%ext0306d(2) { s SQLCODE=100,%ROWCOUNT=%ext0306d(1),%ext0306d(0)=100 q }
+ i '$g(%ext03915d(0)) { s SQLCODE=-102 q  } i %ext03915d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03915d(2),%ext03915d(1)'<%ext03915d(2) { s SQLCODE=100,%ROWCOUNT=%ext03915d(1),%ext03915d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Cfirst:%ext0306d(0)=1
-%0CmCdun if $g(%ext0306d(3))=1 { if $g(%ext0306d(4))=1 { l -@%ext0306d(5) s %ext0306d(4)=0 } elseif $g(%ext0306d(4))=2 { do $classmethod($li(%ext0306d(5)),"%UnlockId",$li(%ext0306d(5),2),1,1)  s %ext0306d(4)=0 }}
+ g %0Cfirst:%ext03915d(0)=1
+%0CmCdun if $g(%ext03915d(3))=1 { if $g(%ext03915d(4))=1 { l -@%ext03915d(5) s %ext03915d(4)=0 } elseif $g(%ext03915d(4))=2 { do $classmethod($li(%ext03915d(5)),"%UnlockId",$li(%ext03915d(5),2),1,1)  s %ext03915d(4)=0 }}
  g %0CmBk3
 %0CmBdun 
 %0CmAdun 
- s %ROWCOUNT=%ext0306d(1),SQLCODE=100,%ext0306d(0)=100
- s:$d(%sqltime) %ext0306d(6)=$g(%ext0306d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03915d(1),SQLCODE=100,%ext03915d(0)=100
+ s:$d(%sqltime) %ext03915d(6)=$g(%ext03915d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext0306d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03915d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext0306d(1)),1:0)
- if $g(%ext0306d(3))=1 {
- 	if $g(%ext0306d(4))=1 { l -@%ext0306d(5) s %ext0306d(4)=0 } elseif $g(%ext0306d(4))=2 { do $classmethod($li(%ext0306d(5)),"%UnlockId",$li(%ext0306d(5),2),1,1)  s %ext0306d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03915d(1)),1:0)
+ if $g(%ext03915d(3))=1 {
+ 	if $g(%ext03915d(4))=1 { l -@%ext03915d(5) s %ext03915d(4)=0 } elseif $g(%ext03915d(4))=2 { do $classmethod($li(%ext03915d(5)),"%UnlockId",$li(%ext03915d(5),2),1,1)  s %ext03915d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext0306d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03915d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"PJBTxQ2h/RrAmH+7w0jjPLFJ65U="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"PJBTxQ2h/RrAmH+7w0jjPLFJ65U=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext0306d
+ k %ext03915d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext0306d(12)
+ kill %ext03915d(12)
  quit  // close
 %0Cerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext0306d(0)=100
+ s %ext03915d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^CBGroupLinkTableD($p(id,"||",1),"A",$p(id,"||",2))),1)

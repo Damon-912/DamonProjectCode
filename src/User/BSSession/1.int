@@ -1,6 +1,6 @@
 ROUTINE User.BSSession.1 [Type=INT,Generated]
  ;User.BSSession.1
- ;Generated for class User.BSSession.  Do NOT edit. 07/05/2022 06:59:22PM
+ ;Generated for class User.BSSession.  Do NOT edit. 04/21/2026 04:18:58PM
  ;;5A555A58;User.BSSession
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
@@ -142,71 +142,71 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext0774d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03768d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext0774d(1)=0,%ext0774d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext0774d(3)=$zu(115,2)
- s %ext0774d(4)=0,%ext0774d(5)=""
+ s %ext03768d(1)=0,%ext03768d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03768d(3)=$zu(115,2)
+ s %ext03768d(4)=0,%ext03768d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext0774d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext0774d(6)=$g(%ext0774d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext0774d }
+ s %ext03768d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03768d(6)=$g(%ext03768d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03768d }
  q
 %0Afirst 
  ; asl MOD# 2
- s %ext0774d(7)=""
-%0AmBk1 s %ext0774d(7)=$o(^BSSessionI("Group",%ext0774d(7)))
- i %ext0774d(7)="" g %0AmBdun
- s %ext0774d(8)=$s(%ext0774d(7)=-1E14:"",1:%ext0774d(7))
+ s %ext03768d(7)=""
+%0AmBk1 s %ext03768d(7)=$o(^BSSessionI("Group",%ext03768d(7)))
+ i %ext03768d(7)="" g %0AmBdun
+ s %ext03768d(8)=$s(%ext03768d(7)=-1E14:"",1:%ext03768d(7))
  s tID=""
-%0AmBk2 s tID=$o(^BSSessionI("Group",%ext0774d(7),tID))
+%0AmBk2 s tID=$o(^BSSessionI("Group",%ext03768d(7),tID))
  i tID="" g %0AmBk1
- goto:%ext0774d(3)'=1 %0AmBuncommitted
- if %ext0774d(3)=1 {
+ goto:%ext03768d(3)'=1 %0AmBuncommitted
+ if %ext03768d(3)=1 {
  	lock +^BSSessionD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext0774d(5)=$name(^BSSessionD($p(tID,"||",1)))_"#""SI""",%ext0774d(4)=1 }
+ 	if $t { set %ext03768d(5)=$name(^BSSessionD($p(tID,"||",1)))_"#""SI""",%ext03768d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_Session for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^BSSessionD(tID))
  e  g %0AmCdun
 %0AmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext0774d(1)),%ROWID=tID,%ext0774d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03768d(1)),%ROWID=tID,%ext03768d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext0774d(6)=$g(%ext0774d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03768d(6)=$g(%ext03768d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext0774d(0)) { s SQLCODE=-102 q  } i %ext0774d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext0774d(2),%ext0774d(1)'<%ext0774d(2) { s SQLCODE=100,%ROWCOUNT=%ext0774d(1),%ext0774d(0)=100 q }
+ i '$g(%ext03768d(0)) { s SQLCODE=-102 q  } i %ext03768d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03768d(2),%ext03768d(1)'<%ext03768d(2) { s SQLCODE=100,%ROWCOUNT=%ext03768d(1),%ext03768d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Afirst:%ext0774d(0)=1
-%0AmCdun if $g(%ext0774d(3))=1 { if $g(%ext0774d(4))=1 { l -@%ext0774d(5) s %ext0774d(4)=0 } elseif $g(%ext0774d(4))=2 { do $classmethod($li(%ext0774d(5)),"%UnlockId",$li(%ext0774d(5),2),1,1)  s %ext0774d(4)=0 }}
+ g %0Afirst:%ext03768d(0)=1
+%0AmCdun if $g(%ext03768d(3))=1 { if $g(%ext03768d(4))=1 { l -@%ext03768d(5) s %ext03768d(4)=0 } elseif $g(%ext03768d(4))=2 { do $classmethod($li(%ext03768d(5)),"%UnlockId",$li(%ext03768d(5),2),1,1)  s %ext03768d(4)=0 }}
  g %0AmBk2
 %0AmBdun 
 %0AmAdun 
- s %ROWCOUNT=%ext0774d(1),SQLCODE=100,%ext0774d(0)=100
- s:$d(%sqltime) %ext0774d(6)=$g(%ext0774d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03768d(1),SQLCODE=100,%ext03768d(0)=100
+ s:$d(%sqltime) %ext03768d(6)=$g(%ext03768d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext0774d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03768d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext0774d(1)),1:0)
- if $g(%ext0774d(3))=1 {
- 	if $g(%ext0774d(4))=1 { l -@%ext0774d(5) s %ext0774d(4)=0 } elseif $g(%ext0774d(4))=2 { do $classmethod($li(%ext0774d(5)),"%UnlockId",$li(%ext0774d(5),2),1,1)  s %ext0774d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03768d(1)),1:0)
+ if $g(%ext03768d(3))=1 {
+ 	if $g(%ext03768d(4))=1 { l -@%ext03768d(5) s %ext03768d(4)=0 } elseif $g(%ext03768d(4))=2 { do $classmethod($li(%ext03768d(5)),"%UnlockId",$li(%ext03768d(5),2),1,1)  s %ext03768d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext0774d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03768d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"E1JZJmHLamojmLYsnGdIjjiVBFY="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"E1JZJmHLamojmLYsnGdIjjiVBFY=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext0774d
+ k %ext03768d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext0774d(9)
+ kill %ext03768d(9)
  quit  // close
 %0Aerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext0774d(0)=100
+ s %ext03768d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^BSSessionD(id)),1)
@@ -1622,15 +1622,6 @@ exit	Quit sc }
 zFromDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		if (pDynamicObject.%IsDefined("CreateUserDr")) {
-			try {
-				set newIdvalue=pDynamicObject."CreateUserDr"
-				set existingIdValue=..CreateUserDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"CreateUserDr")=##class(User.HBUser).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
 		if (pDynamicObject.%IsDefined("CreatedDate")) && (..CreatedDate'=pDynamicObject."CreatedDate") {
 			try {
 				try {
@@ -1672,24 +1663,6 @@ zFromDynamicObj(pDynamicObject) public {
 					set $ZERROR=""
 				}
 				set ..DeviceID=value
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
-		if (pDynamicObject.%IsDefined("GroupDr")) {
-			try {
-				set newIdvalue=pDynamicObject."GroupDr"
-				set existingIdValue=..GroupDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"GroupDr")=##class(User.CBGroup).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
-		if (pDynamicObject.%IsDefined("HospitalDr")) {
-			try {
-				set newIdvalue=pDynamicObject."HospitalDr"
-				set existingIdValue=..HospitalDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"HospitalDr")=##class(User.CBHospital).%OpenId(newIdvalue)
 			} catch(ex) {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
@@ -1750,15 +1723,6 @@ zFromDynamicObj(pDynamicObject) public {
 					set $ZERROR=""
 				}
 				set ..LoginTime=value
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
-		if (pDynamicObject.%IsDefined("LoginUserDr")) {
-			try {
-				set newIdvalue=pDynamicObject."LoginUserDr"
-				set existingIdValue=..LoginUserDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"LoginUserDr")=##class(User.HBUser).%OpenId(newIdvalue)
 			} catch(ex) {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
@@ -1831,15 +1795,6 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
-		if (pDynamicObject.%IsDefined("UpdateUserDr")) {
-			try {
-				set newIdvalue=pDynamicObject."UpdateUserDr"
-				set existingIdValue=..UpdateUserDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"UpdateUserDr")=##class(User.HBUser).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}
@@ -1847,7 +1802,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"CreateUserDr":($CASE($ISOBJECT(..CreateUserDr),1:..CreateUserDr.%Id(),:"")),"CreatedDate":(..GetLogicalToXSDValue($This,"CreatedDate",..CreatedDate)),"CreatedTime":(..GetLogicalToXSDValue($This,"CreatedTime",..CreatedTime)),"DeviceID":(..GetLogicalToXSDValue($This,"DeviceID",..DeviceID)),"GroupDr":($CASE($ISOBJECT(..GroupDr),1:..GroupDr.%Id(),:"")),"HospitalDr":($CASE($ISOBJECT(..HospitalDr),1:..HospitalDr.%Id(),:"")),"IP":(..GetLogicalToXSDValue($This,"IP",..IP)),"IsActive":(..GetLogicalToXSDValue($This,"IsActive",..IsActive)),"LoginDate":(..GetLogicalToXSDValue($This,"LoginDate",..LoginDate)),"LoginTime":(..GetLogicalToXSDValue($This,"LoginTime",..LoginTime)),"LoginUserDr":($CASE($ISOBJECT(..LoginUserDr),1:..LoginUserDr.%Id(),:"")),"Mac":(..GetLogicalToXSDValue($This,"Mac",..Mac)),"SessionStr":(..GetLogicalToXSDValue($This,"SessionStr",..SessionStr)),"TimeOut":(..TimeOut),"UpdateDate":(..GetLogicalToXSDValue($This,"UpdateDate",..UpdateDate)),"UpdateTime":(..GetLogicalToXSDValue($This,"UpdateTime",..UpdateTime)),"UpdateUserDr":($CASE($ISOBJECT(..UpdateUserDr),1:..UpdateUserDr.%Id(),:""))}
+		set pDynamicObject={"ID":(..%Id()),"CreateUserDr":(..CreateUserDr),"CreatedDate":(..GetLogicalToXSDValue($This,"CreatedDate",..CreatedDate)),"CreatedTime":(..GetLogicalToXSDValue($This,"CreatedTime",..CreatedTime)),"DeviceID":(..GetLogicalToXSDValue($This,"DeviceID",..DeviceID)),"GroupDr":(..GroupDr),"HospitalDr":(..HospitalDr),"IP":(..GetLogicalToXSDValue($This,"IP",..IP)),"IsActive":(..GetLogicalToXSDValue($This,"IsActive",..IsActive)),"LoginDate":(..GetLogicalToXSDValue($This,"LoginDate",..LoginDate)),"LoginTime":(..GetLogicalToXSDValue($This,"LoginTime",..LoginTime)),"LoginUserDr":(..LoginUserDr),"Mac":(..GetLogicalToXSDValue($This,"Mac",..Mac)),"SessionStr":(..GetLogicalToXSDValue($This,"SessionStr",..SessionStr)),"TimeOut":(..TimeOut),"UpdateDate":(..GetLogicalToXSDValue($This,"UpdateDate",..UpdateDate)),"UpdateTime":(..GetLogicalToXSDValue($This,"UpdateTime",..UpdateTime)),"UpdateUserDr":(..UpdateUserDr)}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}
@@ -3074,75 +3029,48 @@ zGroupExists(K1,id="") [ K1,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,SQLC
 	do %0No
 	Quit $select('SQLCODE:1,1:0) }
  q
-%0No n sqldata12d,sqldata13d,sqldata14d,sqldata15d,sqldata16d,sqldata17d,sqldata18d,sqldata19d,sqldata20d,sqldata21d,sqldata24d,sqldata25d,sqldata3d,sqldata5d,sqldata6d,sqldata4d,sqldata8d,sqldata9d,sqldata11d
+%0No n sqldata10d,sqldata11d,sqldata12d,sqldata16d,sqldata21d,sqldata22d,sqldata3d,sqldata5d,sqldata6d,sqldata4d,sqldata8d,sqldata9d
  s $zt="%0Nerr"
  n %sqltime s %sqltime=$zh
- s sqldata12d=$zu(115,2)
- s sqldata13d=0,sqldata14d=""
+ s sqldata10d=$zu(115,2)
+ s sqldata11d=0,sqldata12d=""
  d:$zu(115,15) $system.ECP.Sync()
  s sqldata3d=$g(K1),sqldata5d=$s($g(K1)="":"",$isvalidnum(K1):+K1,1:K1),sqldata6d=$g(K1)
  s SQLCODE=100
  ; asl MOD# 2
- s sqldata4d=sqldata5d s sqldata15d=$s(sqldata4d="":-1E14,1:sqldata4d)
- s sqldata8d="",sqldata16d=1,sqldata9d="",sqldata17d=1,sqldata11d=""
- g %0NmBk1
-%0NmBqt1 s sqldata8d="" q
-%0NmBpt1 s sqldata16d=0
- i '(sqldata3d'="") g %0NmBqt1
- s sqldata18d=sqldata5d
- s sqldata19d=$s(sqldata18d'="":sqldata18d,1:-1E14)
- i '(sqldata18d'="") g %0NmBqt1
- g %0NmBft1:sqldata8d=""
-%0NmBat1 g %0NmBpt1:sqldata16d
- g %0NmBgt1:$d(^BSSessionI("Group",sqldata19d,sqldata8d))
-%0NmBft1 g %0NmBpt1:sqldata16d
- s sqldata8d=$o(^BSSessionI("Group",sqldata19d,sqldata8d))
- q:sqldata8d=""
-%0NmBgt1 q
-%0NmBqt2 s sqldata9d="" q
-%0NmBpt2 s sqldata17d=0
- i '(sqldata6d="") g %0NmBqt2
- s sqldata20d=""
- s sqldata21d=$s(sqldata20d'="":sqldata20d,1:-1E14)
- g %0NmBft2:sqldata9d=""
-%0NmBat2 g %0NmBpt2:sqldata17d
- g %0NmBgt2:$d(^BSSessionI("Group",sqldata21d,sqldata9d))
-%0NmBft2 g %0NmBpt2:sqldata17d
- s sqldata9d=$o(^BSSessionI("Group",sqldata21d,sqldata9d))
- q:sqldata9d=""
-%0NmBgt2 q
-%0NmBat3 i sqldata8d="",sqldata9d="" s sqldata8d=sqldata11d d %0NmBat1 s sqldata9d=sqldata11d d %0NmBat2 g %0NmBgt3
- i sqldata8d'="",sqldata11d]]sqldata8d s sqldata8d=sqldata11d d %0NmBat1
- i sqldata9d'="",sqldata11d]]sqldata9d s sqldata9d=sqldata11d d %0NmBat2
- g %0NmBgt3
-%0NmBft3 d %0NmBft1:sqldata8d=sqldata11d,%0NmBft2:sqldata9d=sqldata11d
-%0NmBgt3 s sqldata11d=$S(sqldata8d="":sqldata9d,sqldata9d="":sqldata8d,sqldata9d]]sqldata8d:sqldata8d,1:sqldata9d) q
-%0NmBk1 d %0NmBft3
- i sqldata11d="" g %0NmBdun
- s id=sqldata11d
- goto:sqldata12d'=1 %0NmBuncommitted
- if sqldata12d=1 {
+ s sqldata16d=""
+%0NmBk1 s sqldata16d=$o(^BSSessionI("Group",sqldata16d))
+ i sqldata16d="" g %0NmBdun
+ s sqldata4d=$s(sqldata16d=-1E14:"",1:sqldata16d)
+ i '(((sqldata4d'="")&&((sqldata3d'="")&&(sqldata4d=sqldata5d)))||((sqldata6d="")&&(sqldata4d=""))) g %0NmBk1
+ s id=""
+%0NmBk2 s id=$o(^BSSessionI("Group",sqldata16d,id))
+ i id="" g %0NmBk1
+ goto:sqldata10d'=1 %0NmBuncommitted
+ if sqldata10d=1 {
  	lock +^BSSessionD($p(id,"||",1))#"S":$zu(115,4)
- 	if $t { set sqldata14d=$name(^BSSessionD($p(id,"||",1)))_"#""SI""",sqldata13d=1 }
+ 	if $t { set sqldata12d=$name(^BSSessionD($p(id,"||",1)))_"#""SI""",sqldata11d=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_Session for RowID value: "_id ztrap "LOCK"  }
  }
  ; asl MOD# 3
- i id'="" s sqldata24d="" i $d(^BSSessionD(id),sqldata24d)
+ s sqldata8d=$zlist(sqldata4d)
+ i id'="" s sqldata21d="" i $d(^BSSessionD(id),sqldata21d)
  e  g %0NmCdun
- S sqldata4d=$lg(sqldata24d,6)
- g:'(((sqldata4d'="")&&((sqldata3d'="")&&(sqldata4d=sqldata5d)))||((sqldata6d="")&&(sqldata4d=""))) %0NmCdun
+ S sqldata4d=$lg(sqldata21d,6)
+ s sqldata9d=$zlist(sqldata4d)
+ g:sqldata8d'=sqldata9d %0NmCdun
 %0NmBuncommitted ;
  s SQLCODE=0 g %0Nc
-%0NmCdun if $g(sqldata12d)=1 { if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }}
- g %0NmBk1
+%0NmCdun if $g(sqldata10d)=1 { if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }}
+ g %0NmBk2
 %0NmBdun 
 %0NmAdun 
 %0Nc set %ROWCOUNT='SQLCODE
- if $g(sqldata12d)=1 {
- 	if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }
+ if $g(sqldata10d)=1 {
+ 	if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(sqldata25d)+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(sqldata22d)+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"LXU24jxusZPkwvlUvFaaP2w5sFk="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
@@ -3157,75 +3085,48 @@ zHospExists(K1,id="") [ K1,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,SQLCO
 	do %0Po
 	Quit $select('SQLCODE:1,1:0) }
  q
-%0Po n sqldata12d,sqldata13d,sqldata14d,sqldata15d,sqldata16d,sqldata17d,sqldata18d,sqldata19d,sqldata20d,sqldata21d,sqldata24d,sqldata25d,sqldata3d,sqldata5d,sqldata6d,sqldata4d,sqldata8d,sqldata9d,sqldata11d
+%0Po n sqldata10d,sqldata11d,sqldata12d,sqldata16d,sqldata21d,sqldata22d,sqldata3d,sqldata5d,sqldata6d,sqldata4d,sqldata8d,sqldata9d
  s $zt="%0Perr"
  n %sqltime s %sqltime=$zh
- s sqldata12d=$zu(115,2)
- s sqldata13d=0,sqldata14d=""
+ s sqldata10d=$zu(115,2)
+ s sqldata11d=0,sqldata12d=""
  d:$zu(115,15) $system.ECP.Sync()
  s sqldata3d=$g(K1),sqldata5d=$s($g(K1)="":"",$isvalidnum(K1):+K1,1:K1),sqldata6d=$g(K1)
  s SQLCODE=100
  ; asl MOD# 2
- s sqldata4d=sqldata5d s sqldata15d=$s(sqldata4d="":-1E14,1:sqldata4d)
- s sqldata8d="",sqldata16d=1,sqldata9d="",sqldata17d=1,sqldata11d=""
- g %0PmBk1
-%0PmBqt1 s sqldata8d="" q
-%0PmBpt1 s sqldata16d=0
- i '(sqldata3d'="") g %0PmBqt1
- s sqldata18d=sqldata5d
- s sqldata19d=$s(sqldata18d'="":sqldata18d,1:-1E14)
- i '(sqldata18d'="") g %0PmBqt1
- g %0PmBft1:sqldata8d=""
-%0PmBat1 g %0PmBpt1:sqldata16d
- g %0PmBgt1:$d(^BSSessionI("Hosp",sqldata19d,sqldata8d))
-%0PmBft1 g %0PmBpt1:sqldata16d
- s sqldata8d=$o(^BSSessionI("Hosp",sqldata19d,sqldata8d))
- q:sqldata8d=""
-%0PmBgt1 q
-%0PmBqt2 s sqldata9d="" q
-%0PmBpt2 s sqldata17d=0
- i '(sqldata6d="") g %0PmBqt2
- s sqldata20d=""
- s sqldata21d=$s(sqldata20d'="":sqldata20d,1:-1E14)
- g %0PmBft2:sqldata9d=""
-%0PmBat2 g %0PmBpt2:sqldata17d
- g %0PmBgt2:$d(^BSSessionI("Hosp",sqldata21d,sqldata9d))
-%0PmBft2 g %0PmBpt2:sqldata17d
- s sqldata9d=$o(^BSSessionI("Hosp",sqldata21d,sqldata9d))
- q:sqldata9d=""
-%0PmBgt2 q
-%0PmBat3 i sqldata8d="",sqldata9d="" s sqldata8d=sqldata11d d %0PmBat1 s sqldata9d=sqldata11d d %0PmBat2 g %0PmBgt3
- i sqldata8d'="",sqldata11d]]sqldata8d s sqldata8d=sqldata11d d %0PmBat1
- i sqldata9d'="",sqldata11d]]sqldata9d s sqldata9d=sqldata11d d %0PmBat2
- g %0PmBgt3
-%0PmBft3 d %0PmBft1:sqldata8d=sqldata11d,%0PmBft2:sqldata9d=sqldata11d
-%0PmBgt3 s sqldata11d=$S(sqldata8d="":sqldata9d,sqldata9d="":sqldata8d,sqldata9d]]sqldata8d:sqldata8d,1:sqldata9d) q
-%0PmBk1 d %0PmBft3
- i sqldata11d="" g %0PmBdun
- s id=sqldata11d
- goto:sqldata12d'=1 %0PmBuncommitted
- if sqldata12d=1 {
+ s sqldata16d=""
+%0PmBk1 s sqldata16d=$o(^BSSessionI("Hosp",sqldata16d))
+ i sqldata16d="" g %0PmBdun
+ s sqldata4d=$s(sqldata16d=-1E14:"",1:sqldata16d)
+ i '(((sqldata4d'="")&&((sqldata3d'="")&&(sqldata4d=sqldata5d)))||((sqldata6d="")&&(sqldata4d=""))) g %0PmBk1
+ s id=""
+%0PmBk2 s id=$o(^BSSessionI("Hosp",sqldata16d,id))
+ i id="" g %0PmBk1
+ goto:sqldata10d'=1 %0PmBuncommitted
+ if sqldata10d=1 {
  	lock +^BSSessionD($p(id,"||",1))#"S":$zu(115,4)
- 	if $t { set sqldata14d=$name(^BSSessionD($p(id,"||",1)))_"#""SI""",sqldata13d=1 }
+ 	if $t { set sqldata12d=$name(^BSSessionD($p(id,"||",1)))_"#""SI""",sqldata11d=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_Session for RowID value: "_id ztrap "LOCK"  }
  }
  ; asl MOD# 3
- i id'="" s sqldata24d="" i $d(^BSSessionD(id),sqldata24d)
+ s sqldata8d=$zlist(sqldata4d)
+ i id'="" s sqldata21d="" i $d(^BSSessionD(id),sqldata21d)
  e  g %0PmCdun
- S sqldata4d=$lg(sqldata24d,7)
- g:'(((sqldata4d'="")&&((sqldata3d'="")&&(sqldata4d=sqldata5d)))||((sqldata6d="")&&(sqldata4d=""))) %0PmCdun
+ S sqldata4d=$lg(sqldata21d,7)
+ s sqldata9d=$zlist(sqldata4d)
+ g:sqldata8d'=sqldata9d %0PmCdun
 %0PmBuncommitted ;
  s SQLCODE=0 g %0Pc
-%0PmCdun if $g(sqldata12d)=1 { if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }}
- g %0PmBk1
+%0PmCdun if $g(sqldata10d)=1 { if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }}
+ g %0PmBk2
 %0PmBdun 
 %0PmAdun 
 %0Pc set %ROWCOUNT='SQLCODE
- if $g(sqldata12d)=1 {
- 	if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }
+ if $g(sqldata10d)=1 {
+ 	if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(sqldata25d)+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(sqldata22d)+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"pAhXbMZFs715hEf1TdQQzw9d+rA="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
@@ -3350,75 +3251,48 @@ zLoginUserExists(K1,id="") [ K1,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,
 	do %0To
 	Quit $select('SQLCODE:1,1:0) }
  q
-%0To n sqldata12d,sqldata13d,sqldata14d,sqldata15d,sqldata16d,sqldata17d,sqldata18d,sqldata19d,sqldata20d,sqldata21d,sqldata24d,sqldata25d,sqldata3d,sqldata5d,sqldata6d,sqldata4d,sqldata8d,sqldata9d,sqldata11d
+%0To n sqldata10d,sqldata11d,sqldata12d,sqldata16d,sqldata21d,sqldata22d,sqldata3d,sqldata5d,sqldata6d,sqldata4d,sqldata8d,sqldata9d
  s $zt="%0Terr"
  n %sqltime s %sqltime=$zh
- s sqldata12d=$zu(115,2)
- s sqldata13d=0,sqldata14d=""
+ s sqldata10d=$zu(115,2)
+ s sqldata11d=0,sqldata12d=""
  d:$zu(115,15) $system.ECP.Sync()
  s sqldata3d=$g(K1),sqldata5d=$s($g(K1)="":"",$isvalidnum(K1):+K1,1:K1),sqldata6d=$g(K1)
  s SQLCODE=100
  ; asl MOD# 2
- s sqldata4d=sqldata5d s sqldata15d=$s(sqldata4d="":-1E14,1:sqldata4d)
- s sqldata8d="",sqldata16d=1,sqldata9d="",sqldata17d=1,sqldata11d=""
- g %0TmBk1
-%0TmBqt1 s sqldata8d="" q
-%0TmBpt1 s sqldata16d=0
- i '(sqldata3d'="") g %0TmBqt1
- s sqldata18d=sqldata5d
- s sqldata19d=$s(sqldata18d'="":sqldata18d,1:-1E14)
- i '(sqldata18d'="") g %0TmBqt1
- g %0TmBft1:sqldata8d=""
-%0TmBat1 g %0TmBpt1:sqldata16d
- g %0TmBgt1:$d(^BSSessionI("LoginUser",sqldata19d,sqldata8d))
-%0TmBft1 g %0TmBpt1:sqldata16d
- s sqldata8d=$o(^BSSessionI("LoginUser",sqldata19d,sqldata8d))
- q:sqldata8d=""
-%0TmBgt1 q
-%0TmBqt2 s sqldata9d="" q
-%0TmBpt2 s sqldata17d=0
- i '(sqldata6d="") g %0TmBqt2
- s sqldata20d=""
- s sqldata21d=$s(sqldata20d'="":sqldata20d,1:-1E14)
- g %0TmBft2:sqldata9d=""
-%0TmBat2 g %0TmBpt2:sqldata17d
- g %0TmBgt2:$d(^BSSessionI("LoginUser",sqldata21d,sqldata9d))
-%0TmBft2 g %0TmBpt2:sqldata17d
- s sqldata9d=$o(^BSSessionI("LoginUser",sqldata21d,sqldata9d))
- q:sqldata9d=""
-%0TmBgt2 q
-%0TmBat3 i sqldata8d="",sqldata9d="" s sqldata8d=sqldata11d d %0TmBat1 s sqldata9d=sqldata11d d %0TmBat2 g %0TmBgt3
- i sqldata8d'="",sqldata11d]]sqldata8d s sqldata8d=sqldata11d d %0TmBat1
- i sqldata9d'="",sqldata11d]]sqldata9d s sqldata9d=sqldata11d d %0TmBat2
- g %0TmBgt3
-%0TmBft3 d %0TmBft1:sqldata8d=sqldata11d,%0TmBft2:sqldata9d=sqldata11d
-%0TmBgt3 s sqldata11d=$S(sqldata8d="":sqldata9d,sqldata9d="":sqldata8d,sqldata9d]]sqldata8d:sqldata8d,1:sqldata9d) q
-%0TmBk1 d %0TmBft3
- i sqldata11d="" g %0TmBdun
- s id=sqldata11d
- goto:sqldata12d'=1 %0TmBuncommitted
- if sqldata12d=1 {
+ s sqldata16d=""
+%0TmBk1 s sqldata16d=$o(^BSSessionI("LoginUser",sqldata16d))
+ i sqldata16d="" g %0TmBdun
+ s sqldata4d=$s(sqldata16d=-1E14:"",1:sqldata16d)
+ i '(((sqldata4d'="")&&((sqldata3d'="")&&(sqldata4d=sqldata5d)))||((sqldata6d="")&&(sqldata4d=""))) g %0TmBk1
+ s id=""
+%0TmBk2 s id=$o(^BSSessionI("LoginUser",sqldata16d,id))
+ i id="" g %0TmBk1
+ goto:sqldata10d'=1 %0TmBuncommitted
+ if sqldata10d=1 {
  	lock +^BSSessionD($p(id,"||",1))#"S":$zu(115,4)
- 	if $t { set sqldata14d=$name(^BSSessionD($p(id,"||",1)))_"#""SI""",sqldata13d=1 }
+ 	if $t { set sqldata12d=$name(^BSSessionD($p(id,"||",1)))_"#""SI""",sqldata11d=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_Session for RowID value: "_id ztrap "LOCK"  }
  }
  ; asl MOD# 3
- i id'="" s sqldata24d="" i $d(^BSSessionD(id),sqldata24d)
+ s sqldata8d=$zlist(sqldata4d)
+ i id'="" s sqldata21d="" i $d(^BSSessionD(id),sqldata21d)
  e  g %0TmCdun
- S sqldata4d=$lg(sqldata24d,10)
- g:'(((sqldata4d'="")&&((sqldata3d'="")&&(sqldata4d=sqldata5d)))||((sqldata6d="")&&(sqldata4d=""))) %0TmCdun
+ S sqldata4d=$lg(sqldata21d,10)
+ s sqldata9d=$zlist(sqldata4d)
+ g:sqldata8d'=sqldata9d %0TmCdun
 %0TmBuncommitted ;
  s SQLCODE=0 g %0Tc
-%0TmCdun if $g(sqldata12d)=1 { if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }}
- g %0TmBk1
+%0TmCdun if $g(sqldata10d)=1 { if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }}
+ g %0TmBk2
 %0TmBdun 
 %0TmAdun 
 %0Tc set %ROWCOUNT='SQLCODE
- if $g(sqldata12d)=1 {
- 	if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }
+ if $g(sqldata10d)=1 {
+ 	if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(sqldata25d)+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(sqldata22d)+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"Vcvn8IMoJtizeWl+xPl/jwZiRqw="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)

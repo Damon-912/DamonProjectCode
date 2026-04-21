@@ -1,6 +1,6 @@
 ROUTINE User.HBButtonAuth.1 [Type=INT,Generated]
  ;User.HBButtonAuth.1
- ;Generated for class User.HBButtonAuth.  Do NOT edit. 12/24/2025 10:04:04AM
+ ;Generated for class User.HBButtonAuth.  Do NOT edit. 04/21/2026 04:19:04PM
  ;;49796132;User.HBButtonAuth
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
@@ -160,71 +160,71 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext0287d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03865d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext0287d(1)=0,%ext0287d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext0287d(3)=$zu(115,2)
- s %ext0287d(4)=0,%ext0287d(5)=""
+ s %ext03865d(1)=0,%ext03865d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03865d(3)=$zu(115,2)
+ s %ext03865d(4)=0,%ext03865d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext0287d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext0287d(6)=$g(%ext0287d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext0287d }
+ s %ext03865d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03865d(6)=$g(%ext03865d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03865d }
  q
 %0Cfirst 
  ; asl MOD# 2
- s %ext0287d(7)=""
-%0CmBk1 s %ext0287d(7)=$o(^HBButtonAuthI("HospID",%ext0287d(7)))
- i %ext0287d(7)="" g %0CmBdun
- s %ext0287d(8)=$s(%ext0287d(7)=-1E14:"",1:%ext0287d(7))
+ s %ext03865d(7)=""
+%0CmBk1 s %ext03865d(7)=$o(^HBButtonAuthI("HospID",%ext03865d(7)))
+ i %ext03865d(7)="" g %0CmBdun
+ s %ext03865d(8)=$s(%ext03865d(7)=-1E14:"",1:%ext03865d(7))
  s tID=""
-%0CmBk2 s tID=$o(^HBButtonAuthI("HospID",%ext0287d(7),tID))
+%0CmBk2 s tID=$o(^HBButtonAuthI("HospID",%ext03865d(7),tID))
  i tID="" g %0CmBk1
- goto:%ext0287d(3)'=1 %0CmBuncommitted
- if %ext0287d(3)=1 {
+ goto:%ext03865d(3)'=1 %0CmBuncommitted
+ if %ext03865d(3)=1 {
  	lock +^HBButtonAuthD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext0287d(5)=$name(^HBButtonAuthD($p(tID,"||",1)))_"#""SI""",%ext0287d(4)=1 }
+ 	if $t { set %ext03865d(5)=$name(^HBButtonAuthD($p(tID,"||",1)))_"#""SI""",%ext03865d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_ButtonAuth for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^HBButtonAuthD(tID))
  e  g %0CmCdun
 %0CmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext0287d(1)),%ROWID=tID,%ext0287d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03865d(1)),%ROWID=tID,%ext03865d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext0287d(6)=$g(%ext0287d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03865d(6)=$g(%ext03865d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext0287d(0)) { s SQLCODE=-102 q  } i %ext0287d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext0287d(2),%ext0287d(1)'<%ext0287d(2) { s SQLCODE=100,%ROWCOUNT=%ext0287d(1),%ext0287d(0)=100 q }
+ i '$g(%ext03865d(0)) { s SQLCODE=-102 q  } i %ext03865d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03865d(2),%ext03865d(1)'<%ext03865d(2) { s SQLCODE=100,%ROWCOUNT=%ext03865d(1),%ext03865d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Cfirst:%ext0287d(0)=1
-%0CmCdun if $g(%ext0287d(3))=1 { if $g(%ext0287d(4))=1 { l -@%ext0287d(5) s %ext0287d(4)=0 } elseif $g(%ext0287d(4))=2 { do $classmethod($li(%ext0287d(5)),"%UnlockId",$li(%ext0287d(5),2),1,1)  s %ext0287d(4)=0 }}
+ g %0Cfirst:%ext03865d(0)=1
+%0CmCdun if $g(%ext03865d(3))=1 { if $g(%ext03865d(4))=1 { l -@%ext03865d(5) s %ext03865d(4)=0 } elseif $g(%ext03865d(4))=2 { do $classmethod($li(%ext03865d(5)),"%UnlockId",$li(%ext03865d(5),2),1,1)  s %ext03865d(4)=0 }}
  g %0CmBk2
 %0CmBdun 
 %0CmAdun 
- s %ROWCOUNT=%ext0287d(1),SQLCODE=100,%ext0287d(0)=100
- s:$d(%sqltime) %ext0287d(6)=$g(%ext0287d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03865d(1),SQLCODE=100,%ext03865d(0)=100
+ s:$d(%sqltime) %ext03865d(6)=$g(%ext03865d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext0287d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03865d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext0287d(1)),1:0)
- if $g(%ext0287d(3))=1 {
- 	if $g(%ext0287d(4))=1 { l -@%ext0287d(5) s %ext0287d(4)=0 } elseif $g(%ext0287d(4))=2 { do $classmethod($li(%ext0287d(5)),"%UnlockId",$li(%ext0287d(5),2),1,1)  s %ext0287d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03865d(1)),1:0)
+ if $g(%ext03865d(3))=1 {
+ 	if $g(%ext03865d(4))=1 { l -@%ext03865d(5) s %ext03865d(4)=0 } elseif $g(%ext03865d(4))=2 { do $classmethod($li(%ext03865d(5)),"%UnlockId",$li(%ext03865d(5),2),1,1)  s %ext03865d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext0287d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03865d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"JYX6NY59YPHyw4CxRIYu4OMNeqc="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"JYX6NY59YPHyw4CxRIYu4OMNeqc=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext0287d
+ k %ext03865d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext0287d(9)
+ kill %ext03865d(9)
  quit  // close
 %0Cerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext0287d(0)=100
+ s %ext03865d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^HBButtonAuthD(id)),1)
@@ -1386,15 +1386,6 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
-		if (pDynamicObject.%IsDefined("UserDr")) {
-			try {
-				set newIdvalue=pDynamicObject."UserDr"
-				set existingIdValue=..UserDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"UserDr")=##class(User.HBUser).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}
@@ -1402,7 +1393,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"ButtonDr":($CASE($ISOBJECT(..ButtonDr),1:..ButtonDr.%Id(),:"")),"ComponentDr":($CASE($ISOBJECT(..ComponentDr),1:..ComponentDr.%Id(),:"")),"DataID":(..GetLogicalToXSDValue($This,"DataID",..DataID)),"HospitalDr":($CASE($ISOBJECT(..HospitalDr),1:..HospitalDr.%Id(),:"")),"Icon":(..GetLogicalToXSDValue($This,"Icon",..Icon)),"Type":(..GetLogicalToXSDValue($This,"Type",..Type)),"UserDr":($CASE($ISOBJECT(..UserDr),1:..UserDr.%Id(),:""))}
+		set pDynamicObject={"ID":(..%Id()),"ButtonDr":($CASE($ISOBJECT(..ButtonDr),1:..ButtonDr.%Id(),:"")),"ComponentDr":($CASE($ISOBJECT(..ComponentDr),1:..ComponentDr.%Id(),:"")),"DataID":(..GetLogicalToXSDValue($This,"DataID",..DataID)),"HospitalDr":($CASE($ISOBJECT(..HospitalDr),1:..HospitalDr.%Id(),:"")),"Icon":(..GetLogicalToXSDValue($This,"Icon",..Icon)),"Type":(..GetLogicalToXSDValue($This,"Type",..Type)),"UserDr":(..UserDr)}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}
@@ -2200,13 +2191,13 @@ zHospTypeCheckUnique(id="",pValue...) [ SQLCODE,id,pValue ] public { New %ROWCOU
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_ButtonAuth for RowID value: "_sqldata13d ztrap "LOCK"  }
  }
  ; asl MOD# 3
- s sqldata20d=$zlist(sqldata7d,sqldata11d,sqldata9d,sqldata16d,sqldata18d)
+ s sqldata20d=$zlist(sqldata7d,sqldata11d,sqldata9d,sqldata18d,sqldata16d)
  i sqldata13d'="" s sqldata38d="" i $d(^HBButtonAuthD(sqldata13d),sqldata38d)
  e  g %0NmCdun
  S $lg(,sqldata5d,sqldata3d,sqldata9d,sqldata11d,,,sqldata7d)=sqldata38d
  s sqldata16d=$zu(28,sqldata3d,5)
  s sqldata18d=$zu(28,sqldata5d,5)
- s sqldata21d=$zlist(sqldata7d,sqldata11d,sqldata9d,sqldata16d,sqldata18d)
+ s sqldata21d=$zlist(sqldata7d,sqldata11d,sqldata9d,sqldata18d,sqldata16d)
  g:sqldata20d'=sqldata21d %0NmCdun
 %0NmBuncommitted ;
  s SQLCODE=0 g %0Nc
@@ -2368,13 +2359,13 @@ zHospTypeExists(K1,K2,K3,K4,K5,id="") [ K1,K2,K3,K4,K5,SQLCODE,id ] public { New
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_ButtonAuth for RowID value: "_id ztrap "LOCK"  }
  }
  ; asl MOD# 3
- s sqldata37d=$zlist(sqldata15d,sqldata13d,sqldata9d,sqldata18d,sqldata20d)
+ s sqldata37d=$zlist(sqldata15d,sqldata13d,sqldata9d,sqldata20d,sqldata18d)
  i id'="" s sqldata55d="" i $d(^HBButtonAuthD(id),sqldata55d)
  e  g %0RmCdun
  S $lg(,sqldata5d,sqldata3d,sqldata13d,sqldata15d,,,sqldata9d)=sqldata55d
  s sqldata18d=$zu(28,sqldata3d,5)
  s sqldata20d=$zu(28,sqldata5d,5)
- s sqldata38d=$zlist(sqldata15d,sqldata13d,sqldata9d,sqldata18d,sqldata20d)
+ s sqldata38d=$zlist(sqldata15d,sqldata13d,sqldata9d,sqldata20d,sqldata18d)
  g:sqldata37d'=sqldata38d %0RmCdun
 %0RmBuncommitted ;
  s SQLCODE=0 g %0Rc
@@ -2445,13 +2436,13 @@ zHospTypeSQLCheckUnique(pFromOrig=0,%pID,%pVals...)
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_ButtonAuth for RowID value: "_sqldata11d ztrap "LOCK"  }
  }
  ; asl MOD# 3
- s sqldata21d=$zlist(sqldata3d,sqldata5d,sqldata4d,sqldata15d,sqldata17d)
+ s sqldata21d=$zlist(sqldata3d,sqldata5d,sqldata4d,sqldata17d,sqldata15d)
  i sqldata11d'="" s sqldata42d="" i $d(^HBButtonAuthD(sqldata11d),sqldata42d)
  e  g %0TmCdun
  S $lg(,sqldata2d,sqldata1d,sqldata4d,sqldata5d,,,sqldata3d)=sqldata42d
  s sqldata15d=$zu(28,sqldata1d,5)
  s sqldata17d=$zu(28,sqldata2d,5)
- s sqldata22d=$zlist(sqldata3d,sqldata5d,sqldata4d,sqldata15d,sqldata17d)
+ s sqldata22d=$zlist(sqldata3d,sqldata5d,sqldata4d,sqldata17d,sqldata15d)
  g:sqldata21d'=sqldata22d %0TmCdun
 %0TmBuncommitted ;
  s SQLCODE=0 g %0Tc

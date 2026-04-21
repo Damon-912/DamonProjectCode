@@ -366,16 +366,20 @@ const CoreAlgorithmConfig: React.FC = () => {
 
   // 预览导入数据
   const handlePreviewImport = async () => {
-    const values = importForm.getFieldsValue();
-    if (!values.importProvinceId) {
+    // 直接从表单获取值
+    const provinceId = importForm.getFieldValue('importProvinceId');
+    const cityId = importForm.getFieldValue('importCityId');
+    const hospitalId = importForm.getFieldValue('importHospitalId');
+
+    if (!provinceId) {
       message.error('请先选择省');
       return;
     }
-    if (!values.importCityId) {
+    if (!cityId) {
       message.error('请先选择市');
       return;
     }
-    if (!values.importHospitalId) {
+    if (!hospitalId) {
       message.error('请先选择医疗机构');
       return;
     }
@@ -384,16 +388,17 @@ const CoreAlgorithmConfig: React.FC = () => {
       return;
     }
 
-    // 获取市的信息
-    const selectedCity = importCityList.find(c => c.id === values.importCityId);
+    // 获取市和医疗机构的信息
+    const selectedCity = importCityList.find(c => c.id === cityId);
+    const selectedHospital = importHospitalList.find(h => h.code === hospitalId);
 
     const params: DrgCoreAlgorithmImportParams = {
-      provinceID: values.importProvinceId,
-      cityID: values.importCityId,
-      mdtrtArea: selectedCity?.code || '',          // 市的code作为MdtrtArea
-      fixmedinsCode: values.importHospitalId,       // 医疗机构的code
-      fixmedinsName: '', // 医疗机构名称由后端填充
-      medinsLv: '', // 机构等级由后端填充
+      provinceID: provinceId,
+      cityID: cityId,
+      mdtrtArea: selectedCity?.code || '',
+      fixmedinsCode: hospitalId,
+      fixmedinsName: selectedHospital?.descripts || '',
+      medinsLv: selectedHospital?.medinsLv || selectedHospital?.MedinsLv || '',
       fileData: fileContentRef.current,
       fileName: fileNameRef.current
     };
@@ -423,32 +428,37 @@ const CoreAlgorithmConfig: React.FC = () => {
 
   // 确认导入
   const handleConfirmImport = async () => {
-    const values = importForm.getFieldsValue();
+    // 直接从表单获取值，避免getFieldsValue可能返回空值的问题
+    const provinceId = importForm.getFieldValue('importProvinceId');
+    const cityId = importForm.getFieldValue('importCityId');
+    const hospitalId = importForm.getFieldValue('importHospitalId');
 
     // 验证省市和医疗机构是否已选择
-    if (!values.importProvinceId) {
+    if (!provinceId) {
       message.error('请先选择省');
       return;
     }
-    if (!values.importCityId) {
+    if (!cityId) {
       message.error('请先选择市');
       return;
     }
-    if (!values.importHospitalId) {
+    if (!hospitalId) {
       message.error('请先选择医疗机构');
       return;
     }
 
     // 获取市的信息
-    const selectedCity = importCityList.find(c => c.id === values.importCityId);
+    const selectedCity = importCityList.find(c => c.id === cityId);
+    // 从医疗机构列表中获取名称和等级
+    const selectedHospital = importHospitalList.find(h => h.code === hospitalId);
 
     const params: DrgCoreAlgorithmImportParams = {
-      provinceID: String(values.importProvinceId),
-      cityID: String(values.importCityId),
+      provinceID: String(provinceId),
+      cityID: String(cityId),
       mdtrtArea: selectedCity?.code || '',
-      fixmedinsCode: String(values.importHospitalId),
-      fixmedinsName: '',
-      medinsLv: '',
+      fixmedinsCode: String(hospitalId),
+      fixmedinsName: selectedHospital?.descripts || '',
+      medinsLv: selectedHospital?.medinsLv || selectedHospital?.MedinsLv || '',
       fileData: fileContentRef.current,
       fileName: fileNameRef.current
     };

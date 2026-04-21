@@ -1,6 +1,6 @@
 ROUTINE User.CBDRGCoreGroupsList.1 [Type=INT,Generated]
  ;User.CBDRGCoreGroupsList.1
- ;Generated for class User.CBDRGCoreGroupsList.  Do NOT edit. 04/08/2026 06:09:44PM
+ ;Generated for class User.CBDRGCoreGroupsList.  Do NOT edit. 04/21/2026 04:18:59PM
  ;;39516668;User.CBDRGCoreGroupsList
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
@@ -106,70 +106,70 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext02266d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03791d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext02266d(1)=0,%ext02266d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext02266d(3)=$zu(115,2)
- s %ext02266d(4)=0,%ext02266d(5)=""
+ s %ext03791d(1)=0,%ext03791d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03791d(3)=$zu(115,2)
+ s %ext03791d(4)=0,%ext03791d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext02266d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext02266d(6)=$g(%ext02266d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext02266d }
+ s %ext03791d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03791d(6)=$g(%ext03791d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03791d }
  q
 %0Afirst 
  ; asl MOD# 2
- s %ext02266d(7)=""
-%0AmBk1 s %ext02266d(7)=$o(^CBDRGCoreGroupsListI("City",%ext02266d(7)))
- i %ext02266d(7)="" g %0AmBdun
+ s %ext03791d(7)=""
+%0AmBk1 s %ext03791d(7)=$o(^CBDRGCoreGroupsListI("City",%ext03791d(7)))
+ i %ext03791d(7)="" g %0AmBdun
  s tID=""
-%0AmBk2 s tID=$o(^CBDRGCoreGroupsListI("City",%ext02266d(7),tID))
+%0AmBk2 s tID=$o(^CBDRGCoreGroupsListI("City",%ext03791d(7),tID))
  i tID="" g %0AmBk1
- goto:%ext02266d(3)'=1 %0AmBuncommitted
- if %ext02266d(3)=1 {
+ goto:%ext03791d(3)'=1 %0AmBuncommitted
+ if %ext03791d(3)=1 {
  	lock +^CBDRGCoreGroupsListD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext02266d(5)=$name(^CBDRGCoreGroupsListD($p(tID,"||",1)))_"#""SI""",%ext02266d(4)=1 }
+ 	if $t { set %ext03791d(5)=$name(^CBDRGCoreGroupsListD($p(tID,"||",1)))_"#""SI""",%ext03791d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_DRGCoreGroupsList for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^CBDRGCoreGroupsListD(tID))
  e  g %0AmCdun
 %0AmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext02266d(1)),%ROWID=tID,%ext02266d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03791d(1)),%ROWID=tID,%ext03791d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext02266d(6)=$g(%ext02266d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03791d(6)=$g(%ext03791d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext02266d(0)) { s SQLCODE=-102 q  } i %ext02266d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext02266d(2),%ext02266d(1)'<%ext02266d(2) { s SQLCODE=100,%ROWCOUNT=%ext02266d(1),%ext02266d(0)=100 q }
+ i '$g(%ext03791d(0)) { s SQLCODE=-102 q  } i %ext03791d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03791d(2),%ext03791d(1)'<%ext03791d(2) { s SQLCODE=100,%ROWCOUNT=%ext03791d(1),%ext03791d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Afirst:%ext02266d(0)=1
-%0AmCdun if $g(%ext02266d(3))=1 { if $g(%ext02266d(4))=1 { l -@%ext02266d(5) s %ext02266d(4)=0 } elseif $g(%ext02266d(4))=2 { do $classmethod($li(%ext02266d(5)),"%UnlockId",$li(%ext02266d(5),2),1,1)  s %ext02266d(4)=0 }}
+ g %0Afirst:%ext03791d(0)=1
+%0AmCdun if $g(%ext03791d(3))=1 { if $g(%ext03791d(4))=1 { l -@%ext03791d(5) s %ext03791d(4)=0 } elseif $g(%ext03791d(4))=2 { do $classmethod($li(%ext03791d(5)),"%UnlockId",$li(%ext03791d(5),2),1,1)  s %ext03791d(4)=0 }}
  g %0AmBk2
 %0AmBdun 
 %0AmAdun 
- s %ROWCOUNT=%ext02266d(1),SQLCODE=100,%ext02266d(0)=100
- s:$d(%sqltime) %ext02266d(6)=$g(%ext02266d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03791d(1),SQLCODE=100,%ext03791d(0)=100
+ s:$d(%sqltime) %ext03791d(6)=$g(%ext03791d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext02266d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03791d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext02266d(1)),1:0)
- if $g(%ext02266d(3))=1 {
- 	if $g(%ext02266d(4))=1 { l -@%ext02266d(5) s %ext02266d(4)=0 } elseif $g(%ext02266d(4))=2 { do $classmethod($li(%ext02266d(5)),"%UnlockId",$li(%ext02266d(5),2),1,1)  s %ext02266d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03791d(1)),1:0)
+ if $g(%ext03791d(3))=1 {
+ 	if $g(%ext03791d(4))=1 { l -@%ext03791d(5) s %ext03791d(4)=0 } elseif $g(%ext03791d(4))=2 { do $classmethod($li(%ext03791d(5)),"%UnlockId",$li(%ext03791d(5),2),1,1)  s %ext03791d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext02266d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03791d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"Ugjqndivk78cZj26u8m9aLpaO0k="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"Ugjqndivk78cZj26u8m9aLpaO0k=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext02266d
+ k %ext03791d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext02266d(8)
+ kill %ext03791d(8)
  quit  // close
 %0Aerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext02266d(0)=100
+ s %ext03791d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^CBDRGCoreGroupsListD(id)),1)
@@ -1600,15 +1600,6 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
-		if (pDynamicObject.%IsDefined("CreateUserDr")) {
-			try {
-				set newIdvalue=pDynamicObject."CreateUserDr"
-				set existingIdValue=..CreateUserDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"CreateUserDr")=##class(User.HBUser).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
 		if (pDynamicObject.%IsDefined("MajorProcedure")) && (..MajorProcedure'=pDynamicObject."MajorProcedure") {
 			try {
 				try {
@@ -1665,15 +1656,6 @@ zFromDynamicObj(pDynamicObject) public {
 					set $ZERROR=""
 				}
 				set ..PrincipalDiagnosisName=value
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
-		if (pDynamicObject.%IsDefined("ProvinceDr")) {
-			try {
-				set newIdvalue=pDynamicObject."ProvinceDr"
-				set existingIdValue=..ProvinceDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"ProvinceDr")=##class(User.CBProvince).%OpenId(newIdvalue)
 			} catch(ex) {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
@@ -1880,7 +1862,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"ADRG":(..GetLogicalToXSDValue($This,"ADRG",..ADRG)),"ADRGDesc":(..GetLogicalToXSDValue($This,"ADRGDesc",..ADRGDesc)),"CityDr":($CASE($ISOBJECT(..CityDr),1:..CityDr.%Id(),:"")),"CreateDate":(..GetLogicalToXSDValue($This,"CreateDate",..CreateDate)),"CreateTime":(..GetLogicalToXSDValue($This,"CreateTime",..CreateTime)),"CreateUserDr":($CASE($ISOBJECT(..CreateUserDr),1:..CreateUserDr.%Id(),:"")),"MajorProcedure":(..GetLogicalToXSDValue($This,"MajorProcedure",..MajorProcedure)),"MajorProcedureName":(..GetLogicalToXSDValue($This,"MajorProcedureName",..MajorProcedureName)),"PrincipalDiagnosis":(..GetLogicalToXSDValue($This,"PrincipalDiagnosis",..PrincipalDiagnosis)),"PrincipalDiagnosisName":(..GetLogicalToXSDValue($This,"PrincipalDiagnosisName",..PrincipalDiagnosisName)),"ProvinceDr":($CASE($ISOBJECT(..ProvinceDr),1:..ProvinceDr.%Id(),:"")),"SecondaryDiagnosis":(..GetLogicalToXSDValue($This,"SecondaryDiagnosis",..SecondaryDiagnosis)),"SecondaryDiagnosisName":(..GetLogicalToXSDValue($This,"SecondaryDiagnosisName",..SecondaryDiagnosisName)),"SecondaryProcedure":(..GetLogicalToXSDValue($This,"SecondaryProcedure",..SecondaryProcedure)),"SecondaryProcedureName":(..GetLogicalToXSDValue($This,"SecondaryProcedureName",..SecondaryProcedureName)),"SegmentationFlag":(..GetLogicalToXSDValue($This,"SegmentationFlag",..SegmentationFlag)),"SelectionCriteria":(..GetLogicalToXSDValue($This,"SelectionCriteria",..SelectionCriteria)),"StartDate":(..GetLogicalToXSDValue($This,"StartDate",..StartDate)),"StopDate":(..GetLogicalToXSDValue($This,"StopDate",..StopDate)),"ThirdlyDiagnosis":(..GetLogicalToXSDValue($This,"ThirdlyDiagnosis",..ThirdlyDiagnosis)),"ThirdlyDiagnosisName":(..GetLogicalToXSDValue($This,"ThirdlyDiagnosisName",..ThirdlyDiagnosisName)),"ThirdlyProcedure":(..GetLogicalToXSDValue($This,"ThirdlyProcedure",..ThirdlyProcedure)),"ThirdlyProcedureName":(..GetLogicalToXSDValue($This,"ThirdlyProcedureName",..ThirdlyProcedureName)),"UnionFlag":(..GetLogicalToXSDValue($This,"UnionFlag",..UnionFlag))}
+		set pDynamicObject={"ID":(..%Id()),"ADRG":(..GetLogicalToXSDValue($This,"ADRG",..ADRG)),"ADRGDesc":(..GetLogicalToXSDValue($This,"ADRGDesc",..ADRGDesc)),"CityDr":($CASE($ISOBJECT(..CityDr),1:..CityDr.%Id(),:"")),"CreateDate":(..GetLogicalToXSDValue($This,"CreateDate",..CreateDate)),"CreateTime":(..GetLogicalToXSDValue($This,"CreateTime",..CreateTime)),"CreateUserDr":(..CreateUserDr),"MajorProcedure":(..GetLogicalToXSDValue($This,"MajorProcedure",..MajorProcedure)),"MajorProcedureName":(..GetLogicalToXSDValue($This,"MajorProcedureName",..MajorProcedureName)),"PrincipalDiagnosis":(..GetLogicalToXSDValue($This,"PrincipalDiagnosis",..PrincipalDiagnosis)),"PrincipalDiagnosisName":(..GetLogicalToXSDValue($This,"PrincipalDiagnosisName",..PrincipalDiagnosisName)),"ProvinceDr":(..ProvinceDr),"SecondaryDiagnosis":(..GetLogicalToXSDValue($This,"SecondaryDiagnosis",..SecondaryDiagnosis)),"SecondaryDiagnosisName":(..GetLogicalToXSDValue($This,"SecondaryDiagnosisName",..SecondaryDiagnosisName)),"SecondaryProcedure":(..GetLogicalToXSDValue($This,"SecondaryProcedure",..SecondaryProcedure)),"SecondaryProcedureName":(..GetLogicalToXSDValue($This,"SecondaryProcedureName",..SecondaryProcedureName)),"SegmentationFlag":(..GetLogicalToXSDValue($This,"SegmentationFlag",..SegmentationFlag)),"SelectionCriteria":(..GetLogicalToXSDValue($This,"SelectionCriteria",..SelectionCriteria)),"StartDate":(..GetLogicalToXSDValue($This,"StartDate",..StartDate)),"StopDate":(..GetLogicalToXSDValue($This,"StopDate",..StopDate)),"ThirdlyDiagnosis":(..GetLogicalToXSDValue($This,"ThirdlyDiagnosis",..ThirdlyDiagnosis)),"ThirdlyDiagnosisName":(..GetLogicalToXSDValue($This,"ThirdlyDiagnosisName",..ThirdlyDiagnosisName)),"ThirdlyProcedure":(..GetLogicalToXSDValue($This,"ThirdlyProcedure",..ThirdlyProcedure)),"ThirdlyProcedureName":(..GetLogicalToXSDValue($This,"ThirdlyProcedureName",..ThirdlyProcedureName)),"UnionFlag":(..GetLogicalToXSDValue($This,"UnionFlag",..UnionFlag))}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}

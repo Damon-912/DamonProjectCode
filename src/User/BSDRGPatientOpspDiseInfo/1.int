@@ -1,6 +1,6 @@
 ROUTINE User.BSDRGPatientOpspDiseInfo.1 [Type=INT,Generated]
  ;User.BSDRGPatientOpspDiseInfo.1
- ;Generated for class User.BSDRGPatientOpspDiseInfo.  Do NOT edit. 02/02/2026 11:19:44AM
+ ;Generated for class User.BSDRGPatientOpspDiseInfo.  Do NOT edit. 04/21/2026 04:18:56PM
  ;;37387354;User.BSDRGPatientOpspDiseInfo
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
@@ -106,70 +106,70 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext03503d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03748d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext03503d(1)=0,%ext03503d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext03503d(3)=$zu(115,2)
- s %ext03503d(4)=0,%ext03503d(5)=""
+ s %ext03748d(1)=0,%ext03748d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03748d(3)=$zu(115,2)
+ s %ext03748d(4)=0,%ext03748d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext03503d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext03503d(6)=$g(%ext03503d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03503d }
+ s %ext03748d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03748d(6)=$g(%ext03748d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03748d }
  q
 %0Afirst 
  ; asl MOD# 2
- s %ext03503d(7)=""
-%0AmBk1 s %ext03503d(7)=$o(^BSDRGPatientOpspDiseInfoI("DiagCode",%ext03503d(7)))
- i %ext03503d(7)="" g %0AmBdun
+ s %ext03748d(7)=""
+%0AmBk1 s %ext03748d(7)=$o(^BSDRGPatientOpspDiseInfoI("DiagCode",%ext03748d(7)))
+ i %ext03748d(7)="" g %0AmBdun
  s tID=""
-%0AmBk2 s tID=$o(^BSDRGPatientOpspDiseInfoI("DiagCode",%ext03503d(7),tID))
+%0AmBk2 s tID=$o(^BSDRGPatientOpspDiseInfoI("DiagCode",%ext03748d(7),tID))
  i tID="" g %0AmBk1
- goto:%ext03503d(3)'=1 %0AmBuncommitted
- if %ext03503d(3)=1 {
+ goto:%ext03748d(3)'=1 %0AmBuncommitted
+ if %ext03748d(3)=1 {
  	lock +^BSDRGPatientOpspDiseInfoD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext03503d(5)=$name(^BSDRGPatientOpspDiseInfoD($p(tID,"||",1)))_"#""SI""",%ext03503d(4)=1 }
+ 	if $t { set %ext03748d(5)=$name(^BSDRGPatientOpspDiseInfoD($p(tID,"||",1)))_"#""SI""",%ext03748d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_DRGPatientOpspDiseInfo for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^BSDRGPatientOpspDiseInfoD(tID))
  e  g %0AmCdun
 %0AmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03503d(1)),%ROWID=tID,%ext03503d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03748d(1)),%ROWID=tID,%ext03748d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext03503d(6)=$g(%ext03503d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03748d(6)=$g(%ext03748d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext03503d(0)) { s SQLCODE=-102 q  } i %ext03503d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext03503d(2),%ext03503d(1)'<%ext03503d(2) { s SQLCODE=100,%ROWCOUNT=%ext03503d(1),%ext03503d(0)=100 q }
+ i '$g(%ext03748d(0)) { s SQLCODE=-102 q  } i %ext03748d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03748d(2),%ext03748d(1)'<%ext03748d(2) { s SQLCODE=100,%ROWCOUNT=%ext03748d(1),%ext03748d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Afirst:%ext03503d(0)=1
-%0AmCdun if $g(%ext03503d(3))=1 { if $g(%ext03503d(4))=1 { l -@%ext03503d(5) s %ext03503d(4)=0 } elseif $g(%ext03503d(4))=2 { do $classmethod($li(%ext03503d(5)),"%UnlockId",$li(%ext03503d(5),2),1,1)  s %ext03503d(4)=0 }}
+ g %0Afirst:%ext03748d(0)=1
+%0AmCdun if $g(%ext03748d(3))=1 { if $g(%ext03748d(4))=1 { l -@%ext03748d(5) s %ext03748d(4)=0 } elseif $g(%ext03748d(4))=2 { do $classmethod($li(%ext03748d(5)),"%UnlockId",$li(%ext03748d(5),2),1,1)  s %ext03748d(4)=0 }}
  g %0AmBk2
 %0AmBdun 
 %0AmAdun 
- s %ROWCOUNT=%ext03503d(1),SQLCODE=100,%ext03503d(0)=100
- s:$d(%sqltime) %ext03503d(6)=$g(%ext03503d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03748d(1),SQLCODE=100,%ext03748d(0)=100
+ s:$d(%sqltime) %ext03748d(6)=$g(%ext03748d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext03503d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03748d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03503d(1)),1:0)
- if $g(%ext03503d(3))=1 {
- 	if $g(%ext03503d(4))=1 { l -@%ext03503d(5) s %ext03503d(4)=0 } elseif $g(%ext03503d(4))=2 { do $classmethod($li(%ext03503d(5)),"%UnlockId",$li(%ext03503d(5),2),1,1)  s %ext03503d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03748d(1)),1:0)
+ if $g(%ext03748d(3))=1 {
+ 	if $g(%ext03748d(4))=1 { l -@%ext03748d(5) s %ext03748d(4)=0 } elseif $g(%ext03748d(4))=2 { do $classmethod($li(%ext03748d(5)),"%UnlockId",$li(%ext03748d(5),2),1,1)  s %ext03748d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext03503d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03748d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"3RkFkfVwjt7CWoXb1bAK3xqemiI="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"3RkFkfVwjt7CWoXb1bAK3xqemiI=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext03503d
+ k %ext03748d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext03503d(8)
+ kill %ext03748d(8)
  quit  // close
 %0Aerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext03503d(0)=100
+ s %ext03748d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^BSDRGPatientOpspDiseInfoD(id)),1)
@@ -2313,7 +2313,7 @@ zOpspDiseInfoIndexExists(K1,K2,K3,K4,id="") [ K1,K2,K3,K4,SQLCODE,id ] public { 
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_DRGPatientOpspDiseInfo for RowID value: "_id ztrap "LOCK"  }
  }
  ; asl MOD# 3
- s sqldata20d=$zlist(sqldata18d,sqldata14d,sqldata16d,sqldata12d)
+ s sqldata20d=$zlist(sqldata18d,sqldata16d,sqldata12d,sqldata14d)
  i id'="" s sqldata35d="" i $d(^BSDRGPatientOpspDiseInfoD(id),sqldata35d)
  e  g %0RmCdun
  S $lg(,sqldata3d,,sqldata5d,sqldata7d,sqldata9d)=sqldata35d
@@ -2321,7 +2321,7 @@ zOpspDiseInfoIndexExists(K1,K2,K3,K4,id="") [ K1,K2,K3,K4,SQLCODE,id ] public { 
  s sqldata14d=$zu(28,sqldata5d,5)
  s sqldata16d=$zu(28,sqldata7d,7)
  s sqldata18d=$zu(28,sqldata9d,7)
- s sqldata21d=$zlist(sqldata18d,sqldata14d,sqldata16d,sqldata12d)
+ s sqldata21d=$zlist(sqldata18d,sqldata16d,sqldata12d,sqldata14d)
  g:sqldata20d'=sqldata21d %0RmCdun
 %0RmBuncommitted ;
  s SQLCODE=0 g %0Rc

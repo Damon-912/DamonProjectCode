@@ -1,6 +1,6 @@
 ROUTINE User.CBMapInterface.1 [Type=INT,Generated]
  ;User.CBMapInterface.1
- ;Generated for class User.CBMapInterface.  Do NOT edit. 06/30/2022 04:09:31PM
+ ;Generated for class User.CBMapInterface.  Do NOT edit. 04/21/2026 04:19:01PM
  ;;65503344;User.CBMapInterface
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
@@ -158,70 +158,70 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext0432d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext03818d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext0432d(1)=0,%ext0432d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext0432d(3)=$zu(115,2)
- s %ext0432d(4)=0,%ext0432d(5)=""
+ s %ext03818d(1)=0,%ext03818d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext03818d(3)=$zu(115,2)
+ s %ext03818d(4)=0,%ext03818d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext0432d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext0432d(6)=$g(%ext0432d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext0432d }
+ s %ext03818d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext03818d(6)=$g(%ext03818d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03818d }
  q
 %0Cfirst 
  ; asl MOD# 2
- s %ext0432d(7)=""
-%0CmBk1 s %ext0432d(7)=$o(^CBMapInterfaceI("Code",%ext0432d(7)))
- i %ext0432d(7)="" g %0CmBdun
+ s %ext03818d(7)=""
+%0CmBk1 s %ext03818d(7)=$o(^CBMapInterfaceI("Code",%ext03818d(7)))
+ i %ext03818d(7)="" g %0CmBdun
  s tID=""
- s tID=$o(^CBMapInterfaceI("Code",%ext0432d(7),tID))
+ s tID=$o(^CBMapInterfaceI("Code",%ext03818d(7),tID))
  i tID="" g %0CmBk1
- goto:%ext0432d(3)'=1 %0CmBuncommitted
- if %ext0432d(3)=1 {
+ goto:%ext03818d(3)'=1 %0CmBuncommitted
+ if %ext03818d(3)=1 {
  	lock +^CBMapInterfaceD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext0432d(5)=$name(^CBMapInterfaceD($p(tID,"||",1)))_"#""SI""",%ext0432d(4)=1 }
+ 	if $t { set %ext03818d(5)=$name(^CBMapInterfaceD($p(tID,"||",1)))_"#""SI""",%ext03818d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_MapInterface for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^CBMapInterfaceD(tID))
  e  g %0CmCdun
 %0CmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext0432d(1)),%ROWID=tID,%ext0432d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03818d(1)),%ROWID=tID,%ext03818d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext0432d(6)=$g(%ext0432d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext03818d(6)=$g(%ext03818d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext0432d(0)) { s SQLCODE=-102 q  } i %ext0432d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext0432d(2),%ext0432d(1)'<%ext0432d(2) { s SQLCODE=100,%ROWCOUNT=%ext0432d(1),%ext0432d(0)=100 q }
+ i '$g(%ext03818d(0)) { s SQLCODE=-102 q  } i %ext03818d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext03818d(2),%ext03818d(1)'<%ext03818d(2) { s SQLCODE=100,%ROWCOUNT=%ext03818d(1),%ext03818d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Cfirst:%ext0432d(0)=1
-%0CmCdun if $g(%ext0432d(3))=1 { if $g(%ext0432d(4))=1 { l -@%ext0432d(5) s %ext0432d(4)=0 } elseif $g(%ext0432d(4))=2 { do $classmethod($li(%ext0432d(5)),"%UnlockId",$li(%ext0432d(5),2),1,1)  s %ext0432d(4)=0 }}
+ g %0Cfirst:%ext03818d(0)=1
+%0CmCdun if $g(%ext03818d(3))=1 { if $g(%ext03818d(4))=1 { l -@%ext03818d(5) s %ext03818d(4)=0 } elseif $g(%ext03818d(4))=2 { do $classmethod($li(%ext03818d(5)),"%UnlockId",$li(%ext03818d(5),2),1,1)  s %ext03818d(4)=0 }}
  g %0CmBk1
 %0CmBdun 
 %0CmAdun 
- s %ROWCOUNT=%ext0432d(1),SQLCODE=100,%ext0432d(0)=100
- s:$d(%sqltime) %ext0432d(6)=$g(%ext0432d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext03818d(1),SQLCODE=100,%ext03818d(0)=100
+ s:$d(%sqltime) %ext03818d(6)=$g(%ext03818d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext0432d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext03818d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext0432d(1)),1:0)
- if $g(%ext0432d(3))=1 {
- 	if $g(%ext0432d(4))=1 { l -@%ext0432d(5) s %ext0432d(4)=0 } elseif $g(%ext0432d(4))=2 { do $classmethod($li(%ext0432d(5)),"%UnlockId",$li(%ext0432d(5),2),1,1)  s %ext0432d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03818d(1)),1:0)
+ if $g(%ext03818d(3))=1 {
+ 	if $g(%ext03818d(4))=1 { l -@%ext03818d(5) s %ext03818d(4)=0 } elseif $g(%ext03818d(4))=2 { do $classmethod($li(%ext03818d(5)),"%UnlockId",$li(%ext03818d(5),2),1,1)  s %ext03818d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext0432d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext03818d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"pFiBBgbJSo4TfFO43B7aPLpwb0I="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"pFiBBgbJSo4TfFO43B7aPLpwb0I=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext0432d
+ k %ext03818d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext0432d(8)
+ kill %ext03818d(8)
  quit  // close
 %0Cerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext0432d(0)=100
+ s %ext03818d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^CBMapInterfaceD(id)),1)
@@ -1581,33 +1581,6 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
-		if (pDynamicObject.%IsDefined("ProductCatDr")) {
-			try {
-				set newIdvalue=pDynamicObject."ProductCatDr"
-				set existingIdValue=..ProductCatDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"ProductCatDr")=##class(User.CBProductCat).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
-		if (pDynamicObject.%IsDefined("ProductModuleDr")) {
-			try {
-				set newIdvalue=pDynamicObject."ProductModuleDr"
-				set existingIdValue=..ProductModuleDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"ProductModuleDr")=##class(User.CBProductModule).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
-		if (pDynamicObject.%IsDefined("RWServiceTypeDr")) {
-			try {
-				set newIdvalue=pDynamicObject."RWServiceTypeDr"
-				set existingIdValue=..RWServiceTypeDrGetObjectId()
-				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"RWServiceTypeDr")=##class(User.CBSysServiceType).%OpenId(newIdvalue)
-			} catch(ex) {
-				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
-			}
-		}
 		if (pDynamicObject.%IsDefined("SeqNo")) && (..SeqNo'=pDynamicObject."SeqNo") {
 			try {
 				try {
@@ -1735,7 +1708,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"ClassName":(..GetLogicalToXSDValue($This,"ClassName",..ClassName)),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"MethodName":(..GetLogicalToXSDValue($This,"MethodName",..MethodName)),"ProductCatDr":($CASE($ISOBJECT(..ProductCatDr),1:..ProductCatDr.%Id(),:"")),"ProductModuleDr":($CASE($ISOBJECT(..ProductModuleDr),1:..ProductModuleDr.%Id(),:"")),"RWServiceTypeDr":($CASE($ISOBJECT(..RWServiceTypeDr),1:..RWServiceTypeDr.%Id(),:"")),"SeqNo":(..GetLogicalToXSDValue($This,"SeqNo",..SeqNo)),"ServiceIP":(..GetLogicalToXSDValue($This,"ServiceIP",..ServiceIP)),"ServiceType":(..GetLogicalToXSDValue($This,"ServiceType",..ServiceType)),"SessionFlag":(..GetLogicalToXSDValue($This,"SessionFlag",..SessionFlag)),"StartDate":(..GetLogicalToXSDValue($This,"StartDate",..StartDate)),"StopDate":(..GetLogicalToXSDValue($This,"StopDate",..StopDate)),"TokenFlag":(..GetLogicalToXSDValue($This,"TokenFlag",..TokenFlag)),"TokenOverTime":(..GetLogicalToXSDValue($This,"TokenOverTime",..TokenOverTime))}
+		set pDynamicObject={"ID":(..%Id()),"ClassName":(..GetLogicalToXSDValue($This,"ClassName",..ClassName)),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"MethodName":(..GetLogicalToXSDValue($This,"MethodName",..MethodName)),"ProductCatDr":(..ProductCatDr),"ProductModuleDr":(..ProductModuleDr),"RWServiceTypeDr":(..RWServiceTypeDr),"SeqNo":(..GetLogicalToXSDValue($This,"SeqNo",..SeqNo)),"ServiceIP":(..GetLogicalToXSDValue($This,"ServiceIP",..ServiceIP)),"ServiceType":(..GetLogicalToXSDValue($This,"ServiceType",..ServiceType)),"SessionFlag":(..GetLogicalToXSDValue($This,"SessionFlag",..SessionFlag)),"StartDate":(..GetLogicalToXSDValue($This,"StartDate",..StartDate)),"StopDate":(..GetLogicalToXSDValue($This,"StopDate",..StopDate)),"TokenFlag":(..GetLogicalToXSDValue($This,"TokenFlag",..TokenFlag)),"TokenOverTime":(..GetLogicalToXSDValue($This,"TokenOverTime",..TokenOverTime))}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}

@@ -35,25 +35,33 @@ Property ProvinceDr As CBProvince [ Required, SqlColumnNumber = 9, SqlFieldName 
 
 Index Province On ProvinceDr;
 
-/// 市 指向CB_City
+/// 市 指向CB_City 
 Property CityDr As CBCity [ Required, SqlColumnNumber = 10, SqlFieldName = City_Dr ];
 
 Index City On CityDr;
 
+/// 就医地区划代码
+Property MdtrtArea As %String [ SqlColumnNumber = 11, SqlFieldName = MdtrtArea ];
+
+/// 医疗机构等级
+Property MedinsLv As %String [ SqlColumnNumber = 12, SqlFieldName = MedinsLv ];
+
+Index Index On (PrincipalDiagnosis, MajorProcedure, ProvinceDr, CityDr, MedinsLv);
+
 /// 生效日期 真正开始使用日期
-Property StartDate As %Date [ Required, SqlColumnNumber = 11, SqlFieldName = StartDate ];
+Property StartDate As %Date [ Required, SqlColumnNumber = 13, SqlFieldName = StartDate ];
 
 /// 失效日期 此日期开始不能用,不填说明一直可用,如果不可用需要看此日期
-Property StopDate As %Date [ SqlColumnNumber = 12, SqlFieldName = StopDate ];
+Property StopDate As %Date [ SqlColumnNumber = 14, SqlFieldName = StopDate ];
 
 /// 创建日期 系统自动产生
-Property CreateDate As %Date [ Required, SqlColumnNumber = 13, SqlFieldName = CreateDate ];
+Property CreateDate As %Date [ Required, SqlColumnNumber = 15, SqlFieldName = CreateDate ];
 
 /// 创建时间 系统自动产生
-Property CreateTime As %Time [ Required, SqlColumnNumber = 14, SqlFieldName = CreateTime ];
+Property CreateTime As %Time [ Required, SqlColumnNumber = 16, SqlFieldName = CreateTime ];
 
 /// 创建人员ID 指向HB_User表
-Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 15, SqlFieldName = CreateUser_Dr ];
+Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 17, SqlFieldName = CreateUser_Dr ];
 
 Storage Default
 {
@@ -102,6 +110,12 @@ Storage Default
 </Value>
 <Value name="15">
 <Value>CreateUserDr</Value>
+</Value>
+<Value name="16">
+<Value>MdtrtArea</Value>
+</Value>
+<Value name="17">
+<Value>MedinsLv</Value>
 </Value>
 </Data>
 <DataLocation>^CBDIPCoreGroupsListD</DataLocation>
