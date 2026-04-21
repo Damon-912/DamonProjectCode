@@ -1,6 +1,6 @@
 ROUTINE src.DRG.MedicalRecord.1 [Type=INT,Generated]
  ;src.DRG.MedicalRecord.1
- ;Generated for class src.DRG.MedicalRecord.  Do NOT edit. 03/02/2026 11:57:30PM
+ ;Generated for class src.DRG.MedicalRecord.  Do NOT edit. 04/21/2026 04:19:07PM
  ;;4367496A;src.DRG.MedicalRecord
  ;
 zGetMedicalRecordFromHIS(jsonObj)

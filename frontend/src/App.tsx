@@ -41,7 +41,7 @@ import SelectHospRole from './pages/Login/SelectHospRole';
 import ICDMapping from './pages/BasicData/ICDMapping';
 import ICDQuery from './pages/BasicData/ICDQuery';
 import ADRGRuleMaintenance from './pages/BasicData/ADRGRuleMaintenance';
-import CoreAlgorithmConfig from './pages/BasicData/CoreAlgorithmConfig';
+import CoreAlgorithmConfig from './pages/BasicData/DRGCoreAlgorithmConfig';
 import BasicDataMaintenance from './pages/BasicData/BasicDataMaintenance';
 import DIPDisease from './pages/BasicData/DIPDisease';
 import TableDataMaintenance from './pages/BasicData/TableDataMaintenance';

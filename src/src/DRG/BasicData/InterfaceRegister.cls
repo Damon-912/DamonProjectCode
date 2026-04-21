@@ -10,6 +10,7 @@ ClassMethod RegisterAll() As %String
 {
 	do ..RegisterDRGCataLogInterfaces()
 	do ..RegisterDRGSegmentationRulesInterfaces()
+	do ..RegisterDIPCoreAlgorithmImportInterfaces()
 	quit "所有接口注册完成"
 }
 
@@ -88,6 +89,40 @@ ClassMethod CheckExists(code As %String) As %Boolean
 	set exists=0
 	&sql(SELECT ID INTO :exists FROM CB_MapInterface WHERE Code=:code)
 	quit (SQLCODE=0)
+}
+
+/// 注册DIP核心算法配置导入接口 (02010056/02010057/02010058)
+ClassMethod RegisterDIPCoreAlgorithmImportInterfaces() As %String
+{
+	set className="SRC.DRG.BASICDATA.INTERFACE"
+	set sessionFlag="Y"
+	set tokenFlag="N"
+	
+	// 02010056 - 下载DIP核心算法配置导入模板
+	if '##this().CheckExists("02010056") {
+		&sql(INSERT INTO CB_MapInterface (Code,Descripts,ClassName,MethodName,ServiceType,SessionFlag,TokenFlag) VALUES ('02010056','下载DIP核心算法配置导入模板',:className,'DOWNLOADDIPCOREALGORITHMTEMPLATE','S',:sessionFlag,:tokenFlag))
+		w "02010056 注册成功",!
+	} else {
+		w "02010056 已存在，跳过",!
+	}
+	
+	// 02010057 - DIP核心算法配置导入预览
+	if '##this().CheckExists("02010057") {
+		&sql(INSERT INTO CB_MapInterface (Code,Descripts,ClassName,MethodName,ServiceType,SessionFlag,TokenFlag) VALUES ('02010057','DIP核心算法配置导入预览',:className,'PREVIEWIMPORTDIPCOREALGORITHM','S',:sessionFlag,:tokenFlag))
+		w "02010057 注册成功",!
+	} else {
+		w "02010057 已存在，跳过",!
+	}
+	
+	// 02010058 - 确认导入DIP核心算法配置
+	if '##this().CheckExists("02010058") {
+		&sql(INSERT INTO CB_MapInterface (Code,Descripts,ClassName,MethodName,ServiceType,SessionFlag,TokenFlag) VALUES ('02010058','确认导入DIP核心算法配置',:className,'CONFIRMIMPORTDIPCOREALGORITHM','A',:sessionFlag,:tokenFlag))
+		w "02010058 注册成功",!
+	} else {
+		w "02010058 已存在，跳过",!
+	}
+	
+	quit "DIP核心算法配置导入接口注册完成"
 }
 
 }

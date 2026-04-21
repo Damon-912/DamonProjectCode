@@ -1,6 +1,6 @@
 ROUTINE src.DRG.MIService.1 [Type=INT,Generated]
  ;src.DRG.MIService.1
- ;Generated for class src.DRG.MIService.  Do NOT edit. 03/19/2026 12:48:43AM
+ ;Generated for class src.DRG.MIService.  Do NOT edit. 04/21/2026 04:19:07PM
  ;;6F2B4854;src.DRG.MIService
  ;
 zQueryPatCurrentInsuInfo(postObj)

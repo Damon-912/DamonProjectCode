@@ -347,4 +347,59 @@ ClassMethod DownloadDRGCoreAlgorithmTemplate(jsonObj) As %Library.DynamicObject
 	quit ##class(src.DRG.BasicData.CoreAlgorithm).DownloadDRGCoreAlgorithmTemplate(jsonObj)
 }
 
+/// Creator:     CM
+/// CreatDate:   2026-04-21
+/// Description: 查询DIP核心算法配置
+/// 02010053
+ClassMethod QueryDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.CoreAlgorithm).QueryDIPCoreAlgorithm(jsonObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-04-21
+/// Description: 保存DIP核心算法配置
+/// 02010054
+ClassMethod SaveDIPCoreAlgorithm(jsonObj) As %Library.DynamicAbstractObject
+{
+	Quit ##class(src.DRG.BasicData.CoreAlgorithm).SaveDIPCoreAlgorithm(jsonObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-04-21
+/// Description: 删除DIP核心算法配置
+/// 02010055
+ClassMethod DeleteDIPCoreAlgorithm(jsonObj) As %Library.DynamicAbstractObject
+{
+	Quit ##class(src.DRG.BasicData.CoreAlgorithm).DeleteDIPCoreAlgorithm(jsonObj)
+}
+
+/// Creator:     System
+/// CreatDate:   2026-04-22
+/// Description: 下载DIP核心算法配置导入模板
+/// 02010056
+ClassMethod DownloadDIPCoreAlgorithmTemplate(jsonObj) As %Library.DynamicAbstractObject
+{
+	Quit ##class(src.DRG.BasicData.CoreAlgorithm).DownloadDIPCoreAlgorithmTemplate(jsonObj)
+}
+
+/// Creator:     System
+/// CreatDate:   2026-04-22
+/// Description: DIP核心算法配置导入预览
+/// 02010057
+ClassMethod PreviewImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicAbstractObject
+{
+	Quit ##class(src.DRG.BasicData.CoreAlgorithm).PreviewImportDIPCoreAlgorithm(jsonObj)
+}
+
+/// Creator:     System
+/// CreatDate:   2026-04-22
+/// Description: 确认导入DIP核心算法配置
+/// 02010058
+ClassMethod ConfirmImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicAbstractObject
+{
+	Quit ##class(src.DRG.BasicData.CoreAlgorithm).ConfirmImportDIPCoreAlgorithm(jsonObj)
+}
+
 }

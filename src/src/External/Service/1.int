@@ -1,6 +1,6 @@
 ROUTINE src.External.Service.1 [Type=INT,Generated]
  ;src.External.Service.1
- ;Generated for class src.External.Service.  Do NOT edit. 01/27/2026 06:02:06PM
+ ;Generated for class src.External.Service.  Do NOT edit. 04/21/2026 04:19:07PM
  ;;55653938;src.External.Service
  ;
 zHisService(InputData,HospID)

@@ -1073,3 +1073,77 @@ export const deleteDipCoreAlgorithm = (
 ): Promise<ApiResponse> => {
   return invoke('02010055', [{ id }]);
 };
+
+// ========== DIP核心算法配置导入 (02010056, 02010057, 02010058) ==========
+
+/** DIP核心算法导入预览数据项 */
+export interface DipCoreAlgorithmImportPreviewItem {
+  rowNum: number;
+  principalDiagnosis: string;
+  principalDiagnosisName: string;
+  majorProcedure: string;
+  majorProcedureName: string;
+  secondaryProcedure: string;
+  secondaryProcedureName: string;
+  scoreValue: string;
+  adjustCoefficient: string;
+  primaryAdjustCoefficient: string;
+  secondaryAdjustCoefficient: string;
+  thirdAdjustCoefficient: string;
+  status: 'valid' | 'duplicate' | 'invalid';
+  statusDesc: string;
+  errorMsg?: string;
+}
+
+/** DIP核心算法导入预览结果 */
+export interface DipCoreAlgorithmImportPreviewResult {
+  totalCount: number;
+  validCount: number;
+  invalidCount: number;
+  duplicateCount: number;
+  previewList: DipCoreAlgorithmImportPreviewItem[];
+}
+
+/** DIP核心算法导入结果 */
+export interface DipCoreAlgorithmImportResult {
+  totalCount: number;
+  successCount: number;
+  failCount: number;
+  duplicateCount: number;
+  newCount: number;
+  failList: Array<{
+    rowNum: number;
+    principalDiagnosis: string;
+    errorMsg: string;
+  }>;
+  reportUrl?: string;
+}
+
+/** DIP核心算法导入参数 */
+export interface DipCoreAlgorithmImportParams {
+  provinceID: string;
+  cityID: string;
+  mdtrtArea: string;
+  medinsLv: string;
+  fileData: string;
+  fileName: string;
+}
+
+/** 下载DIP核心算法配置导入模板 (02010056) */
+export const downloadDipCoreAlgorithmTemplate = (): Promise<ApiResponse<{ fileName: string; fileData: string; contentType: string }>> => {
+  return invoke('02010056', []);
+};
+
+/** DIP核心算法配置导入预览 (02010057) */
+export const previewDipCoreAlgorithmImport = (
+  params: DipCoreAlgorithmImportParams
+): Promise<ApiResponse<DipCoreAlgorithmImportPreviewResult>> => {
+  return invoke('02010057', [params]);
+};
+
+/** DIP核心算法配置确认导入 (02010058) */
+export const confirmDipCoreAlgorithmImport = (
+  params: DipCoreAlgorithmImportParams
+): Promise<ApiResponse<DipCoreAlgorithmImportResult>> => {
+  return invoke('02010058', [params]);
+};
