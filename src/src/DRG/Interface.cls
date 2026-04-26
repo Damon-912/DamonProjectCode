@@ -3,6 +3,42 @@ Class src.DRG.Interface Extends (%RegisteredObject, %XML.Adaptor) [ Not Procedur
 
 /// Creator:     CM
 /// CreatDate:   2026-01-01
+/// Description: 分组器
+/// code: 02010001		 
+/// Input:{"params":[{"":""}]}
+/// Debug
+ClassMethod Device(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.GroupDevice).Device(jsonObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: 分组预警 - 组合分组器+费用预警两个接口
+/// code: 02010002		 
+/// Input:{"params":[{"":""}]}
+/// Debug
+ClassMethod DeviceFeeWarning(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.GroupDevice).DeviceFeeWarning(jsonObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: DIP分值查询
+/// code: 02010003		 
+/// Input:{"params":[{"":""}]}
+/// Debug
+ClassMethod GetDIPGroupScore(jsonObj) As %Library.DynamicObject
+{
+	new (jsonObj)
+	quit ##class(src.DRG.GroupDevice).GetDIPGroupScore(jsonObj)
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
 /// Description: 从HIS平台获取病案首页信息更新病案首页表
 /// Code: 02010028
 ClassMethod GetMedicalRecordFromHIS(postObj) As %Library.DynamicObject
@@ -84,18 +120,6 @@ ClassMethod QueryDRGGroupRecord(postObj) As %Library.DynamicObject
 {
 	new (postObj)
 	quit ##class(src.DRG.GroupDevice).QueryDRGGroupRecord(postObj)
-}
-
-/// Creator:     CM
-/// CreatDate:   2026-01-01
-/// Description: 分组器
-/// code: 02010001		 
-/// Input:{"params":[{"":""}]}
-/// Debug
-ClassMethod Device(jsonObj) As %Library.DynamicObject
-{
-	new (jsonObj)
-	quit ##class(src.DRG.GroupDevice).Device(jsonObj)
 }
 
 /// Creator:     CM

@@ -1,7 +1,7 @@
 ROUTINE src.DRG.Interface.1 [Type=INT,Generated]
  ;src.DRG.Interface.1
- ;Generated for class src.DRG.Interface.  Do NOT edit. 04/21/2026 04:19:07PM
- ;;736B3858;src.DRG.Interface
+ ;Generated for class src.DRG.Interface.  Do NOT edit. 04/27/2026 12:44:47AM
+ ;;31457771;src.DRG.Interface
  ;
 zDRGGroup(postObj)
 	new (postObj)
@@ -9,6 +9,12 @@ zDRGGroup(postObj)
 zDevice(jsonObj)
 	new (jsonObj)
 	quit ##class(src.DRG.GroupDevice).Device(jsonObj)
+zDeviceFeeWarning(jsonObj)
+	new (jsonObj)
+	quit ##class(src.DRG.GroupDevice).DeviceFeeWarning(jsonObj)
+zGetDIPGroupScore(jsonObj)
+	new (jsonObj)
+	quit ##class(src.DRG.GroupDevice).GetDIPGroupScore(jsonObj)
 zGetMedicalRecordFromHIS(postObj)
 	new (postObj)
 	quit ##class(src.DRG.MedicalRecord).GetMedicalRecordFromHIS(postObj)

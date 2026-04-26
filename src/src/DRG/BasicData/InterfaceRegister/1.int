@@ -1,7 +1,7 @@
 ROUTINE src.DRG.BasicData.InterfaceRegister.1 [Type=INT,Generated]
  ;src.DRG.BasicData.InterfaceRegister.1
- ;Generated for class src.DRG.BasicData.InterfaceRegister.  Do NOT edit. 04/17/2026 03:03:22PM
- ;;6A566644;src.DRG.BasicData.InterfaceRegister
+ ;Generated for class src.DRG.BasicData.InterfaceRegister.  Do NOT edit. 04/22/2026 12:51:13AM
+ ;;706B4C4B;src.DRG.BasicData.InterfaceRegister
  ;
 zCheckExists(code)
 	new (code)
@@ -12,7 +12,37 @@ zCheckExists(code)
 zRegisterAll()
 	do ..RegisterDRGCataLogInterfaces()
 	do ..RegisterDRGSegmentationRulesInterfaces()
+	do ..RegisterDIPCoreAlgorithmImportInterfaces()
 	quit "所有接口注册完成"
+zRegisterDIPCoreAlgorithmImport()
+	set className="SRC.DRG.BASICDATA.INTERFACE"
+	set sessionFlag="Y"
+	set tokenFlag="N"
+	// 02010056 - 下载DIP核心算法配置导入模板
+	if '$this().CheckExists("02010056") {
+		 ;---&sql(INSERT INTO CB_MapInterface (Code,Descripts,ClassName,MethodName,ServiceType,SessionFlag,TokenFlag) VALUES ('02010056','下载DIP核心算法配置导入模板',:className,'DOWNLOADDIPCOREALGORITHMTEMPLATE','S',:sessionFlag,:tokenFlag))
+		X "** SQL Statement Failed to Compile **" 
+		w "02010056 注册成功",!
+	} else {
+		w "02010056 已存在，跳过",!
+	}
+	// 02010057 - DIP核心算法配置导入预览
+	if '$this().CheckExists("02010057") {
+		 ;---&sql(INSERT INTO CB_MapInterface (Code,Descripts,ClassName,MethodName,ServiceType,SessionFlag,TokenFlag) VALUES ('02010057','DIP核心算法配置导入预览',:className,'PREVIEWIMPORTDIPCOREALGORITHM','S',:sessionFlag,:tokenFlag))
+		X "** SQL Statement Failed to Compile **" 
+		w "02010057 注册成功",!
+	} else {
+		w "02010057 已存在，跳过",!
+	}
+	// 02010058 - 确认导入DIP核心算法配置
+	if '$this().CheckExists("02010058") {
+		 ;---&sql(INSERT INTO CB_MapInterface (Code,Descripts,ClassName,MethodName,ServiceType,SessionFlag,TokenFlag) VALUES ('02010058','确认导入DIP核心算法配置',:className,'CONFIRMIMPORTDIPCOREALGORITHM','A',:sessionFlag,:tokenFlag))
+		X "** SQL Statement Failed to Compile **" 
+		w "02010058 注册成功",!
+	} else {
+		w "02010058 已存在，跳过",!
+	}
+	quit "DIP核心算法配置导入接口注册完成"
 zRegisterDRGCataLogInterfaces()
 	set className="SRC.DRG.BASICDATA.INTERFACE"
 	set sessionFlag="Y"

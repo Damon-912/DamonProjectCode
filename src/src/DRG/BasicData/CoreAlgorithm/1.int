@@ -1,8 +1,287 @@
 ROUTINE src.DRG.BasicData.CoreAlgorithm.1 [Type=INT,Generated]
  ;src.DRG.BasicData.CoreAlgorithm.1
- ;Generated for class src.DRG.BasicData.CoreAlgorithm.  Do NOT edit. 04/22/2026 12:32:06AM
- ;;7074586F;src.DRG.BasicData.CoreAlgorithm
+ ;Generated for class src.DRG.BasicData.CoreAlgorithm.  Do NOT edit. 04/26/2026 10:47:19PM
+ ;;534C5731;src.DRG.BasicData.CoreAlgorithm
  ;
+zConfirmImportDIPCoreAlgorithm(jsonObj)
+    new (jsonObj)
+    set resultObj={"errorCode":"0","errorMessage":"","result":{"totalCount":0,"successCount":0,"failCount":0,"duplicateCount":0,"newCount":0,"failList":[]}}
+    set (totalCount,successCount,failCount,duplicateCount,newCount)=0
+    set failList=[]
+    try {
+        set params=jsonObj.params.%Get(0)
+        if '$isobject(params) {
+            set resultObj.errorCode="02010001"
+            set resultObj.errorMessage="参数错误：缺少params参数"
+            quit
+        }
+        set fileData=params.fileData
+        set provinceID=params.provinceID
+        set cityID=params.cityID
+        set medinsLv=params.medinsLv
+        set mdtrtArea=params.mdtrtArea
+        if (provinceID="")||(cityID="")
+        {
+            set resultObj.errorCode="-1"
+            set resultObj.errorMessage="接口入参省、市代码不能为空！"
+            quit	
+        }
+        if (medinsLv="")
+        {
+            set resultObj.errorCode="-1"
+            set resultObj.errorMessage="机构等级不能为空！"
+            quit	
+        }
+        // 创建用户ID
+        set createUserDr=""
+        if $isobject(jsonObj.session) 
+        {
+            set session=jsonObj.session.%Get(0)
+            set:session'="" createUserDr=session.userID
+        }
+        set:createUserDr="" createUserDr="158"
+        // Base64解码 - 使用与PreviewImportDRGCoreAlgorithm完全相同的逻辑
+        set csvContent = ""
+        // 方法1: 使用$zcvt函数直接解码Base64
+        try {
+            set csvContent = $zcvt(fileData, "I", "BASE64")
+        } catch e1 {
+            // 不输出调试信息
+        }
+        // 如果方法1失败或内容为空，尝试方法2
+        if csvContent="" {
+            try {
+                set binaryData = ##class(%SYSTEM.Encryption).Base64Decode(fileData)
+                set csvContent = $zcvt(binaryData, "I", "UTF8")
+                if csvContent["?" {
+                    set csvContent = $zcvt(binaryData, "I", "GB18030")
+                }
+                if csvContent["?" {
+                    set csvContent = binaryData
+                }
+            } catch e2 {
+                // 不输出调试信息
+            }
+        }
+        if csvContent="" {
+            set resultObj.errorCode="02010003"
+            set resultObj.errorMessage="文件解码失败，请提供有效的CSV文件"
+            quit
+        }
+        // 解析CSV并执行导入
+        set lineNum=0
+        set ptr=1
+        set csvContent=$replace(csvContent,$c(13,10),$c(10))
+        set csvContent=$replace(csvContent,$c(13),$c(10))
+        for 
+        {
+            set line=$piece(csvContent,$c(10),ptr)
+            quit:line=""
+            set ptr=ptr+1
+            set lineNum=lineNum+1
+            continue:lineNum=1
+            continue:line=""
+            set totalCount=totalCount+1
+            set rowNum=lineNum-1
+            // 解析CSV列（11列）
+            try { set principalDiagnosis=$piece(line,",",1) } catch { set principalDiagnosis="" }
+            try { set principalDiagnosisName=$piece(line,",",2) } catch { set principalDiagnosisName="" }
+            try { set majorProcedure=$piece(line,",",3) } catch { set majorProcedure="" }
+            try { set majorProcedureName=$piece(line,",",4) } catch { set majorProcedureName="" }
+            try { set secondaryProcedure=$piece(line,",",5) } catch { set secondaryProcedure="" }
+            try { set secondaryProcedureName=$piece(line,",",6) } catch { set secondaryProcedureName="" }
+            try { set scoreValue=$piece(line,",",7) } catch { set scoreValue="" }
+            try { set adjustCoefficient=$piece(line,",",8) } catch { set adjustCoefficient="" }
+            try { set primaryAdjustCoefficient=$piece(line,",",9) } catch { set primaryAdjustCoefficient="" }
+            try { set secondaryAdjustCoefficient=$piece(line,",",10) } catch { set secondaryAdjustCoefficient="" }
+            try { set thirdAdjustCoefficient=$piece(line,",",11) } catch { set thirdAdjustCoefficient="" }
+            // 跳过校验失败的行
+            if (principalDiagnosis="")||(principalDiagnosisName="")||(scoreValue="")
+            {
+                set failCount=failCount+1
+                set failObj={}
+                set failObj.rowNum=rowNum
+                set failObj.principalDiagnosis=principalDiagnosis
+                set failObj.errorMsg="必填字段为空"
+                do failList.%Push(failObj)
+                continue
+            }
+            // 检查是否已存在
+            set existingID=""
+             ;---&sql(SELECT ID INTO :existingID FROM HB_DIPCoreAlgorithmData 
+              ;---                 WHERE PrincipalDiagnosis=:principalDiagnosis AND Province_Dr=:provinceID AND City_Dr=:cityID AND MedinsLv=:medinsLv)
+              ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, cityID, existingID, medinsLv, principalDiagnosis, provinceID
+            do %0Ao
+            // 构建数据对象
+            set dataObj={}
+            set dataObj.PrincipalDiagnosis=principalDiagnosis
+            set dataObj.PrincipalDiagnosisName=principalDiagnosisName
+            set dataObj.MajorProcedure=majorProcedure
+            set dataObj.MajorProcedureName=majorProcedureName
+            set dataObj.SecondaryProcedure=secondaryProcedure
+            set dataObj.SecondaryProcedureName=secondaryProcedureName
+            set dataObj.ProvinceDr=provinceID
+            set dataObj.CityDr=cityID
+            set dataObj.MdtrtArea=mdtrtArea
+            set dataObj.MedinsLv=medinsLv
+            set dataObj.ScoreValue=scoreValue
+            set dataObj.AdjustCoefficient=adjustCoefficient
+            set dataObj.PrimaryAdjustCoefficient=primaryAdjustCoefficient
+            set dataObj.SecondaryAdjustCoefficient=secondaryAdjustCoefficient
+            set dataObj.ThirdAdjustCoefficient=thirdAdjustCoefficient
+            set dataObj.CreateDate=$zd($h,3)
+            set dataObj.CreateTime=$zt($p($h,",",2),1)
+            set dataObj.CreateUserDr=createUserDr
+            set insObj={},data=[]
+            set insObj.className="User.HBDIPCoreAlgorithmData"
+            do data.%Push(dataObj)
+            set insObj.data=data
+            set operationType=""
+            if existingID'="" 
+            {
+                set dataObj.ID=existingID
+                set rtn=##class(src.util.operatetable).Update(.insObj)
+                set operationType="更新"
+                set duplicateCount=duplicateCount+1
+            } 
+            else 
+            {
+                set rtn=##class(src.util.operatetable).Insert(.insObj)
+                set operationType="新增"
+                set newCount=newCount+1
+            }
+            if rtn.errorCode'=0 
+            {
+                set failCount=failCount+1
+                set failObj={}
+                set failObj.rowNum=rowNum
+                set failObj.principalDiagnosis=principalDiagnosis
+                set failObj.errorMsg=rtn.errorMessage
+                do failList.%Push(failObj)
+            } 
+            else 
+            {
+                set successCount=successCount+1
+            }
+        }
+        set resultObj.result.totalCount=totalCount
+        set resultObj.result.successCount=successCount
+        set resultObj.result.failCount=failCount
+        set resultObj.result.duplicateCount=duplicateCount
+        set resultObj.result.newCount=newCount
+        set resultObj.result.failList=failList
+        if failCount>0 
+        {
+            set resultObj.errorCode="02010002"
+            set resultObj.errorMessage="导入完成，部分数据导入失败，请查看失败列表"
+        }
+    } catch(e) {
+        set status=e.AsStatus()
+        set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+        set errorInfo="导入DIP核心算法配置出现问题:w ##class("_$ClassName()_").ConfirmImportDIPCoreAlgorithm("_jsonObj.%ToJSON()_")"
+        set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+        set resultObj.errorCode="04000007"
+        set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+    }
+    quit resultObj
+ q
+%0Ao n sqldata19d,sqldata20d,sqldata21d,sqldata22d,sqldata23d,sqldata24d,sqldata25d,sqldata28d,sqldata31d,sqldata32d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata7d,sqldata16d,sqldata17d,sqldata18d,sqldata3d,sqldata12d,sqldata13d,sqldata9d,sqldata14d,sqldata15d,sqldata5d
+ s $zt="%0Aerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata19d=$zu(115,2)
+ s sqldata20d=0,sqldata21d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(principalDiagnosis),sqldata6d=$s($g(provinceID)="":"",$isvalidnum(provinceID):+provinceID,1:provinceID),sqldata8d=$s($g(cityID)="":"",$isvalidnum(cityID):+cityID,1:cityID),sqldata10d=$g(medinsLv)
+ s SQLCODE=100
+ s sqldata15d=$zu(28,sqldata10d,7)
+ s sqldata13d=$zu(28,sqldata4d,7)
+ ; asl MOD# 2
+ s sqldata7d=sqldata8d
+ s sqldata16d="",sqldata22d=1,sqldata17d="",sqldata23d=1,sqldata18d=""
+ g %0AmBk1
+%0AmBqt1 s sqldata16d="" q
+%0AmBpt1 s sqldata22d=0
+ s sqldata24d=sqldata8d
+ g %0AmBqt1:sqldata24d=""
+ g %0AmBft1:sqldata16d=""
+%0AmBat1 g %0AmBpt1:sqldata22d
+ g %0AmBgt1:$d(^User.HBDIPCoreAlgorithmDataI("City",sqldata24d,sqldata16d))
+%0AmBft1 g %0AmBpt1:sqldata22d
+ s sqldata16d=$o(^User.HBDIPCoreAlgorithmDataI("City",sqldata24d,sqldata16d))
+ q:sqldata16d=""
+%0AmBgt1 q
+%0AmBqt2 s sqldata17d="" q
+%0AmBpt2 s sqldata23d=0
+ s sqldata25d=sqldata6d
+ g %0AmBqt2:sqldata25d=""
+ g %0AmBft2:sqldata17d=""
+%0AmBat2 g %0AmBpt2:sqldata23d
+ g %0AmBgt2:$d(^User.HBDIPCoreAlgorithmDataI("Province",sqldata25d,sqldata17d))
+%0AmBft2 g %0AmBpt2:sqldata23d
+ s sqldata17d=$o(^User.HBDIPCoreAlgorithmDataI("Province",sqldata25d,sqldata17d))
+ q:sqldata17d=""
+%0AmBgt2 q
+%0AmBat3 s sqldata16d=sqldata18d d %0AmBat1
+ i sqldata16d="" s sqldata18d="" q
+ g %0AmBlt3
+%0AmBft3 d %0AmBft1
+ i sqldata16d="" s sqldata18d="" q
+%0AmBlt3 s sqldata17d=sqldata16d d %0AmBat2
+ i sqldata17d="" s sqldata18d="" q
+ i sqldata17d]]sqldata16d s sqldata16d=sqldata17d d %0AmBat1 i sqldata16d="" s sqldata18d="" q
+ i sqldata16d=sqldata17d s sqldata18d=sqldata16d q
+ g %0AmBlt3
+%0AmBk1 d %0AmBft3
+ i sqldata18d="" g %0AmBdun
+ s existingID=sqldata18d
+ i existingID'="" s sqldata28d="" i $d(^User.HBDIPCoreAlgorithmDataD(existingID),sqldata28d)
+ e  g %0AmBk1
+ S sqldata3d=$lg(sqldata28d,2)
+ s sqldata12d=$zu(28,sqldata3d,7)
+ g:'(sqldata12d=sqldata13d) %0AmBk1
+ S sqldata9d=$lg(sqldata28d,11)
+ s sqldata14d=$zu(28,sqldata9d,7)
+ g:'(sqldata14d=sqldata15d) %0AmBk1
+ S sqldata5d=$lg(sqldata28d,8),sqldata7d=$lg(sqldata28d,9)
+ goto:sqldata19d'=1 %0AmBuncommitted
+ if sqldata19d=1 {
+ 	lock +^User.HBDIPCoreAlgorithmDataD($p(existingID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata21d=$name(^User.HBDIPCoreAlgorithmDataD($p(existingID,"||",1)))_"#""SI""",sqldata20d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DIPCoreAlgorithmData for RowID value: "_existingID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ i existingID'="" s sqldata31d="" i $d(^User.HBDIPCoreAlgorithmDataD(existingID),sqldata31d)
+ e  g %0AmCdun
+ S sqldata3d=$lg(sqldata31d,2)
+ s sqldata12d=$zu(28,sqldata3d,7)
+ g:'(sqldata12d=sqldata13d) %0AmCdun
+ S sqldata5d=$lg(sqldata31d,8)
+ g:'(sqldata5d=sqldata6d) %0AmCdun
+ S sqldata7d=$lg(sqldata31d,9)
+ g:'(sqldata7d=sqldata8d) %0AmCdun
+ S sqldata9d=$lg(sqldata31d,11)
+ s sqldata14d=$zu(28,sqldata9d,7)
+ g:'(sqldata14d=sqldata15d) %0AmCdun
+%0AmBuncommitted ;
+ s SQLCODE=0 g %0Ac
+%0AmCdun if $g(sqldata19d)=1 { if $g(sqldata20d)=1 { l -@sqldata21d s sqldata20d=0 } elseif $g(sqldata20d)=2 { do $classmethod($li(sqldata21d),"%UnlockId",$li(sqldata21d,2),1,1)  s sqldata20d=0 }}
+ g %0AmBk1
+%0AmBdun 
+%0AmAdun 
+%0Ac set %ROWCOUNT='SQLCODE
+ if $g(sqldata19d)=1 {
+ 	if $g(sqldata20d)=1 { l -@sqldata21d s sqldata20d=0 } elseif $g(sqldata20d)=2 { do $classmethod($li(sqldata21d),"%UnlockId",$li(sqldata21d,2),1,1)  s sqldata20d=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata32d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"D3YxoIJQp2g4JLqOFXry31ILeZg="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"D3YxoIJQp2g4JLqOFXry31ILeZg=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Aerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Ac
 zConfirmImportDRGCoreAlgorithm(jsonObj)
     new (jsonObj)
     set resultObj={"errorCode":"0","errorMessage":"","result":{"totalCount":0,"successCount":0,"failCount":0,"duplicateCount":0,"newCount":0,"failList":[]}}
@@ -100,7 +379,7 @@ zConfirmImportDRGCoreAlgorithm(jsonObj)
              ;---&sql(SELECT ID INTO :existingID FROM HB_DRGCoreAlgorithmData 
               ;---                 WHERE DRG=:drgCode AND MdtrtArea=:mdtrtArea AND FixmedinsCode=:fixmedinsCode)
               ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, drgCode, existingID, fixmedinsCode, mdtrtArea
-            do %0Ao
+            do %0Co
             // 构建数据对象
             set dataObj={}
             set dataObj.DRG=drgCode
@@ -175,8 +454,8 @@ zConfirmImportDRGCoreAlgorithm(jsonObj)
     }
     quit resultObj
  q
-%0Ao n sqldata18d,sqldata19d,sqldata20d,sqldata29d,sqldata30d,sqldata31d,sqldata32d,sqldata33d,sqldata36d,sqldata39d,sqldata40d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata14d,sqldata15d,sqldata16d,sqldata17d,sqldata5d,sqldata12d,sqldata13d,sqldata3d,sqldata7d
- s $zt="%0Aerr"
+%0Co n sqldata18d,sqldata19d,sqldata20d,sqldata29d,sqldata30d,sqldata31d,sqldata32d,sqldata33d,sqldata36d,sqldata39d,sqldata40d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata14d,sqldata15d,sqldata16d,sqldata17d,sqldata5d,sqldata12d,sqldata13d,sqldata3d,sqldata7d
+ s $zt="%0Cerr"
  n %sqltime s %sqltime=$zh
  s sqldata18d=$zu(115,2)
  s sqldata19d=0,sqldata20d=""
@@ -188,20 +467,20 @@ zConfirmImportDRGCoreAlgorithm(jsonObj)
  s sqldata11d=$zu(28,sqldata4d,7)
  k sqldata29d
  ; asl MOD# 3
- d %0AmBMod
+ d %0CmBMod
  s sqldata30d="",sqldata31d="",sqldata33d=1
-%0AmCk1 f  s sqldata33d=$bitfind(sqldata31d,1,sqldata33d+1) i sqldata33d { s existingID=sqldata32d+sqldata33d-1 q } s sqldata30d=$o(sqldata29d(sqldata30d),1,sqldata31d) q:sqldata30d=""  s sqldata32d=sqldata30d-1*64000
- i sqldata30d="" g %0AmCdun
+%0CmCk1 f  s sqldata33d=$bitfind(sqldata31d,1,sqldata33d+1) i sqldata33d { s existingID=sqldata32d+sqldata33d-1 q } s sqldata30d=$o(sqldata29d(sqldata30d),1,sqldata31d) q:sqldata30d=""  s sqldata32d=sqldata30d-1*64000
+ i sqldata30d="" g %0CmCdun
  s sqldata36d="" i $d(^User.HBDRGCoreAlgorithmDataD(existingID),sqldata36d)
- e  g %0AmCk1
+ e  g %0CmCk1
  S sqldata5d=$lg(sqldata36d,13)
  s sqldata12d=$zu(28,sqldata5d,7)
- g:'(sqldata12d=sqldata13d) %0AmCk1
- g:'(sqldata12d'=" ") %0AmCk1
+ g:'(sqldata12d=sqldata13d) %0CmCk1
+ g:'(sqldata12d'=" ") %0CmCk1
  S sqldata3d=$lg(sqldata36d,2),sqldata7d=$lg(sqldata36d,16)
  s sqldata10d=$zu(28,sqldata3d,7)
  s sqldata14d=$zu(28,sqldata7d,7)
- goto:sqldata18d'=1 %0AmCuncommitted
+ goto:sqldata18d'=1 %0CmCuncommitted
  if sqldata18d=1 {
  	lock +^User.HBDRGCoreAlgorithmDataD($p(existingID,"||",1))#"S":$zu(115,4)
  	if $t { set sqldata20d=$name(^User.HBDRGCoreAlgorithmDataD($p(existingID,"||",1)))_"#""SI""",sqldata19d=1 }
@@ -209,25 +488,25 @@ zConfirmImportDRGCoreAlgorithm(jsonObj)
  }
  ; asl MOD# 4
  i existingID'="" s sqldata39d="" i $d(^User.HBDRGCoreAlgorithmDataD(existingID),sqldata39d)
- e  g %0AmDdun
+ e  g %0CmDdun
  S sqldata3d=$lg(sqldata39d,2)
  s sqldata10d=$zu(28,sqldata3d,7)
- g:'(sqldata10d=sqldata11d) %0AmDdun
- g:'(sqldata10d'=" ") %0AmDdun
+ g:'(sqldata10d=sqldata11d) %0CmDdun
+ g:'(sqldata10d'=" ") %0CmDdun
  S sqldata5d=$lg(sqldata39d,13)
  s sqldata12d=$zu(28,sqldata5d,7)
- g:'(sqldata12d=sqldata13d) %0AmDdun
- g:'(sqldata12d'=" ") %0AmDdun
+ g:'(sqldata12d=sqldata13d) %0CmDdun
+ g:'(sqldata12d'=" ") %0CmDdun
  S sqldata7d=$lg(sqldata39d,16)
  s sqldata14d=$zu(28,sqldata7d,7)
- g:'(sqldata14d=sqldata15d) %0AmDdun
-%0AmCuncommitted ;
- s SQLCODE=0 g %0Ac
-%0AmDdun if $g(sqldata18d)=1 { if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }}
- g %0AmCk1
-%0AmCdun 
-%0AmAdun 
-%0Ac set %ROWCOUNT='SQLCODE
+ g:'(sqldata14d=sqldata15d) %0CmDdun
+%0CmCuncommitted ;
+ s SQLCODE=0 g %0Cc
+%0CmDdun if $g(sqldata18d)=1 { if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }}
+ g %0CmCk1
+%0CmCdun 
+%0CmAdun 
+%0Cc set %ROWCOUNT='SQLCODE
  if $g(sqldata18d)=1 {
  	if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }
  }
@@ -238,27 +517,27 @@ zConfirmImportDRGCoreAlgorithm(jsonObj)
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"u7QeXSOXDK4cFwAsPHWSrzkFNdw=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
  q
-%0Aerr s $zt=""
+%0Cerr s $zt=""
  d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- g %0Ac
-%0AmBMod ; asl MOD# 2
+ g %0Cc
+%0CmBMod ; asl MOD# 2
  s sqldata10d=sqldata11d
  s sqldata14d=sqldata15d
- i sqldata10d="" g %0AmBdun
- i '(sqldata10d'=" ") g %0AmBdun
+ i sqldata10d="" g %0CmBdun
+ i '(sqldata10d'=" ") g %0CmBdun
  s sqldata16d=""
-%0AmBk1 s sqldata16d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d))
- i sqldata16d="" g %0AmBdun
+%0CmBk1 s sqldata16d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d))
+ i sqldata16d="" g %0CmBdun
  s sqldata17d=""
-%0AmBk2 s sqldata17d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d,sqldata17d))
- i sqldata17d="" g %0AmBk1
- i sqldata14d="" g %0AmBk2
+%0CmBk2 s sqldata17d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d,sqldata17d))
+ i sqldata17d="" g %0CmBk1
+ i sqldata14d="" g %0CmBk2
  s existingID=""
-%0AmBk3 s existingID=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d,sqldata17d,sqldata14d,existingID))
- i existingID="" g %0AmBk2
+%0CmBk3 s existingID=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d,sqldata17d,sqldata14d,existingID))
+ i existingID="" g %0CmBk2
  s $bit(sqldata29d(existingID\64000+1),existingID#64000+1)=1
- g %0AmBk3
-%0AmBdun q
+ g %0CmBk3
+%0CmBdun q
 zDeleteDIPCoreAlgorithm(jsonObj)
     new (jsonObj)
 	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
@@ -334,14 +613,34 @@ zDeleteDRGCoreAlgorithm(jsonObj)
 		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
 	}
 	quit resultObj
+zDownloadDIPCoreAlgorithmTempla(jsonObj)
+    new (jsonObj)
+    set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+    try {
+        // 生成CSV内容 - DIP核心算法模板
+        // 列：主要诊断代码,主要诊断名称,主要手术代码,主要手术名称,相关手术代码,相关手术名称,基准分值,调节系数,一级调节系数,二级调节系数,三级调节系数
+        set csvContent = "PrincipalDiagnosis,PrincipalDiagnosisName,MajorProcedure,MajorProcedureName,SecondaryProcedure,SecondaryProcedureName,ScoreValue,AdjustCoefficient,PrimaryAdjustCoefficient,SecondaryAdjustCoefficient,ThirdAdjustCoefficient"_$c(13,10)
+        set csvContent = csvContent_"A01.01,NULL,31.1,NULL,,,,100.00,1.0,1.1,1.2,1.3"_$c(13,10)
+        set csvContent = csvContent_"K25.0,NULL,43.7,NULL,45.6,NULL,150.50,1.1,1.2,1.3,1.5"_$c(13,10)
+        // Base64编码
+        set base64Data = ##class(%SYSTEM.Encryption).Base64Encode(csvContent)
+        set resultObj.result.fileName = "DIP核心算法配置导入模板.csv"
+        set resultObj.result.fileData = base64Data
+        set resultObj.result.contentType = "text/csv"
+    } catch e {
+        set status = e.AsStatus()
+        set resultObj.errorCode = "04000007"
+        set resultObj.errorMessage = "下载模板失败: "_$system.Status.GetErrorText(status)
+    }
+    quit resultObj
 zDownloadDRGCoreAlgorithmTempla(jsonObj)
     new (jsonObj)
     set resultObj={"errorCode":"0","errorMessage":"","result":{}}
     try {
         // 生成CSV内容
         set csvContent = "DRGCode,DRGDesc,Points,PipValue,DGDOV,PayStandard"_$c(13,10)
-        set csvContent = csvContent_"AA01,急性心肌梗死,120.50,1.2,0.95,15000.00"_$c(13,10)
-        set csvContent = csvContent_"BB02,肺炎伴并发症,85.30,1.0,1.05,9800.00"_$c(13,10)
+        set csvContent = csvContent_"AA01,NULL,120.50,1.2,0.95,15000.00"_$c(13,10)
+        set csvContent = csvContent_"BB02,NULL,85.30,1.0,1.05,9800.00"_$c(13,10)
         // Base64编码
         set base64Data = ##class(%SYSTEM.Encryption).Base64Encode(csvContent)
         set resultObj.result.fileName = "DRG核心算法配置导入模板.csv"
@@ -476,6 +775,289 @@ zIsRecordActive(startDate,stopDate)
     Set effectiveStart = $Select(startDate="":0, 1:startDate)  // 0 = 1840-12-31
     Set effectiveEnd = $Select(stopDate="":99999, 1:stopDate)  // 99999 = 未来日期
     Quit (effectiveStart <= currentDate) && (effectiveEnd >= currentDate)
+zPreviewImportDIPCoreAlgorithm(jsonObj)
+    new (jsonObj)
+    set resultObj={"errorCode":"0","errorMessage":"","result":{"totalCount":0,"validCount":0,"invalidCount":0,"duplicateCount":0,"previewList":[]}}
+    set totalCount=0,validCount=0,invalidCount=0,duplicateCount=0
+    set previewList=[]
+    // 预览数量限制，避免JSON过大导致MAXSTRING错误
+    set previewLimit=100
+    set previewCount=0
+    try 
+    {
+        set params=jsonObj.params.%Get(0)
+        set provinceID=params.provinceID
+        set cityID=params.cityID
+        set medinsLv=params.medinsLv
+        set mdtrtArea=params.mdtrtArea
+        set fileData=params.fileData
+        // 参数校验
+        if provinceID="" {
+            set resultObj.errorCode="01000007"
+            set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000007")
+            quit
+        }
+        if cityID="" {
+            set resultObj.errorCode="01000008"
+            set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000008")
+            quit
+        }
+        if medinsLv="" {
+            set resultObj.errorCode="-1"
+            set resultObj.errorMessage="机构等级不能为空"
+            quit
+        }
+        if fileData="" {
+            set resultObj.errorCode="02010001"
+            set resultObj.errorMessage="导入文件不能为空"
+            quit
+        }
+        // Base64解码 - 与PreviewImportDRGCoreAlgorithm完全相同的逻辑
+        set csvContent = ""
+        // 方法1: 使用$zcvt函数直接解码Base64
+        try {
+            set csvContent = $zcvt(fileData, "I", "BASE64")
+        } catch e1 {
+            // 不输出调试信息
+        }
+        // 如果方法1失败或内容为空，尝试方法2
+        if csvContent="" {
+            try {
+                set binaryData = ##class(%SYSTEM.Encryption).Base64Decode(fileData)
+                set csvContent = $zcvt(binaryData, "I", "UTF8")
+                if csvContent["?" {
+                    set csvContent = $zcvt(binaryData, "I", "GB18030")
+                }
+                if csvContent["?" {
+                    set csvContent = binaryData
+                }
+            } catch e2 {
+                // 不输出调试信息
+            }
+        }
+        if csvContent="" 
+        {
+            set resultObj.errorCode="02010003"
+            set resultObj.errorMessage="文件解码失败，请提供有效的CSV文件"
+            quit
+        }
+        // 解析CSV内容
+        set lineNum=0
+        set ptr=1
+        set csvContent=$replace(csvContent,$c(13,10),$c(10))
+        set csvContent=$replace(csvContent,$c(13),$c(10))
+        for 
+        {
+            set line=$piece(csvContent,$c(10),ptr)
+            quit:line=""
+            set ptr=ptr+1
+            set lineNum=lineNum+1
+            continue:lineNum=1
+            continue:line=""
+            set totalCount=totalCount+1
+            set rowNum=lineNum-1
+            // 预览数量限制：超过限制后只统计，不加入预览列表
+            if previewCount >= previewLimit
+            {
+                quit
+            }
+            // 解析CSV列（11列）
+            set errorMsg=""
+            try { set principalDiagnosis=$piece(line,",",1) } catch { set principalDiagnosis="",errorMsg="字段解析错误" }
+            try { set principalDiagnosisName=$piece(line,",",2) } catch { set principalDiagnosisName="" }
+            try { set majorProcedure=$piece(line,",",3) } catch { set majorProcedure="" }
+            try { set majorProcedureName=$piece(line,",",4) } catch { set majorProcedureName="" }
+            try { set secondaryProcedure=$piece(line,",",5) } catch { set secondaryProcedure="" }
+            try { set secondaryProcedureName=$piece(line,",",6) } catch { set secondaryProcedureName="" }
+            try { set scoreValue=$piece(line,",",7) } catch { set scoreValue="" }
+            try { set adjustCoefficient=$piece(line,",",8) } catch { set adjustCoefficient="" }
+            try { set primaryAdjustCoefficient=$piece(line,",",9) } catch { set primaryAdjustCoefficient="" }
+            try { set secondaryAdjustCoefficient=$piece(line,",",10) } catch { set secondaryAdjustCoefficient="" }
+            try { set thirdAdjustCoefficient=$piece(line,",",11) } catch { set thirdAdjustCoefficient="" }
+            set previewObj={}
+            set previewObj.rowNum=rowNum
+            set previewObj.principalDiagnosis=principalDiagnosis
+            set previewObj.principalDiagnosisName=principalDiagnosisName
+            set previewObj.majorProcedure=majorProcedure
+            set previewObj.majorProcedureName=majorProcedureName
+            set previewObj.secondaryProcedure=secondaryProcedure
+            set previewObj.secondaryProcedureName=secondaryProcedureName
+            set previewObj.scoreValue=scoreValue
+            set previewObj.adjustCoefficient=adjustCoefficient
+            set previewObj.primaryAdjustCoefficient=primaryAdjustCoefficient
+            set previewObj.secondaryAdjustCoefficient=secondaryAdjustCoefficient
+            set previewObj.thirdAdjustCoefficient=thirdAdjustCoefficient
+            set previewObj.errorMsg=errorMsg
+            // 数据校验
+            if (errorMsg '="")
+            {
+                set invalidCount=invalidCount+1
+                set previewObj.status="invalid"
+                set previewObj.statusDesc="解析错误"
+                do previewList.%Push(previewObj)
+                continue
+            } 		
+            elseif principalDiagnosis="" 
+            {
+                set previewObj.status="invalid"
+                set previewObj.statusDesc="错误"
+                set previewObj.errorMsg="主要诊断代码不能为空"
+                set invalidCount=invalidCount+1
+                do previewList.%Push(previewObj)
+                continue
+            }
+            elseif principalDiagnosisName=""
+            {
+                set previewObj.status="invalid"
+                set previewObj.statusDesc="错误"
+                set previewObj.errorMsg="主要诊断名称不能为空"
+                set invalidCount=invalidCount+1
+                do previewList.%Push(previewObj)
+                continue
+            }
+            elseif (scoreValue="")
+            {
+                set previewObj.status="invalid"
+                set previewObj.statusDesc="错误"
+                set previewObj.errorMsg="基准分值不能为空"
+                set invalidCount=invalidCount+1
+                do previewList.%Push(previewObj)
+                continue
+            }
+            // 检查是否已存在（主要诊断代码+省+市+机构等级）
+            set existingID=""
+             ;---&sql(SELECT ID INTO :existingID FROM SQLUser.HB_DIPCoreAlgorithmData 
+              ;---                 WHERE PrincipalDiagnosis=:principalDiagnosis AND Province_Dr=:provinceID AND City_Dr=:cityID AND MedinsLv=:medinsLv)
+              ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, cityID, existingID, medinsLv, principalDiagnosis, provinceID
+            do %0Eo
+            if existingID'="" 
+            {
+                set previewObj.status="duplicate"
+                set previewObj.statusDesc="重复"
+                set previewObj.errorMsg="该DIP配置已存在，导入将执行更新操作"
+                set duplicateCount=duplicateCount+1
+            } 
+            else 
+            {
+                set previewObj.status="valid"
+                set previewObj.statusDesc="正常"
+                set validCount=validCount+1
+            }
+            do previewList.%Push(previewObj)
+            set previewCount=previewCount+1
+        }
+        set resultObj.result.totalCount=totalCount
+        set resultObj.result.validCount=validCount
+        set resultObj.result.invalidCount=invalidCount
+        set resultObj.result.duplicateCount=duplicateCount
+        set resultObj.result.previewList=previewList
+    } 
+    catch(e) 
+    {
+        set status=e.AsStatus()
+        set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+        set resultObj.errorCode="04000007"
+        set resultObj.errorMessage="预览失败："_errorMessage
+    }
+    quit resultObj
+ q
+%0Eo n sqldata19d,sqldata20d,sqldata21d,sqldata22d,sqldata23d,sqldata24d,sqldata25d,sqldata28d,sqldata31d,sqldata32d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata7d,sqldata16d,sqldata17d,sqldata18d,sqldata3d,sqldata12d,sqldata13d,sqldata9d,sqldata14d,sqldata15d,sqldata5d
+ s $zt="%0Eerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata19d=$zu(115,2)
+ s sqldata20d=0,sqldata21d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(principalDiagnosis),sqldata6d=$s($g(provinceID)="":"",$isvalidnum(provinceID):+provinceID,1:provinceID),sqldata8d=$s($g(cityID)="":"",$isvalidnum(cityID):+cityID,1:cityID),sqldata10d=$g(medinsLv)
+ s SQLCODE=100
+ s sqldata15d=$zu(28,sqldata10d,7)
+ s sqldata13d=$zu(28,sqldata4d,7)
+ ; asl MOD# 2
+ s sqldata7d=sqldata8d
+ s sqldata16d="",sqldata22d=1,sqldata17d="",sqldata23d=1,sqldata18d=""
+ g %0EmBk1
+%0EmBqt1 s sqldata16d="" q
+%0EmBpt1 s sqldata22d=0
+ s sqldata24d=sqldata8d
+ g %0EmBqt1:sqldata24d=""
+ g %0EmBft1:sqldata16d=""
+%0EmBat1 g %0EmBpt1:sqldata22d
+ g %0EmBgt1:$d(^User.HBDIPCoreAlgorithmDataI("City",sqldata24d,sqldata16d))
+%0EmBft1 g %0EmBpt1:sqldata22d
+ s sqldata16d=$o(^User.HBDIPCoreAlgorithmDataI("City",sqldata24d,sqldata16d))
+ q:sqldata16d=""
+%0EmBgt1 q
+%0EmBqt2 s sqldata17d="" q
+%0EmBpt2 s sqldata23d=0
+ s sqldata25d=sqldata6d
+ g %0EmBqt2:sqldata25d=""
+ g %0EmBft2:sqldata17d=""
+%0EmBat2 g %0EmBpt2:sqldata23d
+ g %0EmBgt2:$d(^User.HBDIPCoreAlgorithmDataI("Province",sqldata25d,sqldata17d))
+%0EmBft2 g %0EmBpt2:sqldata23d
+ s sqldata17d=$o(^User.HBDIPCoreAlgorithmDataI("Province",sqldata25d,sqldata17d))
+ q:sqldata17d=""
+%0EmBgt2 q
+%0EmBat3 s sqldata16d=sqldata18d d %0EmBat1
+ i sqldata16d="" s sqldata18d="" q
+ g %0EmBlt3
+%0EmBft3 d %0EmBft1
+ i sqldata16d="" s sqldata18d="" q
+%0EmBlt3 s sqldata17d=sqldata16d d %0EmBat2
+ i sqldata17d="" s sqldata18d="" q
+ i sqldata17d]]sqldata16d s sqldata16d=sqldata17d d %0EmBat1 i sqldata16d="" s sqldata18d="" q
+ i sqldata16d=sqldata17d s sqldata18d=sqldata16d q
+ g %0EmBlt3
+%0EmBk1 d %0EmBft3
+ i sqldata18d="" g %0EmBdun
+ s existingID=sqldata18d
+ i existingID'="" s sqldata28d="" i $d(^User.HBDIPCoreAlgorithmDataD(existingID),sqldata28d)
+ e  g %0EmBk1
+ S sqldata3d=$lg(sqldata28d,2)
+ s sqldata12d=$zu(28,sqldata3d,7)
+ g:'(sqldata12d=sqldata13d) %0EmBk1
+ S sqldata9d=$lg(sqldata28d,11)
+ s sqldata14d=$zu(28,sqldata9d,7)
+ g:'(sqldata14d=sqldata15d) %0EmBk1
+ S sqldata5d=$lg(sqldata28d,8),sqldata7d=$lg(sqldata28d,9)
+ goto:sqldata19d'=1 %0EmBuncommitted
+ if sqldata19d=1 {
+ 	lock +^User.HBDIPCoreAlgorithmDataD($p(existingID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata21d=$name(^User.HBDIPCoreAlgorithmDataD($p(existingID,"||",1)))_"#""SI""",sqldata20d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DIPCoreAlgorithmData for RowID value: "_existingID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ i existingID'="" s sqldata31d="" i $d(^User.HBDIPCoreAlgorithmDataD(existingID),sqldata31d)
+ e  g %0EmCdun
+ S sqldata3d=$lg(sqldata31d,2)
+ s sqldata12d=$zu(28,sqldata3d,7)
+ g:'(sqldata12d=sqldata13d) %0EmCdun
+ S sqldata5d=$lg(sqldata31d,8)
+ g:'(sqldata5d=sqldata6d) %0EmCdun
+ S sqldata7d=$lg(sqldata31d,9)
+ g:'(sqldata7d=sqldata8d) %0EmCdun
+ S sqldata9d=$lg(sqldata31d,11)
+ s sqldata14d=$zu(28,sqldata9d,7)
+ g:'(sqldata14d=sqldata15d) %0EmCdun
+%0EmBuncommitted ;
+ s SQLCODE=0 g %0Ec
+%0EmCdun if $g(sqldata19d)=1 { if $g(sqldata20d)=1 { l -@sqldata21d s sqldata20d=0 } elseif $g(sqldata20d)=2 { do $classmethod($li(sqldata21d),"%UnlockId",$li(sqldata21d,2),1,1)  s sqldata20d=0 }}
+ g %0EmBk1
+%0EmBdun 
+%0EmAdun 
+%0Ec set %ROWCOUNT='SQLCODE
+ if $g(sqldata19d)=1 {
+ 	if $g(sqldata20d)=1 { l -@sqldata21d s sqldata20d=0 } elseif $g(sqldata20d)=2 { do $classmethod($li(sqldata21d),"%UnlockId",$li(sqldata21d,2),1,1)  s sqldata20d=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata32d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"6Upm851+MnzbEzR/hMbSv8DBSyw="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"6Upm851+MnzbEzR/hMbSv8DBSyw=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Eerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Ec
 zPreviewImportDRGCoreAlgorithm(jsonObj)
     new (jsonObj)
     set resultObj={"errorCode":"0","errorMessage":"","result":{"totalCount":0,"validCount":0,"invalidCount":0,"duplicateCount":0,"previewList":[]}}
@@ -593,38 +1175,38 @@ zPreviewImportDRGCoreAlgorithm(jsonObj)
                 do previewList.%Push(previewObj)
                 continue
             }
-            elseif (points="")||(##class(%SYSTEM.Util).IsNumeric(points)=0)
+            elseif (points="")
             {
                 set previewObj.status="invalid"
                 set previewObj.statusDesc="错误"
-                set previewObj.errorMsg="基准点数必须是数值"
+                set previewObj.errorMsg="基准点数不能为空"
                 set invalidCount=invalidCount+1
                 do previewList.%Push(previewObj)
                 continue
             }
-            elseif (pipValue="")||(##class(%SYSTEM.Util).IsNumeric(pipValue)=0)
+            elseif (pipValue="")
             {
                 set previewObj.status="invalid"
                 set previewObj.statusDesc="错误"
-                set previewObj.errorMsg="预估点值必须是数值"
+                set previewObj.errorMsg="预估点值不能为空"
                 set invalidCount=invalidCount+1
                 do previewList.%Push(previewObj)
                 continue
             }
-            elseif (dgdov="")||(##class(%SYSTEM.Util).IsNumeric(dgdov)=0)
+            elseif (dgdov="")
             {
                 set previewObj.status="invalid"
                 set previewObj.statusDesc="错误"
-                set previewObj.errorMsg="病组差异系数必须是数值"
+                set previewObj.errorMsg="病组差异系数不能为空"
                 set invalidCount=invalidCount+1
                 do previewList.%Push(previewObj)
                 continue
             }
-            elseif (payStandard="")||(##class(%SYSTEM.Util).IsNumeric(payStandard)=0)
+            elseif (payStandard="")
             {
                 set previewObj.status="invalid"
                 set previewObj.statusDesc="错误"
-                set previewObj.errorMsg="支付标准必须是数值"
+                set previewObj.errorMsg="支付标准不能为空"
                 set invalidCount=invalidCount+1
                 do previewList.%Push(previewObj)
                 continue
@@ -634,7 +1216,7 @@ zPreviewImportDRGCoreAlgorithm(jsonObj)
              ;---&sql(SELECT ID INTO :existingID FROM SQLUser.HB_DRGCoreAlgorithmData 
               ;---                 WHERE DRG=:drgCode AND MdtrtArea=:mdtrtArea AND FixmedinsCode=:fixmedinsCode)
               ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, drgCode, existingID, fixmedinsCode, mdtrtArea
-            do %0Co
+            do %0Go
             if existingID'="" 
             {
                 set previewObj.status="duplicate"
@@ -665,8 +1247,8 @@ zPreviewImportDRGCoreAlgorithm(jsonObj)
     }
     quit resultObj
  q
-%0Co n sqldata18d,sqldata19d,sqldata20d,sqldata29d,sqldata30d,sqldata31d,sqldata32d,sqldata33d,sqldata36d,sqldata39d,sqldata40d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata14d,sqldata15d,sqldata16d,sqldata17d,sqldata5d,sqldata12d,sqldata13d,sqldata3d,sqldata7d
- s $zt="%0Cerr"
+%0Go n sqldata18d,sqldata19d,sqldata20d,sqldata29d,sqldata30d,sqldata31d,sqldata32d,sqldata33d,sqldata36d,sqldata39d,sqldata40d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata14d,sqldata15d,sqldata16d,sqldata17d,sqldata5d,sqldata12d,sqldata13d,sqldata3d,sqldata7d
+ s $zt="%0Gerr"
  n %sqltime s %sqltime=$zh
  s sqldata18d=$zu(115,2)
  s sqldata19d=0,sqldata20d=""
@@ -678,20 +1260,20 @@ zPreviewImportDRGCoreAlgorithm(jsonObj)
  s sqldata11d=$zu(28,sqldata4d,7)
  k sqldata29d
  ; asl MOD# 3
- d %0CmBMod
+ d %0GmBMod
  s sqldata30d="",sqldata31d="",sqldata33d=1
-%0CmCk1 f  s sqldata33d=$bitfind(sqldata31d,1,sqldata33d+1) i sqldata33d { s existingID=sqldata32d+sqldata33d-1 q } s sqldata30d=$o(sqldata29d(sqldata30d),1,sqldata31d) q:sqldata30d=""  s sqldata32d=sqldata30d-1*64000
- i sqldata30d="" g %0CmCdun
+%0GmCk1 f  s sqldata33d=$bitfind(sqldata31d,1,sqldata33d+1) i sqldata33d { s existingID=sqldata32d+sqldata33d-1 q } s sqldata30d=$o(sqldata29d(sqldata30d),1,sqldata31d) q:sqldata30d=""  s sqldata32d=sqldata30d-1*64000
+ i sqldata30d="" g %0GmCdun
  s sqldata36d="" i $d(^User.HBDRGCoreAlgorithmDataD(existingID),sqldata36d)
- e  g %0CmCk1
+ e  g %0GmCk1
  S sqldata5d=$lg(sqldata36d,13)
  s sqldata12d=$zu(28,sqldata5d,7)
- g:'(sqldata12d=sqldata13d) %0CmCk1
- g:'(sqldata12d'=" ") %0CmCk1
+ g:'(sqldata12d=sqldata13d) %0GmCk1
+ g:'(sqldata12d'=" ") %0GmCk1
  S sqldata3d=$lg(sqldata36d,2),sqldata7d=$lg(sqldata36d,16)
  s sqldata10d=$zu(28,sqldata3d,7)
  s sqldata14d=$zu(28,sqldata7d,7)
- goto:sqldata18d'=1 %0CmCuncommitted
+ goto:sqldata18d'=1 %0GmCuncommitted
  if sqldata18d=1 {
  	lock +^User.HBDRGCoreAlgorithmDataD($p(existingID,"||",1))#"S":$zu(115,4)
  	if $t { set sqldata20d=$name(^User.HBDRGCoreAlgorithmDataD($p(existingID,"||",1)))_"#""SI""",sqldata19d=1 }
@@ -699,25 +1281,25 @@ zPreviewImportDRGCoreAlgorithm(jsonObj)
  }
  ; asl MOD# 4
  i existingID'="" s sqldata39d="" i $d(^User.HBDRGCoreAlgorithmDataD(existingID),sqldata39d)
- e  g %0CmDdun
+ e  g %0GmDdun
  S sqldata3d=$lg(sqldata39d,2)
  s sqldata10d=$zu(28,sqldata3d,7)
- g:'(sqldata10d=sqldata11d) %0CmDdun
- g:'(sqldata10d'=" ") %0CmDdun
+ g:'(sqldata10d=sqldata11d) %0GmDdun
+ g:'(sqldata10d'=" ") %0GmDdun
  S sqldata5d=$lg(sqldata39d,13)
  s sqldata12d=$zu(28,sqldata5d,7)
- g:'(sqldata12d=sqldata13d) %0CmDdun
- g:'(sqldata12d'=" ") %0CmDdun
+ g:'(sqldata12d=sqldata13d) %0GmDdun
+ g:'(sqldata12d'=" ") %0GmDdun
  S sqldata7d=$lg(sqldata39d,16)
  s sqldata14d=$zu(28,sqldata7d,7)
- g:'(sqldata14d=sqldata15d) %0CmDdun
-%0CmCuncommitted ;
- s SQLCODE=0 g %0Cc
-%0CmDdun if $g(sqldata18d)=1 { if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }}
- g %0CmCk1
-%0CmCdun 
-%0CmAdun 
-%0Cc set %ROWCOUNT='SQLCODE
+ g:'(sqldata14d=sqldata15d) %0GmDdun
+%0GmCuncommitted ;
+ s SQLCODE=0 g %0Gc
+%0GmDdun if $g(sqldata18d)=1 { if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }}
+ g %0GmCk1
+%0GmCdun 
+%0GmAdun 
+%0Gc set %ROWCOUNT='SQLCODE
  if $g(sqldata18d)=1 {
  	if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }
  }
@@ -728,27 +1310,27 @@ zPreviewImportDRGCoreAlgorithm(jsonObj)
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"X15ePRrlPG+7nGoxKQaCA9rWmYI=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
  q
-%0Cerr s $zt=""
+%0Gerr s $zt=""
  d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- g %0Cc
-%0CmBMod ; asl MOD# 2
+ g %0Gc
+%0GmBMod ; asl MOD# 2
  s sqldata10d=sqldata11d
  s sqldata14d=sqldata15d
- i sqldata10d="" g %0CmBdun
- i '(sqldata10d'=" ") g %0CmBdun
+ i sqldata10d="" g %0GmBdun
+ i '(sqldata10d'=" ") g %0GmBdun
  s sqldata16d=""
-%0CmBk1 s sqldata16d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d))
- i sqldata16d="" g %0CmBdun
+%0GmBk1 s sqldata16d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d))
+ i sqldata16d="" g %0GmBdun
  s sqldata17d=""
-%0CmBk2 s sqldata17d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d,sqldata17d))
- i sqldata17d="" g %0CmBk1
- i sqldata14d="" g %0CmBk2
+%0GmBk2 s sqldata17d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d,sqldata17d))
+ i sqldata17d="" g %0GmBk1
+ i sqldata14d="" g %0GmBk2
  s existingID=""
-%0CmBk3 s existingID=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d,sqldata17d,sqldata14d,existingID))
- i existingID="" g %0CmBk2
+%0GmBk3 s existingID=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d,sqldata17d,sqldata14d,existingID))
+ i existingID="" g %0GmBk2
  s $bit(sqldata29d(existingID\64000+1),existingID#64000+1)=1
- g %0CmBk3
-%0CmBdun q
+ g %0GmBk3
+%0GmBdun q
 zQueryDIPCoreAlgorithm(jsonObj)
 	new (jsonObj)
 	set resultObj={"errorCode":"0","errorMessage":"","result":{"rows":[],"total":0}}

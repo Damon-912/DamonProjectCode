@@ -1,7 +1,7 @@
 ROUTINE src.DRG.GroupDevice.1 [Type=INT,Generated]
  ;src.DRG.GroupDevice.1
- ;Generated for class src.DRG.GroupDevice.  Do NOT edit. 04/17/2026 11:50:33AM
- ;;426D6271;src.DRG.GroupDevice
+ ;Generated for class src.DRG.GroupDevice.  Do NOT edit. 04/27/2026 12:40:18AM
+ ;;6F6D692F;src.DRG.GroupDevice
  ;
 zCheckGroupQY(jsonObj)
 	new (jsonObj)
@@ -587,6 +587,79 @@ zDevice(jsonObj)
  s $bit(sqldata32d(sqldata18d\64000+1),sqldata18d#64000+1)=1
  g %0KmBk3
 %0KmBdun q
+zDeviceFeeWarning(jsonObj)
+	new (jsonObj)
+	set params = ##class(%Library.DynamicArray).%New()	
+	try
+	{
+        // 1. 初始化返回对象（标准化结构）
+        set resultObj = ..SetSuccessResult("0","")
+        // 2. 参数合法性校验（核心前置检查）
+        if (jsonObj = "") || (jsonObj.params = "") 
+        {
+            set resultObj = ..SetErrorResult("-1", "入参异常：缺少params参数或参数为空")
+            quit 
+        }         
+        //先获取分组结果
+        set joDRGObj=..Device(jsonObj)
+        if (joDRGObj.errorCode '=0)
+        {
+            set resultObj = ..SetErrorResult("-1", "DRG分组失败："_joDRGObj.errorMessage)
+            quit   
+	    }
+	    else
+	    {
+		    set params = jsonObj.params.%Get(0)
+		    //取DRG信息
+            set drgParams = joDRGObj.result.drgInfo.%Get(0)
+            set drgCode = drgParams.code  		    
+		    set drgDesc = drgParams.desc  
+		    //组织入参调用02010107费用预警接口服务
+		    set jsonObj.params.%Get(0).hisAdmId=params.hisAdmId
+		    set jsonObj.params.%Get(0).patientName=params.patientName
+		    set jsonObj.params.%Get(0).deptCode=params.deptCode
+		    set jsonObj.params.%Get(0).deptName=params.deptName
+		    set jsonObj.params.%Get(0).doctorCode=params.doctorCode
+		    set jsonObj.params.%Get(0).doctorName=params.doctorName
+		    set jsonObj.params.%Get(0).totalFee=params.totalFee
+		    set jsonObj.params.%Get(0).drgCode=drgCode
+		    set jsonObj.params.%Get(0).drgName=drgDesc
+		    set jsonObj.params.%Get(0).drgPayStandard=params.drgPayStandard
+		    set jsonObj.params.%Get(0).medicalRecordDr=params.medicalRecordDr
+		    set jsonObj.params.%Get(0).insuranceFee=params.insuranceFee
+		    set jsonObj.params.%Get(0).fixmedinsCode=params.fixmedinsCode		    
+		    set jsonObj.params.%Get(0).fixmedinsName=params.fixmedinsName
+		    set jsonObj.params.%Get(0).ruleType=params.ruleType	
+		    set joRtn=##class(src.DRG.Warning).AddWarningRecord(jsonObj)	
+		    if (joRtn.errorCode '=0) 
+		    {
+                set resultObj = ..SetErrorResult("-1", "DRG分组结果费用预警失败："_joRtn.errorMessage)
+                quit   
+			}   
+			else
+			{
+			    set joWarningFee= []
+			    set joWarningFee= joRtn.result
+			    set joDRGObj.result.feeWarningInfo=joWarningFee		
+            	set resultObj={}
+	            set resultObj.errorCode="0"
+	            set resultObj.errorMessage=""
+	            set resultObj.result=joDRGObj			    	    
+			}	    		    		    
+		}				
+	}
+    catch(e)
+    {
+        set status = e.AsStatus()
+        set errorCode = $piece(##class(%SYSTEM.Status).GetErrorCodes(status), ",")
+        set errorMsg = $replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"), "^", " ")
+        set errorInfo = "DRG分组结果费用预警异常：类=" _ $ClassName() _ "，错误：" _ errorMsg
+        // 记录错误日志
+        set errorLogID = ##class(src.Interface.Message).InsErrRecord("02010035", errorInfo, errorMsg)
+        set resultObj.errorCode = "-99"
+        set resultObj.errorMessage = "DRG分组结果费用预警异常（日志ID："_errorLogID_"）："_errorMsg
+    }
+    quit resultObj
 zGetComplicationDesc(num)
     set descripts = $select(
         num = "1": "表示伴有严重并发症与合并症",
@@ -600,6 +673,8 @@ zGetComplicationDesc(num)
         1: "其他数字表示其他需单独分组的情况"
     )
     return descripts
+	Quit
+zGetDIPGroupScore(jsonObj)
 	Quit
 zGroupADRG(jsonObj)
      //ADRG分组顺序

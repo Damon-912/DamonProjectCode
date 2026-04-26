@@ -40,29 +40,32 @@ Property MedinsLv As %String [ Required, SqlColumnNumber = 11, SqlFieldName = Me
 
 Index Index On (PrincipalDiagnosis, MajorProcedure, ProvinceDr, CityDr, MedinsLv);
 
+/// 平均费用(average cost)
+Property AverageCost As %String [ SqlColumnNumber = 12, SqlFieldName = AverageCost ];
+
 /// 基准分值(score value)
-Property ScoreValue As %String [ Required, SqlColumnNumber = 12, SqlFieldName = ScoreValue ];
+Property ScoreValue As %String [ Required, SqlColumnNumber = 13, SqlFieldName = ScoreValue ];
 
 /// 调节系数(adjustment coefficient)
-Property AdjustCoefficient As %String [ SqlColumnNumber = 13, SqlFieldName = AdjustCoefficient ];
+Property AdjustCoefficient As %String [ SqlColumnNumber = 14, SqlFieldName = AdjustCoefficient ];
 
 /// 一级调节系数(Primary adjustment coefficient)
-Property PrimaryAdjustCoefficient As %String [ SqlColumnNumber = 14, SqlFieldName = PrimaryAdjustCoefficient ];
+Property PrimaryAdjustCoefficient As %String [ SqlColumnNumber = 15, SqlFieldName = PrimaryAdjustCoefficient ];
 
 /// 二级调节系数(Secondary adjustment coefficient)
-Property SecondaryAdjustCoefficient As %String [ SqlColumnNumber = 15, SqlFieldName = SecondaryAdjustCoefficient ];
+Property SecondaryAdjustCoefficient As %String [ SqlColumnNumber = 16, SqlFieldName = SecondaryAdjustCoefficient ];
 
 /// 三级调节系数(Third adjustment coefficient)
-Property ThirdAdjustCoefficient As %String [ SqlColumnNumber = 16, SqlFieldName = ThirdAdjustCoefficient ];
+Property ThirdAdjustCoefficient As %String [ SqlColumnNumber = 17, SqlFieldName = ThirdAdjustCoefficient ];
 
 /// 创建日期 系统自动产生
-Property CreateDate As %Date [ Required, SqlColumnNumber = 17, SqlFieldName = CreateDate ];
+Property CreateDate As %Date [ Required, SqlColumnNumber = 18, SqlFieldName = CreateDate ];
 
 /// 创建时间 系统自动产生
-Property CreateTime As %Time [ Required, SqlColumnNumber = 18, SqlFieldName = CreateTime ];
+Property CreateTime As %Time [ Required, SqlColumnNumber = 19, SqlFieldName = CreateTime ];
 
 /// 创建人员ID 指向HB_User表
-Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 19, SqlFieldName = CreateUser_Dr ];
+Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 20, SqlFieldName = CreateUser_Dr ];
 
 Storage Default
 {
@@ -124,12 +127,15 @@ Storage Default
 <Value name="19">
 <Value>CreateUserDr</Value>
 </Value>
+<Value name="20">
+<Value>AverageCost</Value>
+</Value>
 </Data>
-<DataLocation>^User.HBDIPCoreAlgorithmDataD</DataLocation>
+<DataLocation>^HBDIPCoreAlgorithmDataD</DataLocation>
 <DefaultData>HBDIPCoreAlgorithmDataDefaultData</DefaultData>
-<IdLocation>^User.HBDIPCoreAlgorithmDataD</IdLocation>
-<IndexLocation>^User.HBDIPCoreAlgorithmDataI</IndexLocation>
-<StreamLocation>^User.HBDIPCoreAlgorithmDataS</StreamLocation>
+<IdLocation>^HBDIPCoreAlgorithmDataD</IdLocation>
+<IndexLocation>^HBDIPCoreAlgorithmDataI</IndexLocation>
+<StreamLocation>^HBDIPCoreAlgorithmDataS</StreamLocation>
 <Type>%Storage.Persistent</Type>
 }
 

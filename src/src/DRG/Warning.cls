@@ -693,8 +693,8 @@ ClassMethod AddWarningRecord(jsonObj As %Library.DynamicObject) As %Library.Dyna
         set doctorName = params.doctorName
         set totalFee = params.totalFee
         set drgCode = params.drgCode
-        set drgPayStandard = params.drgPayStandard
         set drgName = params.drgName
+        set drgPayStandard = params.drgPayStandard
         set medicalRecordDr = params.medicalRecordDr
         set insuranceFee = params.insuranceFee
         set fixmedinsCode = params.fixmedinsCode
@@ -748,7 +748,7 @@ ClassMethod AddWarningRecord(jsonObj As %Library.DynamicObject) As %Library.Dyna
         if (drgPayStandard '= 0) && (drgPayStandard '= "") 
         {
             set diffAmount = totalFee - drgPayStandard
-            set diffRate = $s(drgPayStandard '= 0:(diffAmount / drgPayStandard * 100), 1:0)
+            set diffRate = diffAmount / drgPayStandard * 100
         } 
         else 
         {
@@ -779,12 +779,14 @@ ClassMethod AddWarningRecord(jsonObj As %Library.DynamicObject) As %Library.Dyna
                 set ruleDrgCode = rs.DRGCode
                 
                 // DRG范围检查
-                if ((ruleDrgCode '= "") && (ruleDrgCode '= drgCode)) {
+                if (ruleDrgCode '= "") && (ruleDrgCode '= drgCode)
+                {
                     continue
                 }
                 
                 // ruleType过滤
-                if (ruleType '= "") && (ruleTypeVal '= ruleType) {
+                if (ruleType '= "") && (ruleTypeVal '= ruleType) 
+                {
                     continue
                 }
                 
@@ -795,7 +797,13 @@ ClassMethod AddWarningRecord(jsonObj As %Library.DynamicObject) As %Library.Dyna
                     // 创建预警记录
                     set wr = ##class(User.BSDRGWarningRecord).%New()
                     set wr.WarningNo = ..GenerateWarningNo()
-                    set wr.RuleDr = ruleId
+                    // 获取规则对象引用（RuleDr是对象类型，不能直接赋值ID）
+                    if (ruleId '= "") {
+                        set ruleObj = ##class(User.BSDRGWarningRule).%OpenId(ruleId)
+                        if ($IsObject(ruleObj)) {
+                            set wr.RuleDr = ruleObj
+                        }
+                    }
                     set wr.RuleCode = ruleCode
                     set wr.RuleName = ruleName
                     set wr.WarningType = ruleTypeVal
@@ -903,23 +911,41 @@ ClassMethod GenerateWarningMessage(ruleName As %String, totalFee As %Numeric, dr
 {
     new (ruleName, totalFee, drgPayStandard, diffAmount, diffRate)
     
-    set msg = ruleName _ "：患者费用总额" _ $fn(totalFee,2) _ "元"
+    // 处理空值
+    if (totalFee = "") set totalFee = 0
+    if (drgPayStandard = "") set drgPayStandard = 0
+    if (diffAmount = "") set diffAmount = 0
+    if (diffRate = "") set diffRate = 0
     
-    if (drgPayStandard '= "") {
-        set msg = msg _ "，DRG支付标准" _ $fn(drgPayStandard,2) _ "元"
+    // 格式化数值
+    set totalFeeStr = "" _ +totalFee
+    set drgPayStandardStr = "" _ +drgPayStandard
+    set diffAmountStr = "" _ +diffAmount
+    set diffRateStr = "" _ +diffRate
+    
+    // 保留2位小数
+    set totalFeeStr = $fn(+totalFeeStr, "", 2)
+    set drgPayStandardStr = $fn(+drgPayStandardStr, "", 2)
+    set diffAmountStr = $fn(+diffAmountStr, "", 2)
+    set diffRateStr = $fn(+diffRateStr, "", 2)
+    
+    set msg = ruleName _ "：患者费用总额" _ totalFeeStr _ "元"
+    
+    if (+drgPayStandard > 0) {
+        set msg = msg _ "，DRG支付标准" _ drgPayStandardStr _ "元"
     }
     
-    if (diffAmount > 0) {
-        set msg = msg _ "，超出" _ $fn(diffAmount,2) _ "元"
-    } elseif (diffAmount < 0) {
-        set msg = msg _ "，低于" _ $fn(-diffAmount,2) _ "元"
+    if (+diffAmount > 0) {
+        set msg = msg _ "，超出" _ diffAmountStr _ "元"
+    } elseif (+diffAmount < 0) {
+        set msg = msg _ "，低于" _ (-diffAmountStr) _ "元"
     }
     
-    if (diffRate '= 0) {
-        if (diffRate > 0) {
-            set msg = msg _ "（+" _ $fn(diffRate,2) _ "%）"
+    if (+diffRate '= 0) {
+        if (+diffRate > 0) {
+            set msg = msg _ "（+" _ diffRateStr _ "%）"
         } else {
-            set msg = msg _ "（" _ $fn(diffRate,2) _ "%）"
+            set msg = msg _ "（" _ diffRateStr _ "%）"
         }
     }
     

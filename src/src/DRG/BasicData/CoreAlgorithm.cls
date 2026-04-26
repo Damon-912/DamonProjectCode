@@ -3,6 +3,18 @@ Import SQLUSER
 Class src.DRG.BasicData.CoreAlgorithm Extends (%RegisteredObject, %XML.Adaptor) [ Not ProcedureBlock ]
 {
 
+/// 通用方法根据起始和截至时间判断有效/失效
+ClassMethod IsRecordActive(startDate As %Date, stopDate As %Date) As %Boolean
+{
+    Set currentDate = +$Horolog
+    
+    // 处理空值：startDate为空视为最小日期，stopDate为空视为最大日期
+    Set effectiveStart = $Select(startDate="":0, 1:startDate)  // 0 = 1840-12-31
+    Set effectiveEnd = $Select(stopDate="":99999, 1:stopDate)  // 99999 = 未来日期
+        
+    Quit (effectiveStart <= currentDate) && (effectiveEnd >= currentDate)
+}
+
 /// Creator:     CM
 /// CreatDate:   2026-01-01
 /// Description: 保存DRG核心算法配置
@@ -335,18 +347,6 @@ ClassMethod DeleteDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
 	quit resultObj
 }
 
-/// 通用方法根据起始和截至时间判断有效/失效
-ClassMethod IsRecordActive(startDate As %Date, stopDate As %Date) As %Boolean
-{
-    Set currentDate = +$Horolog
-    
-    // 处理空值：startDate为空视为最小日期，stopDate为空视为最大日期
-    Set effectiveStart = $Select(startDate="":0, 1:startDate)  // 0 = 1840-12-31
-    Set effectiveEnd = $Select(stopDate="":99999, 1:stopDate)  // 99999 = 未来日期
-        
-    Quit (effectiveStart <= currentDate) && (effectiveEnd >= currentDate)
-}
-
 /// Creator:     System
 /// CreatDate:   2026-04-17
 /// Description: 下载DRG核心算法配置导入模板
@@ -361,8 +361,8 @@ ClassMethod DownloadDRGCoreAlgorithmTemplate(jsonObj As %Library.DynamicObject) 
     try {
         // 生成CSV内容
         set csvContent = "DRGCode,DRGDesc,Points,PipValue,DGDOV,PayStandard"_$c(13,10)
-        set csvContent = csvContent_"AA01,急性心肌梗死,120.50,1.2,0.95,15000.00"_$c(13,10)
-        set csvContent = csvContent_"BB02,肺炎伴并发症,85.30,1.0,1.05,9800.00"_$c(13,10)
+        set csvContent = csvContent_"AA01,NULL,120.50,1.2,0.95,15000.00"_$c(13,10)
+        set csvContent = csvContent_"BB02,NULL,85.30,1.0,1.05,9800.00"_$c(13,10)
         
         // Base64编码
         set base64Data = ##class(%SYSTEM.Encryption).Base64Encode(csvContent)
@@ -519,38 +519,38 @@ ClassMethod PreviewImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
                 do previewList.%Push(previewObj)
                 continue
             }
-            elseif (points="")||(##class(%SYSTEM.Util).IsNumeric(points)=0)
+            elseif (points="")
             {
                 set previewObj.status="invalid"
                 set previewObj.statusDesc="错误"
-                set previewObj.errorMsg="基准点数必须是数值"
+                set previewObj.errorMsg="基准点数不能为空"
                 set invalidCount=invalidCount+1
                 do previewList.%Push(previewObj)
                 continue
             }
-            elseif (pipValue="")||(##class(%SYSTEM.Util).IsNumeric(pipValue)=0)
+            elseif (pipValue="")
             {
                 set previewObj.status="invalid"
                 set previewObj.statusDesc="错误"
-                set previewObj.errorMsg="预估点值必须是数值"
+                set previewObj.errorMsg="预估点值不能为空"
                 set invalidCount=invalidCount+1
                 do previewList.%Push(previewObj)
                 continue
             }
-            elseif (dgdov="")||(##class(%SYSTEM.Util).IsNumeric(dgdov)=0)
+            elseif (dgdov="")
             {
                 set previewObj.status="invalid"
                 set previewObj.statusDesc="错误"
-                set previewObj.errorMsg="病组差异系数必须是数值"
+                set previewObj.errorMsg="病组差异系数不能为空"
                 set invalidCount=invalidCount+1
                 do previewList.%Push(previewObj)
                 continue
             }
-            elseif (payStandard="")||(##class(%SYSTEM.Util).IsNumeric(payStandard)=0)
+            elseif (payStandard="")
             {
                 set previewObj.status="invalid"
                 set previewObj.statusDesc="错误"
-                set previewObj.errorMsg="支付标准必须是数值"
+                set previewObj.errorMsg="支付标准不能为空"
                 set invalidCount=invalidCount+1
                 do previewList.%Push(previewObj)
                 continue
@@ -1112,8 +1112,8 @@ ClassMethod DownloadDIPCoreAlgorithmTemplate(jsonObj As %Library.DynamicObject) 
         // 生成CSV内容 - DIP核心算法模板
         // 列：主要诊断代码,主要诊断名称,主要手术代码,主要手术名称,相关手术代码,相关手术名称,基准分值,调节系数,一级调节系数,二级调节系数,三级调节系数
         set csvContent = "PrincipalDiagnosis,PrincipalDiagnosisName,MajorProcedure,MajorProcedureName,SecondaryProcedure,SecondaryProcedureName,ScoreValue,AdjustCoefficient,PrimaryAdjustCoefficient,SecondaryAdjustCoefficient,ThirdAdjustCoefficient"_$c(13,10)
-        set csvContent = csvContent_"A01.01,急性阑尾炎,31.1,阑尾切除术,,,,100.00,1.0,1.1,1.2,1.3"_$c(13,10)
-        set csvContent = csvContent_"K25.0,胃溃疡,43.7,胃大部分切除术,45.6,肠粘连松解术,150.50,1.1,1.2,1.3,1.5"_$c(13,10)
+        set csvContent = csvContent_"A01.01,NULL,31.1,NULL,,,,100.00,1.0,1.1,1.2,1.3"_$c(13,10)
+        set csvContent = csvContent_"K25.0,NULL,43.7,NULL,45.6,NULL,150.50,1.1,1.2,1.3,1.5"_$c(13,10)
         
         // Base64编码
         set base64Data = ##class(%SYSTEM.Encryption).Base64Encode(csvContent)
@@ -1147,6 +1147,10 @@ ClassMethod PreviewImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
     set totalCount=0,validCount=0,invalidCount=0,duplicateCount=0
     set previewList=[]
     
+    // 预览数量限制，避免JSON过大导致MAXSTRING错误
+    set previewLimit=100
+    set previewCount=0
+    
     try 
     {
         set params=jsonObj.params.%Get(0)
@@ -1178,13 +1182,17 @@ ClassMethod PreviewImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
             quit
         }
         
-        // Base64解码
+        // Base64解码 - 与PreviewImportDRGCoreAlgorithm完全相同的逻辑
         set csvContent = ""
+        
+        // 方法1: 使用$zcvt函数直接解码Base64
         try {
             set csvContent = $zcvt(fileData, "I", "BASE64")
         } catch e1 {
+            // 不输出调试信息
         }
         
+        // 如果方法1失败或内容为空，尝试方法2
         if csvContent="" {
             try {
                 set binaryData = ##class(%SYSTEM.Encryption).Base64Decode(fileData)
@@ -1196,6 +1204,7 @@ ClassMethod PreviewImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
                     set csvContent = binaryData
                 }
             } catch e2 {
+                // 不输出调试信息
             }
         }
         
@@ -1223,6 +1232,12 @@ ClassMethod PreviewImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
             
             set totalCount=totalCount+1
             set rowNum=lineNum-1
+            
+            // 预览数量限制：超过限制后只统计，不加入预览列表
+            if previewCount >= previewLimit
+            {
+                quit
+            }
             
             // 解析CSV列（11列）
             set errorMsg=""
@@ -1259,6 +1274,8 @@ ClassMethod PreviewImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
                 set invalidCount=invalidCount+1
                 set previewObj.status="invalid"
                 set previewObj.statusDesc="解析错误"
+                do previewList.%Push(previewObj)
+                continue
             } 		
             elseif principalDiagnosis="" 
             {
@@ -1278,18 +1295,14 @@ ClassMethod PreviewImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
                 do previewList.%Push(previewObj)
                 continue
             }
-            elseif (scoreValue="")||(scoreValue'="")&&($length(scoreValue,".")>2)
+            elseif (scoreValue="")
             {
-                set numVal=$number(scoreValue,0)
-                if numVal=""
-                {
-                    set previewObj.status="invalid"
-                    set previewObj.statusDesc="错误"
-                    set previewObj.errorMsg="基准分值必须是数值"
-                    set invalidCount=invalidCount+1
-                    do previewList.%Push(previewObj)
-                    continue
-                }
+                set previewObj.status="invalid"
+                set previewObj.statusDesc="错误"
+                set previewObj.errorMsg="基准分值不能为空"
+                set invalidCount=invalidCount+1
+                do previewList.%Push(previewObj)
+                continue
             }
             
             // 检查是否已存在（主要诊断代码+省+市+机构等级）
@@ -1312,6 +1325,7 @@ ClassMethod PreviewImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
             }
             
             do previewList.%Push(previewObj)
+            set previewCount=previewCount+1
                 
         }
         
@@ -1387,13 +1401,17 @@ ClassMethod ConfirmImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
         }
         set:createUserDr="" createUserDr="158"
         
-        // Base64解码
+        // Base64解码 - 使用与PreviewImportDRGCoreAlgorithm完全相同的逻辑
         set csvContent = ""
+        
+        // 方法1: 使用$zcvt函数直接解码Base64
         try {
             set csvContent = $zcvt(fileData, "I", "BASE64")
         } catch e1 {
+            // 不输出调试信息
         }
         
+        // 如果方法1失败或内容为空，尝试方法2
         if csvContent="" {
             try {
                 set binaryData = ##class(%SYSTEM.Encryption).Base64Decode(fileData)
@@ -1405,6 +1423,7 @@ ClassMethod ConfirmImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
                     set csvContent = binaryData
                 }
             } catch e2 {
+                // 不输出调试信息
             }
         }
         
@@ -1534,7 +1553,7 @@ ClassMethod ConfirmImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
     } catch(e) {
         set status=e.AsStatus()
         set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
-        set errorInfo="导入DIP核心算法配置出现问题:w ##class("_$ClassName_").ConfirmImportDIPCoreAlgorithm("_jsonObj.%ToJSON()")"
+        set errorInfo="导入DIP核心算法配置出现问题:w ##class("_$ClassName()_").ConfirmImportDIPCoreAlgorithm("_jsonObj.%ToJSON()_")"
         set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
         set resultObj.errorCode="04000007"
         set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage

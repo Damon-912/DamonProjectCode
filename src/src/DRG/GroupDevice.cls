@@ -1426,6 +1426,267 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
     quit resultObj
 }
 
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: DRG分组器+费用预警
+/// code:		 
+/// Input:{"params":[{"":""}]}
+/// Debug
+ClassMethod DeviceFeeWarning(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set params = ##class(%DynamicArray).%New()	
+	try
+	{
+        // 1. 初始化返回对象（标准化结构）
+        set resultObj = ..SetSuccessResult("0","")
+        
+        // 2. 参数合法性校验（核心前置检查）
+        if (jsonObj = "") || (jsonObj.params = "") 
+        {
+            set resultObj = ..SetErrorResult("-1", "入参异常：缺少params参数或参数为空")
+            quit 
+        }         
+        
+        //先获取分组结果
+        set joDRGObj=..Device(jsonObj)
+        if (joDRGObj.errorCode '=0)
+        {
+            set resultObj = ..SetErrorResult("-1", "DRG分组失败："_joDRGObj.errorMessage)
+            quit   
+	    }
+	    else
+	    {
+		    set params = jsonObj.params.%Get(0)
+		    //取DRG信息
+            set drgParams = joDRGObj.result.drgInfo.%Get(0)
+            set drgCode = drgParams.code  		    
+		    set drgDesc = drgParams.desc  
+		    
+		    //组织入参调用02010107费用预警接口服务
+		    set jsonObj.params.%Get(0).hisAdmId=params.hisAdmId
+		    set jsonObj.params.%Get(0).patientName=params.patientName
+		    set jsonObj.params.%Get(0).deptCode=params.deptCode
+		    set jsonObj.params.%Get(0).deptName=params.deptName
+		    set jsonObj.params.%Get(0).doctorCode=params.doctorCode
+		    set jsonObj.params.%Get(0).doctorName=params.doctorName
+		    set jsonObj.params.%Get(0).totalFee=params.totalFee
+		    set jsonObj.params.%Get(0).drgCode=drgCode
+		    set jsonObj.params.%Get(0).drgName=drgDesc
+		    set jsonObj.params.%Get(0).drgPayStandard=params.drgPayStandard
+		    set jsonObj.params.%Get(0).medicalRecordDr=params.medicalRecordDr
+		    set jsonObj.params.%Get(0).insuranceFee=params.insuranceFee
+		    set jsonObj.params.%Get(0).fixmedinsCode=params.fixmedinsCode		    
+		    set jsonObj.params.%Get(0).fixmedinsName=params.fixmedinsName
+		    set jsonObj.params.%Get(0).ruleType=params.ruleType	
+		    		    
+		    set joRtn=##class(src.DRG.Warning).AddWarningRecord(jsonObj)	
+		    if (joRtn.errorCode '=0) 
+		    {
+                set resultObj = ..SetErrorResult("-1", "DRG分组结果费用预警失败："_joRtn.errorMessage)
+                quit   
+			}   
+			else
+			{
+			    set joWarningFee= []
+			    set joWarningFee= joRtn.result
+			    set joDRGObj.result.feeWarningInfo=joWarningFee		
+			    
+            	set resultObj={}
+	            set resultObj.errorCode="0"
+	            set resultObj.errorMessage=""
+	            set resultObj.result=joDRGObj			    	    
+			}	    		    		    
+		}				
+	}
+    catch(e)
+    {
+        set status = e.AsStatus()
+        set errorCode = $piece(##class(%SYSTEM.Status).GetErrorCodes(status), ",")
+        set errorMsg = $replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"), "^", " ")
+        set errorInfo = "DRG分组结果费用预警异常：类=" _ $ClassName() _ "，错误：" _ errorMsg
+        
+        // 记录错误日志
+        set errorLogID = ##class(src.Interface.Message).InsErrRecord("02010035", errorInfo, errorMsg)
+        set resultObj.errorCode = "-99"
+        set resultObj.errorMessage = "DRG分组结果费用预警异常（日志ID："_errorLogID_"）："_errorMsg
+    }
+    
+    quit resultObj
+}
+
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: DIP分组分值查询 - 通过主诊断和主手术模糊匹配DIP算法配置表，支持行政区划代码和医疗机构关联省市筛选
+/// code:		 02010003
+/// Input:{"params":[{"mainDiagnosisCode":"","mainOperationCode":"","mdtrtArea":"","fixmedinsCode":"","fixmedinsName":""}]}
+/// Debug
+ClassMethod GetDIPGroupScore(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+	new (jsonObj)
+	set params = ##class(%DynamicArray).%New()
+	try
+	{
+	    // 1. 初始化返回对象
+	    set resultObj = ..SetSuccessResult("0","")
+	    
+	    // 2. 参数合法性校验
+	    if (jsonObj = "") || (jsonObj.params = "")
+	    {
+	        set resultObj = ..SetErrorResult("-1", "入参异常：缺少params参数或参数为空")
+	        quit
+	    }
+	    
+	    // 3. 提取入参
+	    set params = jsonObj.params.%Get(0)
+	    set mainDiagCode = params.mainDiagnosisCode   // 主诊断代码（必填）
+	    set mainOpCode = params.mainOperationCode     // 主手术代码（选填）
+	    set mdtrtArea = params.mdtrtArea              // 行政区划代码（选填）
+	    set fixmedinsCode = params.fixmedinsCode      // 医疗机构代码（选填）
+	    set fixmedinsName = params.fixmedinsName      // 医疗机构名称（选填）
+	    
+	    // 4. 必填项校验
+	    if (mainDiagCode = "")
+	    {
+	        set resultObj = ..SetErrorResult("-1", "主诊断不能为空！")
+	        quit
+	    }
+	    
+	    // 5. 行政区划代码和医疗机构代码/名称不能同时为空
+	    if (mdtrtArea = "") && (fixmedinsCode = "") && (fixmedinsName = "")
+	    {
+	        set resultObj = ..SetErrorResult("-1", "行政区划代码和医疗机构代码/名称不能同时为空！")
+	        quit
+	    }
+	    
+	    // 6. 医疗机构关联查询：通过CB_Hospital获取省市ID
+	    set (provID, cityID) = ""
+	    if (fixmedinsCode '= "")
+	    {
+	        // 优先使用医疗机构代码精确查询
+	        &sql(SELECT ProvID_Dr, CityID_Dr INTO :provID, :cityID FROM CB_Hospital WHERE OrganizationCode = :fixmedinsCode)
+	        if (SQLCODE '= 0) || (provID = "")
+	        {
+	            set resultObj = ..SetErrorResult("-1", "未找到对应医疗机构信息！")
+	            quit
+	        }
+	    }
+	    elseif (fixmedinsName '= "")
+	    {
+	        // 医疗机构代码为空时，通过名称模糊查询（取第一条）
+	        &sql(SELECT TOP 1 ProvID_Dr, CityID_Dr INTO :provID, :cityID FROM CB_Hospital WHERE Descripts LIKE '%'_:fixmedinsName_'%')
+	        if (SQLCODE '= 0) || (provID = "")
+	        {
+	            set resultObj = ..SetErrorResult("-1", "未找到对应医疗机构信息！")
+	            quit
+	        }
+	    }
+	    
+	    // 7. 构建动态SQL查询DIP算法配置数据
+	    set sql = " SELECT ID, PrincipalDiagnosis, PrincipalDiagnosisName,"
+	            _ " MajorProcedure, MajorProcedureName,"
+	            _ " SecondaryProcedure, SecondaryProcedureName,"
+	            _ " Province_Dr AS ProvinceID, Province_Dr->Descripts AS ProvinceDesc,"
+	            _ " City_Dr AS CityID, City_Dr->Descripts AS CityDesc,"
+	            _ " MdtrtArea, MedinsLv,"
+	            _ " ScoreValue, AdjustCoefficient,"
+	            _ " PrimaryAdjustCoefficient, SecondaryAdjustCoefficient, ThirdAdjustCoefficient,"
+	            _ " AverageCost"
+	            _ " FROM HB_DIPCoreAlgorithmData WHERE 1=1"
+	    
+	    set sqlParams = []
+	    
+	    // 主诊断 - 前置模糊匹配（走索引）
+	    set sql = sql _ " AND PrincipalDiagnosis LIKE ?"
+	    do sqlParams.%Push(mainDiagCode_"%")
+	    
+	    // 主手术 - 选填，前置模糊匹配
+	    if (mainOpCode '= "")
+	    {
+	        set sql = sql _ " AND MajorProcedure LIKE ?"
+	        do sqlParams.%Push(mainOpCode_"%")
+	    }
+	    
+	    // 行政区划代码 - 等值匹配
+	    if (mdtrtArea '= "")
+	    {
+	        set sql = sql _ " AND MdtrtArea = ?"
+	        do sqlParams.%Push(mdtrtArea)
+	    }
+	    
+	    // 省市条件 - 通过医疗机构关联获取
+	    if (provID '= "")
+	    {
+	        set sql = sql _ " AND Province_Dr = ?"
+	        do sqlParams.%Push(provID)
+	    }
+	    if (cityID '= "")
+	    {
+	        set sql = sql _ " AND City_Dr = ?"
+	        do sqlParams.%Push(cityID)
+	    }
+	    
+	    set sql = sql _ " ORDER BY ID DESC"
+	    
+	    // 8. 执行参数化查询
+	    set sqlObj = ##class(%SQL.Statement).%New(1)
+	    set sc = sqlObj.%Prepare(sql)
+	    if ($$$ISERR(sc))
+	    {
+	        set resultObj = ..SetErrorResult("-1", "SQL准备失败")
+	        quit
+	    }
+	    
+	    set rs = sqlObj.%Execute(sqlParams...)
+	    set rows = []
+	    set totalCount = 0
+	    
+	    while rs.%Next(sc)
+	    {
+	        set dataObj = {}
+	        set dataObj.id = rs.%Get("ID")
+	        set dataObj.principalDiagnosis = rs.%Get("PrincipalDiagnosis")
+	        set dataObj.principalDiagnosisName = rs.%Get("PrincipalDiagnosisName")
+	        set dataObj.majorProcedure = rs.%Get("MajorProcedure")
+	        set dataObj.majorProcedureName = rs.%Get("MajorProcedureName")
+	        set dataObj.secondaryProcedure = rs.%Get("SecondaryProcedure")
+	        set dataObj.secondaryProcedureName = rs.%Get("SecondaryProcedureName")
+	        set dataObj.provinceID = rs.%Get("ProvinceID")
+	        set dataObj.provinceDesc = rs.%Get("ProvinceDesc")
+	        set dataObj.cityID = rs.%Get("CityID")
+	        set dataObj.cityDesc = rs.%Get("CityDesc")
+	        set dataObj.mdtrtArea = rs.%Get("MdtrtArea")
+	        set dataObj.medinsLv = rs.%Get("MedinsLv")
+	        set dataObj.scoreValue = rs.%Get("ScoreValue")
+	        set dataObj.adjustCoefficient = rs.%Get("AdjustCoefficient")
+	        set dataObj.primaryAdjustCoefficient = rs.%Get("PrimaryAdjustCoefficient")
+	        set dataObj.secondaryAdjustCoefficient = rs.%Get("SecondaryAdjustCoefficient")
+	        set dataObj.thirdAdjustCoefficient = rs.%Get("ThirdAdjustCoefficient")
+	        set dataObj.averageCost = rs.%Get("AverageCost")
+	        
+	        do rows.%Push(dataObj)
+	        set totalCount = totalCount + 1
+	    }
+	    
+	    // 9. 封装返回结果
+	    set resultObj = ..SetJarraySuccessResult(rows, totalCount)
+	}
+	catch(e)
+	{
+	    // 异常处理
+	    set status = e.AsStatus()
+	    set errorCode = $piece(##class(%SYSTEM.Status).GetErrorCodes(status), ",")
+	    set errorMsg = $replace(##class(%SYSTEM.Status).GetErrorText(status, "cn"), "^", " ")
+	    set errorInfo = "DIP分组分值查询异常：类=" _ $ClassName() _ "，入参=" _ jsonObj.%ToJSON() _ "，错误：" _ errorMsg
+	    
+	    // 记录错误日志
+	    set errorLogID = ##class(src.Interface.Message).InsErrRecord("04000007", errorInfo, errorMsg)
+	    set resultObj = ..SetErrorResult("-99", "DIP分组分值查询异常（日志ID："_errorLogID_"）："_errorMsg)
+	}
+	
+	quit resultObj
+}
+
 /// Creator:     System
 /// CreatDate:   2026-03-22
 /// Description: 保存DRG分组记录（优化版 - 使用独立字段存储）
