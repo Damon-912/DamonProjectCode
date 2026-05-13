@@ -439,11 +439,13 @@ ClassMethod QueryWarningRecords(jsonObj) As %Library.DynamicObject
             set dataObj.diffRate=result.%Get("DiffRate")
             set dataObj.warningMessage=result.%Get("WarningMessage")
             set dataObj.warningStatus=result.%Get("WarningStatus")
-            set dataObj.warningDate=$zd(result.%Get("WarningDate"),3)
-            set dataObj.warningTime=$zt(result.%Get("WarningTime"),1)
+            set dataObj.warningDate=result.%Get("WarningDate")
+            set dataObj.warningTime=result.%Get("WarningTime")
+            set dataObj.warningDateTime=dataObj.warningDate_" "_dataObj.warningTime
             set dataObj.processUser=result.%Get("ProcessUser_Dr")
-            set dataObj.processDate=$zd(result.%Get("ProcessDate"),3)
-            set dataObj.processTime=$zt(result.%Get("ProcessTime"),1)
+            set dataObj.processDate=result.%Get("ProcessDate")
+            set dataObj.processTime=result.%Get("ProcessTime")
+            set dataObj.processDateTime=$s(dataObj.processDate'="":dataObj.processDate_" "_dataObj.processTime,1:"")
             set dataObj.processRemark=result.%Get("ProcessRemark")
             
             set count=count+1
@@ -616,7 +618,7 @@ ClassMethod QueryWarningStats(jsonObj As %Library.DynamicObject) As %Library.Dyn
             set rs = tStatement.%Execute()
             while (rs.%Next()) {
                 set typeItem={}
-                set typeItem.type = $s(rs.WarningType="01":"费用超支", rs.WarningType="02":"低倍率", rs.WarningType="03":"高倍率", rs.WarningType="04":"编码异常", rs.WarningType="05":"分解住院", 1:rs.WarningType)
+                set typeItem.type = $s(rs.WarningType="01":"费用超支", rs.WarningType="02":"低倍率", rs.WarningType="03":"高倍率", rs.WarningType="04":"编码异常", rs.WarningType="05":"分解住院", rs.WarningType="06":"费用过低", 1:rs.WarningType)
                 set typeItem.count = rs.Cnt
                 do typeStatsArr.%Push(typeItem)
             }
@@ -758,6 +760,11 @@ ClassMethod AddWarningRecord(jsonObj As %Library.DynamicObject) As %Library.Dyna
         
         // 查询匹配的预警规则
         set warningList = []
+        // 费用超支(01)与费用过低(06)的排他性由CheckWarningTrigger内部保证：
+        // 01要求diffAmount>0才可能触发，06要求diffAmount<0才可能触发，两者互斥
+        
+        // 第一步：遍历所有启用的规则，收集触发的规则
+        set triggeredRules = {}  // 按ruleType存储最高级别的触发规则: ruleType -> {ruleId,ruleCode,ruleName,ruleTypeVal,warningLevel,thresholdType,thresholdValue}
         
         // 使用%SQL.Statement执行查询
         set tStatement = ##class(%SQL.Statement).%New()
@@ -794,56 +801,88 @@ ClassMethod AddWarningRecord(jsonObj As %Library.DynamicObject) As %Library.Dyna
                 set isTrigger = ..CheckWarningTrigger(ruleTypeVal, thresholdType, thresholdValue, totalFee, drgPayStandard)
                 
                 if (isTrigger) {
-                    // 创建预警记录
-                    set wr = ##class(User.BSDRGWarningRecord).%New()
-                    set wr.WarningNo = ..GenerateWarningNo()
-                    // 获取规则对象引用（RuleDr是对象类型，不能直接赋值ID）
-                    if (ruleId '= "") {
-                        set ruleObj = ##class(User.BSDRGWarningRule).%OpenId(ruleId)
-                        if ($IsObject(ruleObj)) {
-                            set wr.RuleDr = ruleObj
+                    // 同类型只保留最高预警级别（WarningLevel值越大级别越高：3=严重>2=警告>1=提示）
+                    set needReplace = 0
+                    if (triggeredRules.%IsDefined(ruleTypeVal) '= 0) {
+                        set existingRule = triggeredRules.%Get(ruleTypeVal)
+                        if (+warningLevel > +existingRule.warningLevel) {
+                            set needReplace = 1
                         }
                     }
-                    set wr.RuleCode = ruleCode
-                    set wr.RuleName = ruleName
-                    set wr.WarningType = ruleTypeVal
-                    set wr.WarningLevel = warningLevel
-                    set wr.MedicalRecordDr = medicalRecordDr
-                    set wr.HISAdmID = hisAdmId
-                    set wr.PatientName = patientName
-                    set wr.DeptCode = deptCode
-                    set wr.DeptName = deptName
-                    set wr.DoctorCode = doctorCode
-                    set wr.DoctorName = doctorName
-                    set wr.TotalFee = totalFee
-                    set wr.DRGCode = drgCode
-                    set wr.DRGName = drgName
-                    set wr.InsuranceFee = insuranceFee
-                    set wr.DRGPayStandard = drgPayStandard
-                    set wr.DiffAmount = diffAmount
-                    set wr.DiffRate = diffRate
-                    set wr.WarningStatus = "01"
-                    set wr.WarningDate = +$h
-                    set wr.WarningTime = $p($h,",",2)
-                    set wr.FixmedinsCode = fixmedinsCode
-                    set wr.FixmedinsName = fixmedinsName
+                    else {
+                        set needReplace = 1
+                    }
                     
-                    // 生成预警消息
-                    set warningMsg = ..GenerateWarningMessage(ruleName, totalFee, drgPayStandard, diffAmount, diffRate)
-                    set wr.WarningMessage = warningMsg
-                    
-                    set sc = wr.%Save()
-                    if ($$$ISOK(sc)) {
-                        set item={}
-                        set item.warningId = wr.%Id()
-                        set item.warningNo = wr.WarningNo
-                        set item.ruleCode = ruleCode
-                        set item.ruleName = ruleName
-                        set item.warningLevel = warningLevel
-                        set item.warningMessage = warningMsg
-                        do warningList.%Push(item)
+                    if (needReplace = 1) {
+                        set ruleInfo = {}
+                        set ruleInfo.ruleId = ruleId
+                        set ruleInfo.ruleCode = ruleCode
+                        set ruleInfo.ruleName = ruleName
+                        set ruleInfo.ruleTypeVal = ruleTypeVal
+                        set ruleInfo.warningLevel = warningLevel
+                        do triggeredRules.%Set(ruleTypeVal, ruleInfo)
                     }
                 }
+            }
+        }
+        
+        // 第二步：根据筛选后的触发规则（同类型最高级别），创建预警记录
+        set typeIter = triggeredRules.%GetIterator()
+        while (typeIter.%GetNext(.typeKey, .typeRuleInfo)) {
+            set ruleId = typeRuleInfo.ruleId
+            set ruleCode = typeRuleInfo.ruleCode
+            set ruleName = typeRuleInfo.ruleName
+            set ruleTypeVal = typeRuleInfo.ruleTypeVal
+            set warningLevel = typeRuleInfo.warningLevel
+            
+            // 创建预警记录
+            set wr = ##class(User.BSDRGWarningRecord).%New()
+            set wr.WarningNo = ..GenerateWarningNo()
+            // 获取规则对象引用（RuleDr是对象类型，不能直接赋值ID）
+            if (ruleId '= "") {
+                set ruleObj = ##class(User.BSDRGWarningRule).%OpenId(ruleId)
+                if ($IsObject(ruleObj)) {
+                    set wr.RuleDr = ruleObj
+                }
+            }
+            set wr.RuleCode = ruleCode
+            set wr.RuleName = ruleName
+            set wr.WarningType = ruleTypeVal
+            set wr.WarningLevel = warningLevel
+            set wr.MedicalRecordDr = medicalRecordDr
+            set wr.HISAdmID = hisAdmId
+            set wr.PatientName = patientName
+            set wr.DeptCode = deptCode
+            set wr.DeptName = deptName
+            set wr.DoctorCode = doctorCode
+            set wr.DoctorName = doctorName
+            set wr.TotalFee = totalFee
+            set wr.DRGCode = drgCode
+            set wr.DRGName = drgName
+            set wr.InsuranceFee = insuranceFee
+            set wr.DRGPayStandard = drgPayStandard
+            set wr.DiffAmount = diffAmount
+            set wr.DiffRate = diffRate
+            set wr.WarningStatus = "01"
+            set wr.WarningDate = +$h
+            set wr.WarningTime = $p($h,",",2)
+            set wr.FixmedinsCode = fixmedinsCode
+            set wr.FixmedinsName = fixmedinsName
+            
+            // 生成预警消息
+            set warningMsg = ..GenerateWarningMessage(ruleTypeVal, ruleName, totalFee, drgPayStandard, diffAmount, diffRate)
+            set wr.WarningMessage = warningMsg
+            
+            set sc = wr.%Save()
+            if ($$$ISOK(sc)) {
+                set item={}
+                set item.warningId = wr.%Id()
+                set item.warningNo = wr.WarningNo
+                set item.ruleCode = ruleCode
+                set item.ruleName = ruleName
+                set item.warningLevel = warningLevel
+                set item.warningMessage = ruleObj.RuleDesc_warningMsg
+                do warningList.%Push(item)
             }
         }
         
@@ -867,39 +906,57 @@ ClassMethod AddWarningRecord(jsonObj As %Library.DynamicObject) As %Library.Dyna
 }
 
 /// 检查预警是否触发
+/// 第一步：根据totalFee与drgPayStandard的大小关系确定方向（超支/过低）
+/// 第二步：根据差额计算阈值，判断是否达到预警触发条件
+/// 第三步：结合方向和阈值结果，确定是否触发该规则
 ClassMethod CheckWarningTrigger(ruleType As %String, thresholdType As %String, thresholdValue As %Numeric, totalFee As %Numeric, drgPayStandard As %Numeric) As %Boolean
 {
     new (ruleType, thresholdType, thresholdValue, totalFee, drgPayStandard)
     
     set result = 0
     
-    // ruleType: 01=费用超支, 02=低倍率, 03=高倍率, 04=编码异常, 05=分解住院
+    // ruleType: 01=费用超支, 02=低倍率, 03=高倍率, 04=编码异常, 05=分解住院, 06=费用过低
+    
+    if (drgPayStandard = "") || (thresholdValue = "") {
+        quit result
+    }
+    
+    // 第一步：确定费用方向
+    // totalFee > drgPayStandard → 费用超支方向
+    // totalFee < drgPayStandard → 费用过低方向
+    // totalFee = drgPayStandard → 无偏差，不触发
+    set diffAmount = +totalFee - +drgPayStandard
     
     if (ruleType = "01") {
-        // 费用超支预警
-        if (drgPayStandard '= "") && (thresholdValue '= "") {
-            set threshold = drgPayStandard * thresholdValue / 100
+        // 费用超支预警：必须在超支方向(diffAmount>0)，且费用超过DRG支付标准的(1+阈值%)时触发
+        if (diffAmount > 0) {
+            set threshold = drgPayStandard * (100 + thresholdValue) / 100
             if (totalFee > threshold) {
                 set result = 1
             }
         }
     }
-    elseif (ruleType = "02") {
-        // 低倍率预警
-        if (drgPayStandard '= "") && (thresholdValue '= "") {
+    elseif (ruleType = "06") {
+        // 费用过低预警：必须在过低方向(diffAmount<0)，且费用低于DRG支付标准的(1-阈值%)时触发
+        if (diffAmount < 0) {
             set threshold = drgPayStandard * (100 - thresholdValue) / 100
             if (totalFee < threshold) {
                 set result = 1
             }
         }
     }
+    elseif (ruleType = "02") {
+        // 低倍率预警：费用低于DRG支付标准的(1-阈值%)时触发
+        set threshold = drgPayStandard * (100 - thresholdValue) / 100
+        if (totalFee < threshold) {
+            set result = 1
+        }
+    }
     elseif (ruleType = "03") {
-        // 高倍率预警
-        if (drgPayStandard '= "") && (thresholdValue '= "") {
-            set threshold = drgPayStandard * (100 + thresholdValue) / 100
-            if (totalFee > threshold) {
-                set result = 1
-            }
+        // 高倍率预警：费用高于DRG支付标准的(1+阈值%)时触发
+        set threshold = drgPayStandard * (100 + thresholdValue) / 100
+        if (totalFee > threshold) {
+            set result = 1
         }
     }
     
@@ -907,9 +964,9 @@ ClassMethod CheckWarningTrigger(ruleType As %String, thresholdType As %String, t
 }
 
 /// 生成预警消息
-ClassMethod GenerateWarningMessage(ruleName As %String, totalFee As %Numeric, drgPayStandard As %Numeric, diffAmount As %Numeric, diffRate As %Numeric) As %String
+ClassMethod GenerateWarningMessage(ruleType As %String, ruleName As %String, totalFee As %Numeric, drgPayStandard As %Numeric, diffAmount As %Numeric, diffRate As %Numeric) As %String
 {
-    new (ruleName, totalFee, drgPayStandard, diffAmount, diffRate)
+    new (ruleType, ruleName, totalFee, drgPayStandard, diffAmount, diffRate)
     
     // 处理空值
     if (totalFee = "") set totalFee = 0
@@ -929,16 +986,29 @@ ClassMethod GenerateWarningMessage(ruleName As %String, totalFee As %Numeric, dr
     set diffAmountStr = $fn(+diffAmountStr, "", 2)
     set diffRateStr = $fn(+diffRateStr, "", 2)
     
-    set msg = ruleName _ "：患者费用总额" _ totalFeeStr _ "元"
+    // 根据规则类型生成差异化语义前缀
+    set typePrefix = $s(
+        ruleType="01":"费用超支预警",
+        ruleType="02":"低倍率预警",
+        ruleType="03":"高倍率预警",
+        ruleType="04":"编码异常预警",
+        ruleType="05":"分解住院预警",
+        ruleType="06":"费用过低预警",
+        1:ruleName _ "预警"
+    )
+    
+    //set msg = typePrefix _ "：患者费用总额" _ totalFeeStr _ "元"
+    set msg = "：患者费用总额" _ totalFeeStr _ "元"
     
     if (+drgPayStandard > 0) {
         set msg = msg _ "，DRG支付标准" _ drgPayStandardStr _ "元"
     }
     
+    // 根据规则类型区分描述：偏低类型(02,06)和超支类型(01,03)使用不同方向词
     if (+diffAmount > 0) {
-        set msg = msg _ "，超出" _ diffAmountStr _ "元"
+        set msg = msg _ "，低于" _ diffAmountStr _ "元"
     } elseif (+diffAmount < 0) {
-        set msg = msg _ "，低于" _ (-diffAmountStr) _ "元"
+        set msg = msg _ "，超出" _ (-diffAmountStr) _ "元"
     }
     
     if (+diffRate '= 0) {

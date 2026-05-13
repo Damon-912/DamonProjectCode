@@ -9,7 +9,7 @@ import {
   MedicineBoxOutlined, UserOutlined, ScissorOutlined, BankOutlined
 } from '@ant-design/icons';
 import { drgGroup, convertResultToLowerCamel, type DiagnosisInfoLowerCamel, type OperationInfoLowerCamel, type DRGGroupResultLowerCamel } from '@/api/drgGrouping';
-import { queryMedInsuIcdInfo, type MedInsuIcdItem } from '@/api/basicData';
+import { queryMedInsuIcdInfo, getProvinceData, getCityData, type MedInsuIcdItem, type ProvinceItem, type CityItem } from '@/api/basicData';
 import { queryHospitals, type HospitalItem } from '@/api/hospital';
 
 
@@ -71,6 +71,60 @@ const DRGCustomQuery: React.FC = () => {
     hospitalsRef.current = hospitals;
   }, [hospitals]);
 
+  // 省、市下拉数据状态
+  const [provinceList, setProvinceList] = useState<ProvinceItem[]>([]);
+  const [cityList, setCityList] = useState<CityItem[]>([]);
+  const [provinceLoading, setProvinceLoading] = useState(false);
+  const [cityLoading, setCityLoading] = useState(false);
+
+  // 加载省数据
+  const loadProvinces = useCallback(async () => {
+    setProvinceLoading(true);
+    try {
+      const res = await getProvinceData();
+      if (res.errorCode === '0' && res.result) {
+        setProvinceList(res.result);
+      }
+    } catch (error) {
+      message.error('加载省数据失败');
+    } finally {
+      setProvinceLoading(false);
+    }
+  }, []);
+
+  // 加载市数据
+  const loadCities = useCallback(async (provinceId: string) => {
+    if (!provinceId) {
+      setCityList([]);
+      return;
+    }
+    setCityLoading(true);
+    try {
+      const res = await getCityData(provinceId);
+      if (res.errorCode === '0' && res.result) {
+        setCityList(res.result);
+      }
+    } catch (error) {
+      message.error('加载市数据失败');
+    } finally {
+      setCityLoading(false);
+    }
+  }, []);
+
+  // 初始化加载省数据
+  useEffect(() => {
+    loadProvinces();
+  }, [loadProvinces]);
+
+  // 省选择变化
+  const handleProvinceChange = (value: string) => {
+    form.setFieldsValue({ City: undefined }); // 清空市的选择
+    setCityList([]);
+    if (value) {
+      loadCities(value);
+    }
+  };
+
   // 提交分组查询 - 使用小驼峰格式
   const handleSubmit = async (values: any) => {
     try {
@@ -127,6 +181,11 @@ const DRGCustomQuery: React.FC = () => {
       const newbornFlag = values.AgeGroupDays && values.AgeGroupDays > 0 ? '1' : '0';
       form.setFieldValue('NewbornFlag', newbornFlag);
 
+      // 获取市对应的行政区划代码（从 cityList 中查找）
+      const selectedCityCode = values.City 
+        ? (cityList.find(c => c.id === values.City)?.code || '')
+        : '';
+
       // 构建医疗机构信息数组，从已选中的医疗机构中提取code和descripts
       const hospInfo = hospitals
         .filter(h => h.code) // 只选择有code的医疗机构
@@ -134,6 +193,13 @@ const DRGCustomQuery: React.FC = () => {
           code: h.code,
           name: h.descripts,
         }));
+
+      // 校验：如果医疗机构信息不为空，则省市必选
+      if (hospInfo.length > 0 && (!values.Province || !values.City)) {
+        message.error('选择医疗机构时，参保省份、参保城市为必选项');
+        setLoading(false);
+        return;
+      }
 
       // 构建小驼峰入参
       // 注意：diseInfo 和 oprnInfo 必须传递，即使是空数组
@@ -155,6 +221,8 @@ const DRGCustomQuery: React.FC = () => {
         dischargeType: values.DischargeType,
         hospitalDays: values.HospitalDays,
         totalCost: values.TotalCost,
+        // 就医地行政区划代码（取自市下拉框的 code 值）
+        insuranceAreaCode: selectedCityCode,
         // diseInfo 和 oprnInfo 必须传递，即使是空数组
         // 主诊断和主手术信息已包含在数组对象内
         diseInfo: diagnoses,
@@ -1207,6 +1275,44 @@ const DRGCustomQuery: React.FC = () => {
                   <Select>
                     <Option value="0">否</Option>
                     <Option value="1">是</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+
+            {/* 第四行：参保省份、参保城市下拉框 */}
+            <Row gutter={16}>
+              <Col span={6}>
+                <Form.Item name="Province" label="参保省份">
+                  <Select
+                    placeholder="请选择参保省份"
+                    onChange={handleProvinceChange}
+                    allowClear
+                    loading={provinceLoading}
+                    showSearch
+                    optionFilterProp="children"
+                    style={{ width: '100%' }}
+                  >
+                    {provinceList.map(item => (
+                      <Option key={item.id} value={item.id}>{item.descripts}</Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item name="City" label="参保城市">
+                  <Select
+                    placeholder="请选择参保城市"
+                    allowClear
+                    loading={cityLoading}
+                    showSearch
+                    optionFilterProp="children"
+                    disabled={!form.getFieldValue('Province')}
+                    style={{ width: '100%' }}
+                  >
+                    {cityList.map(item => (
+                      <Option key={item.id} value={item.id}>{item.descripts}</Option>
+                    ))}
                   </Select>
                 </Form.Item>
               </Col>

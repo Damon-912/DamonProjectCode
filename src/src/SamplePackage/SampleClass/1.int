@@ -1,0 +1,149 @@
+ROUTINE src.SamplePackage.SampleClass.1 [Type=INT,Generated]
+ ;src.SamplePackage.SampleClass.1
+ ;Generated for class src.SamplePackage.SampleClass.  Do NOT edit. 04/27/2026 11:22:26AM
+ ;;64586D31;src.SamplePackage.SampleClass
+ ;
+zBatchSave(pDataList)
+        new (pDataList)
+        Try {
+            Set tSuccessCount = 0
+            // 参数验证
+            If ($ListLength(pDataList) = 0) {
+                return 0
+            }
+            // 开始事务
+            TSTART
+            // 遍历数据列表
+            For i = 1:1:$ListLength(pDataList) {
+                Set tData = $ListGet(pDataList, i)
+                Set tDr = ##class(src.util.operatetable).Insert("User.BSSample", tData)
+                If (tDr '= "") {
+                    Set tSuccessCount = tSuccessCount + 1
+                }
+            }
+            // 提交事务
+            TCOMMIT
+            // 返回成功数量
+            return tSuccessCount
+        } Catch {
+            // 回滚事务
+            TROLLBACK
+            Return 0
+        }
+	Quit
+zDeleteOrder(pOrderId)
+        new (pOrderId)
+        Try {
+            // 参数验证
+            If (pOrderId = "") {
+                return $System.Status.Error(5001, "订单ID不能为空")
+            }
+            // 获取订单数据
+            Set tOrder = ##class(src.util.operatetable).GetRow("User.BSOrder", pOrderId)
+            If (tOrder = "") {
+                return $System.Status.Error(5002, "订单不存在")
+            }
+            // 设置删除标记
+            Set tOrder.Deleted = 1
+            Set tOrder.DeleteTime = $zdatetime($horolog, 3)
+            // 更新数据
+            Set tSC = ##class(src.util.operatetable).Update("User.BSOrder", pOrderId, tOrder)
+            If ('tSC) {
+                Throw ##class(%Exception.SystemException).%New("删除失败")
+            }
+            // 返回成功状态
+            return 1
+        } Catch {
+            Return $System.Status.Error(5001, "删除失败: " _ $ze)
+        }
+	Quit
+zGetOrderInfo(pOrderId)
+        new (pOrderId)
+        Try {
+            Set tOrderInfo = ""
+            // 参数验证
+            If (pOrderId = "") {
+                return $System.Status.Error(5001, "订单ID不能为空")
+            }
+            // 查询数据
+            Set tOrderInfo = ##class(src.util.operatetable).GetRow("User.BSOrder", pOrderId)
+            If (tOrderInfo = "") {
+                return $System.Status.Error(5002, "订单不存在")
+            }
+            // 返回数据
+            return tOrderInfo
+        } Catch {
+            Return $System.Status.Error(5001, "查询失败: " _ $ze)
+        }
+	Quit
+zSampleMethod(pParameter1,pParameter2)
+        new (pParameter1,pParameter2)
+        Try {
+            // 初始化返回值
+            Set tResult = ""
+            Set tSC = 1
+            // 参数验证
+            If (pParameter1 = "") {
+                return $System.Status.Error(5001, "参数1不能为空")
+            }
+            // 准备数据
+            Set tData = ##class(%Library.GlobalBinaryStream).%New()
+            Set tData.Field1 = pParameter1
+            Set tData.Field2 = pParameter2
+            // 数据操作（示例：插入）
+            Set tResult = ##class(src.util.operatetable).Insert("User.BSSample", tData)
+            If (tResult = "") {
+                Throw ##class(%Exception.SystemException).%New("插入数据失败")
+            }
+            // 返回成功结果
+            return tResult
+        } Catch {
+            // 错误处理
+            Return $System.Status.Error(5001, "方法执行失败: " _ $ze)
+        }
+	Quit
+zSaveOrderWithTransaction(pOrderData)
+        new (pOrderData)
+        Try {
+            // 开始事务
+            TSTART
+            // 插入订单主表
+            Set tOrderDr = ##class(src.util.operatetable).Insert("User.BSOrder", pOrderData)
+            If (tOrderDr = "") {
+                Throw ##class(%Exception.SystemException).%New("保存订单失败")
+            }
+            // 插入订单明细
+            Set tItemData = ##class(%Library.GlobalBinaryStream).%New()
+            Set tItemData.OrderDr = tOrderDr
+            Set tItemDr = ##class(src.util.operatetable).Insert("User.BSOrderItem", tItemData)
+            If (tItemDr = "") {
+                Throw ##class(%Exception.SystemException).%New("保存订单明细失败")
+            }
+            // 提交事务
+            TCOMMIT
+            // 返回订单ID
+            return tOrderDr
+        } Catch {
+            // 回滚事务
+            TROLLBACK
+            Return ""
+        }
+	Quit
+zUpdateOrder(pOrderId,pOrderData)
+        new (pOrderId, pOrderData)
+        Try {
+            // 参数验证
+            If (pOrderId = "") {
+                return $System.Status.Error(5001, "订单ID不能为空")
+            }
+            // 更新数据
+            Set tSC = ##class(src.util.operatetable).Update("User.BSOrder", pOrderId, pOrderData)
+            If ('tSC) {
+                Throw ##class(%Exception.SystemException).%New("更新失败")
+            }
+            // 返回成功状态
+            return 1
+        } Catch {
+            Return $System.Status.Error(5001, "更新失败: " _ $ze)
+        }
+	Quit

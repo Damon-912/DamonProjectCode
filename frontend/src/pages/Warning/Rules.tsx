@@ -45,6 +45,7 @@ const RULE_TYPES: Record<string, string> = {
   '03': '高倍率',
   '04': '编码异常',
   '05': '分解住院',
+  '06': '费用过低',
 };
 
 // 预警级别
@@ -408,6 +409,7 @@ const Rules: React.FC = () => {
               <Option value="03">高倍率</Option>
               <Option value="04">编码异常</Option>
               <Option value="05">分解住院</Option>
+              <Option value="06">费用过低</Option>
             </Select>
           </Form.Item>
           <Form.Item name="isActive" label="状态">
@@ -518,6 +520,7 @@ const Rules: React.FC = () => {
                   <Option value="03">高倍率</Option>
                   <Option value="04">编码异常</Option>
                   <Option value="05">分解住院</Option>
+                  <Option value="06">费用过低</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -701,7 +704,7 @@ const Rules: React.FC = () => {
               <Col span={24} style={{ marginTop: 16 }}>
                 <Alert
                   message="预警示例"
-                  description={`当病例费用${previewRule.ruleType === '02' ? '低于' : '超过'}DRG支付标准的${previewRule.thresholdValue}%时，将触发此预警规则`}
+                  description={`当病例费用${['02', '06'].includes(previewRule.ruleType) ? '低于' : '超过'}DRG支付标准的${previewRule.thresholdValue}%时，将触发此预警规则`}
                   type="info"
                   showIcon
                 />

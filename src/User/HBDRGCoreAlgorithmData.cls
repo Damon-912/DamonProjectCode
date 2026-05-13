@@ -32,7 +32,7 @@ Property CityDr As CBCity [ Required, SqlColumnNumber = 9, SqlFieldName = City_D
 Index City On CityDr;
 
 /// 生效日期 真正开始使用日期
-Property StartDate As %Date [ Required, SqlColumnNumber = 10, SqlFieldName = StartDate ];
+Property StartDate As %Date [ SqlColumnNumber = 10, SqlFieldName = StartDate ];
 
 /// 失效日期 此日期开始不能用,不填说明一直可用,如果不可用需要看此日期
 Property StopDate As %Date [ SqlColumnNumber = 11, SqlFieldName = StopDate ];
@@ -138,11 +138,11 @@ Storage Default
 <Value>Remark</Value>
 </Value>
 </Data>
-<DataLocation>^User.HBDRGCoreAlgorithmDataD</DataLocation>
+<DataLocation>^HBDRGCoreAlgorithmDataD</DataLocation>
 <DefaultData>HBDRGCoreAlgorithmDataDefaultData</DefaultData>
-<IdLocation>^User.HBDRGCoreAlgorithmDataD</IdLocation>
-<IndexLocation>^User.HBDRGCoreAlgorithmDataI</IndexLocation>
-<StreamLocation>^User.HBDRGCoreAlgorithmDataS</StreamLocation>
+<IdLocation>^HBDRGCoreAlgorithmDataD</IdLocation>
+<IndexLocation>^HBDRGCoreAlgorithmDataI</IndexLocation>
+<StreamLocation>^HBDRGCoreAlgorithmDataS</StreamLocation>
 <Type>%Storage.Persistent</Type>
 }
 

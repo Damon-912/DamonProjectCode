@@ -14,77 +14,88 @@ Index AdmID On AdmID;
 /// 病案号
 Property MedcasNo As %String [ SqlColumnNumber = 3, SqlFieldName = MedcasNo ];
 
+/// 患者姓名
 Property PatientName As %String [ SqlColumnNumber = 4, SqlFieldName = PatientName ];
 
-/// 患者姓名
+/// 医保个人编号
+Property PsnNo As %String [ SqlColumnNumber = 5, SqlFieldName = PsnNo ];
+
+/// 参保地
+Property InsuranceAreaCode As %String [ SqlColumnNumber = 6, SqlFieldName = InsuranceAreaCode ];
+
+/// 就医地
+Property mdtrtareaAreaCode As %String [ SqlColumnNumber = 7, SqlFieldName = MdtrtareaAreaCode ];
+
+/// 医保险种
+Property InsuType As %String [ SqlColumnNumber = 8, SqlFieldName = InsuType ];
+
 /// 性别 1=男 2=女
-Property Sex As %String [ SqlColumnNumber = 5, SqlFieldName = Sex ];
+Property Sex As %String [ SqlColumnNumber = 9, SqlFieldName = Sex ];
 
 /// 年龄
-Property Age As %Integer [ SqlColumnNumber = 6, SqlFieldName = Age ];
+Property Age As %Integer [ SqlColumnNumber = 10, SqlFieldName = Age ];
 
 /// ========================================
 /// 诊断信息字段
 /// ========================================
 /// 主诊断代码
-Property MainDiagnosisCode As %String [ SqlColumnNumber = 7, SqlFieldName = MainDiagnosisCode ];
+Property MainDiagnosisCode As %String [ Required, SqlColumnNumber = 11, SqlFieldName = MainDiagnosisCode ];
 
 /// 主诊断名称
-Property MainDiagnosisName As %String(MAXLEN = 200) [ SqlColumnNumber = 8, SqlFieldName = MainDiagnosisName ];
+Property MainDiagnosisName As %String [ Required, SqlColumnNumber = 12, SqlFieldName = MainDiagnosisName ];
+
+/// 主诊断类型编码  ADD入院 OPD门诊 DIS出院
+Property DiaTypeCode As %String [ Required, SqlColumnNumber = 13, SqlFieldName = DiaTypeCode ];
+
+/// 病种编码
+Property DiagnosisCode As %String [ SqlColumnNumber = 14, SqlFieldName = DiagnosisCode ];
+
+/// 病种名称
+Property DiagnosisName As %String [ SqlColumnNumber = 15, SqlFieldName = DiagnosisName ];
 
 /// 主手术代码
-Property MainOperationCode As %String [ SqlColumnNumber = 9, SqlFieldName = MainOperationCode ];
+Property MainOperationCode As %String [ SqlColumnNumber = 16, SqlFieldName = MainOperationCode ];
 
 /// 主手术名称
-Property MainOperationName As %String(MAXLEN = 200) [ SqlColumnNumber = 10, SqlFieldName = MainOperationName ];
+Property MainOperationName As %String [ SqlColumnNumber = 17, SqlFieldName = MainOperationName ];
 
-/// ========================================
-/// DRG分组结果字段
-/// ========================================
-/// MDC主诊断大类编码
-Property MDC As %String [ SqlColumnNumber = 11, SqlFieldName = MDC ];
+/// 入院时间
+Property AdmDateTime As %DateTime [ SqlColumnNumber = 18, SqlFieldName = AdmDateTime ];
 
-Index MDC On MDC;
+/// 出院时间
+Property DiscgDateTime As %DateTime [ SqlColumnNumber = 19, SqlFieldName = DiscgDateTime ];
 
-/// MDC描述
-Property MDCDesc As %String(MAXLEN = 100) [ SqlColumnNumber = 12, SqlFieldName = MDCDesc ];
-
-/// ADRG编码
-Property ADRG As %String [ SqlColumnNumber = 13, SqlFieldName = ADRG ];
-
-Index ADRG On ADRG;
-
-/// ADRG描述
-Property ADRGDesc As %String(MAXLEN = 100) [ SqlColumnNumber = 14, SqlFieldName = ADRGDesc ];
+/// 结算时间
+Property SettleDateTime As %DateTime [ SqlColumnNumber = 20, SqlFieldName = SettleDateTime ];
 
 /// DRG编码
-Property DRG As %String [ SqlColumnNumber = 15, SqlFieldName = DRG ];
+Property DRG As %String [ Required, SqlColumnNumber = 21, SqlFieldName = DRG ];
 
 Index DRG On DRG;
 
 /// DRG指向HB_DRGCoreAlgorithmData
-Property DRGDr As HBDRGCoreAlgorithmData [ SqlColumnNumber = 16, SqlFieldName = DRG_Dr ];
+Property DRGDr As HBDRGCoreAlgorithmData [ Required, SqlColumnNumber = 22, SqlFieldName = DRG_Dr ];
 
 /// DRG描述
-Property DRGDesc As %String(MAXLEN = 200) [ SqlColumnNumber = 17, SqlFieldName = DRGDesc ];
+Property DRGDesc As %String(MAXLEN = 200) [ Required, SqlColumnNumber = 23, SqlFieldName = DRGDesc ];
 
 /// 权重
-Property Weight As %Decimal(SCALE = 4) [ SqlColumnNumber = 18, SqlFieldName = Weight ];
+Property Weight As %Decimal(SCALE = 4) [ SqlColumnNumber = 24, SqlFieldName = Weight ];
 
 /// 基准费用
-Property BenchmarkCost As %Decimal(SCALE = 2) [ SqlColumnNumber = 19, SqlFieldName = BenchmarkCost ];
+Property BenchmarkCost As %Decimal(SCALE = 2) [ SqlColumnNumber = 25, SqlFieldName = BenchmarkCost ];
 
 /// CC标志 1=有合并症 0=无
-Property CCFlag As %String [ SqlColumnNumber = 20, SqlFieldName = CCFlag ];
+Property CCFlag As %String [ SqlColumnNumber = 26, SqlFieldName = CCFlag ];
 
 /// MCC标志 1=有严重合并症 0=无
-Property MCCFlag As %String [ SqlColumnNumber = 21, SqlFieldName = MCCFlag ];
+Property MCCFlag As %String [ SqlColumnNumber = 27, SqlFieldName = MCCFlag ];
 
 /// 风险等级 高/中/低
-Property RiskLevel As %String [ SqlColumnNumber = 22, SqlFieldName = RiskLevel ];
+Property RiskLevel As %String [ SqlColumnNumber = 28, SqlFieldName = RiskLevel ];
 
 /// 分组时间
-Property GroupTime As %TimeStamp [ SqlColumnNumber = 23, SqlFieldName = GroupTime ];
+Property GroupTime As %TimeStamp [ SqlColumnNumber = 29, SqlFieldName = GroupTime ];
 
 Index GroupTime On GroupTime;
 
@@ -92,56 +103,65 @@ Index GroupTime On GroupTime;
 /// 机构信息字段
 /// ========================================
 /// 省 指向CB_Province
-Property ProvinceDr As CBProvince [ SqlColumnNumber = 24, SqlFieldName = Province_Dr ];
+Property ProvinceDr As CBProvince [ SqlColumnNumber = 30, SqlFieldName = Province_Dr ];
 
 Index Province On ProvinceDr;
 
 /// 市 指向CB_City
-Property CityDr As CBCity [ SqlColumnNumber = 25, SqlFieldName = City_Dr ];
+Property CityDr As CBCity [ SqlColumnNumber = 31, SqlFieldName = City_Dr ];
 
 Index City On CityDr;
 
 /// 医疗机构代码
-Property FixmedinsCode As %String [ SqlColumnNumber = 26, SqlFieldName = FixmedinsCode ];
+Property FixmedinsCode As %String [ Required, SqlColumnNumber = 32, SqlFieldName = FixmedinsCode ];
 
 Index FixmedinsCode On FixmedinsCode;
 
 /// 医疗机构名称
-Property FixmedinsName As %String(MAXLEN = 200) [ SqlColumnNumber = 27, SqlFieldName = FixmedinsName ];
+Property FixmedinsName As %String [ Required, SqlColumnNumber = 33, SqlFieldName = FixmedinsName ];
 
-/// 科室
-Property Department As %String [ SqlColumnNumber = 28, SqlFieldName = Department ];
+/// HIS科室编码
+Property Department As %String [ SqlColumnNumber = 34, SqlFieldName = Department ];
+
+/// HIS科室名称名称
+Property DepartmentDesc As %String [ SqlColumnNumber = 35, SqlFieldName = DepartmentDesc ];
 
 /// ========================================
 /// 系统字段
 /// ========================================
 /// 创建日期 系统自动产生
-Property CreateDate As %Date [ Required, SqlColumnNumber = 29, SqlFieldName = CreateDate ];
+Property CreateDate As %Date [ Required, SqlColumnNumber = 36, SqlFieldName = CreateDate ];
 
 Index CreateDate On CreateDate;
 
 /// 创建时间 系统自动产生
-Property CreateTime As %Time [ Required, SqlColumnNumber = 30, SqlFieldName = CreateTime ];
+Property CreateTime As %Time [ Required, SqlColumnNumber = 37, SqlFieldName = CreateTime ];
 
 /// 创建人员ID 指向HB_User表
-Property CreateUserDr As HBUser [ SqlColumnNumber = 31, SqlFieldName = CreateUser_Dr ];
+Property CreateUserDr As HBUser [ SqlColumnNumber = 38, SqlFieldName = CreateUser_Dr ];
 
 /// 最后更新日期
-Property UpdateDate As %Date [ SqlColumnNumber = 32, SqlFieldName = UpdateDate ];
+Property UpdateDate As %Date [ SqlColumnNumber = 39, SqlFieldName = UpdateDate ];
 
 /// 最后更新时间
-Property UpdateTime As %Time [ SqlColumnNumber = 33, SqlFieldName = UpdateTime ];
+Property UpdateTime As %Time [ SqlColumnNumber = 40, SqlFieldName = UpdateTime ];
 
 /// 最后更新人员
-Property UpdateUserDr As HBUser [ SqlColumnNumber = 34, SqlFieldName = UpdateUser_Dr ];
+Property UpdateUserDr As HBUser [ SqlColumnNumber = 41, SqlFieldName = UpdateUser_Dr ];
+
+/// 分组阶段 1.事前 2.事中 3.事后
+Property GroupStage As %String [ SqlColumnNumber = 42, SqlFieldName = GroupStage ];
 
 /// 备注
-Property Remark As %String(MAXLEN = 99999) [ SqlColumnNumber = 35, SqlFieldName = Remark ];
+Property Remark As %String(MAXLEN = 99999) [ SqlColumnNumber = 43, SqlFieldName = Remark ];
 
 /// 有效标志 1=有效 0=无效
-Property ActiveFlag As %String [ InitialExpression = "1", SqlColumnNumber = 36, SqlFieldName = ActiveFlag ];
+Property ActiveFlag As %String [ InitialExpression = "1", SqlColumnNumber = 44, SqlFieldName = ActiveFlag ];
 
 Index ActiveFlag On ActiveFlag;
+
+/// 联合手术标志 1是 0否
+Property UnionOprnFlag As %String [ InitialExpression = "0", SqlColumnNumber = 45, SqlFieldName = UnionOprnFlag ];
 
 /// ========================================
 /// 复合索引
@@ -159,10 +179,10 @@ Storage Default
 <Value>%%CLASSNAME</Value>
 </Value>
 <Value name="2">
-<Value>HISAdmID</Value>
+<Value>AdmID</Value>
 </Value>
 <Value name="3">
-<Value>AdmissionNo</Value>
+<Value>MedcasNo</Value>
 </Value>
 <Value name="4">
 <Value>PatientName</Value>
@@ -180,64 +200,64 @@ Storage Default
 <Value>MainDiagnosisName</Value>
 </Value>
 <Value name="9">
-<Value>MainOperationCode</Value>
+<Value>DiaTypeCode</Value>
 </Value>
 <Value name="10">
-<Value>MainOperationName</Value>
+<Value>DiagnosisCode</Value>
 </Value>
 <Value name="11">
-<Value>MDC</Value>
+<Value>DiagnosisName</Value>
 </Value>
 <Value name="12">
-<Value>MDCDesc</Value>
+<Value>MainOperationCode</Value>
 </Value>
 <Value name="13">
-<Value>ADRG</Value>
+<Value>MainOperationName</Value>
 </Value>
 <Value name="14">
-<Value>ADRGDesc</Value>
-</Value>
-<Value name="15">
 <Value>DRG</Value>
 </Value>
-<Value name="16">
+<Value name="15">
 <Value>DRGDr</Value>
 </Value>
-<Value name="17">
+<Value name="16">
 <Value>DRGDesc</Value>
 </Value>
-<Value name="18">
+<Value name="17">
 <Value>Weight</Value>
 </Value>
-<Value name="19">
+<Value name="18">
 <Value>BenchmarkCost</Value>
 </Value>
-<Value name="20">
+<Value name="19">
 <Value>CCFlag</Value>
 </Value>
-<Value name="21">
+<Value name="20">
 <Value>MCCFlag</Value>
 </Value>
-<Value name="22">
+<Value name="21">
 <Value>RiskLevel</Value>
 </Value>
-<Value name="23">
+<Value name="22">
 <Value>GroupTime</Value>
 </Value>
-<Value name="24">
+<Value name="23">
 <Value>ProvinceDr</Value>
 </Value>
-<Value name="25">
+<Value name="24">
 <Value>CityDr</Value>
 </Value>
-<Value name="26">
+<Value name="25">
 <Value>FixmedinsCode</Value>
 </Value>
-<Value name="27">
+<Value name="26">
 <Value>FixmedinsName</Value>
 </Value>
-<Value name="28">
+<Value name="27">
 <Value>Department</Value>
+</Value>
+<Value name="28">
+<Value>DepartmentDesc</Value>
 </Value>
 <Value name="29">
 <Value>CreateDate</Value>
@@ -264,17 +284,38 @@ Storage Default
 <Value>ActiveFlag</Value>
 </Value>
 <Value name="37">
-<Value>AdmID</Value>
+<Value>GroupStage</Value>
 </Value>
 <Value name="38">
-<Value>MedcasNo</Value>
+<Value>PsnNo</Value>
+</Value>
+<Value name="39">
+<Value>InsuranceAreaCode</Value>
+</Value>
+<Value name="40">
+<Value>InsuType</Value>
+</Value>
+<Value name="41">
+<Value>AdmDateTime</Value>
+</Value>
+<Value name="42">
+<Value>DiscgDateTime</Value>
+</Value>
+<Value name="43">
+<Value>SettleDateTime</Value>
+</Value>
+<Value name="44">
+<Value>mdtrtareaAreaCode</Value>
+</Value>
+<Value name="45">
+<Value>UnionOprnFlag</Value>
 </Value>
 </Data>
-<DataLocation>^User.BSDRGGroupRecordD</DataLocation>
+<DataLocation>^BSDRGGroupRecordD</DataLocation>
 <DefaultData>BSDRGGroupRecordDefaultData</DefaultData>
-<IdLocation>^User.BSDRGGroupRecordD</IdLocation>
-<IndexLocation>^User.BSDRGGroupRecordI</IndexLocation>
-<StreamLocation>^User.BSDRGGroupRecordS</StreamLocation>
+<IdLocation>^BSDRGGroupRecordD</IdLocation>
+<IndexLocation>^BSDRGGroupRecordI</IndexLocation>
+<StreamLocation>^BSDRGGroupRecordS</StreamLocation>
 <Type>%Storage.Persistent</Type>
 }
 

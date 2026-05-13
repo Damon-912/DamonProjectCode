@@ -1,0 +1,210 @@
+[
+  {
+    "componentName": "RcaReportView",
+    "descripts": "RCA报告查看",
+    "enDesc": "RCA Report View",
+    "columns": [
+      {
+        "title": "事件编号",
+        "dataIndex": "eventNo",
+        "key": "eventNo",
+        "width": 130,
+        "align": "C",
+        "seqNo": 1
+      },
+      {
+        "title": "事件类型",
+        "dataIndex": "categoryName",
+        "key": "categoryName",
+        "width": 140,
+        "align": "C",
+        "seqNo": 2
+      },
+      {
+        "title": "事件等级",
+        "dataIndex": "eventLevelCode",
+        "key": "eventLevelCode",
+        "width": 100,
+        "align": "C",
+        "seqNo": 3
+      },
+      {
+        "title": "RCA完成时间",
+        "dataIndex": "completedDate",
+        "key": "completedDate",
+        "width": 150,
+        "align": "C",
+        "seqNo": 4
+      },
+      {
+        "title": "直接原因摘要",
+        "dataIndex": "directCauseRcaSummary",
+        "key": "directCauseRcaSummary",
+        "width": 200,
+        "align": "L",
+        "seqNo": 5
+      },
+      {
+        "title": "改进措施摘要",
+        "dataIndex": "improvementMeasuresSummary",
+        "key": "improvementMeasuresSummary",
+        "width": 200,
+        "align": "L",
+        "seqNo": 6
+      },
+      {
+        "title": "附件数量",
+        "dataIndex": "attachmentCount",
+        "key": "attachmentCount",
+        "width": 80,
+        "align": "C",
+        "seqNo": 7
+      },
+      {
+        "title": "是否已读",
+        "dataIndex": "isRead",
+        "key": "isRead",
+        "width": 100,
+        "align": "C",
+        "seqNo": 8
+      },
+      {
+        "title": "操作",
+        "dataIndex": "operation",
+        "key": "operation",
+        "width": 100,
+        "align": "C",
+        "seqNo": 9
+      }
+    ],
+    "formData": [
+      {
+        "type": "RangePicker",
+        "title": "推送日期范围",
+        "dataIndex": "dateRange",
+        "format": "YYYY-MM-DD",
+        "seqNo": 1,
+        "col": 8
+      },
+      {
+        "type": "Select",
+        "title": "是否已读",
+        "dataIndex": "isRead",
+        "placeholder": "请选择",
+        "seqNo": 2,
+        "col": 4
+      },
+      {
+        "type": "Button",
+        "title": "查询",
+        "dataIndex": "queryBtn",
+        "seqNo": 3,
+        "col": 2
+      }
+    ]
+  },
+  {
+    "componentName": "Level1EventReminder",
+    "descripts": "Ⅰ级事件提醒",
+    "enDesc": "Level 1 Event Reminder",
+    "columns": [
+      {
+        "title": "状态",
+        "dataIndex": "isRead",
+        "key": "isRead",
+        "width": 60,
+        "align": "C",
+        "seqNo": 1
+      },
+      {
+        "title": "事件编号",
+        "dataIndex": "eventNo",
+        "key": "eventNo",
+        "width": 130,
+        "align": "C",
+        "seqNo": 2
+      },
+      {
+        "title": "事件类型",
+        "dataIndex": "categoryName",
+        "key": "categoryName",
+        "width": 140,
+        "align": "C",
+        "seqNo": 3
+      },
+      {
+        "title": "事件等级",
+        "dataIndex": "eventLevelCode",
+        "key": "eventLevelCode",
+        "width": 100,
+        "align": "C",
+        "seqNo": 4
+      },
+      {
+        "title": "推送时间",
+        "dataIndex": "noticeDate",
+        "key": "noticeDate",
+        "width": 150,
+        "align": "C",
+        "seqNo": 5
+      },
+      {
+        "title": "事件发生时间",
+        "dataIndex": "eventDate",
+        "key": "eventDate",
+        "width": 150,
+        "align": "C",
+        "seqNo": 6
+      },
+      {
+        "title": "事件描述",
+        "dataIndex": "description",
+        "key": "description",
+        "width": 200,
+        "align": "L",
+        "seqNo": 7
+      },
+      {
+        "title": "上报科室",
+        "dataIndex": "reportLocName",
+        "key": "reportLocName",
+        "width": 120,
+        "align": "C",
+        "seqNo": 8
+      },
+      {
+        "title": "上报人",
+        "dataIndex": "reportUserName",
+        "key": "reportUserName",
+        "width": 100,
+        "align": "C",
+        "seqNo": 9
+      },
+      {
+        "title": "操作",
+        "dataIndex": "operation",
+        "key": "operation",
+        "width": 150,
+        "align": "L",
+        "seqNo": 10
+      }
+    ],
+    "formData": [
+      {
+        "type": "RangePicker",
+        "title": "推送日期范围",
+        "dataIndex": "dateRange",
+        "format": "YYYY-MM-DD",
+        "seqNo": 1,
+        "col": 8
+      },
+      {
+        "type": "Button",
+        "title": "查询",
+        "dataIndex": "queryBtn",
+        "seqNo": 2,
+        "col": 2
+      }
+    ]
+  }
+]

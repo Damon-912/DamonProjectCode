@@ -1,0 +1,201 @@
+[2026-04-01T06:14:01.900Z] ========================================
+[2026-04-01T06:14:01.902Z] 发送请求到: http://139.199.176.179:8090/bdhealth/
+[2026-04-01T06:14:01.903Z] 接口代码: 01049999
+[2026-04-01T06:14:01.903Z] 组件名称: Level1EventReminder
+[2026-04-01T06:14:01.903Z] 组件描述: Ⅰ级事件提醒
+[2026-04-01T06:14:01.903Z] 表头数量: 10
+[2026-04-01T06:14:01.904Z] 表单数量: 2
+[2026-04-01T06:14:01.904Z] ========================================
+[2026-04-01T06:14:01.906Z] 请求选项: {
+  "hostname": "139.199.176.179",
+  "port": "8090",
+  "path": "/bdhealth/",
+  "method": "POST",
+  "headers": {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    "Authorization": "Basic cHJoaXA6cHJoaXBAMjAyMA==",
+    "Access-Control-Allow-Origin": "http://139.199.176.179:8090"
+  }
+}
+[2026-04-01T06:14:01.906Z] 请求体: {
+  "params": [
+    {
+      "componentArr": [
+        {
+          "code": "Level1EventReminder",
+          "descripts": "Ⅰ级事件提醒",
+          "enDesc": "Level 1 Event Reminder",
+          "columns": [
+            {
+              "descripts": "状态",
+              "code": "isRead",
+              "width": 60,
+              "align": "C",
+              "seqNo": 1,
+              "type": "C",
+              "display": "Y",
+              "print": "Y",
+              "export": "Y"
+            },
+            {
+              "descripts": "事件编号",
+              "code": "eventNo",
+              "width": 130,
+              "align": "C",
+              "seqNo": 2,
+              "type": "C",
+              "display": "Y",
+              "print": "Y",
+              "export": "Y"
+            },
+            {
+              "descripts": "事件类型",
+              "code": "categoryName",
+              "width": 140,
+              "align": "C",
+              "seqNo": 3,
+              "type": "C",
+              "display": "Y",
+              "print": "Y",
+              "export": "Y"
+            },
+            {
+              "descripts": "事件等级",
+              "code": "eventLevelCode",
+              "width": 100,
+              "align": "C",
+              "seqNo": 4,
+              "type": "C",
+              "display": "Y",
+              "print": "Y",
+              "export": "Y"
+            },
+            {
+              "descripts": "推送时间",
+              "code": "noticeDate",
+              "width": 150,
+              "align": "C",
+              "seqNo": 5,
+              "type": "C",
+              "display": "Y",
+              "print": "Y",
+              "export": "Y"
+            },
+            {
+              "descripts": "事件发生时间",
+              "code": "eventDate",
+              "width": 150,
+              "align": "C",
+              "seqNo": 6,
+              "type": "C",
+              "display": "Y",
+              "print": "Y",
+              "export": "Y"
+            },
+            {
+              "descripts": "事件描述",
+              "code": "description",
+              "width": 200,
+              "align": "L",
+              "seqNo": 7,
+              "type": "C",
+              "display": "Y",
+              "print": "Y",
+              "export": "Y"
+            },
+            {
+              "descripts": "上报科室",
+              "code": "reportLocName",
+              "width": 120,
+              "align": "C",
+              "seqNo": 8,
+              "type": "C",
+              "display": "Y",
+              "print": "Y",
+              "export": "Y"
+            },
+            {
+              "descripts": "上报人",
+              "code": "reportUserName",
+              "width": 100,
+              "align": "C",
+              "seqNo": 9,
+              "type": "C",
+              "display": "Y",
+              "print": "Y",
+              "export": "Y"
+            },
+            {
+              "descripts": "操作",
+              "code": "operation",
+              "width": 150,
+              "align": "L",
+              "seqNo": 10,
+              "type": "C",
+              "display": "Y",
+              "print": "N",
+              "export": "N"
+            }
+          ],
+          "formData": [
+            {
+              "descripts": "推送日期范围",
+              "code": "dateRange",
+              "fieldTypeID": 16,
+              "seqNo": 1,
+              "col": 8,
+              "labelCol": 8,
+              "wrapperCol": 16,
+              "display": "Y",
+              "required": "N",
+              "disabled": "N"
+            },
+            {
+              "descripts": "查询",
+              "code": "queryBtn",
+              "fieldTypeID": 17,
+              "seqNo": 2,
+              "col": 2,
+              "labelCol": 8,
+              "wrapperCol": 16,
+              "display": "Y",
+              "required": "N",
+              "disabled": "N"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "code": "01049999",
+  "session": [
+    {}
+  ]
+}
+[2026-04-01T06:14:01.957Z] 响应状态码: 200
+[2026-04-01T06:14:01.958Z] 响应头: {
+  "server": "nginx/1.18.0",
+  "date": "Wed, 01 Apr 2026 06:14:02 GMT",
+  "content-type": "application/json; charset=UTF-8",
+  "transfer-encoding": "chunked",
+  "connection": "close",
+  "access-control-allow-credentials": "true",
+  "access-control-allow-methods": "GET,POST,PUT,OPTIONS",
+  "access-control-allow-origin": "*",
+  "cache-control": "no-cache",
+  "expires": "Thu, 29 Oct 1998 17:04:19 GMT",
+  "pragma": "no-cache"
+}
+[2026-04-01T06:14:01.960Z] 原始响应: {"errorCode":"0","errorMessage":"","result":{"successCount":1,"skippedCount":0,"skippedCodes":[]}}
+[2026-04-01T06:14:01.961Z] 完整响应数据: {
+  "errorCode": "0",
+  "errorMessage": "",
+  "result": {
+    "successCount": 1,
+    "skippedCount": 0,
+    "skippedCodes": []
+  }
+}
+[2026-04-01T06:14:01.962Z] 入库成功!
+[2026-04-01T06:14:01.962Z] 消息: 入库成功

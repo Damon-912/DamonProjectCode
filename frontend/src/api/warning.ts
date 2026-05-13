@@ -232,6 +232,7 @@ export interface WarningStats {
     '03'?: number;
     '04'?: number;
     '05'?: number;
+    '06'?: number;
   };
   levelStats: {
     high?: number;
@@ -267,34 +268,73 @@ export interface WarningRule {
 }
 
 /**
- * 预警记录数据类型
+ * 预警记录数据类型（对应 BS_DRGWarningRecord 表）
  */
 export interface WarningRecord {
+  /** 记录ID */
   id: string;
+  /** 预警流水号 */
   warningNo: string;
+  /** 关联规则的引用ID */
+  ruleDr?: string;
+  /** 关联规则编码 */
   ruleCode: string;
+  /** 关联规则名称 */
   ruleName: string;
+  /** 预警类型：01=费用超支, 02=低倍率, 03=高倍率, 04=编码异常, 05=分解住院 */
   warningType: string;
+  /** 预警级别：1=低, 2=中, 3=高 */
   warningLevel: number;
+  /** 病案ID */
+  medicalRecordDr?: string;
+  /** HIS就诊ID */
   hisAdmId: string;
+  /** 患者姓名 */
   patientName: string;
+  /** 科室编码 */
   deptCode?: string;
+  /** 科室名称 */
   deptName?: string;
+  /** 医生编码 */
   doctorCode?: string;
+  /** 医生姓名 */
   doctorName?: string;
+  /** DRG编码 */
   drgCode: string;
+  /** DRG名称 */
   drgName?: string;
+  /** 医疗总费用 */
   totalFee: number;
+  /** 医保结算费用 */
   insuranceFee?: number;
+  /** DRG支付标准 */
   drgPayStandard?: number;
+  /** 费用差异金额 */
   diffAmount?: number;
+  /** 费用差异率(%) */
   diffRate?: number;
+  /** 预警消息 */
   warningMessage?: string;
+  /** 预警状态：01=待处理, 02=已确认, 03=已忽略, 04=已申诉, 05=已解决 */
   warningStatus: string;
+  /** 预警日期 */
   warningDate: string;
+  /** 预警时间 */
   warningTime: string;
+  /** 预警日期时间（组合） */
+  warningDateTime?: string;
+  /** 处理人 */
   processUser?: string;
+  /** 处理日期 */
   processDate?: string;
+  /** 处理时间 */
   processTime?: string;
+  /** 处理日期时间（组合） */
+  processDateTime?: string;
+  /** 处理备注 */
   processRemark?: string;
+  /** 医疗机构代码 */
+  fixmedinsCode?: string;
+  /** 医疗机构名称 */
+  fixmedinsName?: string;
 }

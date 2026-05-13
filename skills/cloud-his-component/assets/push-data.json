@@ -1,0 +1,91 @@
+{
+  "code": "Level1EventReminder",
+  "descripts": "Ⅰ级事件提醒",
+  "columns": [
+    {
+      "descripts": "状态",
+      "code": "isRead",
+      "width": 60,
+      "align": "center",
+      "seqNo": 1,
+      "type": "C",
+      "display": "Y",
+      "print": "Y",
+      "export": "Y"
+    },
+    {
+      "descripts": "事件编号",
+      "code": "eventId",
+      "width": 130,
+      "align": "center",
+      "seqNo": 2,
+      "type": "C",
+      "display": "Y",
+      "print": "Y",
+      "export": "Y"
+    },
+    {
+      "descripts": "事件类型",
+      "code": "eventType",
+      "width": 120,
+      "align": "center",
+      "seqNo": 3,
+      "type": "C",
+      "display": "Y",
+      "print": "Y",
+      "export": "Y"
+    },
+    {
+      "descripts": "上报日期",
+      "code": "reportTime",
+      "width": 150,
+      "align": "center",
+      "seqNo": 4,
+      "type": "C",
+      "display": "Y",
+      "print": "Y",
+      "export": "Y"
+    },
+    {
+      "descripts": "当前状态",
+      "code": "status",
+      "width": 120,
+      "align": "center",
+      "seqNo": 5,
+      "type": "C",
+      "display": "Y",
+      "print": "Y",
+      "export": "Y"
+    },
+    {
+      "descripts": "操作",
+      "code": "operation",
+      "width": 180,
+      "align": "left",
+      "seqNo": 6,
+      "type": "C",
+      "display": "Y",
+      "print": "N",
+      "export": "N"
+    }
+  ],
+  "formData": [
+    {
+      "descripts": "上报日期",
+      "code": "dateRange",
+      "fieldTypeID": 16,
+      "col": 5,
+      "labelCol": 5,
+      "wrapperCol": 18,
+      "display": "Y"
+    },
+    {
+      "descripts": "查询",
+      "code": "queryBtn",
+      "fieldTypeID": 17,
+      "col": 2,
+      "offset": 1,
+      "display": "Y"
+    }
+  ]
+}

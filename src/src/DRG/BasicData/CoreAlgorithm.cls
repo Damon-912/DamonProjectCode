@@ -616,6 +616,13 @@ ClassMethod ConfirmImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
     try 
     {
         set params=jsonObj.params.%Get(0)
+        set session=jsonObj.session.%Get(0)
+        set userID=session.userID
+        
+        if (userID="")
+        {
+	        set userID="158"    
+	    }                              
         
         // 检查必需参数
         if '$isobject(params) {
@@ -638,16 +645,7 @@ ClassMethod ConfirmImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
             set resultObj.errorMessage="接口入参省、市代码不能为空！"
             quit	
         }
-        
-        // 创建用户ID
-        set createUserDr=""
-        if $isobject(jsonObj.session) 
-        {
-            set session=jsonObj.session.%Get(0)
-            set:session'="" createUserDr=session.userID
-        }
-        set:createUserDr="" createUserDr="158"
-        
+                
         // Base64解码
         set csvContent = ""
         try {
@@ -736,7 +734,7 @@ ClassMethod ConfirmImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
             set dataObj.StopDate=""
             set dataObj.CreateDate=$zd($h,3)
             set dataObj.CreateTime=$zt($p($h,",",2),1)
-            set dataObj.CreateUserDr=createUserDr
+            set dataObj.CreateUserDr=userID
             
             set insObj={},data=[]
             set insObj.className="User.HBDRGCoreAlgorithmData"

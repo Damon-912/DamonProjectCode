@@ -27,7 +27,7 @@ ClassMethod DeviceFeeWarning(jsonObj) As %Library.DynamicObject
 
 /// Creator:     CM
 /// CreatDate:   2026-01-01
-/// Description: DIP分值查询
+/// Description: DIP分组分值查询
 /// code: 02010003		 
 /// Input:{"params":[{"":""}]}
 /// Debug
