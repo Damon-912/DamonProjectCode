@@ -13,7 +13,7 @@ Property Code As %String(COLLATION = "UPPER", TRUNCATE = 1) [ Required, SqlColum
 
 Index Code On Code;
 
-Index DataIndex On (Code, HBDictionariesDr);
+Index DataIndex On (Code, HBDictionariesDr) [ Unique ];
 
 /// 描述 非空
 Property Descripts As %String(COLLATION = "UPPER", TRUNCATE = 1) [ Required, SqlColumnNumber = 4, SqlFieldName = Descripts ];
@@ -22,19 +22,19 @@ Property Descripts As %String(COLLATION = "UPPER", TRUNCATE = 1) [ Required, Sql
 Property Identification As %String(MAXLEN = 99999) [ SqlColumnNumber = 5, SqlFieldName = Identification ];
 
 /// 生效日期 真正开始使用日期
-Property StartDate As %Date [ Required, SqlColumnNumber = 6, SqlFieldName = StartDate ];
+Property StartDate As %Date [ SqlColumnNumber = 6, SqlFieldName = StartDate ];
 
 /// 失效日期 此日期开始不能用,不填说明一直可用,如果不可用需要看此日期
 Property StopDate As %Date [ SqlColumnNumber = 7, SqlFieldName = StopDate ];
 
 /// 创建日期 系统自动产生
-Property CreateDate As %Date [ Required, SqlColumnNumber = 8, SqlFieldName = CreateDate ];
+Property CreateDate As %Date [ SqlColumnNumber = 8, SqlFieldName = CreateDate ];
 
 /// 创建时间 系统自动产生
-Property CreateTime As %Time [ Required, SqlColumnNumber = 9, SqlFieldName = CreateTime ];
+Property CreateTime As %Time [ SqlColumnNumber = 9, SqlFieldName = CreateTime ];
 
 /// 创建人员ID 指向HB_User表
-Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 10, SqlFieldName = CreateUser_Dr ];
+Property CreateUserDr As HBUser [ SqlColumnNumber = 10, SqlFieldName = CreateUser_Dr ];
 
 /// 备注
 Property Remark As %String(MAXLEN = 99999) [ SqlColumnNumber = 11, SqlFieldName = Remark ];

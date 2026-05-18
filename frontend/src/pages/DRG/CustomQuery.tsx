@@ -6,7 +6,8 @@ import {
 } from 'antd';
 import { 
   PlayCircleOutlined, ReloadOutlined, PlusOutlined, DeleteOutlined,
-  MedicineBoxOutlined, UserOutlined, ScissorOutlined, BankOutlined
+  MedicineBoxOutlined, UserOutlined, ScissorOutlined, BankOutlined,
+  CalendarOutlined
 } from '@ant-design/icons';
 import { drgGroup, convertResultToLowerCamel, type DiagnosisInfoLowerCamel, type OperationInfoLowerCamel, type DRGGroupResultLowerCamel } from '@/api/drgGrouping';
 import { queryMedInsuIcdInfo, getProvinceData, getCityData, type MedInsuIcdItem, type ProvinceItem, type CityItem } from '@/api/basicData';
@@ -194,9 +195,14 @@ const DRGCustomQuery: React.FC = () => {
           name: h.descripts,
         }));
 
-      // 校验：如果医疗机构信息不为空，则省市必选
+      // 校验：如果医疗机构信息不为空，则省市和分组方案年份必选
       if (hospInfo.length > 0 && (!values.Province || !values.City)) {
         message.error('选择医疗机构时，参保省份、参保城市为必选项');
+        setLoading(false);
+        return;
+      }
+      if (hospInfo.length > 0 && !values.GroupYear) {
+        message.error('选择医疗机构时，分组方案年份为必填项');
         setLoading(false);
         return;
       }
@@ -229,6 +235,8 @@ const DRGCustomQuery: React.FC = () => {
         oprnInfo: operations,
         // 医疗机构信息数组，即使为空也要传递
         hospInfo: hospInfo,
+        // 分组方案年份
+        groupYear: values.GroupYear,
       };
 
       // 直接调用接口（内部会自动转换大小驼峰）
@@ -1143,6 +1151,7 @@ const DRGCustomQuery: React.FC = () => {
                 TraumaLevel: 0,
                 HospitalDays: 1,
                 DischargeType: '1', // 默认值：1-医嘱离院
+                GroupYear: new Date().getFullYear(), // 默认当前年份
               }}
             >
           {/* 患者基本信息 */}
@@ -1314,6 +1323,25 @@ const DRGCustomQuery: React.FC = () => {
                       <Option key={item.id} value={item.id}>{item.descripts}</Option>
                     ))}
                   </Select>
+                </Form.Item>
+              </Col>
+              <Col span={6}>
+                <Form.Item 
+                  name="GroupYear" 
+                  label={
+                    <Space size={4}>
+                      <CalendarOutlined />
+                      <span>分组方案年份</span>
+                    </Space>
+                  }
+                >
+                  <InputNumber 
+                    min={2020} 
+                    max={2099} 
+                    placeholder="请输入年份"
+                    style={{ width: '100%' }} 
+                    precision={0}
+                  />
                 </Form.Item>
               </Col>
             </Row>

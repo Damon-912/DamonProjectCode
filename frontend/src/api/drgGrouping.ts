@@ -641,6 +641,8 @@ export interface DRGGroupParamsLowerCamel {
   admissionNo?: string;
   /** 医疗机构信息数组 */
   hospInfo?: HospInfoLowerCamel[];
+  /** 分组方案年份（4位数字，如 2026），医疗机构信息不为空时必填 */
+  groupYear?: number;
 }
 
 /**
@@ -737,6 +739,8 @@ export interface DRGGroupResultLowerCamel {
     pipValue: string | number;
     dgdov: string | number;
     payStandard: string | number;
+    /** 实际使用的分组方案年份 */
+    groupPlanYear?: string | number;
     /** 当前费用总额 */
     totalAmt?: string | number;
     /** 预估盈利 */

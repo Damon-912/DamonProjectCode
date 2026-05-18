@@ -56,6 +56,7 @@ ClassMethod UpdateDRGCoreAlgorithm(postObj) As %Library.DynamicObject
 		
 		set identification=params.identification
 		set remark=params.remark
+		set year=params.year //分组方案年份
 		
 		if (startDate'="")&&(stopDate'="")
 		{
@@ -123,7 +124,8 @@ ClassMethod UpdateDRGCoreAlgorithm(postObj) As %Library.DynamicObject
 		set dataObj.FixmedinsCode=fixmedinsCode
 		set dataObj.FixmedinsName=fixmedinsName
 		set dataObj.Identification=identification
-		set dataObj.Remark=remark		
+		set dataObj.Remark=remark
+		set dataObj.Year=year		
 				
 		set insObj={}
 		set insObj.className="User.HBDRGCoreAlgorithmData"
@@ -187,11 +189,12 @@ ClassMethod GetDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
 		set insuType=params.insuType
 		
 		set status=params.status
+		set year=params.year  //分组方案年份
 
 		set sql =" SELECT ID,DRG,DRGDESC,Points,PipValue,DGDOV,PayStandard,InsuType,MdtrtArea,MedinsLv,"
 		        _" Province_Dr as ProvinceID,Province_Dr->Descripts as ProvinceDesc,"
 		        _" City_Dr as CityID,City_Dr->Descripts as CityDesc,StartDate,StopDate," 
-			    _" FixmedinsCode,FixmedinsName,Identification,Remark,CreateDate,CreateTime "
+			    _" FixmedinsCode,FixmedinsName,Identification,Remark,CreateDate,CreateTime,Year "
 			    _" FROM HB_DRGCoreAlgorithmData where 1=1"
 		
 		if DRG'=""
@@ -217,6 +220,10 @@ ClassMethod GetDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
 		if insuType'=""
 		{
 			set sql=sql_" and insuType = "_insuType 
+		}
+		if year'=""
+		{
+			set sql=sql_" and Year = '"_year_"'" 
 		}										
 
 		set sqlObj=##class(%SQL.Statement).%New(1)
@@ -249,7 +256,8 @@ ClassMethod GetDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
 		    set dataObj.fixmedinsCode=result.%Get("FixmedinsCode")
 		    set dataObj.fixmedinsName=result.%Get("FixmedinsName")
 		    set dataObj.identification=result.%Get("Identification")
-		    set dataObj.remark=result.%Get("Remark")				
+		    set dataObj.remark=result.%Get("Remark")
+		    set dataObj.year=result.%Get("Year")				
 
 			if startDate'=""{
 				set startDate=$zdh(startDate,3)
@@ -405,6 +413,7 @@ ClassMethod PreviewImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
         set mdtrtArea=params.mdtrtArea
         set fixmedinsCode=params.fixmedinsCode
         set fixmedinsName=params.fixmedinsName
+        set year=params.year  //分组方案年份（导入必选）
         set medinsLv=params.medinsLv
         
         // 参数校验
@@ -556,10 +565,10 @@ ClassMethod PreviewImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
                 continue
             }
             
-            // 检查是否已存在（DRG代码+行政区划+机构代码）
+            // 检查是否已存在（DRG代码+行政区划+机构代码+年份）
             set existingID=""
             &sql(SELECT ID INTO :existingID FROM SQLUser.HB_DRGCoreAlgorithmData 
-                 WHERE DRG=:drgCode AND MdtrtArea=:mdtrtArea AND FixmedinsCode=:fixmedinsCode)
+                 WHERE DRG=:drgCode AND MdtrtArea=:mdtrtArea AND FixmedinsCode=:fixmedinsCode AND Year=:year)
             
             if existingID'="" 
             {
@@ -638,6 +647,7 @@ ClassMethod ConfirmImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
         set fixmedinsCode=params.fixmedinsCode
         set fixmedinsName=params.fixmedinsName
         set medinsLv=params.medinsLv
+        set year=params.year  //分组方案年份（导入必选）
         
         if (provinceID="")||(cityID="")
         {
@@ -711,10 +721,10 @@ ClassMethod ConfirmImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
                 continue
             }
             
-            // 检查是否已存在
+            // 检查是否已存在（含年份）
             set existingID=""
             &sql(SELECT ID INTO :existingID FROM HB_DRGCoreAlgorithmData 
-                 WHERE DRG=:drgCode AND MdtrtArea=:mdtrtArea AND FixmedinsCode=:fixmedinsCode)
+                 WHERE DRG=:drgCode AND MdtrtArea=:mdtrtArea AND FixmedinsCode=:fixmedinsCode AND Year=:year)
             
             // 构建数据对象
             set dataObj={}
@@ -730,6 +740,7 @@ ClassMethod ConfirmImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
             set dataObj.FixmedinsCode=fixmedinsCode
             set dataObj.FixmedinsName=fixmedinsName
             set dataObj.MedinsLv=medinsLv
+            set dataObj.Year=year
             set dataObj.StartDate=$zd($h,3)
             set dataObj.StopDate=""
             set dataObj.CreateDate=$zd($h,3)
@@ -830,6 +841,7 @@ ClassMethod QueryDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
 		set provinceID=params.provinceID
 		set cityID=params.cityID
 		set medinsLv=params.medinsLv
+		set year=params.year  //分组方案年份
 		
 		set sql =" SELECT ID,PrincipalDiagnosis,PrincipalDiagnosisName,"
 		        _" MajorProcedure,MajorProcedureName,"
@@ -839,7 +851,7 @@ ClassMethod QueryDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
 		        _" MdtrtArea,MedinsLv,"
 		        _" ScoreValue,AdjustCoefficient,"
 		        _" PrimaryAdjustCoefficient,SecondaryAdjustCoefficient,ThirdAdjustCoefficient,"
-		        _" CreateDate,CreateTime "
+		        _" CreateDate,CreateTime,Year "
 		        _" FROM HB_DIPCoreAlgorithmData where 1=1"
 		
 		if principalDiagnosis'=""
@@ -870,6 +882,10 @@ ClassMethod QueryDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
 		{
 			set sql=sql_" and MedinsLv = '"_medinsLv_"'" 
 		}
+		if year'=""
+		{
+			set sql=sql_" and Year = '"_year_"'" 
+		}
 		
 		set sql=sql_" ORDER BY ID DESC"
 		
@@ -899,6 +915,7 @@ ClassMethod QueryDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
 			set dataObj.thirdAdjustCoefficient=result.%Get("ThirdAdjustCoefficient")
 			set dataObj.createDate=result.%Get("CreateDate")
 			set dataObj.createTime=result.%Get("CreateTime")
+			set dataObj.year=result.%Get("Year")
 			
 			set count=count+1
 			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
@@ -954,6 +971,7 @@ ClassMethod SaveDIPCoreAlgorithm(postObj) As %Library.DynamicObject
 		set primaryAdjustCoefficient=params.primaryAdjustCoefficient
 		set secondaryAdjustCoefficient=params.secondaryAdjustCoefficient
 		set thirdAdjustCoefficient=params.thirdAdjustCoefficient
+		set year=params.year  //分组方案年份
 		
 		// 必填校验
 		if (principalDiagnosis="")
@@ -1011,6 +1029,7 @@ ClassMethod SaveDIPCoreAlgorithm(postObj) As %Library.DynamicObject
 		set dataObj.PrimaryAdjustCoefficient=primaryAdjustCoefficient
 		set dataObj.SecondaryAdjustCoefficient=secondaryAdjustCoefficient
 		set dataObj.ThirdAdjustCoefficient=thirdAdjustCoefficient
+		set dataObj.Year=year
 		set dataObj.CreateDate=$zd($h,3)
 		set dataObj.CreateTime=$zt($p($h,",",2),1)
 		set dataObj.CreateUserDr="158" //userID
@@ -1157,6 +1176,7 @@ ClassMethod PreviewImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
         set medinsLv=params.medinsLv
         set mdtrtArea=params.mdtrtArea
         set fileData=params.fileData
+        set year=params.year  //分组方案年份（导入必选）
         
         // 参数校验
         if provinceID="" {
@@ -1303,10 +1323,10 @@ ClassMethod PreviewImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
                 continue
             }
             
-            // 检查是否已存在（主要诊断代码+省+市+机构等级）
+            // 检查是否已存在（主要诊断代码+省+市+机构等级+年份）
             set existingID=""
             &sql(SELECT ID INTO :existingID FROM SQLUser.HB_DIPCoreAlgorithmData 
-                 WHERE PrincipalDiagnosis=:principalDiagnosis AND Province_Dr=:provinceID AND City_Dr=:cityID AND MedinsLv=:medinsLv)
+                 WHERE PrincipalDiagnosis=:principalDiagnosis AND Province_Dr=:provinceID AND City_Dr=:cityID AND MedinsLv=:medinsLv AND Year=:year)
             
             if existingID'="" 
             {
@@ -1375,6 +1395,7 @@ ClassMethod ConfirmImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
         set cityID=params.cityID
         set medinsLv=params.medinsLv
         set mdtrtArea=params.mdtrtArea
+        set year=params.year  //分组方案年份（导入必选）
         
         if (provinceID="")||(cityID="")
         {
@@ -1474,10 +1495,10 @@ ClassMethod ConfirmImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
                 continue
             }
             
-            // 检查是否已存在
+            // 检查是否已存在（含年份）
             set existingID=""
             &sql(SELECT ID INTO :existingID FROM HB_DIPCoreAlgorithmData 
-                 WHERE PrincipalDiagnosis=:principalDiagnosis AND Province_Dr=:provinceID AND City_Dr=:cityID AND MedinsLv=:medinsLv)
+                 WHERE PrincipalDiagnosis=:principalDiagnosis AND Province_Dr=:provinceID AND City_Dr=:cityID AND MedinsLv=:medinsLv AND Year=:year)
             
             // 构建数据对象
             set dataObj={}
@@ -1494,6 +1515,7 @@ ClassMethod ConfirmImportDIPCoreAlgorithm(jsonObj) As %Library.DynamicObject
             set dataObj.ScoreValue=scoreValue
             set dataObj.AdjustCoefficient=adjustCoefficient
             set dataObj.PrimaryAdjustCoefficient=primaryAdjustCoefficient
+            set dataObj.Year=year
             set dataObj.SecondaryAdjustCoefficient=secondaryAdjustCoefficient
             set dataObj.ThirdAdjustCoefficient=thirdAdjustCoefficient
             set dataObj.CreateDate=$zd($h,3)

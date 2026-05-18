@@ -1,7 +1,7 @@
 ROUTINE src.DRG.Warning.1 [Type=INT,Generated]
  ;src.DRG.Warning.1
- ;Generated for class src.DRG.Warning.  Do NOT edit. 04/27/2026 06:22:15PM
- ;;48314876;src.DRG.Warning
+ ;Generated for class src.DRG.Warning.  Do NOT edit. 05/13/2026 12:35:29PM
+ ;;70593268;src.DRG.Warning
  ;
 zAddWarningRecord(jsonObj)
 	new (jsonObj)
@@ -231,19 +231,19 @@ zAddWarningRecord(jsonObj)
  s sqldata27d="",sqldata28d="",sqldata30d=1
 %0AmCk1 f  s sqldata30d=$bitfind(sqldata28d,1,sqldata30d+1) i sqldata30d { s sqldata12d=sqldata29d+sqldata30d-1 q } s sqldata27d=$o(sqldata26d(sqldata27d),1,sqldata28d) q:sqldata27d=""  s sqldata29d=sqldata27d-1*64000
  i sqldata27d="" g %0AmCdun
- s sqldata33d="" i $d(^User.HBDRGCoreAlgorithmDataD(sqldata12d),sqldata33d)
+ s sqldata33d="" i $d(^HBDRGCoreAlgorithmDataD(sqldata12d),sqldata33d)
  e  g %0AmCk1
  S $lg(,sqldata3d,,,,,getPayStandard,,,,,,,,,sqldata5d)=sqldata33d
  s sqldata8d=$zu(28,sqldata3d,7)
  s sqldata10d=$zu(28,sqldata5d,7)
  goto:sqldata15d'=1 %0AmCuncommitted
  if sqldata15d=1 {
- 	lock +^User.HBDRGCoreAlgorithmDataD($p(sqldata12d,"||",1))#"S":$zu(115,4)
- 	if $t { set sqldata17d=$name(^User.HBDRGCoreAlgorithmDataD($p(sqldata12d,"||",1)))_"#""SI""",sqldata16d=1 }
+ 	lock +^HBDRGCoreAlgorithmDataD($p(sqldata12d,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata17d=$name(^HBDRGCoreAlgorithmDataD($p(sqldata12d,"||",1)))_"#""SI""",sqldata16d=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGCoreAlgorithmData for RowID value: "_sqldata12d ztrap "LOCK"  }
  }
  ; asl MOD# 4
- i sqldata12d'="" s sqldata36d="" i $d(^User.HBDRGCoreAlgorithmDataD(sqldata12d),sqldata36d)
+ i sqldata12d'="" s sqldata36d="" i $d(^HBDRGCoreAlgorithmDataD(sqldata12d),sqldata36d)
  e  g %0AmDdun
  S sqldata3d=$lg(sqldata36d,2)
  s sqldata8d=$zu(28,sqldata3d,7)
@@ -279,14 +279,14 @@ zAddWarningRecord(jsonObj)
  i sqldata8d="" g %0AmBdun
  i '(sqldata8d'=" ") g %0AmBdun
  s sqldata13d=""
-%0AmBk1 s sqldata13d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata8d,sqldata13d))
+%0AmBk1 s sqldata13d=$o(^HBDRGCoreAlgorithmDataI("Index",sqldata8d,sqldata13d))
  i sqldata13d="" g %0AmBdun
  s sqldata14d=""
-%0AmBk2 s sqldata14d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata8d,sqldata13d,sqldata14d))
+%0AmBk2 s sqldata14d=$o(^HBDRGCoreAlgorithmDataI("Index",sqldata8d,sqldata13d,sqldata14d))
  i sqldata14d="" g %0AmBk1
  i sqldata10d="" g %0AmBk2
  s sqldata12d=""
-%0AmBk3 s sqldata12d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata8d,sqldata13d,sqldata14d,sqldata10d,sqldata12d))
+%0AmBk3 s sqldata12d=$o(^HBDRGCoreAlgorithmDataI("Index",sqldata8d,sqldata13d,sqldata14d,sqldata10d,sqldata12d))
  i sqldata12d="" g %0AmBk2
  s $bit(sqldata26d(sqldata12d\64000+1),sqldata12d#64000+1)=1
  g %0AmBk3
@@ -656,11 +656,13 @@ zQueryWarningRecords(jsonObj)
             set dataObj.diffRate=result.%Get("DiffRate")
             set dataObj.warningMessage=result.%Get("WarningMessage")
             set dataObj.warningStatus=result.%Get("WarningStatus")
-            set dataObj.warningDate=$zd(result.%Get("WarningDate"),3)
-            set dataObj.warningTime=$zt(result.%Get("WarningTime"),1)
+            set dataObj.warningDate=result.%Get("WarningDate")
+            set dataObj.warningTime=result.%Get("WarningTime")
+            set dataObj.warningDateTime=dataObj.warningDate_" "_dataObj.warningTime
             set dataObj.processUser=result.%Get("ProcessUser_Dr")
-            set dataObj.processDate=$zd(result.%Get("ProcessDate"),3)
-            set dataObj.processTime=$zt(result.%Get("ProcessTime"),1)
+            set dataObj.processDate=result.%Get("ProcessDate")
+            set dataObj.processTime=result.%Get("ProcessTime")
+            set dataObj.processDateTime=$s(dataObj.processDate'="":dataObj.processDate_" "_dataObj.processTime,1:"")
             set dataObj.processRemark=result.%Get("ProcessRemark")
             set count=count+1
             // 分页处理：使用 continue 语句

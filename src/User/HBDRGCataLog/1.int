@@ -1,7 +1,7 @@
 ROUTINE User.HBDRGCataLog.1 [Type=INT,Generated]
  ;User.HBDRGCataLog.1
- ;Generated for class User.HBDRGCataLog.  Do NOT edit. 04/21/2026 04:19:04PM
- ;;677A794A;User.HBDRGCataLog
+ ;Generated for class User.HBDRGCataLog.  Do NOT edit. 05/14/2026 04:00:16PM
+ ;;535A6763;User.HBDRGCataLog
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
 ALPHAUP(v,r) { quit $zu(28,v,6) }
@@ -80,8 +80,53 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	}
 	Set:$Get(tPrefetch) tPrefetch=$prefetchoff(^HBDRGCataLogD)
 	Quit tStatus }
-%CheckConstraints(pID,pConstraintList="",pCheckDisabled=0,pErrorInfo) public {
-	if (''..%OnDetermineClass($select(pID="":"",1:$listbuild(pID_"")),.tMSTC)) && (tMSTC '= $classname()) { quit $classmethod(tMSTC,"%CheckConstraints",pID,pConstraintList) } else { quit 1 } }
+%CheckConstraints(pID,pConstraintList="",pCheckDisabled=0,pErrorInfo) [ SQLCODE,pID,tCol1,tCol2,tCol3 ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE,tCol1,tCol2,tCol3 
+	set tStatus = ..%OnDetermineClass($select(pID="":"",1:$listbuild(pID_"")),.tMSTC) if ('tStatus) { set pErrorInfo = $Listbuild(pID) quit tStatus } if tMSTC '= $classname() { quit $classmethod(tMSTC,"%CheckConstraints",pID,pConstraintList) }
+	set tStatus = 1, pErrorInfo = ""
+	 ;---&sql(select City_Dr,Code,Province_Dr INTO :tCol3,:tCol1,:tCol2 FROM SQLUser.HB_DRGCataLog WHERE %ID = :pID)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, pID, tCol1, tCol2, tCol3
+	do %0Ao
+	if 'SQLCODE {
+		if ((pConstraintList="")||($lf(pConstraintList,"DataIndex"))) && ('..DataIndexCheckUnique(pID,tCol1,tCol2,tCol3)) { set tStatus = $select(+tStatus:$$Error^%apiOBJ(5808,$classname()_".DataIndex"),1:$$AppendStatus^%occSystem(tStatus,$$Error^%apiOBJ(5808,$classname()_".DataIndex"))) }
+		set pErrorInfo = $Listbuild(pID,tCol3,tCol1,tCol2)
+	} elseif SQLCODE < 0 { set tStatus = $$Error^%apiOBJ(5540,SQLCODE,$Get(%msg)) }
+	quit tStatus }
+ q
+%0Ao n sqldata10d,sqldata11d,sqldata12d,sqldata15d,sqldata18d,sqldata8d,sqldata7d
+ s $zt="%0Aerr"
+ s sqldata10d=$zu(115,2)
+ s sqldata11d=0,sqldata12d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata8d=$s($g(pID)="":"",$isvalidnum(pID):+pID,1:pID)
+ s SQLCODE=100
+ ; asl MOD# 2
+ s sqldata7d=sqldata8d
+ i sqldata7d'="" s sqldata15d="" i $d(^HBDRGCataLogD(sqldata7d),sqldata15d)
+ e  g %0AmBdun
+ S $lg(,tCol1,,,tCol2,tCol3)=sqldata15d
+ goto:sqldata10d'=1 %0AmBuncommitted
+ if sqldata10d=1 {
+ 	lock +^HBDRGCataLogD($p(sqldata7d,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata12d=$name(^HBDRGCataLogD($p(sqldata7d,"||",1)))_"#""SI""",sqldata11d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGCataLog for RowID value: "_sqldata7d ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ i sqldata7d'="" s sqldata18d="" i $d(^HBDRGCataLogD(sqldata7d),sqldata18d)
+ e  g %0AmCdun
+ S $lg(,tCol1,,,tCol2,tCol3)=sqldata18d
+%0AmBuncommitted ;
+ s SQLCODE=0 g %0Ac
+%0AmCdun if $g(sqldata10d)=1 { if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }}
+%0AmBdun 
+%0AmAdun 
+%0Ac set %ROWCOUNT='SQLCODE
+ if $g(sqldata10d)=1 {
+ 	if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }
+ }
+ q
+%0Aerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Ac
 %CheckConstraintsForExtent(pConstraintList="",pCheckDisabled=0,pErrorLog) [ SQLCODE,tID ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE,tID 
 	kill pErrorLog set tStatusAll = 1, pErrorLog = 0 if '$listvalid(pConstraintList) { set pConstraintList = $listfromstring(pConstraintList) }
 	 ;---&sql(declare ext cursor for select %ID into :tID FROM SQLUser.HB_DRGCataLog)
@@ -94,7 +139,7 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 		for {
 			 ;---&sql(fetch ext)
  			 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
-			try { do %ext0f if SQLCODE'=0 { quit } } catch { do %0Aerr }
+			try { do %ext0f if SQLCODE'=0 { quit } } catch { do %0Cerr }
 			if SQLCODE { if SQLCODE=100 { quit } elseif SQLCODE<0 { set tStatusAll = $select(+tStatusAll:$$Error^%apiOBJ(5521,SQLCODE,$Get(%msg)),1:$$AppendStatus^%occSystem(tStatusAll,$$Error^%apiOBJ(5521,SQLCODE,$Get(%msg)))) quit } }
 			set tStatus = ..%CheckConstraints(tID,pConstraintList,pCheckDisabled,.tErrorInfo)
 			if ('tStatus) { set tStatusAll = $select(+tStatusAll:tStatus,1:$$AppendStatus^%occSystem(tStatusAll,tStatus)) set:pErrorLog<1000 pErrorLog = pErrorLog + 1, pErrorLog(pErrorLog) = tErrorInfo _ $Listbuild(tStatus) }
@@ -106,70 +151,70 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext03872d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext05652d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext03872d(1)=0,%ext03872d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext03872d(3)=$zu(115,2)
- s %ext03872d(4)=0,%ext03872d(5)=""
+ s %ext05652d(1)=0,%ext05652d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext05652d(3)=$zu(115,2)
+ s %ext05652d(4)=0,%ext05652d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext03872d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext03872d(6)=$g(%ext03872d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03872d }
+ s %ext05652d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext05652d(6)=$g(%ext05652d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext05652d }
  q
-%0Afirst 
+%0Cfirst 
  ; asl MOD# 2
- s %ext03872d(7)=""
-%0AmBk1 s %ext03872d(7)=$o(^HBDRGCataLogI("Code",%ext03872d(7)))
- i %ext03872d(7)="" g %0AmBdun
+ s %ext05652d(7)=""
+%0CmBk1 s %ext05652d(7)=$o(^HBDRGCataLogI("Code",%ext05652d(7)))
+ i %ext05652d(7)="" g %0CmBdun
  s tID=""
-%0AmBk2 s tID=$o(^HBDRGCataLogI("Code",%ext03872d(7),tID))
- i tID="" g %0AmBk1
- goto:%ext03872d(3)'=1 %0AmBuncommitted
- if %ext03872d(3)=1 {
+%0CmBk2 s tID=$o(^HBDRGCataLogI("Code",%ext05652d(7),tID))
+ i tID="" g %0CmBk1
+ goto:%ext05652d(3)'=1 %0CmBuncommitted
+ if %ext05652d(3)=1 {
  	lock +^HBDRGCataLogD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext03872d(5)=$name(^HBDRGCataLogD($p(tID,"||",1)))_"#""SI""",%ext03872d(4)=1 }
+ 	if $t { set %ext05652d(5)=$name(^HBDRGCataLogD($p(tID,"||",1)))_"#""SI""",%ext05652d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGCataLog for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^HBDRGCataLogD(tID))
- e  g %0AmCdun
-%0AmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03872d(1)),%ROWID=tID,%ext03872d(0)=10
+ e  g %0CmCdun
+%0CmBuncommitted ;
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext05652d(1)),%ROWID=tID,%ext05652d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext03872d(6)=$g(%ext03872d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext05652d(6)=$g(%ext05652d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext03872d(0)) { s SQLCODE=-102 q  } i %ext03872d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext03872d(2),%ext03872d(1)'<%ext03872d(2) { s SQLCODE=100,%ROWCOUNT=%ext03872d(1),%ext03872d(0)=100 q }
+ i '$g(%ext05652d(0)) { s SQLCODE=-102 q  } i %ext05652d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext05652d(2),%ext05652d(1)'<%ext05652d(2) { s SQLCODE=100,%ROWCOUNT=%ext05652d(1),%ext05652d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Afirst:%ext03872d(0)=1
-%0AmCdun if $g(%ext03872d(3))=1 { if $g(%ext03872d(4))=1 { l -@%ext03872d(5) s %ext03872d(4)=0 } elseif $g(%ext03872d(4))=2 { do $classmethod($li(%ext03872d(5)),"%UnlockId",$li(%ext03872d(5),2),1,1)  s %ext03872d(4)=0 }}
- g %0AmBk2
-%0AmBdun 
-%0AmAdun 
- s %ROWCOUNT=%ext03872d(1),SQLCODE=100,%ext03872d(0)=100
- s:$d(%sqltime) %ext03872d(6)=$g(%ext03872d(6))+$zh-%sqltime
+ g %0Cfirst:%ext05652d(0)=1
+%0CmCdun if $g(%ext05652d(3))=1 { if $g(%ext05652d(4))=1 { l -@%ext05652d(5) s %ext05652d(4)=0 } elseif $g(%ext05652d(4))=2 { do $classmethod($li(%ext05652d(5)),"%UnlockId",$li(%ext05652d(5),2),1,1)  s %ext05652d(4)=0 }}
+ g %0CmBk2
+%0CmBdun 
+%0CmAdun 
+ s %ROWCOUNT=%ext05652d(1),SQLCODE=100,%ext05652d(0)=100
+ s:$d(%sqltime) %ext05652d(6)=$g(%ext05652d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext03872d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext05652d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03872d(1)),1:0)
- if $g(%ext03872d(3))=1 {
- 	if $g(%ext03872d(4))=1 { l -@%ext03872d(5) s %ext03872d(4)=0 } elseif $g(%ext03872d(4))=2 { do $classmethod($li(%ext03872d(5)),"%UnlockId",$li(%ext03872d(5),2),1,1)  s %ext03872d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext05652d(1)),1:0)
+ if $g(%ext05652d(3))=1 {
+ 	if $g(%ext05652d(4))=1 { l -@%ext05652d(5) s %ext05652d(4)=0 } elseif $g(%ext05652d(4))=2 { do $classmethod($li(%ext05652d(5)),"%UnlockId",$li(%ext05652d(5),2),1,1)  s %ext05652d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext03872d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext05652d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"SZHnckF+R1mC1kjGb4BeYfSnlpM="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"SZHnckF+R1mC1kjGb4BeYfSnlpM=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext03872d
+ k %ext05652d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext03872d(8)
+ kill %ext05652d(8)
  quit  // close
-%0Aerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext03872d(0)=100
+%0Cerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ s %ext05652d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^HBDRGCataLogD(id)),1)
@@ -198,7 +243,31 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	}
 	If ($Data(^HBDRGCataLogD(id))) {
 		Set bsv0N1=^HBDRGCataLogD(id)
+		Set bsv0N2=$listget(bsv0N1,5)
+		Set bsv0N3=$zu(28,$listget(bsv0N1,2),5)
+		Set bsv0N4=$listget(bsv0N1,6)
+		If concurrency, ('$g(%0CacheLock($classname(),"E"))) {
+			Lock +^HBDRGCataLogI("DataIndex",bsv0N3,bsv0N2,bsv0N4):$zu(115,4)
+			If $test {
+				Lock -^HBDRGCataLogI("DataIndex",bsv0N3,bsv0N2,bsv0N4)
+			} Else {
+				Set sc = $$Error^%apiOBJ(5803,$classname())
+				Goto DeleteDataEXIT
+			}
+		}
 		If $data(^oddEXTR($classname())) {
+			Set fc=""
+			For {
+				Set fc=$order(^rINDEXEXT("F",$classname(),"DataIndex","f",fc))
+				Quit:fc=""
+				Set fk=""
+				For {
+					Set fk=$order(^rINDEXEXT("F",$classname(),"DataIndex","f",fc,fk))
+					Quit:fk=""
+					Set sc=$classmethod(fc,fk_"Delete",$listget(bsv0N1,2),$listget(bsv0N1,5),$listget(bsv0N1,6))
+					If ('sc) { Goto DeleteDataEXIT }
+				}
+			}
 			Set fc=""
 			For {
 				Set fc=$order(^rINDEXEXT("F",$classname(),"%1","f",fc))
@@ -224,8 +293,11 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 				}
 			}
 		}
+		Set bsv0N5=$listget(bsv0N1,5)
+		Set bsv0N6=$zu(28,$listget(bsv0N1,2),5)
+		Set bsv0N7=$listget(bsv0N1,6)
 		Kill ^HBDRGCataLogI("Code",$zu(28,$listget(bsv0N1,2),5),id)
-		Kill ^HBDRGCataLogI("DataIndex",$zu(28,$listget(bsv0N1,2),5),$listget(bsv0N1,5),$listget(bsv0N1,6),id)
+		Kill ^HBDRGCataLogI("DataIndex",bsv0N6,bsv0N5,bsv0N7,id)
 		Kill ^HBDRGCataLogD(id)
 		Set sc=1
 	}
@@ -273,16 +345,20 @@ CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
 			set cnt=cnt+1
 			set zzc9v1=$listget(data,2)
 			set zzc9v2=$listget(data,1)
-			set lock=0
+			set lock=0,locku=$c(0)
 			if (useTransactions) tstart
 			set id=$i(^HBDRGCataLogD)
+			set zzc14v1=$listget(data,5)
+			set zzc14v2=$zu(28,zzc9v1,5)
+			set zzc14v3=$listget(data,6)
 			try {
 				set tInnerException = ""
 				;
 				if concurrency { lock +(^HBDRGCataLogD(id)#"E"):$zu(115,4) set lock=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,2:2,4:2,:0)) set:lock=2&&($tlevel) %0CacheLock($classname(),"E")=1 if 'lock { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
+				if (concurrency)&&('$g(%0CacheLock($classname(),"E"))) { l +^HBDRGCataLogI("DataIndex",zzc14v2,zzc14v1,zzc14v3):$zu(115,4) if $Test { Set $Extract(locku,1)=$c(1) } Else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } } If $data(^HBDRGCataLogI("DataIndex",zzc14v2,zzc14v1,zzc14v3)) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5808,$classname()_":DataIndex:"_$zreference)) }
 				set ^HBDRGCataLogD(id)=data
 				set ^HBDRGCataLogI("Code",$zu(28,zzc9v1,5),id)=zzc9v2
-				set ^HBDRGCataLogI("DataIndex",$zu(28,zzc9v1,5),$listget(data,5),$listget(data,6),id)=zzc9v2
+				set ^HBDRGCataLogI("DataIndex",zzc14v2,zzc14v1,zzc14v3,id)=zzc9v2
 				if (useTransactions) { tcommit }
 			}
 			catch tInnerException {
@@ -290,6 +366,7 @@ CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
 				if '($length(errs)+$length(newerr)>32767) { set numerrs=numerrs+1, errs=errs_newerr }
 				if (useTransactions) && ($Tlevel) trollback
 			}
+			lock:$Ascii($Extract(locku,1)) -^HBDRGCataLogI("DataIndex",zzc14v2,zzc14v1,zzc14v3)#"D"
 			if lock lock -(^HBDRGCataLogD(id)#"E")
 		}
 	}
@@ -684,8 +761,11 @@ init	Set i%Admvs="",i%CityDr="",i%Code="",i%Descripts="",i%ProvinceDr="",i%Updat
 	do ..%SQLGetOld(%rowid,.%d,.%e,.sqlcode) if sqlcode { set SQLCODE=-106 do ..%SQLEExit() QUIT  }
 	if %e(10)'="" { set sn=$p(%e(10),$e(%e(10)),$l(%e(10),$e(%e(10)))-1) if "HBDRGCataLog"'=sn { new %f do ..%SQLCopyIcolIntoName() do $classmethod(sn,"%SQLDelete",%rowid,%check,%tstart,%mv,1) QUIT  }}
 	if '$a(%check),'$zu(115,7) do  if sqlcode set SQLCODE=sqlcode do ..%SQLEExit() QUIT  
-	. new %fk,%k,%p,%st,%t,%z set %k="",%p("%1")="%d(1),",%p("IDKEY")="%d(1),"
+	. new %fk,%k,%p,%st,%t,%z set %k="",%p("%1")="%d(1),",%p("DataIndex")="%e(2),%e(4),%e(5),,,",%p("IDKEY")="%d(1),"
 	. for  quit:sqlcode<0  set %k=$o(^rINDEXEXT("F","User.HBDRGCataLog",%k)) quit:%k=""  set %t="" for  set %t=$o(^rINDEXEXT("F","User.HBDRGCataLog",%k,"f",%t)) quit:%t=""  set %st=(%t="User.HBDRGCataLog") set %fk="" for  set %fk=$o(^rINDEXEXT("F","User.HBDRGCataLog",%k,"f",%t,%fk)) quit:%fk=""  x "set %z=$classmethod(%t,%fk_""SQLFKeyRefAction"",%st,%k,$a(%check,2),"_%p(%k)_")" if %z set sqlcode=-124 quit  
+	if '($a(%check,2)#2),'$g(%0CacheLock("User.HBDRGCataLog","E")) {
+		lock +^HBDRGCataLogI("DataIndex",%e(2),%e(4),%e(5))#"S":$zu(115,4) if $t { lock -^HBDRGCataLogI("DataIndex",%e(2),%e(4),%e(5))#"S" } else { do ..%SQLUnlockError("DataIndex") set SQLCODE=sqlcode do ..%SQLEExit() QUIT }
+	}
 	set ce="" for  { set ce=$order(^oddSQL("SQLUser","HB_DRGCataLog","DC",ce)) quit:ce=""   do $classmethod(ce,"%SQLDeleteChildren",%d(1),%check,.sqlcode) quit:sqlcode<0  } if sqlcode<0 { set SQLCODE=sqlcode do ..%SQLEExit() QUIT } // Delete any children
 	if '$a(%check,3) {
 		set sn(1)=$zu(28,%e(2),5) set sn(2)=%d(1) k ^HBDRGCataLogI("Code",sn(1),sn(2))
@@ -701,7 +781,7 @@ ERRORDelete	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 	// Delete all temporary streams
 	QUIT
 %SQLEExit()
-	do ..%SQLUnlock() 
+	do:%oper'="DELETE" ..%SQLUnlock2(),..%SQLUnlock() 
 	if %tstart,$zu(115,1)=1,$TLEVEL { set %tstart=0 TROLLBACK 1 } kill:$g(omcall) %0CacheSQLRA QUIT  
 	Quit
 %SQLExists(pLockOnly=0,pUnlockRef,%pVal...)
@@ -742,7 +822,7 @@ ERRORDelete	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 	QUIT
 %SQLInsert(%d,%check,%inssel,%vco,%tstart=1,%mv=0)
 	// SQL INSERT method for table SQLUser.HB_DRGCataLog
-	new bva,%ele,%itm,%key,%f,%l,%n,%nc,%oper,%pos,%s,sqlcode,sn,subs,icol set %oper="INSERT",sqlcode=0,%l=$c(0,0,0)
+	new bva,%ele,%itm,%key,%f,%l,%n,%nc,%oper,%pos,%s,sqlcode,sn,subs,icol set %oper="INSERT",sqlcode=0,%l=$c(0,0,0,0)
 	if $a(%check,7) { new %diu merge %diu=%d }
 	if $d(%d(1)),'$zu(115,11) { if %d(1)'="" { set SQLCODE=-111,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler6",,"ID","SQLUser"_"."_"HB_DRGCataLog") RETURN ""  } kill %d(1) } 
 	if '$a(%check),'..%SQLValidateFields(.sqlcode) { set SQLCODE=sqlcode RETURN "" }
@@ -753,7 +833,12 @@ ERRORDelete	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 			if $g(%vco)'="" { d @%vco quit:sqlcode<0  }
 			do:$g(%d(2))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,3)) do:$g(%d(3))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,4)) do:$g(%d(4))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,5)) do:$g(%d(5))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,6)) do:$g(%d(6))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,7)) do:$g(%d(7))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,8)) do:$g(%d(8))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,9)) do:$g(%d(9))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,10)) 
 			quit:sqlcode<0		// A required field was missing
+				// Constraint DataIndex
+				if '$a(%check,2) { lock +^HBDRGCataLogI("DataIndex",%d(2),%d(4),%d(5)):$zu(115,4) if $t { set $e(%l,2)=$c(1) } else { do ..%SQLUnlockError("DataIndex") quit  } }
+				if '$a(%check,7) { if '..DataIndexSQLCheckUnique(0,,%d(2),%d(4),%d(5)) { set sqlcode=-119,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler10",,"SQLUser"_"."_"HB_DRGCataLog","DataIndex","Code"_"="_$$quoter^%apiSQL($g(%d(2)))_","_"Province_Dr"_"="_$$quoter^%apiSQL($g(%d(4)))_","_"City_Dr"_"="_$$quoter^%apiSQL($g(%d(5)))) quit  }}
+				else { new tID set tID=..DataIndexSQLFindRowIDByConstraint($lb(%d(2),%d(4),%d(5)),1) if tID'="" { kill %d merge %d=%diu kill %diu do ..%SQLUpdate(tID,%check,.%d),..%SQLUnlock2() set $e(%check,7)=$c(2) quit  }}
 		} while 0
+		QUIT:$a(%check,7)=2 $s('SQLCODE:tID,1:"")				// INSERT became UPDATE
 		if sqlcode<0 { set SQLCODE=sqlcode do ..%SQLEExit() RETURN "" }		// A constraint failed
 	}
 	if '$d(%d(1)) { set %d(1)=$i(^HBDRGCataLogD) } elseif %d(1)>$g(^HBDRGCataLogD) { if $i(^HBDRGCataLogD,$zabs(%d(1)-$g(^HBDRGCataLogD))) {}} elseif $d(^HBDRGCataLogD(%d(1))) { set SQLCODE=-119,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler33",,"ID",%d(1),"SQLUser"_"."_"HB_DRGCataLog"_"."_"ID") do ..%SQLEExit() RETURN "" }
@@ -768,6 +853,7 @@ ERRORDelete	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 		set sn(1)=$zu(28,%d(2),5) set sn(2)=%d(1) set ^HBDRGCataLogI("Code",sn(1),sn(2))=%d(10)
 		set sn(1)=$zu(28,%d(2),5) set sn(2)=%d(4) set sn(3)=%d(5) set sn(4)=%d(1) set ^HBDRGCataLogI("DataIndex",sn(1),sn(2),sn(3),sn(4))=%d(10)
 	}
+	lock:$a(%l,2) -^HBDRGCataLogI("DataIndex",%d(2),%d(4),%d(5))#"D" 
 	lock:$a(%l) -^HBDRGCataLogD(%d(1))#"E"
 	TCOMMIT:%tstart&&($zu(115,1)=1)
 	set SQLCODE=0
@@ -813,12 +899,14 @@ ERRORInsert	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 %SQLUnlock()
 	lock:$a(%l) -^HBDRGCataLogD(%d(1))#"E"
 	QUIT
+%SQLUnlock2()
+	lock:$a(%l,2) -^HBDRGCataLogI("DataIndex",%d(2),%d(4),%d(5))#"D" QUIT
 %SQLUnlockError(cname)
 	set sqlcode=-110 if %oper="DELETE" { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler48",,"SQLUser"_"."_"HB_DRGCataLog",cname) } else { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler49",,"SQLUser"_"."_"HB_DRGCataLog",cname) } quit
 	Quit
 %SQLUpdate(%rowid,%check,%d,%vco,%tstart=1,%mv=0,%polymorphic=0,%soid)
 	// SQL UPDATE method for table SQLUser.HB_DRGCataLog
-	new %e,bva,%ele,%itm,%key,%f,%l,%n,%nc,%oper,%pos,%s,icol,omcall,s,sn,sqlcode,subs,t set %oper="UPDATE",sqlcode=0,%ROWID=%rowid,$e(%e,1)=$c(0),%l=$c(0,0,0)
+	new %e,bva,%ele,%itm,%key,%f,%l,%n,%nc,%oper,%pos,%s,icol,omcall,s,sn,sqlcode,subs,t set %oper="UPDATE",sqlcode=0,%ROWID=%rowid,$e(%e,1)=$c(0),%l=$c(0,0,0,0)
 	if '$d(%0CacheSQLRA) { new %0CacheSQLRA set omcall=1 }
 	if '$a(%check,7) {
 		if '$a(%check),'..%SQLValidateFields(.sqlcode) { set SQLCODE=sqlcode QUIT  }
@@ -848,6 +936,17 @@ ERRORInsert	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 			if $a(%e,8),$g(%d(8))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,9)) }
 			if $a(%e,9),$g(%d(9))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,10)) }
 			quit:sqlcode
+			if ($a(%e,2)||$a(%e,4)||$a(%e,5)) {	// UNIQUE constraint DataIndex
+				if '($a(%check,2)#2),'$g(%0CacheLock("User.HBDRGCataLog","E")) {
+					lock +^HBDRGCataLogI("DataIndex",%d(2),%d(4),%d(5)):$zu(115,4) if $t { set $e(%l,2)=$c(1) } else { do ..%SQLUnlockError("DataIndex") quit  } 
+					lock +^HBDRGCataLogI("DataIndex",%e(2),%e(4),%e(5)):$zu(115,4) if $t { lock -^HBDRGCataLogI("DataIndex",%e(2),%e(4),%e(5)) } else { do ..%SQLUnlockError("DataIndex") quit  }
+				}
+				if '..DataIndexSQLCheckUnique(0,%d(1),%d(2),%d(4),%d(5)) { set sqlcode=-120,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler10",,"SQLUser"_"."_"HB_DRGCataLog","DataIndex","Code"_"="_$$quoter^%apiSQL($g(%d(2)))_","_"Province_Dr"_"="_$$quoter^%apiSQL($g(%d(4)))_","_"City_Dr"_"="_$$quoter^%apiSQL($g(%d(5)))) quit  }
+			}
+			new %fk,%st,%t,%y
+			if ($a(%e,2)||$a(%e,4)||$a(%e,5)),'$zu(115,7) {
+				set %t="" for  { set %t=$o(^rINDEXEXT("F","User.HBDRGCataLog","DataIndex","f",%t)) quit:%t=""  set %st=(%t="User.HBDRGCataLog") s %fk="" for  { set %fk=$o(^rINDEXEXT("F","User.HBDRGCataLog","DataIndex","f",%t,%fk)) quit:%fk=""  x "set %y=$classmethod(%t,%fk_""SQLFKeyRefAction"",%st,""DataIndex"",$a(%check,2),%e(2),%e(4),%e(5),%d(2),%d(4),%d(5))" if %y { set sqlcode=-123 quit  }}}
+			}
 		} while 0
 		if sqlcode { set SQLCODE=sqlcode do ..%SQLEExit() QUIT  }
 	}
@@ -864,6 +963,7 @@ ERRORInsert	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 			set sn(1)=$zu(28,%d(2),5) set sn(2)=%d(4) set sn(3)=%d(5) set sn(4)=%d(1) set ^HBDRGCataLogI("DataIndex",sn(1),sn(2),sn(3),sn(4))=%d(10)
 		}
 	}
+	do ..%SQLUnlock2()
 	do ..%SQLUnlock() TCOMMIT:%tstart&&($zu(115,1)=1)
 	set SQLCODE=0 kill:$g(omcall) %0CacheSQLRA
 	QUIT
@@ -911,7 +1011,7 @@ ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 %SaveData(id) public {
 	try {
 		set id=$listget(i%"%%OID") if id'="" { set insert=0,idassigned=1 } else { set insert=1,idassigned=0 }
-		set lock=0,lockok=0,tSharedLock=0
+		set lock=0,lockok=0,tSharedLock=0,locku=$c(0)
 		if 'idassigned { set id=$i(^HBDRGCataLogD) do ..%IdSet(id) set:$g(%objtxSTATUS)=2 %objtxOIDASSIGNED(+$this)="" }
 		set zzc10v1=$zu(28,i%Code,5)
 		set zzc10v2=$zu(28,i%Code,5)
@@ -928,6 +1028,7 @@ ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 			if insert {
 				if ('lockok&&..%Concurrency&&$tlevel)||(i%%Concurrency=4) {  lock +(^HBDRGCataLogD(id)#"E"):$zu(115,4) set lockok=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,2:2,4:2,:0)) set:(lockok=2&&(i%%Concurrency'=4)) %0CacheLock($classname(),"E")=1 set:lockok lock=1 if 'lockok { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
 				if i%%Concurrency=3 { lock +(^HBDRGCataLogD(id)#"ES") set tSharedLock=1 }
+				if (i%%Concurrency)&&('$g(%0CacheLock($classname(),"E"))) { l +^HBDRGCataLogI("DataIndex",zzc10v1,i%ProvinceDr,i%CityDr):$zu(115,4) if $Test { Set $Extract(locku,1)=$c(1) } Else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } } If $data(^HBDRGCataLogI("DataIndex",zzc10v1,i%ProvinceDr,i%CityDr)) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5808,$classname()_":DataIndex:"_$zreference)) }
 				set ^HBDRGCataLogD(id)=$lb("",i%Code,i%Descripts,,i%ProvinceDr,i%CityDr,i%Admvs,,,i%UpdateDate,i%UpdateTime,i%UpdateUserDr)
 				set ^HBDRGCataLogI("Code",zzc10v2,id)=""
 				set ^HBDRGCataLogI("DataIndex",zzc10v1,i%ProvinceDr,i%CityDr,id)=""
@@ -936,13 +1037,16 @@ ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 				set zzc31v1=^HBDRGCataLogD(id)
 				set zzc31v2=$listget(zzc31v1,5)
 				set zzc31v3=$listget(zzc31v1,2)
-				set zzc31v4=$listget(zzc31v1,6)
+				set zzc31v4=$zu(28,zzc31v3,5)
+				set zzc31v5=$listget(zzc31v1,6)
+				if (i%Code'=zzc31v3)||(i%ProvinceDr'=zzc31v2)||(i%CityDr'=zzc31v5) { if (i%%Concurrency)&&('$g(%0CacheLock($classname(),"E"))) { lock +^HBDRGCataLogI("DataIndex",zzc10v1,i%ProvinceDr,i%CityDr):$zu(115,4) if $Test { Set $Extract(locku,1)=$c(1) } else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } l +^HBDRGCataLogI("DataIndex",zzc31v4,zzc31v2,zzc31v5):$zu(115,4) if $t { l -^HBDRGCataLogI("DataIndex",zzc31v4,zzc31v2,zzc31v5) } Else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) }} If ($data(^HBDRGCataLogI("DataIndex",zzc10v1,i%ProvinceDr,i%CityDr)))&&('$data(^HBDRGCataLogI("DataIndex",zzc10v1,i%ProvinceDr,i%CityDr,id))) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5808,$classname()_":DataIndex:"_$zreference)) } }
 				if (i%Code'=zzc31v3) {
 					kill ^HBDRGCataLogI("Code",$zu(28,zzc31v3,5),id)
 					set ^HBDRGCataLogI("Code",zzc10v2,id)=""
 				}
-				if (i%CityDr'=zzc31v4)||(i%Code'=zzc31v3)||(i%ProvinceDr'=zzc31v2) {
-					kill ^HBDRGCataLogI("DataIndex",$zu(28,zzc31v3,5),zzc31v2,zzc31v4,id)
+				if (i%CityDr'=zzc31v5)||(i%Code'=zzc31v3)||(i%ProvinceDr'=zzc31v2) {
+					kill ^HBDRGCataLogI("DataIndex",zzc31v4,zzc31v2,zzc31v5,id)
+					if (i%Code'=zzc31v3)||(i%ProvinceDr'=zzc31v2)||(i%CityDr'=zzc31v5){ n %fk,%fc s %fc="" f  s %fc=$o(^rINDEXEXT("F",$classname(),"DataIndex","f",%fc)) q:%fc=""  s %fk="" f  s %fk=$o(^rINDEXEXT("F",$classname(),"DataIndex","f",%fc,%fk)) q:%fk=""  s tStatus=$classmethod(%fc,%fk_"Update",zzc31v3,zzc31v2,zzc31v5,i%Code,i%ProvinceDr,i%CityDr) i ('tStatus) Throw ##class(%Exception.StatusException).ThrowIfInterrupt(tStatus) }
 					set ^HBDRGCataLogI("DataIndex",zzc10v1,i%ProvinceDr,i%CityDr,id)=""
 				}
 				set ^HBDRGCataLogD(id)=$lb("",i%Code,i%Descripts,,i%ProvinceDr,i%CityDr,i%Admvs,,,i%UpdateDate,i%UpdateTime,i%UpdateUserDr)
@@ -953,6 +1057,7 @@ ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 			if ('idassigned) { Set $zobjoid("",$listget(i%"%%OID"))="",i%"%%OID"="" kill:$g(%objtxSTATUS)=2 %objtxOIDASSIGNED(+$this) }
 			if (tSharedLock) {  lock -(^HBDRGCataLogD(id)#"ES") } elseif (lockok=1)&&(insert)&&(i%%Concurrency=4) {  lock -(^HBDRGCataLogD(id)) }
 		}
+		lock:$Ascii($Extract(locku,1)) -^HBDRGCataLogI("DataIndex",zzc10v1,i%ProvinceDr,i%CityDr)#"D"
 		if lock lock -(^HBDRGCataLogD(id)#"E")
 		if $Isobject(tInnerException) { throw tInnerException }
 	}
@@ -969,7 +1074,7 @@ ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 		set zzc5v5=$listget(data,1)
 		if concurrency=-1 { set concurrency=$zu(115,10) }
 		if id'="" { set insert=0,idassigned=1 } else { set insert=1,idassigned=0 }
-		set lock=0,tSharedLock=0
+		set lock=0,tSharedLock=0,locku=$c(0)
 		if 'idassigned { set id=$i(^HBDRGCataLogD) }
 		set zzc10v1=$zu(28,zzc5v3,5)
 		set zzc10v2=$zu(28,zzc5v3,5)
@@ -985,6 +1090,7 @@ ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 			}
 			if insert {
 				if concurrency { lock +(^HBDRGCataLogD(id)#"E"):$zu(115,4) set lock=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,2:2,4:2,:0)) set:lock=2&&($tlevel) %0CacheLock($classname(),"E")=1 if 'lock { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
+				if (concurrency)&&('$g(%0CacheLock($classname(),"E"))) { l +^HBDRGCataLogI("DataIndex",zzc10v1,zzc5v2,zzc5v4):$zu(115,4) if $Test { Set $Extract(locku,1)=$c(1) } Else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } } If $data(^HBDRGCataLogI("DataIndex",zzc10v1,zzc5v2,zzc5v4)) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5808,$classname()_":DataIndex:"_$zreference)) }
 				set ^HBDRGCataLogD(id)=data
 				set ^HBDRGCataLogI("Code",zzc10v2,id)=zzc5v5
 				set ^HBDRGCataLogI("DataIndex",zzc10v1,zzc5v2,zzc5v4,id)=zzc5v5
@@ -993,13 +1099,16 @@ ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 				set zzc31v1=^HBDRGCataLogD(zzc5v1)
 				set zzc31v2=$listget(zzc31v1,5)
 				set zzc31v3=$listget(zzc31v1,2)
-				set zzc31v4=$listget(zzc31v1,6)
+				set zzc31v4=$zu(28,zzc31v3,5)
+				set zzc31v5=$listget(zzc31v1,6)
+				if (zzc5v3'=zzc31v3)||(zzc5v2'=zzc31v2)||(zzc5v4'=zzc31v5) { if (concurrency)&&('$g(%0CacheLock($classname(),"E"))) { lock +^HBDRGCataLogI("DataIndex",zzc10v1,zzc5v2,zzc5v4):$zu(115,4) if $Test { Set $Extract(locku,1)=$c(1) } else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } l +^HBDRGCataLogI("DataIndex",zzc31v4,zzc31v2,zzc31v5):$zu(115,4) if $t { l -^HBDRGCataLogI("DataIndex",zzc31v4,zzc31v2,zzc31v5) } Else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) }} If ($data(^HBDRGCataLogI("DataIndex",zzc10v1,zzc5v2,zzc5v4)))&&('$data(^HBDRGCataLogI("DataIndex",zzc10v1,zzc5v2,zzc5v4,id))) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5808,$classname()_":DataIndex:"_$zreference)) } }
 				if (zzc5v3'=zzc31v3) {
 					kill ^HBDRGCataLogI("Code",$zu(28,zzc31v3,5),zzc5v1)
 					set ^HBDRGCataLogI("Code",zzc10v2,id)=zzc5v5
 				}
-				if (zzc5v4'=zzc31v4)||(zzc5v3'=zzc31v3)||(zzc5v2'=zzc31v2) {
-					kill ^HBDRGCataLogI("DataIndex",$zu(28,zzc31v3,5),zzc31v2,zzc31v4,zzc5v1)
+				if (zzc5v4'=zzc31v5)||(zzc5v3'=zzc31v3)||(zzc5v2'=zzc31v2) {
+					kill ^HBDRGCataLogI("DataIndex",zzc31v4,zzc31v2,zzc31v5,zzc5v1)
+					if (zzc5v3'=zzc31v3)||(zzc5v2'=zzc31v2)||(zzc5v4'=zzc31v5){ n %fk,%fc s %fc="" f  s %fc=$o(^rINDEXEXT("F",$classname(),"DataIndex","f",%fc)) q:%fc=""  s %fk="" f  s %fk=$o(^rINDEXEXT("F",$classname(),"DataIndex","f",%fc,%fk)) q:%fk=""  s tStatus=$classmethod(%fc,%fk_"Update",zzc31v3,zzc31v2,zzc31v5,zzc5v3,zzc5v2,zzc5v4) i ('tStatus) Throw ##class(%Exception.StatusException).ThrowIfInterrupt(tStatus) }
 					set ^HBDRGCataLogI("DataIndex",zzc10v1,zzc5v2,zzc5v4,id)=zzc5v5
 				}
 				set ^HBDRGCataLogD(id)=data
@@ -1008,6 +1117,7 @@ ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 		}
 		catch tInnerException {
 		}
+		lock:$Ascii($Extract(locku,1)) -^HBDRGCataLogI("DataIndex",zzc10v1,zzc5v2,zzc5v4)#"D"
 		if lock lock -(^HBDRGCataLogD(id)#"E")
 		if $Isobject(tInnerException) { throw tInnerException }
 	}
@@ -1074,11 +1184,11 @@ CatchError	Set $ZTrap=""
 exit	Quit sc }
 %SortBegin(idxlist="",excludeunique=0)
 	if $select(idxlist="":1,$listfind(idxlist,"Code"):1,1:0) If $SortBegin(^HBDRGCataLogI("Code"))
-	if $select(idxlist="":1,$listfind(idxlist,"DataIndex"):1,1:0) If $SortBegin(^HBDRGCataLogI("DataIndex"))
+	if 'excludeunique,$select(idxlist="":1,$listfind(idxlist,"DataIndex"):1,1:0) If $SortBegin(^HBDRGCataLogI("DataIndex"))
 	Quit 1
 %SortEnd(idxlist="",commit=1,excludeunique=0) public {
 	if $select(idxlist="":1,$listfind(idxlist,"Code"):1,1:0) If $SortEnd(^HBDRGCataLogI("Code"),commit)
-	if $select(idxlist="":1,$listfind(idxlist,"DataIndex"):1,1:0) If $SortEnd(^HBDRGCataLogI("DataIndex"),commit)
+	if 'excludeunique,$select(idxlist="":1,$listfind(idxlist,"DataIndex"):1,1:0) If $SortEnd(^HBDRGCataLogI("DataIndex"),commit)
 	Quit 1 }
 %UnlockExtent(shared=0,immediate=0) public {
 	If 'shared {
@@ -1229,6 +1339,15 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
+		if (pDynamicObject.%IsDefined("UpdateUserDr")) {
+			try {
+				set newIdvalue=pDynamicObject."UpdateUserDr"
+				set existingIdValue=..UpdateUserDrGetObjectId()
+				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"UpdateUserDr")=##class(User.HBUser).%OpenId(newIdvalue)
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}
@@ -1236,7 +1355,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"Admvs":(..GetLogicalToXSDValue($This,"Admvs",..Admvs)),"CityDr":($CASE($ISOBJECT(..CityDr),1:..CityDr.%Id(),:"")),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"ProvinceDr":($CASE($ISOBJECT(..ProvinceDr),1:..ProvinceDr.%Id(),:"")),"UpdateDate":(..GetLogicalToXSDValue($This,"UpdateDate",..UpdateDate)),"UpdateTime":(..GetLogicalToXSDValue($This,"UpdateTime",..UpdateTime)),"UpdateUserDr":(..UpdateUserDr)}
+		set pDynamicObject={"ID":(..%Id()),"Admvs":(..GetLogicalToXSDValue($This,"Admvs",..Admvs)),"CityDr":($CASE($ISOBJECT(..CityDr),1:..CityDr.%Id(),:"")),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"ProvinceDr":($CASE($ISOBJECT(..ProvinceDr),1:..ProvinceDr.%Id(),:"")),"UpdateDate":(..GetLogicalToXSDValue($This,"UpdateDate",..UpdateDate)),"UpdateTime":(..GetLogicalToXSDValue($This,"UpdateTime",..UpdateTime)),"UpdateUserDr":($CASE($ISOBJECT(..UpdateUserDr),1:..UpdateUserDr.%Id(),:""))}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}
@@ -1904,7 +2023,7 @@ zExtentFetch(%qHandle,Row,AtEnd=0) [ SQLCODE ] public { New %ROWCOUNT,%ROWID,%ms
 	Set Row="",AtEnd=0
 	 ;---&sql(FETCH QExtent INTO :c1)
  	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
-	try { do %QExtent0f if SQLCODE'=0 { quit } s c1=%objcsd(%qHandle,8) } catch { do %0Ferr }
+	try { do %QExtent0f if SQLCODE'=0 { quit } s c1=%objcsd(%qHandle,8) } catch { do %0Herr }
 	If 'SQLCODE { Set Row=$lb(c1) Set sc=1 }
 	ElseIf SQLCODE=100 { Set AtEnd=1,sc=1 Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.%ROWCOUNT=$g(%ROWCOUNT) }
 	Else { Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.Message=$g(%msg) Set AtEnd=1,sc=$$Error^%apiOBJ(5540,SQLCODE,$get(%msg)) }
@@ -1914,7 +2033,7 @@ zExtentFetchRows(%qHandle,FetchCount=0,RowSet,ReturnCount,AtEnd) [ SQLCODE ] pub
 	For {
 		 ;---&sql(FETCH QExtent INTO :c1)
  		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
-		try { do %QExtent0f if SQLCODE'=0 { quit } s c1=%objcsd(%qHandle,8) } catch { do %0Ferr }
+		try { do %QExtent0f if SQLCODE'=0 { quit } s c1=%objcsd(%qHandle,8) } catch { do %0Herr }
 		If 'SQLCODE { Set RowSet=RowSet_$lb(c1),ReturnCount=ReturnCount+1 Quit:(ReturnCount=FetchCount)||(($l(RowSet)+($l(RowSet)\ReturnCount))>24000) } Else { Set AtEnd=1 Quit }
 	}
 	If 'SQLCODE { Set sc=1 } ElseIf SQLCODE=100 { Set sc=1 Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.%ROWCOUNT=$g(%ROWCOUNT) } Else { Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.Message=$g(%msg) Set sc=$$Error^%apiOBJ(5540,SQLCODE,$get(%msg)) }
@@ -1948,15 +2067,15 @@ SPDone	set:%protocol>46 piece=piece+1
  s:$d(%sqltime) %objcsd(%qHandle,6)=$g(%objcsd(%qHandle,6))+$zh-%sqltime
  } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %objcsd(%qHandle) }
  q
-%0Ffirst 
+%0Hfirst 
  ; asl MOD# 2
  s %objcsd(%qHandle,7)=""
-%0FmBk1 s %objcsd(%qHandle,7)=$o(^HBDRGCataLogI("Code",%objcsd(%qHandle,7)))
- i %objcsd(%qHandle,7)="" g %0FmBdun
+%0HmBk1 s %objcsd(%qHandle,7)=$o(^HBDRGCataLogI("Code",%objcsd(%qHandle,7)))
+ i %objcsd(%qHandle,7)="" g %0HmBdun
  s %objcsd(%qHandle,8)=""
-%0FmBk2 s %objcsd(%qHandle,8)=$o(^HBDRGCataLogI("Code",%objcsd(%qHandle,7),%objcsd(%qHandle,8)))
- i %objcsd(%qHandle,8)="" g %0FmBk1
- goto:%objcsd(%qHandle,3)'=1 %0FmBuncommitted
+%0HmBk2 s %objcsd(%qHandle,8)=$o(^HBDRGCataLogI("Code",%objcsd(%qHandle,7),%objcsd(%qHandle,8)))
+ i %objcsd(%qHandle,8)="" g %0HmBk1
+ goto:%objcsd(%qHandle,3)'=1 %0HmBuncommitted
  if %objcsd(%qHandle,3)=1 {
  	lock +^HBDRGCataLogD($p(%objcsd(%qHandle,8),"||",1))#"S":$zu(115,4)
  	if $t { set %objcsd(%qHandle,5)=$name(^HBDRGCataLogD($p(%objcsd(%qHandle,8),"||",1)))_"#""SI""",%objcsd(%qHandle,4)=1 }
@@ -1964,8 +2083,8 @@ SPDone	set:%protocol>46 piece=piece+1
  }
  ; asl MOD# 3
  i %objcsd(%qHandle,8)'="",$d(^HBDRGCataLogD(%objcsd(%qHandle,8)))
- e  g %0FmCdun
-%0FmBuncommitted ;
+ e  g %0HmCdun
+%0HmBuncommitted ;
  s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%objcsd(%qHandle,1)),%ROWID=%objcsd(%qHandle,8),%objcsd(%qHandle,0)=10
  //-- FETCH Output
  s:$d(%sqltime) %objcsd(%qHandle,6)=$g(%objcsd(%qHandle,6))+$zh-%sqltime
@@ -1974,11 +2093,11 @@ SPDone	set:%protocol>46 piece=piece+1
  i '$g(%objcsd(%qHandle,0)) { s SQLCODE=-102 q  } i %objcsd(%qHandle,0)=100 { s SQLCODE=100 q  } s SQLCODE=0
  i %objcsd(%qHandle,2),%objcsd(%qHandle,1)'<%objcsd(%qHandle,2) { s SQLCODE=100,%ROWCOUNT=%objcsd(%qHandle,1),%objcsd(%qHandle,0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Ffirst:%objcsd(%qHandle,0)=1
-%0FmCdun if $g(%objcsd(%qHandle,3))=1 { if $g(%objcsd(%qHandle,4))=1 { l -@%objcsd(%qHandle,5) s %objcsd(%qHandle,4)=0 } elseif $g(%objcsd(%qHandle,4))=2 { do $classmethod($li(%objcsd(%qHandle,5)),"%UnlockId",$li(%objcsd(%qHandle,5),2),1,1)  s %objcsd(%qHandle,4)=0 }}
- g %0FmBk2
-%0FmBdun 
-%0FmAdun 
+ g %0Hfirst:%objcsd(%qHandle,0)=1
+%0HmCdun if $g(%objcsd(%qHandle,3))=1 { if $g(%objcsd(%qHandle,4))=1 { l -@%objcsd(%qHandle,5) s %objcsd(%qHandle,4)=0 } elseif $g(%objcsd(%qHandle,4))=2 { do $classmethod($li(%objcsd(%qHandle,5)),"%UnlockId",$li(%objcsd(%qHandle,5),2),1,1)  s %objcsd(%qHandle,4)=0 }}
+ g %0HmBk2
+%0HmBdun 
+%0HmAdun 
  s %ROWCOUNT=%objcsd(%qHandle,1),SQLCODE=100,%objcsd(%qHandle,0)=100
  s:$d(%sqltime) %objcsd(%qHandle,6)=$g(%objcsd(%qHandle,6))+$zh-%sqltime
  //-- no [more] data
@@ -2000,7 +2119,7 @@ SPDone	set:%protocol>46 piece=piece+1
  s:$g(SQLCODE)'<0 SQLCODE=0
  kill %objcsd(%qHandle,9)
  quit  // close
-%0Ferr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+%0Herr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
  s %objcsd(%qHandle,0)=100
  quit  // error
 zExtentFunc() public {
@@ -2037,14 +2156,67 @@ zExtentGetODBCInfo(colinfo,parminfo,qHandle) public {
 		For i=0:1:colcount-1 Set colinfo=colinfo_$list(metadata,3+(i*10),11+(i*10))
 	}
 	Quit 1 }
+zDataIndexCheckUnique(id="",pValue...) [ SQLCODE,id,pValue ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	 ;---&sql(SELECT 1 as _PassFail FROM SQLUser.HB_DRGCataLog WHERE Code = :pValue(1) AND Province_Dr = :pValue(2) AND City_Dr = :pValue(3) AND %ID <> :id)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, id, pValue
+	do %0No
+	Quit SQLCODE=100 }
+ q
+%0No n sqldata16d,sqldata17d,sqldata18d,sqldata28d,sqldata1d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata12d,sqldata13d,sqldata5d,sqldata7d,sqldata9d,sqldata14d,sqldata3d,sqldata15d
+ s $zt="%0Nerr"
+ s sqldata16d=$zu(115,2)
+ s sqldata17d=0,sqldata18d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata1d=$s(1="":"",$isvalidnum(1):+1,1:1),sqldata4d=$g(pValue(1)),sqldata6d=$s($g(pValue(2))="":"",$isvalidnum(pValue(2)):+pValue(2),1:pValue(2)),sqldata8d=$s($g(pValue(3))="":"",$isvalidnum(pValue(3)):+pValue(3),1:pValue(3)),sqldata10d=$s($g(id)="":"",$isvalidnum(id):+id,1:id)
+ s SQLCODE=100
+ s sqldata13d=$zu(28,sqldata4d,5)
+ i '(sqldata10d'="") g %0NmAdun
+ ; asl MOD# 2
+ s sqldata12d=sqldata13d
+ s sqldata5d=sqldata6d
+ s sqldata7d=sqldata8d
+ i sqldata12d="" g %0NmBdun
+ i sqldata5d="" g %0NmBdun
+ i sqldata7d="" g %0NmBdun
+ s sqldata9d=""
+ s sqldata9d=$o(^HBDRGCataLogI("DataIndex",sqldata12d,sqldata5d,sqldata7d,sqldata9d))
+ i sqldata9d="" g %0NmBdun
+ i '(sqldata9d'=sqldata10d) g %0NmBdun
+ goto:sqldata16d'=1 %0NmBuncommitted
+ if sqldata16d=1 {
+ 	lock +^HBDRGCataLogD($p(sqldata9d,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata18d=$name(^HBDRGCataLogD($p(sqldata9d,"||",1)))_"#""SI""",sqldata17d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGCataLog for RowID value: "_sqldata9d ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata14d=$zlist(sqldata12d,sqldata7d,sqldata5d)
+ i sqldata9d'="" s sqldata28d="" i $d(^HBDRGCataLogD(sqldata9d),sqldata28d)
+ e  g %0NmCdun
+ S $lg(,sqldata3d,,,sqldata5d,sqldata7d)=sqldata28d
+ s sqldata12d=$zu(28,sqldata3d,5)
+ s sqldata15d=$zlist(sqldata12d,sqldata7d,sqldata5d)
+ g:sqldata14d'=sqldata15d %0NmCdun
+%0NmBuncommitted ;
+ s SQLCODE=0 g %0Nc
+%0NmCdun if $g(sqldata16d)=1 { if $g(sqldata17d)=1 { l -@sqldata18d s sqldata17d=0 } elseif $g(sqldata17d)=2 { do $classmethod($li(sqldata18d),"%UnlockId",$li(sqldata18d,2),1,1)  s sqldata17d=0 }}
+%0NmBdun 
+%0NmAdun 
+%0Nc set %ROWCOUNT='SQLCODE
+ if $g(sqldata16d)=1 {
+ 	if $g(sqldata17d)=1 { l -@sqldata18d s sqldata17d=0 } elseif $g(sqldata17d)=2 { do $classmethod($li(sqldata18d),"%UnlockId",$li(sqldata18d,2),1,1)  s sqldata17d=0 }
+ }
+ q
+%0Nerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Nc
 zCodeExists(K1,id="") [ K1,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
 	 ;---&sql(SELECT %ID INTO :id FROM SQLUser.HB_DRGCataLog WHERE (:K1 is not null and Code = :K1) OR (:K1 IS NULL AND Code IS NULL))
  	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, K1, SQLCODE, id
-	do %0Lo
+	do %0Po
 	Quit $select('SQLCODE:1,1:0) }
  q
-%0Lo n sqldata12d,sqldata13d,sqldata14d,sqldata22d,sqldata23d,sqldata3d,sqldata5d,sqldata6d,sqldata8d,sqldata9d,sqldata10d,sqldata4d,sqldata11d
- s $zt="%0Lerr"
+%0Po n sqldata12d,sqldata13d,sqldata14d,sqldata22d,sqldata23d,sqldata3d,sqldata5d,sqldata6d,sqldata8d,sqldata9d,sqldata10d,sqldata4d,sqldata11d
+ s $zt="%0Perr"
  n %sqltime s %sqltime=$zh
  s sqldata12d=$zu(115,2)
  s sqldata13d=0,sqldata14d=""
@@ -2052,14 +2224,14 @@ zCodeExists(K1,id="") [ K1,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,SQLCO
  s sqldata3d=$g(K1),sqldata5d=$g(K1),sqldata6d=$g(K1)
  s SQLCODE=100
  s sqldata9d=$zu(28,sqldata5d,5)
- i '(sqldata3d'="") g %0LmAdun
+ i '(sqldata3d'="") g %0PmAdun
  ; asl MOD# 2
  s sqldata8d=sqldata9d
- i sqldata8d="" g %0LmBdun
+ i sqldata8d="" g %0PmBdun
  s id=""
-%0LmBk1 s id=$o(^HBDRGCataLogI("Code",sqldata8d,id))
- i id="" g %0LmBdun
- goto:sqldata12d'=1 %0LmBuncommitted
+%0PmBk1 s id=$o(^HBDRGCataLogI("Code",sqldata8d,id))
+ i id="" g %0PmBdun
+ goto:sqldata12d'=1 %0PmBuncommitted
  if sqldata12d=1 {
  	lock +^HBDRGCataLogD($p(id,"||",1))#"S":$zu(115,4)
  	if $t { set sqldata14d=$name(^HBDRGCataLogD($p(id,"||",1)))_"#""SI""",sqldata13d=1 }
@@ -2068,18 +2240,18 @@ zCodeExists(K1,id="") [ K1,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,SQLCO
  ; asl MOD# 3
  s sqldata10d=$zlist(sqldata8d)
  i id'="" s sqldata22d="" i $d(^HBDRGCataLogD(id),sqldata22d)
- e  g %0LmCdun
+ e  g %0PmCdun
  S sqldata4d=$lg(sqldata22d,2)
  s sqldata8d=$zu(28,sqldata4d,5)
  s sqldata11d=$zlist(sqldata8d)
- g:sqldata10d'=sqldata11d %0LmCdun
-%0LmBuncommitted ;
- s SQLCODE=0 g %0Lc
-%0LmCdun if $g(sqldata12d)=1 { if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }}
- g %0LmBk1
-%0LmBdun 
-%0LmAdun 
-%0Lc set %ROWCOUNT='SQLCODE
+ g:sqldata10d'=sqldata11d %0PmCdun
+%0PmBuncommitted ;
+ s SQLCODE=0 g %0Pc
+%0PmCdun if $g(sqldata12d)=1 { if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }}
+ g %0PmBk1
+%0PmBdun 
+%0PmAdun 
+%0Pc set %ROWCOUNT='SQLCODE
  if $g(sqldata12d)=1 {
  	if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }
  }
@@ -2090,18 +2262,23 @@ zCodeExists(K1,id="") [ K1,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,SQLCO
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"QhgkEW9mQpENSqS7zxiMGbnDe5A=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
  q
-%0Lerr s $zt=""
+%0Perr s $zt=""
  d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- g %0Lc
+ g %0Pc
+zDataIndexCheck(K1,K2,K3,lockonly=0,concurrency=-1) public {
+	s exists=..DataIndexExists(K1,K2,K3,.id) q:'exists $s('lockonly:$$Error^%apiOBJ(5797,$classname(),"DataIndex",K1_"||"_K2_"||"_K3),1:1) s:concurrency=-1 concurrency=$select(..#DEFAULTCONCURRENCY="$zu(115,10)":$zu(115,10),1:$xecute("q "_..#DEFAULTCONCURRENCY)) if concurrency { s status=..%LockId(id,1) q:('status) status } if 'lockonly { s exists=..DataIndexExists(K1,K2,K3,.idcheck) d:concurrency ..%UnlockId(id,1,0) quit $s(('exists)||(id'=idcheck):$$Error^%apiOBJ(5797,$classname(),"DataIndex",K1_"||"_K2_"||"_K3),1:1) } else { d:concurrency ..%UnlockId(id,1,0) q 1 }
+}
+zDataIndexDelete(K1,K2,K3,concurrency=-1) public {
+	i ..DataIndexExists(K1,K2,K3,.id){ s sc=..%DeleteId(id,concurrency) } Else { s sc=$$Error^%apiOBJ(5771,"DataIndex",K1_":"_K2_":"_K3) }
+	QUIT sc }
 zDataIndexExists(K1,K2,K3,id="") [ K1,K2,K3,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
 	 ;---&sql(SELECT %ID INTO :id FROM SQLUser.HB_DRGCataLog WHERE (Code = :K1) AND (Province_Dr = :K2) AND (City_Dr = :K3))
  	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, K1, K2, K3, SQLCODE, id
-	do %0No
+	do %0Ro
 	Quit $select('SQLCODE:1,1:0) }
  q
-%0No n sqldata14d,sqldata15d,sqldata16d,sqldata26d,sqldata27d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata5d,sqldata7d,sqldata12d,sqldata3d,sqldata13d
- s $zt="%0Nerr"
- n %sqltime s %sqltime=$zh
+%0Ro n sqldata14d,sqldata15d,sqldata16d,sqldata26d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata5d,sqldata7d,sqldata12d,sqldata3d,sqldata13d
+ s $zt="%0Rerr"
  s sqldata14d=$zu(115,2)
  s sqldata15d=0,sqldata16d=""
  d:$zu(115,15) $system.ECP.Sync()
@@ -2112,13 +2289,13 @@ zDataIndexExists(K1,K2,K3,id="") [ K1,K2,K3,SQLCODE,id ] public { New %ROWCOUNT,
  s sqldata10d=sqldata11d
  s sqldata5d=sqldata6d
  s sqldata7d=sqldata8d
- i sqldata10d="" g %0NmBdun
- i sqldata5d="" g %0NmBdun
- i sqldata7d="" g %0NmBdun
+ i sqldata10d="" g %0RmBdun
+ i sqldata5d="" g %0RmBdun
+ i sqldata7d="" g %0RmBdun
  s id=""
-%0NmBk1 s id=$o(^HBDRGCataLogI("DataIndex",sqldata10d,sqldata5d,sqldata7d,id))
- i id="" g %0NmBdun
- goto:sqldata14d'=1 %0NmBuncommitted
+ s id=$o(^HBDRGCataLogI("DataIndex",sqldata10d,sqldata5d,sqldata7d,id))
+ i id="" g %0RmBdun
+ goto:sqldata14d'=1 %0RmBuncommitted
  if sqldata14d=1 {
  	lock +^HBDRGCataLogD($p(id,"||",1))#"S":$zu(115,4)
  	if $t { set sqldata16d=$name(^HBDRGCataLogD($p(id,"||",1)))_"#""SI""",sqldata15d=1 }
@@ -2127,31 +2304,154 @@ zDataIndexExists(K1,K2,K3,id="") [ K1,K2,K3,SQLCODE,id ] public { New %ROWCOUNT,
  ; asl MOD# 3
  s sqldata12d=$zlist(sqldata10d,sqldata7d,sqldata5d)
  i id'="" s sqldata26d="" i $d(^HBDRGCataLogD(id),sqldata26d)
- e  g %0NmCdun
+ e  g %0RmCdun
  S $lg(,sqldata3d,,,sqldata5d,sqldata7d)=sqldata26d
  s sqldata10d=$zu(28,sqldata3d,5)
  s sqldata13d=$zlist(sqldata10d,sqldata7d,sqldata5d)
- g:sqldata12d'=sqldata13d %0NmCdun
-%0NmBuncommitted ;
- s SQLCODE=0 g %0Nc
-%0NmCdun if $g(sqldata14d)=1 { if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }}
- g %0NmBk1
-%0NmBdun 
-%0NmAdun 
-%0Nc set %ROWCOUNT='SQLCODE
+ g:sqldata12d'=sqldata13d %0RmCdun
+%0RmBuncommitted ;
+ s SQLCODE=0 g %0Rc
+%0RmCdun if $g(sqldata14d)=1 { if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }}
+%0RmBdun 
+%0RmAdun 
+%0Rc set %ROWCOUNT='SQLCODE
  if $g(sqldata14d)=1 {
  	if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }
  }
- n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(sqldata27d)+$zh-%sqltime
- if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
- s tmp=$g(context.Stats($namespace,"5Ro/vmjJT5C4ZiZOh8AvF9SN2k0="))
- s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
- s context.Stats($namespace,"5Ro/vmjJT5C4ZiZOh8AvF9SN2k0=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
  q
-%0Nerr s $zt=""
+%0Rerr s $zt=""
  d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- g %0Nc
+ g %0Rc
+zDataIndexOpen(K1,K2,K3,concurrency=-1,sc) public { s:'($d(sc)#2) sc=1
+ i ..DataIndexExists(K1,K2,K3,.id){ s return=..%OpenId(id,concurrency,.sc) } Else { s sc=$$Error^%apiOBJ(5770,"DataIndex",K1_":"_K2_":"_K3),return="" }
+ QUIT return }
+zDataIndexSQLCheckUnique(pFromOrig=0,%pID,%pVals...)
+	 ;---&sql(SELECT Code,Province_Dr,City_Dr FROM SQLUser.HB_DRGCataLog WHERE  Code=:%pVals(1) AND Province_Dr=:%pVals(2) AND City_Dr=:%pVals(3) AND (%ID <> :%pID OR :%pID IS NULL)) QUIT SQLCODE=100
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	do %0To QUIT SQLCODE=100
+ q
+%0To n sqldata16d,sqldata17d,sqldata18d,sqldata28d,sqldata31d,sqldata4d,sqldata5d,sqldata6d,sqldata8d,sqldata9d,sqldata11d,sqldata12d,sqldata2d,sqldata3d,sqldata7d,sqldata1d,sqldata13d,sqldata14d,sqldata15d
+ s $zt="%0Terr"
+ s sqldata16d=$zu(115,2)
+ s sqldata17d=0,sqldata18d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(%pVals(1)),sqldata5d=$s($g(%pVals(2))="":"",$isvalidnum(%pVals(2)):+%pVals(2),1:%pVals(2)),sqldata6d=$s($g(%pVals(3))="":"",$isvalidnum(%pVals(3)):+%pVals(3),1:%pVals(3)),sqldata8d=$s($g(%pID)="":"",$isvalidnum(%pID):+%pID,1:%pID),sqldata9d=$g(%pID)
+ s SQLCODE=100
+ s sqldata12d=$zu(28,sqldata4d,5)
+ ; asl MOD# 2
+ s sqldata11d=sqldata12d
+ s sqldata2d=sqldata5d
+ s sqldata3d=sqldata6d
+ i sqldata11d="" g %0TmBdun
+ i sqldata2d="" g %0TmBdun
+ i sqldata3d="" g %0TmBdun
+ s sqldata7d=""
+ s sqldata7d=$o(^HBDRGCataLogI("DataIndex",sqldata11d,sqldata2d,sqldata3d,sqldata7d))
+ i sqldata7d="" g %0TmBdun
+ i '(((sqldata8d'="")&&(sqldata7d'=sqldata8d))||(sqldata9d="")) g %0TmBdun
+ s sqldata28d="" i $d(^HBDRGCataLogD(sqldata7d),sqldata28d)
+ e  g %0TmBdun
+ S sqldata1d=$lg(sqldata28d,2)
+ i sqldata16d=3 {
+ s sqldata13d=$zu(28,sqldata1d,5)
+ i '(sqldata13d=sqldata12d) g %0TmBdun
+ }
+ goto:sqldata16d'=1 %0TmBuncommitted
+ if sqldata16d=1 {
+ 	lock +^HBDRGCataLogD($p(sqldata7d,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata18d=$name(^HBDRGCataLogD($p(sqldata7d,"||",1)))_"#""SI""",sqldata17d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGCataLog for RowID value: "_sqldata7d ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata14d=$zlist(sqldata11d,sqldata3d,sqldata2d)
+ i sqldata7d'="" s sqldata31d="" i $d(^HBDRGCataLogD(sqldata7d),sqldata31d)
+ e  g %0TmCdun
+ S $lg(,sqldata1d,,,sqldata2d,sqldata3d)=sqldata31d
+ s sqldata11d=$zu(28,sqldata1d,5)
+ s sqldata15d=$zlist(sqldata11d,sqldata3d,sqldata2d)
+ g:sqldata14d'=sqldata15d %0TmCdun
+%0TmBuncommitted ;
+ s SQLCODE=0 g %0Tc
+%0TmCdun if $g(sqldata16d)=1 { if $g(sqldata17d)=1 { l -@sqldata18d s sqldata17d=0 } elseif $g(sqldata17d)=2 { do $classmethod($li(sqldata18d),"%UnlockId",$li(sqldata18d,2),1,1)  s sqldata17d=0 }}
+%0TmBdun 
+%0TmAdun 
+%0Tc set %ROWCOUNT='SQLCODE
+ if $g(sqldata16d)=1 {
+ 	if $g(sqldata17d)=1 { l -@sqldata18d s sqldata17d=0 } elseif $g(sqldata17d)=2 { do $classmethod($li(sqldata18d),"%UnlockId",$li(sqldata18d,2),1,1)  s sqldata17d=0 }
+ }
+ q
+%0Terr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Tc
+zDataIndexSQLExists(pLockOnly=0,pUnlockRef,%pVal...)
+	// SQL Foreign Key validation entry point for Key DataIndex.  Called by FKeys that reference this Key to see if the row is defined
+	new id set id=..DataIndexSQLFindRowIDByConstraint($lb(%pVal(1),%pVal(2),%pVal(3)),1) QUIT:SQLCODE $s('pLockOnly:0,1:1)
+	if pLockOnly>=0 { if '..%SQLGetLock(id,1,.pUnlockRef) { set sqlcode=-114,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler39",,"SQLUser"_"."_"HB_DRGCataLog"_":"_"DataIndex") QUIT 0 } }
+	if pLockOnly<1 {
+		new qv set qv='..DataIndexSQLCheckUnique(0,,%pVal(1),%pVal(2),%pVal(3)) QUIT:pLockOnly=-1 qv
+		do:'$g(pUnlockRef) ..%SQLReleaseLock(id,1) quit qv
+	}
+	else { do:'$g(pUnlockRef) ..%SQLReleaseLock(id,1) QUIT 1 }
+	Quit
+zDataIndexSQLFindPKeyByConstrai(%con)
+ QUIT $$Error^%apiOBJ(5758,"%Persistent::DataIndexSQLFindPKeyByConstraint")
+zDataIndexSQLFindRowIDByConstra(%con,pInternal=0)
+	// Get ROWID value for UNIQUE Key DataIndex value given in %con
+	new %d,id,rtm set rtm=$zu(115,5,$s(pInternal:0,1:1)) set %d(2)=$lg(%con,1) set %d(4)=$lg(%con,2) set %d(5)=$lg(%con,3)
+	set %ROWCOUNT=0 set:'pInternal %qrc=0
+	 ;---&sql(SELECT %ID INTO :id FROM SQLUser.HB_DRGCataLog WHERE Code = :%d(2) AND Province_Dr = :%d(4) AND City_Dr = :%d(5))
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, id
+	do %0Vo
+	do $zu(115,5,rtm)
+	if pInternal { QUIT:'SQLCODE $g(id) RETURN "" }
+	if SQLCODE { set:SQLCODE<0 %qrc=-SQLCODE set:'%ROWCOUNT&&(SQLCODE=100) id="",%qrc=0 } set d=$zobjexport(id,18) QUIT
+	Quit
+ q
+%0Vo n sqldata14d,sqldata15d,sqldata16d,sqldata26d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata5d,sqldata7d,sqldata12d,sqldata3d,sqldata13d
+ s $zt="%0Verr"
+ s sqldata14d=$zu(115,2)
+ s sqldata15d=0,sqldata16d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(%d(2)),sqldata6d=$s($zu(115,5)=2:$select($g(%d(4))="":"",$g(%d(4))=$c(0)&&$zu(115,13):"",1:$s($in($g(%d(4)),"","")'="":+$in($g(%d(4)),"",$g(%d(4))),1:$g(%d(4)))),1:$g(%d(4))),sqldata6d=$s(sqldata6d="":"",$isvalidnum(sqldata6d):+sqldata6d,1:sqldata6d),sqldata8d=$s($zu(115,5)=2:$select($g(%d(5))="":"",$g(%d(5))=$c(0)&&$zu(115,13):"",1:$s($in($g(%d(5)),"","")'="":+$in($g(%d(5)),"",$g(%d(5))),1:$g(%d(5)))),1:$g(%d(5))),sqldata8d=$s(sqldata8d="":"",$isvalidnum(sqldata8d):+sqldata8d,1:sqldata8d)
+ s SQLCODE=100
+ s sqldata11d=$zu(28,sqldata4d,5)
+ ; asl MOD# 2
+ s sqldata10d=sqldata11d
+ s sqldata5d=sqldata6d
+ s sqldata7d=sqldata8d
+ i sqldata10d="" g %0VmBdun
+ i sqldata5d="" g %0VmBdun
+ i sqldata7d="" g %0VmBdun
+ s id=""
+ s id=$o(^HBDRGCataLogI("DataIndex",sqldata10d,sqldata5d,sqldata7d,id))
+ i id="" g %0VmBdun
+ goto:sqldata14d'=1 %0VmBuncommitted
+ if sqldata14d=1 {
+ 	lock +^HBDRGCataLogD($p(id,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata16d=$name(^HBDRGCataLogD($p(id,"||",1)))_"#""SI""",sqldata15d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGCataLog for RowID value: "_id ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata12d=$zlist(sqldata10d,sqldata7d,sqldata5d)
+ i id'="" s sqldata26d="" i $d(^HBDRGCataLogD(id),sqldata26d)
+ e  g %0VmCdun
+ S $lg(,sqldata3d,,,sqldata5d,sqldata7d)=sqldata26d
+ s sqldata10d=$zu(28,sqldata3d,5)
+ s sqldata13d=$zlist(sqldata10d,sqldata7d,sqldata5d)
+ g:sqldata12d'=sqldata13d %0VmCdun
+%0VmBuncommitted ;
+ s SQLCODE=0 g %0Vc
+%0VmCdun if $g(sqldata14d)=1 { if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }}
+%0VmBdun 
+%0VmAdun 
+%0Vc set %ROWCOUNT='SQLCODE
+ if $g(sqldata14d)=1 {
+ 	if $g(sqldata15d)=1 { l -@sqldata16d s sqldata15d=0 } elseif $g(sqldata15d)=2 { do $classmethod($li(sqldata16d),"%UnlockId",$li(sqldata16d,2),1,1)  s sqldata15d=0 }
+ }
+ q
+%0Verr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Vc
 zIDKEYCheck(K1,lockonly=0,concurrency=-1) public {
 	s id=K1,exists=..%ExistsId(id) q:'exists $s('lockonly:$$Error^%apiOBJ(5797,$classname(),"IDKEY",id),1:1) s:concurrency=-1 concurrency=$select(..#DEFAULTCONCURRENCY="$zu(115,10)":$zu(115,10),1:$xecute("q "_..#DEFAULTCONCURRENCY)) if concurrency { s status=..%LockId(id,1) q:('status) status } if 'lockonly { s exists=..%ExistsId(id) d:concurrency ..%UnlockId(id,1,0) quit $s('exists:$$Error^%apiOBJ(5797,$classname(),"IDKEY",id),1:1) } else { d:concurrency ..%UnlockId(id,1,0) q 1 }
 }

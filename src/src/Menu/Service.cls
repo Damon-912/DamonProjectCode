@@ -642,7 +642,7 @@ ClassMethod GetUserMenusByGroup(postObj) As %Library.DynamicArray
 			INTO :code, :descripts, :menuGroup, :image, :seqNo, :linkAddress, :mainMenuDr, :parentCode
 			FROM CB_GroupMenu GM
 			JOIN CB_Menu MD ON GM.Menu_Dr = MD.ID
-			WHERE GM.Group_Dr = :groupID
+			WHERE MD.IsActive='Y' AND GM.Group_Dr = :groupID
 			ORDER BY MD.SortNo)
 		
 		&sql(OPEN UserMenuCursor)

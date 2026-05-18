@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  Card, Table, Button, Input, Select, Space, Modal, Form,
+  Card, Table, Button, Input, InputNumber, Select, Space, Modal, Form,
   Row, Col, Tag, message, Popconfirm, DatePicker, Upload,
   Steps, Alert, Statistic, Divider, Typography, List, Result, Modal as ImportModal
 } from 'antd';
@@ -43,6 +43,7 @@ const CoreAlgorithmConfig: React.FC = () => {
   const [cityId, setCityId] = useState('');
   const [queryInsuType, setQueryInsuType] = useState('');
   const [status, setStatus] = useState('');
+  const [year, setYear] = useState('');
 
   // 弹窗
   const [modalOpen, setModalOpen] = useState(false);
@@ -110,6 +111,7 @@ const CoreAlgorithmConfig: React.FC = () => {
           cityID: cityId || undefined,
           insuType: queryInsuType || undefined,
           status: status || undefined,
+          year: year || undefined,
         },
         { pageSize: size, currentPage: page }
       );
@@ -124,12 +126,12 @@ const CoreAlgorithmConfig: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [drg, fixmedinsName, provinceId, cityId, queryInsuType, status, currentPage, pageSize]);
+  }, [drg, fixmedinsName, provinceId, cityId, queryInsuType, status, year, currentPage, pageSize]);
 
   useEffect(() => {
     fetchData(1, pageSize);
     setCurrentPage(1);
-  }, [drg, fixmedinsName, provinceId, cityId, queryInsuType, status]);
+  }, [drg, fixmedinsName, provinceId, cityId, queryInsuType, status, year]);
 
   // 页面加载时获取查询条件下拉数据
   useEffect(() => {
@@ -195,6 +197,7 @@ const CoreAlgorithmConfig: React.FC = () => {
     setCityId('');
     setQueryInsuType('');
     setStatus('');
+    setYear('');
   };
 
   // ==================== 导入功能方法 ====================
@@ -400,7 +403,8 @@ const CoreAlgorithmConfig: React.FC = () => {
       fixmedinsName: selectedHospital?.descripts || '',
       medinsLv: selectedHospital?.medinsLv || selectedHospital?.MedinsLv || '',
       fileData: fileContentRef.current,
-      fileName: fileNameRef.current
+      fileName: fileNameRef.current,
+      year: importForm.getFieldValue('importYear') || '',
     };
 
     try {
@@ -460,7 +464,8 @@ const CoreAlgorithmConfig: React.FC = () => {
       fixmedinsName: selectedHospital?.descripts || '',
       medinsLv: selectedHospital?.medinsLv || selectedHospital?.MedinsLv || '',
       fileData: fileContentRef.current,
-      fileName: fileNameRef.current
+      fileName: fileNameRef.current,
+      year: importForm.getFieldValue('importYear') || '',
     };
 
     try {
@@ -556,7 +561,8 @@ const CoreAlgorithmConfig: React.FC = () => {
     fetchHospitalData(); // 弹窗打开时获取医疗机构数据
     // 设置生效日期默认值为当年1月1日
     form.setFieldsValue({
-      startDate: dayjs().startOf('year')
+      startDate: dayjs().startOf('year'),
+      year: dayjs().year(),
     });
   };
 
@@ -609,6 +615,7 @@ const CoreAlgorithmConfig: React.FC = () => {
         stopDate: record.stopDate ? dayjs(record.stopDate) : undefined,
         identification: record.identification,
         remark: record.remark,
+        year: record.year || '',
       } as any);
     }, 100);
   };
@@ -676,6 +683,7 @@ const CoreAlgorithmConfig: React.FC = () => {
         id: editRecord?.id || '',
         startDate: values.startDate ? (values.startDate as any).format('YYYY-MM-DD') : '',
         stopDate: values.stopDate ? (values.stopDate as any).format('YYYY-MM-DD') : '',
+        year: values.year || '',
       };
       const res = await saveCoreAlgorithm(params);
       if (res.errorCode === '0') {
@@ -704,6 +712,11 @@ const CoreAlgorithmConfig: React.FC = () => {
       dataIndex: 'drgDesc',
       width: 160,
       ellipsis: true,
+    },
+    {
+      title: '年份',
+      dataIndex: 'year',
+      width: 50,
     },
     {
       title: '基准点数',
@@ -913,6 +926,17 @@ const CoreAlgorithmConfig: React.FC = () => {
             </Select>
           </Col>
           <Col>
+            <InputNumber
+              placeholder="年份"
+              value={year ? Number(year) : undefined}
+              onChange={v => setYear(v ? String(v) : '')}
+              style={{ width: 100 }}
+              min={2020}
+              max={2099}
+              precision={0}
+            />
+          </Col>
+          <Col>
             <Space>
               <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>查询</Button>
               <Button icon={<ReloadOutlined />} onClick={handleReset}>重置</Button>
@@ -935,7 +959,7 @@ const CoreAlgorithmConfig: React.FC = () => {
           dataSource={data}
           rowKey="id"
           loading={loading}
-          scroll={{ x: 1490 }}
+          scroll={{ x: 1570 }}
           size="small"
           pagination={false}
         />
@@ -1144,6 +1168,11 @@ const CoreAlgorithmConfig: React.FC = () => {
                   <Input placeholder="标识码" />
                 </Form.Item>
               </Col>
+              <Col span={8}>
+                <Form.Item name="year" label="分组方案年份" rules={[{ required: true, message: '请输入年份' }]}>
+                  <InputNumber placeholder="请输入年份" style={{ width: '100%' }} min={2020} max={2099} precision={0} />
+                </Form.Item>
+              </Col>
               <Col span={24}>
                 <Form.Item name="remark" label="备注">
                   <Input.TextArea rows={2} placeholder="备注信息" />
@@ -1247,6 +1276,19 @@ const CoreAlgorithmConfig: React.FC = () => {
                         </Option>
                       ))}
                     </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item
+                    name="importYear"
+                    label="分组方案年份"
+                    rules={[{ required: true, message: '请输入年份' }]}
+                    initialValue={dayjs().year()}
+                  >
+                    <InputNumber placeholder="请输入年份" style={{ width: '100%' }} min={2020} max={2099} precision={0} />
                   </Form.Item>
                 </Col>
               </Row>

@@ -1,7 +1,7 @@
 ROUTINE src.Menu.Service.1 [Type=INT,Generated]
  ;src.Menu.Service.1
- ;Generated for class src.Menu.Service.  Do NOT edit. 04/15/2026 12:00:40AM
- ;;344C376C;src.Menu.Service
+ ;Generated for class src.Menu.Service.  Do NOT edit. 05/13/2026 05:11:02PM
+ ;;6A716455;src.Menu.Service
  ;
 zDeleteMenu(postObj)
 	new (postObj)
@@ -132,72 +132,72 @@ zGetChildMenus(parentCode)
 	quit children
  q
 %ChildCursor0o 
- try { s SQLCODE=$s($g(%ChildCursor03258d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ChildCursor05558d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ChildCursor03258d(1)=0,%ChildCursor03258d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ChildCursor03258d(3)=$zu(115,2)
- s %ChildCursor03258d(4)=0,%ChildCursor03258d(5)=""
+ s %ChildCursor05558d(1)=0,%ChildCursor05558d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ChildCursor05558d(3)=$zu(115,2)
+ s %ChildCursor05558d(4)=0,%ChildCursor05558d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ChildCursor03258d(6)=$g(parentCode)
- s %ChildCursor03258d(7)=$i(^||%t)
- s %ChildCursor03258d(8)=$zu(28,%ChildCursor03258d(6),7)
- s %ChildCursor03258d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ChildCursor03258d(9)=$g(%ChildCursor03258d(9))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ChildCursor03258d }
+ s %ChildCursor05558d(6)=$g(parentCode)
+ s %ChildCursor05558d(7)=$i(^||%t)
+ s %ChildCursor05558d(8)=$zu(28,%ChildCursor05558d(6),7)
+ s %ChildCursor05558d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ChildCursor05558d(9)=$g(%ChildCursor05558d(9))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ChildCursor05558d }
  q
 %0Cfirst 
- k ^||%t(%ChildCursor03258d(7))
- i $sortbegin(^||%t(%ChildCursor03258d(7))) {}
+ k ^||%t(%ChildCursor05558d(7))
+ i $sortbegin(^||%t(%ChildCursor05558d(7))) {}
  d %0CmBMod
  ; asl MOD# 4
- i $sortend(^||%t(%ChildCursor03258d(7)))
- s %ChildCursor03258d(10)=""
-%0CmDk1 s %ChildCursor03258d(10)=$o(^||%t(%ChildCursor03258d(7),%ChildCursor03258d(10)))
- i %ChildCursor03258d(10)="" g %0CmDdun
- s sortNo=$s(%ChildCursor03258d(10)=-1E19:"",1:%ChildCursor03258d(10))
+ i $sortend(^||%t(%ChildCursor05558d(7)))
+ s %ChildCursor05558d(10)=""
+%0CmDk1 s %ChildCursor05558d(10)=$o(^||%t(%ChildCursor05558d(7),%ChildCursor05558d(10)))
+ i %ChildCursor05558d(10)="" g %0CmDdun
+ s sortNo=$s(%ChildCursor05558d(10)=-1E19:"",1:%ChildCursor05558d(10))
  s id=""
-%0CmDk2 s %ChildCursor03258d(11)="" s id=$o(^||%t(%ChildCursor03258d(7),%ChildCursor03258d(10),id),1,%ChildCursor03258d(11))
+%0CmDk2 s %ChildCursor05558d(11)="" s id=$o(^||%t(%ChildCursor05558d(7),%ChildCursor05558d(10),id),1,%ChildCursor05558d(11))
  i id="" g %0CmDk1
- S $lg(code,descripts,icon,isActive,isVisible,menuLevel,parentCode,routePath)=%ChildCursor03258d(11)
- s %ChildCursor03258d(12)=$zu(28,parentCode,7)
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ChildCursor03258d(1)),%ROWID=id,%ChildCursor03258d(0)=10
+ S $lg(code,descripts,icon,isActive,isVisible,menuLevel,parentCode,routePath)=%ChildCursor05558d(11)
+ s %ChildCursor05558d(12)=$zu(28,parentCode,7)
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ChildCursor05558d(1)),%ROWID=id,%ChildCursor05558d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ChildCursor03258d(9)=$g(%ChildCursor03258d(9))+$zh-%sqltime
+ s:$d(%sqltime) %ChildCursor05558d(9)=$g(%ChildCursor05558d(9))+$zh-%sqltime
  quit
 %ChildCursor0f //-- FETCH tag
- i '$g(%ChildCursor03258d(0)) { s SQLCODE=-102 q  } i %ChildCursor03258d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ChildCursor03258d(2),%ChildCursor03258d(1)'<%ChildCursor03258d(2) { s SQLCODE=100,%ROWCOUNT=%ChildCursor03258d(1),%ChildCursor03258d(0)=100 q }
+ i '$g(%ChildCursor05558d(0)) { s SQLCODE=-102 q  } i %ChildCursor05558d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ChildCursor05558d(2),%ChildCursor05558d(1)'<%ChildCursor05558d(2) { s SQLCODE=100,%ROWCOUNT=%ChildCursor05558d(1),%ChildCursor05558d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Cfirst:%ChildCursor03258d(0)=1
+ g %0Cfirst:%ChildCursor05558d(0)=1
  g %0CmDk2
 %0CmDdun 
 %0CmAdun 
- s %ROWCOUNT=%ChildCursor03258d(1),SQLCODE=100,%ChildCursor03258d(0)=100
- s:$d(%sqltime) %ChildCursor03258d(9)=$g(%ChildCursor03258d(9))+$zh-%sqltime
+ s %ROWCOUNT=%ChildCursor05558d(1),SQLCODE=100,%ChildCursor05558d(0)=100
+ s:$d(%sqltime) %ChildCursor05558d(9)=$g(%ChildCursor05558d(9))+$zh-%sqltime
  //-- no [more] data
  quit
-%ChildCursor0c i '$g(%ChildCursor03258d(0)) { s SQLCODE=-102 q  }
+%ChildCursor0c i '$g(%ChildCursor05558d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ChildCursor03258d(1)),1:0)
- i $sortend(^||%t(%ChildCursor03258d(7)),0) {} 
- if $g(%ChildCursor03258d(7))'="" kill ^||%t(%ChildCursor03258d(7))
- if $g(%ChildCursor03258d(3))=1 {
- 	if $g(%ChildCursor03258d(4))=1 { l -@%ChildCursor03258d(5) s %ChildCursor03258d(4)=0 } elseif $g(%ChildCursor03258d(4))=2 { do $classmethod($li(%ChildCursor03258d(5)),"%UnlockId",$li(%ChildCursor03258d(5),2),1,1)  s %ChildCursor03258d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ChildCursor05558d(1)),1:0)
+ i $sortend(^||%t(%ChildCursor05558d(7)),0) {} 
+ if $g(%ChildCursor05558d(7))'="" kill ^||%t(%ChildCursor05558d(7))
+ if $g(%ChildCursor05558d(3))=1 {
+ 	if $g(%ChildCursor05558d(4))=1 { l -@%ChildCursor05558d(5) s %ChildCursor05558d(4)=0 } elseif $g(%ChildCursor05558d(4))=2 { do $classmethod($li(%ChildCursor05558d(5)),"%UnlockId",$li(%ChildCursor05558d(5),2),1,1)  s %ChildCursor05558d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ChildCursor03258d(9))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ChildCursor05558d(9))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"WmCSPl+gpjCZwQvS3bLDVWNLUYc="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"WmCSPl+gpjCZwQvS3bLDVWNLUYc=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ChildCursor03258d
+ k %ChildCursor05558d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ChildCursor03258d(13)
+ kill %ChildCursor05558d(13)
  quit  // close
 %0Cerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- i $sortend(^||%t(%ChildCursor03258d(7)),0) {} 
- s %ChildCursor03258d(0)=100
+ i $sortend(^||%t(%ChildCursor05558d(7)),0) {} 
+ s %ChildCursor05558d(0)=100
  quit  // error
 %0CmBMod ; asl MOD# 2
  n sqld21,sqld27,sqld28,sqld43,sqld46
@@ -209,28 +209,28 @@ zGetChildMenus(parentCode)
  s sqld43="" i $d(^CBMenuD(id),sqld43)
  e  g %0CmBk1
  S parentCode=$lg(sqld43,7)
- s %ChildCursor03258d(12)=$zu(28,parentCode,7)
- g:'(%ChildCursor03258d(12)=%ChildCursor03258d(8)) %0CmBk1
- g:'(%ChildCursor03258d(12)'=" ") %0CmBk1
+ s %ChildCursor05558d(12)=$zu(28,parentCode,7)
+ g:'(%ChildCursor05558d(12)=%ChildCursor05558d(8)) %0CmBk1
+ g:'(%ChildCursor05558d(12)'=" ") %0CmBk1
  S $lg(,code,descripts,,,,,menuLevel,sortNo,icon,routePath,isVisible,isActive)=sqld43
- goto:%ChildCursor03258d(3)'=1 %0CmBuncommitted
- if %ChildCursor03258d(3)=1 {
+ goto:%ChildCursor05558d(3)'=1 %0CmBuncommitted
+ if %ChildCursor05558d(3)=1 {
  	lock +^CBMenuD($p(id,"||",1))#"S":$zu(115,4)
- 	if $t { set %ChildCursor03258d(5)=$name(^CBMenuD($p(id,"||",1)))_"#""SI""",%ChildCursor03258d(4)=1 }
+ 	if $t { set %ChildCursor05558d(5)=$name(^CBMenuD($p(id,"||",1)))_"#""SI""",%ChildCursor05558d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_Menu for RowID value: "_id ztrap "LOCK"  }
  }
  ; asl MOD# 3
- s sqld27=$zlist(sqld21,%ChildCursor03258d(12))
+ s sqld27=$zlist(sqld21,%ChildCursor05558d(12))
  i id'="" s sqld46="" i $d(^CBMenuD(id),sqld46)
  e  g %0CmCdun
  S $lg(,code,descripts,,,,parentCode,menuLevel,sortNo,icon,routePath,isVisible,isActive)=sqld46
  S sqld21=$lg(sqld46,16)
- s %ChildCursor03258d(12)=$zu(28,parentCode,7)
- s sqld28=$zlist(sqld21,%ChildCursor03258d(12))
+ s %ChildCursor05558d(12)=$zu(28,parentCode,7)
+ s sqld28=$zlist(sqld21,%ChildCursor05558d(12))
  g:sqld27'=sqld28 %0CmCdun
 %0CmBuncommitted ;
- s ^||%t(%ChildCursor03258d(7),$s(sortNo'="":sortNo,1:-1E19),id)=$lb(code,descripts,icon,isActive,isVisible,menuLevel,parentCode,routePath)
-%0CmCdun if $g(%ChildCursor03258d(3))=1 { if $g(%ChildCursor03258d(4))=1 { l -@%ChildCursor03258d(5) s %ChildCursor03258d(4)=0 } elseif $g(%ChildCursor03258d(4))=2 { do $classmethod($li(%ChildCursor03258d(5)),"%UnlockId",$li(%ChildCursor03258d(5),2),1,1)  s %ChildCursor03258d(4)=0 }}
+ s ^||%t(%ChildCursor05558d(7),$s(sortNo'="":sortNo,1:-1E19),id)=$lb(code,descripts,icon,isActive,isVisible,menuLevel,parentCode,routePath)
+%0CmCdun if $g(%ChildCursor05558d(3))=1 { if $g(%ChildCursor05558d(4))=1 { l -@%ChildCursor05558d(5) s %ChildCursor05558d(4)=0 } elseif $g(%ChildCursor05558d(4))=2 { do $classmethod($li(%ChildCursor05558d(5)),"%UnlockId",$li(%ChildCursor05558d(5),2),1,1)  s %ChildCursor05558d(4)=0 }}
  g %0CmBk1
 %0CmBdun q
 zGetChildMenusFromDetail(parentCode)
@@ -318,88 +318,88 @@ zGetChildMenusFromDetail(parentCode)
  d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
  g %0Hc
 %ChildDetailCursor0o 
- try { s SQLCODE=$s($g(%ChildDetailCursor03259d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ChildDetailCursor05559d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ChildDetailCursor03259d(1)=0,%ChildDetailCursor03259d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ChildDetailCursor03259d(3)=$zu(115,2)
- s %ChildDetailCursor03259d(4)=0,%ChildDetailCursor03259d(5)=""
+ s %ChildDetailCursor05559d(1)=0,%ChildDetailCursor05559d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ChildDetailCursor05559d(3)=$zu(115,2)
+ s %ChildDetailCursor05559d(4)=0,%ChildDetailCursor05559d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ChildDetailCursor03259d(6)=$s($g(parentID)="":"",$isvalidnum(parentID):+parentID,1:parentID)
- s %ChildDetailCursor03259d(7)=$zu(28,"N",7)
- s %ChildDetailCursor03259d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ChildDetailCursor03259d(8)=$g(%ChildDetailCursor03259d(8))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ChildDetailCursor03259d }
+ s %ChildDetailCursor05559d(6)=$s($g(parentID)="":"",$isvalidnum(parentID):+parentID,1:parentID)
+ s %ChildDetailCursor05559d(7)=$zu(28,"N",7)
+ s %ChildDetailCursor05559d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ChildDetailCursor05559d(8)=$g(%ChildDetailCursor05559d(8))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ChildDetailCursor05559d }
  q
 %0Jfirst 
  ; asl MOD# 2
- s %ChildDetailCursor03259d(9)=""
-%0JmBk1 s %ChildDetailCursor03259d(9)=$o(^CBMenuDetailI("SeqNo",%ChildDetailCursor03259d(9)))
- i %ChildDetailCursor03259d(9)="" g %0JmBdun
- s seqNo=$s(%ChildDetailCursor03259d(9)=-1E14:"",1:%ChildDetailCursor03259d(9))
+ s %ChildDetailCursor05559d(9)=""
+%0JmBk1 s %ChildDetailCursor05559d(9)=$o(^CBMenuDetailI("SeqNo",%ChildDetailCursor05559d(9)))
+ i %ChildDetailCursor05559d(9)="" g %0JmBdun
+ s seqNo=$s(%ChildDetailCursor05559d(9)=-1E14:"",1:%ChildDetailCursor05559d(9))
  s id=""
-%0JmBk2 s id=$o(^CBMenuDetailI("SeqNo",%ChildDetailCursor03259d(9),id))
+%0JmBk2 s id=$o(^CBMenuDetailI("SeqNo",%ChildDetailCursor05559d(9),id))
  i id="" g %0JmBk1
- s %ChildDetailCursor03259d(10)="" i $d(^CBMenuDetailD(id),%ChildDetailCursor03259d(10))
+ s %ChildDetailCursor05559d(10)="" i $d(^CBMenuDetailD(id),%ChildDetailCursor05559d(10))
  e  g %0JmBk2
- S %ChildDetailCursor03259d(11)=$lg(%ChildDetailCursor03259d(10),10)
- g:'(%ChildDetailCursor03259d(11)=%ChildDetailCursor03259d(6)) %0JmBk2
- g:'(%ChildDetailCursor03259d(11)'="") %0JmBk2
- S menuGroup=$lg(%ChildDetailCursor03259d(10),8)
- s %ChildDetailCursor03259d(12)=$zu(28,menuGroup,7)
- g:'(%ChildDetailCursor03259d(12)=%ChildDetailCursor03259d(7)) %0JmBk2
- S $lg(,code,descripts,,linkAddress,linkPath,,,image)=%ChildDetailCursor03259d(10)
- goto:%ChildDetailCursor03259d(3)'=1 %0JmBuncommitted
- if %ChildDetailCursor03259d(3)=1 {
+ S %ChildDetailCursor05559d(11)=$lg(%ChildDetailCursor05559d(10),10)
+ g:'(%ChildDetailCursor05559d(11)=%ChildDetailCursor05559d(6)) %0JmBk2
+ g:'(%ChildDetailCursor05559d(11)'="") %0JmBk2
+ S menuGroup=$lg(%ChildDetailCursor05559d(10),8)
+ s %ChildDetailCursor05559d(12)=$zu(28,menuGroup,7)
+ g:'(%ChildDetailCursor05559d(12)=%ChildDetailCursor05559d(7)) %0JmBk2
+ S $lg(,code,descripts,,linkAddress,linkPath,,,image)=%ChildDetailCursor05559d(10)
+ goto:%ChildDetailCursor05559d(3)'=1 %0JmBuncommitted
+ if %ChildDetailCursor05559d(3)=1 {
  	lock +^CBMenuDetailD($p(id,"||",1))#"S":$zu(115,4)
- 	if $t { set %ChildDetailCursor03259d(5)=$name(^CBMenuDetailD($p(id,"||",1)))_"#""SI""",%ChildDetailCursor03259d(4)=1 }
+ 	if $t { set %ChildDetailCursor05559d(5)=$name(^CBMenuDetailD($p(id,"||",1)))_"#""SI""",%ChildDetailCursor05559d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_MenuDetail for RowID value: "_id ztrap "LOCK"  }
  }
  ; asl MOD# 3
- s %ChildDetailCursor03259d(13)=$zlist(%ChildDetailCursor03259d(11),%ChildDetailCursor03259d(12))
- i id'="" s %ChildDetailCursor03259d(14)="" i $d(^CBMenuDetailD(id),%ChildDetailCursor03259d(14))
+ s %ChildDetailCursor05559d(13)=$zlist(%ChildDetailCursor05559d(11),%ChildDetailCursor05559d(12))
+ i id'="" s %ChildDetailCursor05559d(14)="" i $d(^CBMenuDetailD(id),%ChildDetailCursor05559d(14))
  e  g %0JmCdun
- S $lg(,code,descripts,,linkAddress,linkPath,seqNo,menuGroup,image)=%ChildDetailCursor03259d(14)
- S %ChildDetailCursor03259d(11)=$lg(%ChildDetailCursor03259d(14),10)
- s %ChildDetailCursor03259d(12)=$zu(28,menuGroup,7)
- s %ChildDetailCursor03259d(15)=$zlist(%ChildDetailCursor03259d(11),%ChildDetailCursor03259d(12))
- g:%ChildDetailCursor03259d(13)'=%ChildDetailCursor03259d(15) %0JmCdun
+ S $lg(,code,descripts,,linkAddress,linkPath,seqNo,menuGroup,image)=%ChildDetailCursor05559d(14)
+ S %ChildDetailCursor05559d(11)=$lg(%ChildDetailCursor05559d(14),10)
+ s %ChildDetailCursor05559d(12)=$zu(28,menuGroup,7)
+ s %ChildDetailCursor05559d(15)=$zlist(%ChildDetailCursor05559d(11),%ChildDetailCursor05559d(12))
+ g:%ChildDetailCursor05559d(13)'=%ChildDetailCursor05559d(15) %0JmCdun
 %0JmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ChildDetailCursor03259d(1)),%ROWID=id,%ChildDetailCursor03259d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ChildDetailCursor05559d(1)),%ROWID=id,%ChildDetailCursor05559d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ChildDetailCursor03259d(8)=$g(%ChildDetailCursor03259d(8))+$zh-%sqltime
+ s:$d(%sqltime) %ChildDetailCursor05559d(8)=$g(%ChildDetailCursor05559d(8))+$zh-%sqltime
  quit
 %ChildDetailCursor0f //-- FETCH tag
- i '$g(%ChildDetailCursor03259d(0)) { s SQLCODE=-102 q  } i %ChildDetailCursor03259d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ChildDetailCursor03259d(2),%ChildDetailCursor03259d(1)'<%ChildDetailCursor03259d(2) { s SQLCODE=100,%ROWCOUNT=%ChildDetailCursor03259d(1),%ChildDetailCursor03259d(0)=100 q }
+ i '$g(%ChildDetailCursor05559d(0)) { s SQLCODE=-102 q  } i %ChildDetailCursor05559d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ChildDetailCursor05559d(2),%ChildDetailCursor05559d(1)'<%ChildDetailCursor05559d(2) { s SQLCODE=100,%ROWCOUNT=%ChildDetailCursor05559d(1),%ChildDetailCursor05559d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Jfirst:%ChildDetailCursor03259d(0)=1
-%0JmCdun if $g(%ChildDetailCursor03259d(3))=1 { if $g(%ChildDetailCursor03259d(4))=1 { l -@%ChildDetailCursor03259d(5) s %ChildDetailCursor03259d(4)=0 } elseif $g(%ChildDetailCursor03259d(4))=2 { do $classmethod($li(%ChildDetailCursor03259d(5)),"%UnlockId",$li(%ChildDetailCursor03259d(5),2),1,1)  s %ChildDetailCursor03259d(4)=0 }}
+ g %0Jfirst:%ChildDetailCursor05559d(0)=1
+%0JmCdun if $g(%ChildDetailCursor05559d(3))=1 { if $g(%ChildDetailCursor05559d(4))=1 { l -@%ChildDetailCursor05559d(5) s %ChildDetailCursor05559d(4)=0 } elseif $g(%ChildDetailCursor05559d(4))=2 { do $classmethod($li(%ChildDetailCursor05559d(5)),"%UnlockId",$li(%ChildDetailCursor05559d(5),2),1,1)  s %ChildDetailCursor05559d(4)=0 }}
  g %0JmBk2
 %0JmBdun 
 %0JmAdun 
- s %ROWCOUNT=%ChildDetailCursor03259d(1),SQLCODE=100,%ChildDetailCursor03259d(0)=100
- s:$d(%sqltime) %ChildDetailCursor03259d(8)=$g(%ChildDetailCursor03259d(8))+$zh-%sqltime
+ s %ROWCOUNT=%ChildDetailCursor05559d(1),SQLCODE=100,%ChildDetailCursor05559d(0)=100
+ s:$d(%sqltime) %ChildDetailCursor05559d(8)=$g(%ChildDetailCursor05559d(8))+$zh-%sqltime
  //-- no [more] data
  quit
-%ChildDetailCursor0c i '$g(%ChildDetailCursor03259d(0)) { s SQLCODE=-102 q  }
+%ChildDetailCursor0c i '$g(%ChildDetailCursor05559d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ChildDetailCursor03259d(1)),1:0)
- if $g(%ChildDetailCursor03259d(3))=1 {
- 	if $g(%ChildDetailCursor03259d(4))=1 { l -@%ChildDetailCursor03259d(5) s %ChildDetailCursor03259d(4)=0 } elseif $g(%ChildDetailCursor03259d(4))=2 { do $classmethod($li(%ChildDetailCursor03259d(5)),"%UnlockId",$li(%ChildDetailCursor03259d(5),2),1,1)  s %ChildDetailCursor03259d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ChildDetailCursor05559d(1)),1:0)
+ if $g(%ChildDetailCursor05559d(3))=1 {
+ 	if $g(%ChildDetailCursor05559d(4))=1 { l -@%ChildDetailCursor05559d(5) s %ChildDetailCursor05559d(4)=0 } elseif $g(%ChildDetailCursor05559d(4))=2 { do $classmethod($li(%ChildDetailCursor05559d(5)),"%UnlockId",$li(%ChildDetailCursor05559d(5),2),1,1)  s %ChildDetailCursor05559d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ChildDetailCursor03259d(8))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ChildDetailCursor05559d(8))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"8rO1eD+ZVXsnhoNsVIcSW6WnXhA="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"8rO1eD+ZVXsnhoNsVIcSW6WnXhA=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ChildDetailCursor03259d
+ k %ChildDetailCursor05559d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ChildDetailCursor03259d(16)
+ kill %ChildDetailCursor05559d(16)
  quit  // close
 %0Jerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ChildDetailCursor03259d(0)=100
+ s %ChildDetailCursor05559d(0)=100
  quit  // error
 zGetMenuTree(postObj)
 	new (postObj)
@@ -454,74 +454,74 @@ zGetMenuTree(postObj)
 	quit retObj
  q
 %MenuCursor0o 
- try { s SQLCODE=$s($g(%MenuCursor03260d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%MenuCursor05560d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %MenuCursor03260d(1)=0,%MenuCursor03260d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %MenuCursor03260d(3)=$zu(115,2)
- s %MenuCursor03260d(4)=0,%MenuCursor03260d(5)=""
+ s %MenuCursor05560d(1)=0,%MenuCursor05560d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %MenuCursor05560d(3)=$zu(115,2)
+ s %MenuCursor05560d(4)=0,%MenuCursor05560d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %MenuCursor03260d(6)=$i(^||%t)
- k %MenuCursor03260d(7) s %MenuCursor03260d(7," ")=""
- k %MenuCursor03260d(8) s %MenuCursor03260d(8,$s($zu(28,$c(0),7)'="":$zu(28,$c(0),7),1:" "))="" s %MenuCursor03260d(8," ")=""
- k %MenuCursor03260d(9) m %MenuCursor03260d(9)=%MenuCursor03260d(8) k %MenuCursor03260d(9," ")
- k %MenuCursor03260d(10) m %MenuCursor03260d(10)=%MenuCursor03260d(7),%MenuCursor03260d(10)=%MenuCursor03260d(9)
- s %MenuCursor03260d(0)=1,SQLCODE=0
- s:$d(%sqltime) %MenuCursor03260d(11)=$g(%MenuCursor03260d(11))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %MenuCursor03260d }
+ s %MenuCursor05560d(6)=$i(^||%t)
+ k %MenuCursor05560d(7) s %MenuCursor05560d(7," ")=""
+ k %MenuCursor05560d(8) s %MenuCursor05560d(8,$s($zu(28,$c(0),7)'="":$zu(28,$c(0),7),1:" "))="" s %MenuCursor05560d(8," ")=""
+ k %MenuCursor05560d(9) m %MenuCursor05560d(9)=%MenuCursor05560d(8) k %MenuCursor05560d(9," ")
+ k %MenuCursor05560d(10) m %MenuCursor05560d(10)=%MenuCursor05560d(7),%MenuCursor05560d(10)=%MenuCursor05560d(9)
+ s %MenuCursor05560d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %MenuCursor05560d(11)=$g(%MenuCursor05560d(11))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %MenuCursor05560d }
  q
 %0Ofirst 
- k ^||%t(%MenuCursor03260d(6))
- i $sortbegin(^||%t(%MenuCursor03260d(6))) {}
+ k ^||%t(%MenuCursor05560d(6))
+ i $sortbegin(^||%t(%MenuCursor05560d(6))) {}
  d %0OmBMod
  ; asl MOD# 4
- i $sortend(^||%t(%MenuCursor03260d(6)))
- s %MenuCursor03260d(12)=""
-%0OmDk1 s %MenuCursor03260d(12)=$o(^||%t(%MenuCursor03260d(6),%MenuCursor03260d(12)))
- i %MenuCursor03260d(12)="" g %0OmDdun
- s sortNo=$s(%MenuCursor03260d(12)=-1E19:"",1:%MenuCursor03260d(12))
+ i $sortend(^||%t(%MenuCursor05560d(6)))
+ s %MenuCursor05560d(12)=""
+%0OmDk1 s %MenuCursor05560d(12)=$o(^||%t(%MenuCursor05560d(6),%MenuCursor05560d(12)))
+ i %MenuCursor05560d(12)="" g %0OmDdun
+ s sortNo=$s(%MenuCursor05560d(12)=-1E19:"",1:%MenuCursor05560d(12))
  s id=""
-%0OmDk2 s %MenuCursor03260d(13)="" s id=$o(^||%t(%MenuCursor03260d(6),%MenuCursor03260d(12),id),1,%MenuCursor03260d(13))
+%0OmDk2 s %MenuCursor05560d(13)="" s id=$o(^||%t(%MenuCursor05560d(6),%MenuCursor05560d(12),id),1,%MenuCursor05560d(13))
  i id="" g %0OmDk1
- S $lg(code,descripts,icon,isActive,isVisible,menuLevel,parentCode,routePath)=%MenuCursor03260d(13)
- s %MenuCursor03260d(14)=$zu(28,parentCode,7)
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%MenuCursor03260d(1)),%ROWID=id,%MenuCursor03260d(0)=10
+ S $lg(code,descripts,icon,isActive,isVisible,menuLevel,parentCode,routePath)=%MenuCursor05560d(13)
+ s %MenuCursor05560d(14)=$zu(28,parentCode,7)
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%MenuCursor05560d(1)),%ROWID=id,%MenuCursor05560d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %MenuCursor03260d(11)=$g(%MenuCursor03260d(11))+$zh-%sqltime
+ s:$d(%sqltime) %MenuCursor05560d(11)=$g(%MenuCursor05560d(11))+$zh-%sqltime
  quit
 %MenuCursor0f //-- FETCH tag
- i '$g(%MenuCursor03260d(0)) { s SQLCODE=-102 q  } i %MenuCursor03260d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %MenuCursor03260d(2),%MenuCursor03260d(1)'<%MenuCursor03260d(2) { s SQLCODE=100,%ROWCOUNT=%MenuCursor03260d(1),%MenuCursor03260d(0)=100 q }
+ i '$g(%MenuCursor05560d(0)) { s SQLCODE=-102 q  } i %MenuCursor05560d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %MenuCursor05560d(2),%MenuCursor05560d(1)'<%MenuCursor05560d(2) { s SQLCODE=100,%ROWCOUNT=%MenuCursor05560d(1),%MenuCursor05560d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Ofirst:%MenuCursor03260d(0)=1
+ g %0Ofirst:%MenuCursor05560d(0)=1
  g %0OmDk2
 %0OmDdun 
 %0OmAdun 
- s %ROWCOUNT=%MenuCursor03260d(1),SQLCODE=100,%MenuCursor03260d(0)=100
- s:$d(%sqltime) %MenuCursor03260d(11)=$g(%MenuCursor03260d(11))+$zh-%sqltime
+ s %ROWCOUNT=%MenuCursor05560d(1),SQLCODE=100,%MenuCursor05560d(0)=100
+ s:$d(%sqltime) %MenuCursor05560d(11)=$g(%MenuCursor05560d(11))+$zh-%sqltime
  //-- no [more] data
  quit
-%MenuCursor0c i '$g(%MenuCursor03260d(0)) { s SQLCODE=-102 q  }
+%MenuCursor0c i '$g(%MenuCursor05560d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%MenuCursor03260d(1)),1:0)
- i $sortend(^||%t(%MenuCursor03260d(6)),0) {} 
- if $g(%MenuCursor03260d(6))'="" kill ^||%t(%MenuCursor03260d(6))
- if $g(%MenuCursor03260d(3))=1 {
- 	if $g(%MenuCursor03260d(4))=1 { l -@%MenuCursor03260d(5) s %MenuCursor03260d(4)=0 } elseif $g(%MenuCursor03260d(4))=2 { do $classmethod($li(%MenuCursor03260d(5)),"%UnlockId",$li(%MenuCursor03260d(5),2),1,1)  s %MenuCursor03260d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%MenuCursor05560d(1)),1:0)
+ i $sortend(^||%t(%MenuCursor05560d(6)),0) {} 
+ if $g(%MenuCursor05560d(6))'="" kill ^||%t(%MenuCursor05560d(6))
+ if $g(%MenuCursor05560d(3))=1 {
+ 	if $g(%MenuCursor05560d(4))=1 { l -@%MenuCursor05560d(5) s %MenuCursor05560d(4)=0 } elseif $g(%MenuCursor05560d(4))=2 { do $classmethod($li(%MenuCursor05560d(5)),"%UnlockId",$li(%MenuCursor05560d(5),2),1,1)  s %MenuCursor05560d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%MenuCursor03260d(11))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%MenuCursor05560d(11))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"CNV5vgZGO0wMm11feGg4jo4mX2E="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"CNV5vgZGO0wMm11feGg4jo4mX2E=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %MenuCursor03260d
+ k %MenuCursor05560d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %MenuCursor03260d(15)
+ kill %MenuCursor05560d(15)
  quit  // close
 %0Oerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- i $sortend(^||%t(%MenuCursor03260d(6)),0) {} 
- s %MenuCursor03260d(0)=100
+ i $sortend(^||%t(%MenuCursor05560d(6)),0) {} 
+ s %MenuCursor05560d(0)=100
  quit  // error
 %0OmBMod ; asl MOD# 2
  n sqld21,sqld34,sqld35,sqld50,sqld51,sqld54
@@ -533,28 +533,28 @@ zGetMenuTree(postObj)
  s sqld50="" i $d(^CBMenuD(id),sqld50)
  e  g %0OmBk1
  S parentCode=$lg(sqld50,7)
- s %MenuCursor03260d(14)=$zu(28,parentCode,7)
- try { s sqld51=$d(%MenuCursor03260d(10,%MenuCursor03260d(14))) } catch { zt:$ze'["<SUBSCRIPT>" $ze s sqld51=0 }
+ s %MenuCursor05560d(14)=$zu(28,parentCode,7)
+ try { s sqld51=$d(%MenuCursor05560d(10,%MenuCursor05560d(14))) } catch { zt:$ze'["<SUBSCRIPT>" $ze s sqld51=0 }
  g:'sqld51 %0OmBk1
  S $lg(,code,descripts,,,,,menuLevel,sortNo,icon,routePath,isVisible,isActive)=sqld50
- goto:%MenuCursor03260d(3)'=1 %0OmBuncommitted
- if %MenuCursor03260d(3)=1 {
+ goto:%MenuCursor05560d(3)'=1 %0OmBuncommitted
+ if %MenuCursor05560d(3)=1 {
  	lock +^CBMenuD($p(id,"||",1))#"S":$zu(115,4)
- 	if $t { set %MenuCursor03260d(5)=$name(^CBMenuD($p(id,"||",1)))_"#""SI""",%MenuCursor03260d(4)=1 }
+ 	if $t { set %MenuCursor05560d(5)=$name(^CBMenuD($p(id,"||",1)))_"#""SI""",%MenuCursor05560d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_Menu for RowID value: "_id ztrap "LOCK"  }
  }
  ; asl MOD# 3
- s sqld34=$zlist(sqld21,%MenuCursor03260d(14))
+ s sqld34=$zlist(sqld21,%MenuCursor05560d(14))
  i id'="" s sqld54="" i $d(^CBMenuD(id),sqld54)
  e  g %0OmCdun
  S $lg(,code,descripts,,,,parentCode,menuLevel,sortNo,icon,routePath,isVisible,isActive)=sqld54
  S sqld21=$lg(sqld54,16)
- s %MenuCursor03260d(14)=$zu(28,parentCode,7)
- s sqld35=$zlist(sqld21,%MenuCursor03260d(14))
+ s %MenuCursor05560d(14)=$zu(28,parentCode,7)
+ s sqld35=$zlist(sqld21,%MenuCursor05560d(14))
  g:sqld34'=sqld35 %0OmCdun
 %0OmBuncommitted ;
- s ^||%t(%MenuCursor03260d(6),$s(sortNo'="":sortNo,1:-1E19),id)=$lb(code,descripts,icon,isActive,isVisible,menuLevel,parentCode,routePath)
-%0OmCdun if $g(%MenuCursor03260d(3))=1 { if $g(%MenuCursor03260d(4))=1 { l -@%MenuCursor03260d(5) s %MenuCursor03260d(4)=0 } elseif $g(%MenuCursor03260d(4))=2 { do $classmethod($li(%MenuCursor03260d(5)),"%UnlockId",$li(%MenuCursor03260d(5),2),1,1)  s %MenuCursor03260d(4)=0 }}
+ s ^||%t(%MenuCursor05560d(6),$s(sortNo'="":sortNo,1:-1E19),id)=$lb(code,descripts,icon,isActive,isVisible,menuLevel,parentCode,routePath)
+%0OmCdun if $g(%MenuCursor05560d(3))=1 { if $g(%MenuCursor05560d(4))=1 { l -@%MenuCursor05560d(5) s %MenuCursor05560d(4)=0 } elseif $g(%MenuCursor05560d(4))=2 { do $classmethod($li(%MenuCursor05560d(5)),"%UnlockId",$li(%MenuCursor05560d(5),2),1,1)  s %MenuCursor05560d(4)=0 }}
  g %0OmBk1
 %0OmBdun q
 zGetMenuTreeFromDetail(postObj)
@@ -608,83 +608,83 @@ zGetMenuTreeFromDetail(postObj)
 	quit retObj
  q
 %MenuDetailCursor0o 
- try { s SQLCODE=$s($g(%MenuDetailCursor03261d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%MenuDetailCursor05561d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %MenuDetailCursor03261d(1)=0,%MenuDetailCursor03261d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %MenuDetailCursor03261d(3)=$zu(115,2)
- s %MenuDetailCursor03261d(4)=0,%MenuDetailCursor03261d(5)=""
+ s %MenuDetailCursor05561d(1)=0,%MenuDetailCursor05561d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %MenuDetailCursor05561d(3)=$zu(115,2)
+ s %MenuDetailCursor05561d(4)=0,%MenuDetailCursor05561d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %MenuDetailCursor03261d(6)=$zu(28,"Y",7)
- s %MenuDetailCursor03261d(0)=1,SQLCODE=0
- s:$d(%sqltime) %MenuDetailCursor03261d(7)=$g(%MenuDetailCursor03261d(7))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %MenuDetailCursor03261d }
+ s %MenuDetailCursor05561d(6)=$zu(28,"Y",7)
+ s %MenuDetailCursor05561d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %MenuDetailCursor05561d(7)=$g(%MenuDetailCursor05561d(7))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %MenuDetailCursor05561d }
  q
 %0Tfirst 
  ; asl MOD# 2
- s %MenuDetailCursor03261d(8)=""
-%0TmBk1 s %MenuDetailCursor03261d(8)=$o(^CBMenuDetailI("SeqNo",%MenuDetailCursor03261d(8)))
- i %MenuDetailCursor03261d(8)="" g %0TmBdun
- s seqNo=$s(%MenuDetailCursor03261d(8)=-1E14:"",1:%MenuDetailCursor03261d(8))
+ s %MenuDetailCursor05561d(8)=""
+%0TmBk1 s %MenuDetailCursor05561d(8)=$o(^CBMenuDetailI("SeqNo",%MenuDetailCursor05561d(8)))
+ i %MenuDetailCursor05561d(8)="" g %0TmBdun
+ s seqNo=$s(%MenuDetailCursor05561d(8)=-1E14:"",1:%MenuDetailCursor05561d(8))
  s id=""
-%0TmBk2 s id=$o(^CBMenuDetailI("SeqNo",%MenuDetailCursor03261d(8),id))
+%0TmBk2 s id=$o(^CBMenuDetailI("SeqNo",%MenuDetailCursor05561d(8),id))
  i id="" g %0TmBk1
- s %MenuDetailCursor03261d(9)="" i $d(^CBMenuDetailD(id),%MenuDetailCursor03261d(9))
+ s %MenuDetailCursor05561d(9)="" i $d(^CBMenuDetailD(id),%MenuDetailCursor05561d(9))
  e  g %0TmBk2
- S menuGroup=$lg(%MenuDetailCursor03261d(9),8)
- s %MenuDetailCursor03261d(10)=$zu(28,menuGroup,7)
- g:'(%MenuDetailCursor03261d(10)=%MenuDetailCursor03261d(6)) %0TmBk2
- S $lg(,code,descripts,,linkAddress,linkPath,,,image,mainMenuDr)=%MenuDetailCursor03261d(9)
- goto:%MenuDetailCursor03261d(3)'=1 %0TmBuncommitted
- if %MenuDetailCursor03261d(3)=1 {
+ S menuGroup=$lg(%MenuDetailCursor05561d(9),8)
+ s %MenuDetailCursor05561d(10)=$zu(28,menuGroup,7)
+ g:'(%MenuDetailCursor05561d(10)=%MenuDetailCursor05561d(6)) %0TmBk2
+ S $lg(,code,descripts,,linkAddress,linkPath,,,image,mainMenuDr)=%MenuDetailCursor05561d(9)
+ goto:%MenuDetailCursor05561d(3)'=1 %0TmBuncommitted
+ if %MenuDetailCursor05561d(3)=1 {
  	lock +^CBMenuDetailD($p(id,"||",1))#"S":$zu(115,4)
- 	if $t { set %MenuDetailCursor03261d(5)=$name(^CBMenuDetailD($p(id,"||",1)))_"#""SI""",%MenuDetailCursor03261d(4)=1 }
+ 	if $t { set %MenuDetailCursor05561d(5)=$name(^CBMenuDetailD($p(id,"||",1)))_"#""SI""",%MenuDetailCursor05561d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_MenuDetail for RowID value: "_id ztrap "LOCK"  }
  }
  ; asl MOD# 3
- s %MenuDetailCursor03261d(11)=$zlist(%MenuDetailCursor03261d(10))
- i id'="" s %MenuDetailCursor03261d(12)="" i $d(^CBMenuDetailD(id),%MenuDetailCursor03261d(12))
+ s %MenuDetailCursor05561d(11)=$zlist(%MenuDetailCursor05561d(10))
+ i id'="" s %MenuDetailCursor05561d(12)="" i $d(^CBMenuDetailD(id),%MenuDetailCursor05561d(12))
  e  g %0TmCdun
- S $lg(,code,descripts,,linkAddress,linkPath,seqNo,menuGroup,image,mainMenuDr)=%MenuDetailCursor03261d(12)
- s %MenuDetailCursor03261d(10)=$zu(28,menuGroup,7)
- s %MenuDetailCursor03261d(13)=$zlist(%MenuDetailCursor03261d(10))
- g:%MenuDetailCursor03261d(11)'=%MenuDetailCursor03261d(13) %0TmCdun
+ S $lg(,code,descripts,,linkAddress,linkPath,seqNo,menuGroup,image,mainMenuDr)=%MenuDetailCursor05561d(12)
+ s %MenuDetailCursor05561d(10)=$zu(28,menuGroup,7)
+ s %MenuDetailCursor05561d(13)=$zlist(%MenuDetailCursor05561d(10))
+ g:%MenuDetailCursor05561d(11)'=%MenuDetailCursor05561d(13) %0TmCdun
 %0TmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%MenuDetailCursor03261d(1)),%ROWID=id,%MenuDetailCursor03261d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%MenuDetailCursor05561d(1)),%ROWID=id,%MenuDetailCursor05561d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %MenuDetailCursor03261d(7)=$g(%MenuDetailCursor03261d(7))+$zh-%sqltime
+ s:$d(%sqltime) %MenuDetailCursor05561d(7)=$g(%MenuDetailCursor05561d(7))+$zh-%sqltime
  quit
 %MenuDetailCursor0f //-- FETCH tag
- i '$g(%MenuDetailCursor03261d(0)) { s SQLCODE=-102 q  } i %MenuDetailCursor03261d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %MenuDetailCursor03261d(2),%MenuDetailCursor03261d(1)'<%MenuDetailCursor03261d(2) { s SQLCODE=100,%ROWCOUNT=%MenuDetailCursor03261d(1),%MenuDetailCursor03261d(0)=100 q }
+ i '$g(%MenuDetailCursor05561d(0)) { s SQLCODE=-102 q  } i %MenuDetailCursor05561d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %MenuDetailCursor05561d(2),%MenuDetailCursor05561d(1)'<%MenuDetailCursor05561d(2) { s SQLCODE=100,%ROWCOUNT=%MenuDetailCursor05561d(1),%MenuDetailCursor05561d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Tfirst:%MenuDetailCursor03261d(0)=1
-%0TmCdun if $g(%MenuDetailCursor03261d(3))=1 { if $g(%MenuDetailCursor03261d(4))=1 { l -@%MenuDetailCursor03261d(5) s %MenuDetailCursor03261d(4)=0 } elseif $g(%MenuDetailCursor03261d(4))=2 { do $classmethod($li(%MenuDetailCursor03261d(5)),"%UnlockId",$li(%MenuDetailCursor03261d(5),2),1,1)  s %MenuDetailCursor03261d(4)=0 }}
+ g %0Tfirst:%MenuDetailCursor05561d(0)=1
+%0TmCdun if $g(%MenuDetailCursor05561d(3))=1 { if $g(%MenuDetailCursor05561d(4))=1 { l -@%MenuDetailCursor05561d(5) s %MenuDetailCursor05561d(4)=0 } elseif $g(%MenuDetailCursor05561d(4))=2 { do $classmethod($li(%MenuDetailCursor05561d(5)),"%UnlockId",$li(%MenuDetailCursor05561d(5),2),1,1)  s %MenuDetailCursor05561d(4)=0 }}
  g %0TmBk2
 %0TmBdun 
 %0TmAdun 
- s %ROWCOUNT=%MenuDetailCursor03261d(1),SQLCODE=100,%MenuDetailCursor03261d(0)=100
- s:$d(%sqltime) %MenuDetailCursor03261d(7)=$g(%MenuDetailCursor03261d(7))+$zh-%sqltime
+ s %ROWCOUNT=%MenuDetailCursor05561d(1),SQLCODE=100,%MenuDetailCursor05561d(0)=100
+ s:$d(%sqltime) %MenuDetailCursor05561d(7)=$g(%MenuDetailCursor05561d(7))+$zh-%sqltime
  //-- no [more] data
  quit
-%MenuDetailCursor0c i '$g(%MenuDetailCursor03261d(0)) { s SQLCODE=-102 q  }
+%MenuDetailCursor0c i '$g(%MenuDetailCursor05561d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%MenuDetailCursor03261d(1)),1:0)
- if $g(%MenuDetailCursor03261d(3))=1 {
- 	if $g(%MenuDetailCursor03261d(4))=1 { l -@%MenuDetailCursor03261d(5) s %MenuDetailCursor03261d(4)=0 } elseif $g(%MenuDetailCursor03261d(4))=2 { do $classmethod($li(%MenuDetailCursor03261d(5)),"%UnlockId",$li(%MenuDetailCursor03261d(5),2),1,1)  s %MenuDetailCursor03261d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%MenuDetailCursor05561d(1)),1:0)
+ if $g(%MenuDetailCursor05561d(3))=1 {
+ 	if $g(%MenuDetailCursor05561d(4))=1 { l -@%MenuDetailCursor05561d(5) s %MenuDetailCursor05561d(4)=0 } elseif $g(%MenuDetailCursor05561d(4))=2 { do $classmethod($li(%MenuDetailCursor05561d(5)),"%UnlockId",$li(%MenuDetailCursor05561d(5),2),1,1)  s %MenuDetailCursor05561d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%MenuDetailCursor03261d(7))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%MenuDetailCursor05561d(7))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"gZ1VvGxU+smNZyI2e+L7eOgYZSk="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"gZ1VvGxU+smNZyI2e+L7eOgYZSk=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %MenuDetailCursor03261d
+ k %MenuDetailCursor05561d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %MenuDetailCursor03261d(14)
+ kill %MenuDetailCursor05561d(14)
  quit  // close
 %0Terr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %MenuDetailCursor03261d(0)=100
+ s %MenuDetailCursor05561d(0)=100
  quit  // error
 zGetRoleMenus(postObj)
 	new (postObj)
@@ -724,92 +724,92 @@ zGetRoleMenus(postObj)
 	quit retObj
  q
 %RoleMenuCursor0o 
- try { s SQLCODE=$s($g(%RoleMenuCursor03262d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%RoleMenuCursor05562d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %RoleMenuCursor03262d(1)=0,%RoleMenuCursor03262d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %RoleMenuCursor03262d(3)=$zu(115,2)
- s %RoleMenuCursor03262d(4)=0,%RoleMenuCursor03262d(5)="",%RoleMenuCursor03262d(6)=0,%RoleMenuCursor03262d(7)=""
+ s %RoleMenuCursor05562d(1)=0,%RoleMenuCursor05562d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %RoleMenuCursor05562d(3)=$zu(115,2)
+ s %RoleMenuCursor05562d(4)=0,%RoleMenuCursor05562d(5)="",%RoleMenuCursor05562d(6)=0,%RoleMenuCursor05562d(7)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %RoleMenuCursor03262d(8)=$s($g(roleCode)="":"",$isvalidnum(roleCode):+roleCode,1:roleCode)
- s %RoleMenuCursor03262d(0)=1,SQLCODE=0
- s:$d(%sqltime) %RoleMenuCursor03262d(9)=$g(%RoleMenuCursor03262d(9))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %RoleMenuCursor03262d }
+ s %RoleMenuCursor05562d(8)=$s($g(roleCode)="":"",$isvalidnum(roleCode):+roleCode,1:roleCode)
+ s %RoleMenuCursor05562d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %RoleMenuCursor05562d(9)=$g(%RoleMenuCursor05562d(9))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %RoleMenuCursor05562d }
  q
 %0Yfirst 
  ; asl MOD# 2
- s %RoleMenuCursor03262d(10)=""
-%0YmBk1 s %RoleMenuCursor03262d(11)="" s %RoleMenuCursor03262d(10)=$o(^CBGroupMenuD(%RoleMenuCursor03262d(10)),1,%RoleMenuCursor03262d(11))
- i %RoleMenuCursor03262d(10)="" g %0YmBdun
- S %RoleMenuCursor03262d(12)=$lg(%RoleMenuCursor03262d(11),3)
- g:'(%RoleMenuCursor03262d(12)=%RoleMenuCursor03262d(8)) %0YmBk1
- S %RoleMenuCursor03262d(13)=$lg(%RoleMenuCursor03262d(11),5)
- goto:%RoleMenuCursor03262d(3)'=1 %0YmBuncommitted
- if %RoleMenuCursor03262d(3)=1 {
- 	lock +^CBGroupMenuD($p(%RoleMenuCursor03262d(10),"||",1))#"S":$zu(115,4)
- 	if $t { set %RoleMenuCursor03262d(5)=$name(^CBGroupMenuD($p(%RoleMenuCursor03262d(10),"||",1)))_"#""SI""",%RoleMenuCursor03262d(4)=1 }
- 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_GroupMenu for RowID value: "_%RoleMenuCursor03262d(10) ztrap "LOCK"  }
+ s %RoleMenuCursor05562d(10)=""
+%0YmBk1 s %RoleMenuCursor05562d(11)="" s %RoleMenuCursor05562d(10)=$o(^CBGroupMenuD(%RoleMenuCursor05562d(10)),1,%RoleMenuCursor05562d(11))
+ i %RoleMenuCursor05562d(10)="" g %0YmBdun
+ S %RoleMenuCursor05562d(12)=$lg(%RoleMenuCursor05562d(11),3)
+ g:'(%RoleMenuCursor05562d(12)=%RoleMenuCursor05562d(8)) %0YmBk1
+ S %RoleMenuCursor05562d(13)=$lg(%RoleMenuCursor05562d(11),5)
+ goto:%RoleMenuCursor05562d(3)'=1 %0YmBuncommitted
+ if %RoleMenuCursor05562d(3)=1 {
+ 	lock +^CBGroupMenuD($p(%RoleMenuCursor05562d(10),"||",1))#"S":$zu(115,4)
+ 	if $t { set %RoleMenuCursor05562d(5)=$name(^CBGroupMenuD($p(%RoleMenuCursor05562d(10),"||",1)))_"#""SI""",%RoleMenuCursor05562d(4)=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_GroupMenu for RowID value: "_%RoleMenuCursor05562d(10) ztrap "LOCK"  }
  }
  ; asl MOD# 3
- s %RoleMenuCursor03262d(14)=$zlist(%RoleMenuCursor03262d(12))
- i %RoleMenuCursor03262d(10)'="" s %RoleMenuCursor03262d(15)="" i $d(^CBGroupMenuD(%RoleMenuCursor03262d(10)),%RoleMenuCursor03262d(15))
+ s %RoleMenuCursor05562d(14)=$zlist(%RoleMenuCursor05562d(12))
+ i %RoleMenuCursor05562d(10)'="" s %RoleMenuCursor05562d(15)="" i $d(^CBGroupMenuD(%RoleMenuCursor05562d(10)),%RoleMenuCursor05562d(15))
  e  g %0YmCdun
- S %RoleMenuCursor03262d(12)=$lg(%RoleMenuCursor03262d(15),3),%RoleMenuCursor03262d(13)=$lg(%RoleMenuCursor03262d(15),5)
- s %RoleMenuCursor03262d(16)=$zlist(%RoleMenuCursor03262d(12))
- g:%RoleMenuCursor03262d(14)'=%RoleMenuCursor03262d(16) %0YmCdun
+ S %RoleMenuCursor05562d(12)=$lg(%RoleMenuCursor05562d(15),3),%RoleMenuCursor05562d(13)=$lg(%RoleMenuCursor05562d(15),5)
+ s %RoleMenuCursor05562d(16)=$zlist(%RoleMenuCursor05562d(12))
+ g:%RoleMenuCursor05562d(14)'=%RoleMenuCursor05562d(16) %0YmCdun
 %0YmBuncommitted ;
- s %RoleMenuCursor03262d(17)=%RoleMenuCursor03262d(13)
- i %RoleMenuCursor03262d(17)'="" s %RoleMenuCursor03262d(18)="" i $d(^CBMenuD(%RoleMenuCursor03262d(17)),%RoleMenuCursor03262d(18))
+ s %RoleMenuCursor05562d(17)=%RoleMenuCursor05562d(13)
+ i %RoleMenuCursor05562d(17)'="" s %RoleMenuCursor05562d(18)="" i $d(^CBMenuD(%RoleMenuCursor05562d(17)),%RoleMenuCursor05562d(18))
  e  g %0YmCdun
- S menuCode=$lg(%RoleMenuCursor03262d(18),2)
- goto:%RoleMenuCursor03262d(3)'=1 %0YmCuncommitted
- if %RoleMenuCursor03262d(3)=1 {
- 	lock +^CBMenuD($p(%RoleMenuCursor03262d(17),"||",1))#"S":$zu(115,4)
- 	if $t { set %RoleMenuCursor03262d(7)=$name(^CBMenuD($p(%RoleMenuCursor03262d(17),"||",1)))_"#""SI""",%RoleMenuCursor03262d(6)=1 }
- 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_Menu for RowID value: "_%RoleMenuCursor03262d(17) ztrap "LOCK"  }
+ S menuCode=$lg(%RoleMenuCursor05562d(18),2)
+ goto:%RoleMenuCursor05562d(3)'=1 %0YmCuncommitted
+ if %RoleMenuCursor05562d(3)=1 {
+ 	lock +^CBMenuD($p(%RoleMenuCursor05562d(17),"||",1))#"S":$zu(115,4)
+ 	if $t { set %RoleMenuCursor05562d(7)=$name(^CBMenuD($p(%RoleMenuCursor05562d(17),"||",1)))_"#""SI""",%RoleMenuCursor05562d(6)=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_Menu for RowID value: "_%RoleMenuCursor05562d(17) ztrap "LOCK"  }
  }
  ; asl MOD# 4
- i %RoleMenuCursor03262d(17)'="" s %RoleMenuCursor03262d(19)="" i $d(^CBMenuD(%RoleMenuCursor03262d(17)),%RoleMenuCursor03262d(19))
+ i %RoleMenuCursor05562d(17)'="" s %RoleMenuCursor05562d(19)="" i $d(^CBMenuD(%RoleMenuCursor05562d(17)),%RoleMenuCursor05562d(19))
  e  g %0YmDdun
- S menuCode=$lg(%RoleMenuCursor03262d(19),2)
+ S menuCode=$lg(%RoleMenuCursor05562d(19),2)
 %0YmCuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%RoleMenuCursor03262d(1)),%RoleMenuCursor03262d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%RoleMenuCursor05562d(1)),%RoleMenuCursor05562d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %RoleMenuCursor03262d(9)=$g(%RoleMenuCursor03262d(9))+$zh-%sqltime
+ s:$d(%sqltime) %RoleMenuCursor05562d(9)=$g(%RoleMenuCursor05562d(9))+$zh-%sqltime
  quit
 %RoleMenuCursor0f //-- FETCH tag
- i '$g(%RoleMenuCursor03262d(0)) { s SQLCODE=-102 q  } i %RoleMenuCursor03262d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %RoleMenuCursor03262d(2),%RoleMenuCursor03262d(1)'<%RoleMenuCursor03262d(2) { s SQLCODE=100,%ROWCOUNT=%RoleMenuCursor03262d(1),%RoleMenuCursor03262d(0)=100 q }
+ i '$g(%RoleMenuCursor05562d(0)) { s SQLCODE=-102 q  } i %RoleMenuCursor05562d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %RoleMenuCursor05562d(2),%RoleMenuCursor05562d(1)'<%RoleMenuCursor05562d(2) { s SQLCODE=100,%ROWCOUNT=%RoleMenuCursor05562d(1),%RoleMenuCursor05562d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Yfirst:%RoleMenuCursor03262d(0)=1
-%0YmDdun if $g(%RoleMenuCursor03262d(3))=1 { if $g(%RoleMenuCursor03262d(6))=1 { l -@%RoleMenuCursor03262d(7) s %RoleMenuCursor03262d(6)=0 } elseif $g(%RoleMenuCursor03262d(6))=2 { do $classmethod($li(%RoleMenuCursor03262d(7)),"%UnlockId",$li(%RoleMenuCursor03262d(7),2),1,1)  s %RoleMenuCursor03262d(6)=0 }}
-%0YmCdun if $g(%RoleMenuCursor03262d(3))=1 { if $g(%RoleMenuCursor03262d(4))=1 { l -@%RoleMenuCursor03262d(5) s %RoleMenuCursor03262d(4)=0 } elseif $g(%RoleMenuCursor03262d(4))=2 { do $classmethod($li(%RoleMenuCursor03262d(5)),"%UnlockId",$li(%RoleMenuCursor03262d(5),2),1,1)  s %RoleMenuCursor03262d(4)=0 }}
+ g %0Yfirst:%RoleMenuCursor05562d(0)=1
+%0YmDdun if $g(%RoleMenuCursor05562d(3))=1 { if $g(%RoleMenuCursor05562d(6))=1 { l -@%RoleMenuCursor05562d(7) s %RoleMenuCursor05562d(6)=0 } elseif $g(%RoleMenuCursor05562d(6))=2 { do $classmethod($li(%RoleMenuCursor05562d(7)),"%UnlockId",$li(%RoleMenuCursor05562d(7),2),1,1)  s %RoleMenuCursor05562d(6)=0 }}
+%0YmCdun if $g(%RoleMenuCursor05562d(3))=1 { if $g(%RoleMenuCursor05562d(4))=1 { l -@%RoleMenuCursor05562d(5) s %RoleMenuCursor05562d(4)=0 } elseif $g(%RoleMenuCursor05562d(4))=2 { do $classmethod($li(%RoleMenuCursor05562d(5)),"%UnlockId",$li(%RoleMenuCursor05562d(5),2),1,1)  s %RoleMenuCursor05562d(4)=0 }}
  g %0YmBk1
 %0YmBdun 
 %0YmAdun 
- s %ROWCOUNT=%RoleMenuCursor03262d(1),SQLCODE=100,%RoleMenuCursor03262d(0)=100
- s:$d(%sqltime) %RoleMenuCursor03262d(9)=$g(%RoleMenuCursor03262d(9))+$zh-%sqltime
+ s %ROWCOUNT=%RoleMenuCursor05562d(1),SQLCODE=100,%RoleMenuCursor05562d(0)=100
+ s:$d(%sqltime) %RoleMenuCursor05562d(9)=$g(%RoleMenuCursor05562d(9))+$zh-%sqltime
  //-- no [more] data
  quit
-%RoleMenuCursor0c i '$g(%RoleMenuCursor03262d(0)) { s SQLCODE=-102 q  }
+%RoleMenuCursor0c i '$g(%RoleMenuCursor05562d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%RoleMenuCursor03262d(1)),1:0)
- if $g(%RoleMenuCursor03262d(3))=1 {
- 	if $g(%RoleMenuCursor03262d(4))=1 { l -@%RoleMenuCursor03262d(5) s %RoleMenuCursor03262d(4)=0 } elseif $g(%RoleMenuCursor03262d(4))=2 { do $classmethod($li(%RoleMenuCursor03262d(5)),"%UnlockId",$li(%RoleMenuCursor03262d(5),2),1,1)  s %RoleMenuCursor03262d(4)=0 }
- 	if $g(%RoleMenuCursor03262d(6))=1 { l -@%RoleMenuCursor03262d(7) s %RoleMenuCursor03262d(6)=0 } elseif $g(%RoleMenuCursor03262d(6))=2 { do $classmethod($li(%RoleMenuCursor03262d(7)),"%UnlockId",$li(%RoleMenuCursor03262d(7),2),1,1)  s %RoleMenuCursor03262d(6)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%RoleMenuCursor05562d(1)),1:0)
+ if $g(%RoleMenuCursor05562d(3))=1 {
+ 	if $g(%RoleMenuCursor05562d(4))=1 { l -@%RoleMenuCursor05562d(5) s %RoleMenuCursor05562d(4)=0 } elseif $g(%RoleMenuCursor05562d(4))=2 { do $classmethod($li(%RoleMenuCursor05562d(5)),"%UnlockId",$li(%RoleMenuCursor05562d(5),2),1,1)  s %RoleMenuCursor05562d(4)=0 }
+ 	if $g(%RoleMenuCursor05562d(6))=1 { l -@%RoleMenuCursor05562d(7) s %RoleMenuCursor05562d(6)=0 } elseif $g(%RoleMenuCursor05562d(6))=2 { do $classmethod($li(%RoleMenuCursor05562d(7)),"%UnlockId",$li(%RoleMenuCursor05562d(7),2),1,1)  s %RoleMenuCursor05562d(6)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%RoleMenuCursor03262d(9))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%RoleMenuCursor05562d(9))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"ZW6QnXyijkXdJ+vbEwHmBjDHFEM="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"ZW6QnXyijkXdJ+vbEwHmBjDHFEM=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %RoleMenuCursor03262d
+ k %RoleMenuCursor05562d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %RoleMenuCursor03262d(20)
+ kill %RoleMenuCursor05562d(20)
  quit  // close
 %0Yerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %RoleMenuCursor03262d(0)=100
+ s %RoleMenuCursor05562d(0)=100
  quit  // error
 zGetUserChildMenus(parentCode,menuCodes)
 	new (parentCode)
@@ -1183,7 +1183,7 @@ zGetUserMenusByGroup(postObj)
  		 ;---			INTO :code, :descripts, :menuGroup, :image, :seqNo, :linkAddress, :mainMenuDr, :parentCode
  		 ;---			FROM CB_GroupMenu GM
  		 ;---			JOIN CB_Menu MD ON GM.Menu_Dr = MD.ID
- 		 ;---			WHERE GM.Group_Dr = :groupID
+ 		 ;---			WHERE MD.IsActive='Y' AND GM.Group_Dr = :groupID
  		 ;---			ORDER BY MD.SortNo)
  		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, code, descripts, groupID, image, linkAddress, mainMenuDr, menuGroup, parentCode, seqNo
 		
@@ -1298,114 +1298,124 @@ zGetUserMenusByGroup(postObj)
  d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
  g %09c
 %UserMenuCursor0o 
- try { s SQLCODE=$s($g(%UserMenuCursor03263d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%UserMenuCursor05563d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %UserMenuCursor03263d(1)=0,%UserMenuCursor03263d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %UserMenuCursor03263d(3)=$zu(115,2)
- s %UserMenuCursor03263d(4)=0,%UserMenuCursor03263d(5)="",%UserMenuCursor03263d(6)=0,%UserMenuCursor03263d(7)=""
+ s %UserMenuCursor05563d(1)=0,%UserMenuCursor05563d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %UserMenuCursor05563d(3)=$zu(115,2)
+ s %UserMenuCursor05563d(4)=0,%UserMenuCursor05563d(5)="",%UserMenuCursor05563d(6)=0,%UserMenuCursor05563d(7)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %UserMenuCursor03263d(8)=$s($g(groupID)="":"",$isvalidnum(groupID):+groupID,1:groupID)
- s %UserMenuCursor03263d(9)=$i(^||%t)
- s %UserMenuCursor03263d(0)=1,SQLCODE=0
- s:$d(%sqltime) %UserMenuCursor03263d(10)=$g(%UserMenuCursor03263d(10))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %UserMenuCursor03263d }
+ s %UserMenuCursor05563d(8)=$s($g(groupID)="":"",$isvalidnum(groupID):+groupID,1:groupID)
+ s %UserMenuCursor05563d(9)=$i(^||%t)
+ s %UserMenuCursor05563d(10)=$zu(28,"Y",7)
+ s %UserMenuCursor05563d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %UserMenuCursor05563d(11)=$g(%UserMenuCursor05563d(11))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %UserMenuCursor05563d }
  q
 %0bfirst 
- s %UserMenuCursor03263d(11)=""
- k ^||%t(%UserMenuCursor03263d(9))
- i $sortbegin(^||%t(%UserMenuCursor03263d(9))) {}
+ s %UserMenuCursor05563d(12)=""
+ k ^||%t(%UserMenuCursor05563d(9))
+ i $sortbegin(^||%t(%UserMenuCursor05563d(9))) {}
  d %0bmBMod
  ; asl MOD# 5
- i $sortend(^||%t(%UserMenuCursor03263d(9)))
- s %UserMenuCursor03263d(12)=""
-%0bmEk1 s %UserMenuCursor03263d(12)=$o(^||%t(%UserMenuCursor03263d(9),%UserMenuCursor03263d(12)))
- i %UserMenuCursor03263d(12)="" g %0bmEdun
- s seqNo=$s(%UserMenuCursor03263d(12)=-1E19:"",1:%UserMenuCursor03263d(12))
- s %UserMenuCursor03263d(11)=""
-%0bmEk2 s %UserMenuCursor03263d(13)="" s %UserMenuCursor03263d(11)=$o(^||%t(%UserMenuCursor03263d(9),%UserMenuCursor03263d(12),%UserMenuCursor03263d(11)),1,%UserMenuCursor03263d(13))
- i %UserMenuCursor03263d(11)="" g %0bmEk1
- S $lg(menuGroup,code,descripts,image,mainMenuDr,parentCode,linkAddress)=%UserMenuCursor03263d(13)
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%UserMenuCursor03263d(1)),%UserMenuCursor03263d(0)=10
+ i $sortend(^||%t(%UserMenuCursor05563d(9)))
+ s %UserMenuCursor05563d(13)=""
+%0bmEk1 s %UserMenuCursor05563d(13)=$o(^||%t(%UserMenuCursor05563d(9),%UserMenuCursor05563d(13)))
+ i %UserMenuCursor05563d(13)="" g %0bmEdun
+ s seqNo=$s(%UserMenuCursor05563d(13)=-1E19:"",1:%UserMenuCursor05563d(13))
+ s %UserMenuCursor05563d(12)=""
+%0bmEk2 s %UserMenuCursor05563d(14)="" s %UserMenuCursor05563d(12)=$o(^||%t(%UserMenuCursor05563d(9),%UserMenuCursor05563d(13),%UserMenuCursor05563d(12)),1,%UserMenuCursor05563d(14))
+ i %UserMenuCursor05563d(12)="" g %0bmEk1
+ S $lg(menuGroup,code,descripts,image,mainMenuDr,parentCode,linkAddress)=%UserMenuCursor05563d(14)
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%UserMenuCursor05563d(1)),%UserMenuCursor05563d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %UserMenuCursor03263d(10)=$g(%UserMenuCursor03263d(10))+$zh-%sqltime
+ s:$d(%sqltime) %UserMenuCursor05563d(11)=$g(%UserMenuCursor05563d(11))+$zh-%sqltime
  quit
 %UserMenuCursor0f //-- FETCH tag
- i '$g(%UserMenuCursor03263d(0)) { s SQLCODE=-102 q  } i %UserMenuCursor03263d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %UserMenuCursor03263d(2),%UserMenuCursor03263d(1)'<%UserMenuCursor03263d(2) { s SQLCODE=100,%ROWCOUNT=%UserMenuCursor03263d(1),%UserMenuCursor03263d(0)=100 q }
+ i '$g(%UserMenuCursor05563d(0)) { s SQLCODE=-102 q  } i %UserMenuCursor05563d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %UserMenuCursor05563d(2),%UserMenuCursor05563d(1)'<%UserMenuCursor05563d(2) { s SQLCODE=100,%ROWCOUNT=%UserMenuCursor05563d(1),%UserMenuCursor05563d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0bfirst:%UserMenuCursor03263d(0)=1
+ g %0bfirst:%UserMenuCursor05563d(0)=1
  g %0bmEk2
 %0bmEdun 
 %0bmAdun 
- s %ROWCOUNT=%UserMenuCursor03263d(1),SQLCODE=100,%UserMenuCursor03263d(0)=100
- s:$d(%sqltime) %UserMenuCursor03263d(10)=$g(%UserMenuCursor03263d(10))+$zh-%sqltime
+ s %ROWCOUNT=%UserMenuCursor05563d(1),SQLCODE=100,%UserMenuCursor05563d(0)=100
+ s:$d(%sqltime) %UserMenuCursor05563d(11)=$g(%UserMenuCursor05563d(11))+$zh-%sqltime
  //-- no [more] data
  quit
-%UserMenuCursor0c i '$g(%UserMenuCursor03263d(0)) { s SQLCODE=-102 q  }
+%UserMenuCursor0c i '$g(%UserMenuCursor05563d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%UserMenuCursor03263d(1)),1:0)
- i $sortend(^||%t(%UserMenuCursor03263d(9)),0) {} 
- if $g(%UserMenuCursor03263d(9))'="" kill ^||%t(%UserMenuCursor03263d(9))
- if $g(%UserMenuCursor03263d(3))=1 {
- 	if $g(%UserMenuCursor03263d(4))=1 { l -@%UserMenuCursor03263d(5) s %UserMenuCursor03263d(4)=0 } elseif $g(%UserMenuCursor03263d(4))=2 { do $classmethod($li(%UserMenuCursor03263d(5)),"%UnlockId",$li(%UserMenuCursor03263d(5),2),1,1)  s %UserMenuCursor03263d(4)=0 }
- 	if $g(%UserMenuCursor03263d(6))=1 { l -@%UserMenuCursor03263d(7) s %UserMenuCursor03263d(6)=0 } elseif $g(%UserMenuCursor03263d(6))=2 { do $classmethod($li(%UserMenuCursor03263d(7)),"%UnlockId",$li(%UserMenuCursor03263d(7),2),1,1)  s %UserMenuCursor03263d(6)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%UserMenuCursor05563d(1)),1:0)
+ i $sortend(^||%t(%UserMenuCursor05563d(9)),0) {} 
+ if $g(%UserMenuCursor05563d(9))'="" kill ^||%t(%UserMenuCursor05563d(9))
+ if $g(%UserMenuCursor05563d(3))=1 {
+ 	if $g(%UserMenuCursor05563d(4))=1 { l -@%UserMenuCursor05563d(5) s %UserMenuCursor05563d(4)=0 } elseif $g(%UserMenuCursor05563d(4))=2 { do $classmethod($li(%UserMenuCursor05563d(5)),"%UnlockId",$li(%UserMenuCursor05563d(5),2),1,1)  s %UserMenuCursor05563d(4)=0 }
+ 	if $g(%UserMenuCursor05563d(6))=1 { l -@%UserMenuCursor05563d(7) s %UserMenuCursor05563d(6)=0 } elseif $g(%UserMenuCursor05563d(6))=2 { do $classmethod($li(%UserMenuCursor05563d(7)),"%UnlockId",$li(%UserMenuCursor05563d(7),2),1,1)  s %UserMenuCursor05563d(6)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%UserMenuCursor03263d(10))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%UserMenuCursor05563d(11))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
- s tmp=$g(context.Stats($namespace,"QXxl6zBD9F9aOdIbh12iSIzdc1U="))
+ s tmp=$g(context.Stats($namespace,"SKOUjoqIvy37f4IVGEp5+dAW24M="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
- s context.Stats($namespace,"QXxl6zBD9F9aOdIbh12iSIzdc1U=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %UserMenuCursor03263d
+ s context.Stats($namespace,"SKOUjoqIvy37f4IVGEp5+dAW24M=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ k %UserMenuCursor05563d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %UserMenuCursor03263d(14)
+ kill %UserMenuCursor05563d(15)
  quit  // close
 %0berr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- i $sortend(^||%t(%UserMenuCursor03263d(9)),0) {} 
- s %UserMenuCursor03263d(0)=100
+ i $sortend(^||%t(%UserMenuCursor05563d(9)),0) {} 
+ s %UserMenuCursor05563d(0)=100
  quit  // error
 %0bmBMod ; asl MOD# 2
- n sqld1,sqld2,sqld21,sqld22,sqld23,sqld35,sqld39,sqld42,sqld45
- s sqld21=""
-%0bmBk1 s sqld35="" s sqld21=$o(^CBGroupMenuD(sqld21),1,sqld35)
- i sqld21="" g %0bmBdun
- S menuGroup=$lg(sqld35,3)
- g:'(menuGroup=%UserMenuCursor03263d(8)) %0bmBk1
- S sqld1=$lg(sqld35,5)
- goto:%UserMenuCursor03263d(3)'=1 %0bmBuncommitted
- if %UserMenuCursor03263d(3)=1 {
- 	lock +^CBGroupMenuD($p(sqld21,"||",1))#"S":$zu(115,4)
- 	if $t { set %UserMenuCursor03263d(5)=$name(^CBGroupMenuD($p(sqld21,"||",1)))_"#""SI""",%UserMenuCursor03263d(4)=1 }
- 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_GroupMenu for RowID value: "_sqld21 ztrap "LOCK"  }
+ n sqld1,sqld19,sqld2,sqld23,sqld25,sqld26,sqld27,sqld28,sqld29,sqld41,sqld45,sqld48,sqld51
+ s sqld25=""
+%0bmBk1 s sqld41="" s sqld25=$o(^CBGroupMenuD(sqld25),1,sqld41)
+ i sqld25="" g %0bmBdun
+ S menuGroup=$lg(sqld41,3)
+ g:'(menuGroup=%UserMenuCursor05563d(8)) %0bmBk1
+ S sqld1=$lg(sqld41,5)
+ goto:%UserMenuCursor05563d(3)'=1 %0bmBuncommitted
+ if %UserMenuCursor05563d(3)=1 {
+ 	lock +^CBGroupMenuD($p(sqld25,"||",1))#"S":$zu(115,4)
+ 	if $t { set %UserMenuCursor05563d(5)=$name(^CBGroupMenuD($p(sqld25,"||",1)))_"#""SI""",%UserMenuCursor05563d(4)=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_GroupMenu for RowID value: "_sqld25 ztrap "LOCK"  }
  }
  ; asl MOD# 3
- s sqld22=$zlist(menuGroup)
- i sqld21'="" s sqld39="" i $d(^CBGroupMenuD(sqld21),sqld39)
+ s sqld26=$zlist(menuGroup)
+ i sqld25'="" s sqld45="" i $d(^CBGroupMenuD(sqld25),sqld45)
  e  g %0bmCdun
- S menuGroup=$lg(sqld39,3),sqld1=$lg(sqld39,5)
- s sqld23=$zlist(menuGroup)
- g:sqld22'=sqld23 %0bmCdun
+ S menuGroup=$lg(sqld45,3),sqld1=$lg(sqld45,5)
+ s sqld27=$zlist(menuGroup)
+ g:sqld26'=sqld27 %0bmCdun
 %0bmBuncommitted ;
  s sqld2=sqld1
- i sqld2'="" s sqld42="" i $d(^CBMenuD(sqld2),sqld42)
+ i sqld2'="" s sqld48="" i $d(^CBMenuD(sqld2),sqld48)
  e  g %0bmCdun
- S $lg(,code,descripts,,,,parentCode,mainMenuDr,seqNo,image,linkAddress)=sqld42
- goto:%UserMenuCursor03263d(3)'=1 %0bmCuncommitted
- if %UserMenuCursor03263d(3)=1 {
+ S sqld19=$lg(sqld48,13)
+ s sqld23=$zu(28,sqld19,7)
+ g:'(sqld23=%UserMenuCursor05563d(10)) %0bmCdun
+ g:'(sqld23'=" ") %0bmCdun
+ S $lg(,code,descripts,,,,parentCode,mainMenuDr,seqNo,image,linkAddress)=sqld48
+ goto:%UserMenuCursor05563d(3)'=1 %0bmCuncommitted
+ if %UserMenuCursor05563d(3)=1 {
  	lock +^CBMenuD($p(sqld2,"||",1))#"S":$zu(115,4)
- 	if $t { set %UserMenuCursor03263d(7)=$name(^CBMenuD($p(sqld2,"||",1)))_"#""SI""",%UserMenuCursor03263d(6)=1 }
+ 	if $t { set %UserMenuCursor05563d(7)=$name(^CBMenuD($p(sqld2,"||",1)))_"#""SI""",%UserMenuCursor05563d(6)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_Menu for RowID value: "_sqld2 ztrap "LOCK"  }
  }
  ; asl MOD# 4
- i sqld2'="" s sqld45="" i $d(^CBMenuD(sqld2),sqld45)
+ s sqld28=$zlist(sqld23)
+ i sqld2'="" s sqld51="" i $d(^CBMenuD(sqld2),sqld51)
  e  g %0bmDdun
- S $lg(,code,descripts,,,,parentCode,mainMenuDr,seqNo,image,linkAddress)=sqld45
+ S $lg(,code,descripts,,,,parentCode,mainMenuDr,seqNo,image,linkAddress)=sqld51
+ S sqld19=$lg(sqld51,13)
+ s sqld23=$zu(28,sqld19,7)
+ s sqld29=$zlist(sqld23)
+ g:sqld28'=sqld29 %0bmDdun
 %0bmCuncommitted ;
- s %UserMenuCursor03263d(11)=%UserMenuCursor03263d(11)+1
- s ^||%t(%UserMenuCursor03263d(9),$s(seqNo'="":seqNo,1:-1E19),%UserMenuCursor03263d(11))=$lb(menuGroup,code,descripts,image,mainMenuDr,parentCode,linkAddress)
-%0bmDdun if $g(%UserMenuCursor03263d(3))=1 { if $g(%UserMenuCursor03263d(6))=1 { l -@%UserMenuCursor03263d(7) s %UserMenuCursor03263d(6)=0 } elseif $g(%UserMenuCursor03263d(6))=2 { do $classmethod($li(%UserMenuCursor03263d(7)),"%UnlockId",$li(%UserMenuCursor03263d(7),2),1,1)  s %UserMenuCursor03263d(6)=0 }}
-%0bmCdun if $g(%UserMenuCursor03263d(3))=1 { if $g(%UserMenuCursor03263d(4))=1 { l -@%UserMenuCursor03263d(5) s %UserMenuCursor03263d(4)=0 } elseif $g(%UserMenuCursor03263d(4))=2 { do $classmethod($li(%UserMenuCursor03263d(5)),"%UnlockId",$li(%UserMenuCursor03263d(5),2),1,1)  s %UserMenuCursor03263d(4)=0 }}
+ s %UserMenuCursor05563d(12)=%UserMenuCursor05563d(12)+1
+ s ^||%t(%UserMenuCursor05563d(9),$s(seqNo'="":seqNo,1:-1E19),%UserMenuCursor05563d(12))=$lb(menuGroup,code,descripts,image,mainMenuDr,parentCode,linkAddress)
+%0bmDdun if $g(%UserMenuCursor05563d(3))=1 { if $g(%UserMenuCursor05563d(6))=1 { l -@%UserMenuCursor05563d(7) s %UserMenuCursor05563d(6)=0 } elseif $g(%UserMenuCursor05563d(6))=2 { do $classmethod($li(%UserMenuCursor05563d(7)),"%UnlockId",$li(%UserMenuCursor05563d(7),2),1,1)  s %UserMenuCursor05563d(6)=0 }}
+%0bmCdun if $g(%UserMenuCursor05563d(3))=1 { if $g(%UserMenuCursor05563d(4))=1 { l -@%UserMenuCursor05563d(5) s %UserMenuCursor05563d(4)=0 } elseif $g(%UserMenuCursor05563d(4))=2 { do $classmethod($li(%UserMenuCursor05563d(5)),"%UnlockId",$li(%UserMenuCursor05563d(5),2),1,1)  s %UserMenuCursor05563d(4)=0 }}
  g %0bmBk1
 %0bmBdun q
 zInitDefaultMenus(postObj)

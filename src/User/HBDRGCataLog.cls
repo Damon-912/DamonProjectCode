@@ -18,7 +18,7 @@ Property ProvinceDr As CBProvince [ Required, SqlColumnNumber = 4, SqlFieldName 
 /// 市 指向CB_City
 Property CityDr As CBCity [ Required, SqlColumnNumber = 5, SqlFieldName = City_Dr ];
 
-Index DataIndex On (Code, ProvinceDr, CityDr);
+Index DataIndex On (Code, ProvinceDr, CityDr) [ Unique ];
 
 /// 行政区划代码
 Property Admvs As %String [ Required, SqlColumnNumber = 6, SqlFieldName = Admvs ];

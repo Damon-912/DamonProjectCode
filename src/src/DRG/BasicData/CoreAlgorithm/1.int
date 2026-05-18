@@ -1,7 +1,7 @@
 ROUTINE src.DRG.BasicData.CoreAlgorithm.1 [Type=INT,Generated]
  ;src.DRG.BasicData.CoreAlgorithm.1
- ;Generated for class src.DRG.BasicData.CoreAlgorithm.  Do NOT edit. 05/03/2026 03:31:22PM
- ;;596D352F;src.DRG.BasicData.CoreAlgorithm
+ ;Generated for class src.DRG.BasicData.CoreAlgorithm.  Do NOT edit. 05/18/2026 11:55:04PM
+ ;;2B717238;src.DRG.BasicData.CoreAlgorithm
  ;
 zConfirmImportDIPCoreAlgorithm(jsonObj)
     new (jsonObj)
@@ -20,6 +20,7 @@ zConfirmImportDIPCoreAlgorithm(jsonObj)
         set cityID=params.cityID
         set medinsLv=params.medinsLv
         set mdtrtArea=params.mdtrtArea
+        set year=params.year  //分组方案年份（导入必选）
         if (provinceID="")||(cityID="")
         {
             set resultObj.errorCode="-1"
@@ -106,11 +107,11 @@ zConfirmImportDIPCoreAlgorithm(jsonObj)
                 do failList.%Push(failObj)
                 continue
             }
-            // 检查是否已存在
+            // 检查是否已存在（含年份）
             set existingID=""
              ;---&sql(SELECT ID INTO :existingID FROM HB_DIPCoreAlgorithmData 
-              ;---                 WHERE PrincipalDiagnosis=:principalDiagnosis AND Province_Dr=:provinceID AND City_Dr=:cityID AND MedinsLv=:medinsLv)
-              ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, cityID, existingID, medinsLv, principalDiagnosis, provinceID
+              ;---                 WHERE PrincipalDiagnosis=:principalDiagnosis AND Province_Dr=:provinceID AND City_Dr=:cityID AND MedinsLv=:medinsLv AND Year=:year)
+              ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, cityID, existingID, medinsLv, principalDiagnosis, provinceID, year
             do %0Ao
             // 构建数据对象
             set dataObj={}
@@ -127,6 +128,7 @@ zConfirmImportDIPCoreAlgorithm(jsonObj)
             set dataObj.ScoreValue=scoreValue
             set dataObj.AdjustCoefficient=adjustCoefficient
             set dataObj.PrimaryAdjustCoefficient=primaryAdjustCoefficient
+            set dataObj.Year=year
             set dataObj.SecondaryAdjustCoefficient=secondaryAdjustCoefficient
             set dataObj.ThirdAdjustCoefficient=thirdAdjustCoefficient
             set dataObj.CreateDate=$zd($h,3)
@@ -185,99 +187,108 @@ zConfirmImportDIPCoreAlgorithm(jsonObj)
     }
     quit resultObj
  q
-%0Ao n sqldata19d,sqldata20d,sqldata21d,sqldata22d,sqldata23d,sqldata24d,sqldata25d,sqldata28d,sqldata31d,sqldata32d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata7d,sqldata16d,sqldata17d,sqldata18d,sqldata3d,sqldata12d,sqldata13d,sqldata9d,sqldata14d,sqldata15d,sqldata5d
+%0Ao n sqldata23d,sqldata24d,sqldata25d,sqldata26d,sqldata27d,sqldata28d,sqldata29d,sqldata32d,sqldata35d,sqldata36d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata12d,sqldata7d,sqldata20d,sqldata21d,sqldata22d,sqldata11d,sqldata18d,sqldata19d,sqldata3d,sqldata14d,sqldata15d,sqldata9d,sqldata16d,sqldata17d,sqldata5d
  s $zt="%0Aerr"
  n %sqltime s %sqltime=$zh
- s sqldata19d=$zu(115,2)
- s sqldata20d=0,sqldata21d=""
+ s sqldata23d=$zu(115,2)
+ s sqldata24d=0,sqldata25d=""
  d:$zu(115,15) $system.ECP.Sync()
- s sqldata4d=$g(principalDiagnosis),sqldata6d=$s($g(provinceID)="":"",$isvalidnum(provinceID):+provinceID,1:provinceID),sqldata8d=$s($g(cityID)="":"",$isvalidnum(cityID):+cityID,1:cityID),sqldata10d=$g(medinsLv)
+ s sqldata4d=$g(principalDiagnosis),sqldata6d=$s($g(provinceID)="":"",$isvalidnum(provinceID):+provinceID,1:provinceID),sqldata8d=$s($g(cityID)="":"",$isvalidnum(cityID):+cityID,1:cityID),sqldata10d=$g(medinsLv),sqldata12d=$g(year)
  s SQLCODE=100
- s sqldata15d=$zu(28,sqldata10d,7)
- s sqldata13d=$zu(28,sqldata4d,7)
+ s sqldata17d=$zu(28,sqldata10d,7)
+ s sqldata15d=$zu(28,sqldata4d,7)
+ s sqldata19d=$zu(28,sqldata12d,7)
  ; asl MOD# 2
  s sqldata7d=sqldata8d
- s sqldata16d="",sqldata22d=1,sqldata17d="",sqldata23d=1,sqldata18d=""
+ s sqldata20d="",sqldata26d=1,sqldata21d="",sqldata27d=1,sqldata22d=""
  g %0AmBk1
-%0AmBqt1 s sqldata16d="" q
-%0AmBpt1 s sqldata22d=0
- s sqldata24d=sqldata8d
- g %0AmBqt1:sqldata24d=""
- g %0AmBft1:sqldata16d=""
-%0AmBat1 g %0AmBpt1:sqldata22d
- g %0AmBgt1:$d(^HBDIPCoreAlgorithmDataI("City",sqldata24d,sqldata16d))
-%0AmBft1 g %0AmBpt1:sqldata22d
- s sqldata16d=$o(^HBDIPCoreAlgorithmDataI("City",sqldata24d,sqldata16d))
- q:sqldata16d=""
+%0AmBqt1 s sqldata20d="" q
+%0AmBpt1 s sqldata26d=0
+ s sqldata28d=sqldata8d
+ g %0AmBqt1:sqldata28d=""
+ g %0AmBft1:sqldata20d=""
+%0AmBat1 g %0AmBpt1:sqldata26d
+ g %0AmBgt1:$d(^HBDIPCoreAlgorithmDataI("City",sqldata28d,sqldata20d))
+%0AmBft1 g %0AmBpt1:sqldata26d
+ s sqldata20d=$o(^HBDIPCoreAlgorithmDataI("City",sqldata28d,sqldata20d))
+ q:sqldata20d=""
 %0AmBgt1 q
-%0AmBqt2 s sqldata17d="" q
-%0AmBpt2 s sqldata23d=0
- s sqldata25d=sqldata6d
- g %0AmBqt2:sqldata25d=""
- g %0AmBft2:sqldata17d=""
-%0AmBat2 g %0AmBpt2:sqldata23d
- g %0AmBgt2:$d(^HBDIPCoreAlgorithmDataI("Province",sqldata25d,sqldata17d))
-%0AmBft2 g %0AmBpt2:sqldata23d
- s sqldata17d=$o(^HBDIPCoreAlgorithmDataI("Province",sqldata25d,sqldata17d))
- q:sqldata17d=""
+%0AmBqt2 s sqldata21d="" q
+%0AmBpt2 s sqldata27d=0
+ s sqldata29d=sqldata6d
+ g %0AmBqt2:sqldata29d=""
+ g %0AmBft2:sqldata21d=""
+%0AmBat2 g %0AmBpt2:sqldata27d
+ g %0AmBgt2:$d(^HBDIPCoreAlgorithmDataI("Province",sqldata29d,sqldata21d))
+%0AmBft2 g %0AmBpt2:sqldata27d
+ s sqldata21d=$o(^HBDIPCoreAlgorithmDataI("Province",sqldata29d,sqldata21d))
+ q:sqldata21d=""
 %0AmBgt2 q
-%0AmBat3 s sqldata16d=sqldata18d d %0AmBat1
- i sqldata16d="" s sqldata18d="" q
+%0AmBat3 s sqldata20d=sqldata22d d %0AmBat1
+ i sqldata20d="" s sqldata22d="" q
  g %0AmBlt3
 %0AmBft3 d %0AmBft1
- i sqldata16d="" s sqldata18d="" q
-%0AmBlt3 s sqldata17d=sqldata16d d %0AmBat2
- i sqldata17d="" s sqldata18d="" q
- i sqldata17d]]sqldata16d s sqldata16d=sqldata17d d %0AmBat1 i sqldata16d="" s sqldata18d="" q
- i sqldata16d=sqldata17d s sqldata18d=sqldata16d q
+ i sqldata20d="" s sqldata22d="" q
+%0AmBlt3 s sqldata21d=sqldata20d d %0AmBat2
+ i sqldata21d="" s sqldata22d="" q
+ i sqldata21d]]sqldata20d s sqldata20d=sqldata21d d %0AmBat1 i sqldata20d="" s sqldata22d="" q
+ i sqldata20d=sqldata21d s sqldata22d=sqldata20d q
  g %0AmBlt3
 %0AmBk1 d %0AmBft3
- i sqldata18d="" g %0AmBdun
- s existingID=sqldata18d
- i existingID'="" s sqldata28d="" i $d(^HBDIPCoreAlgorithmDataD(existingID),sqldata28d)
+ i sqldata22d="" g %0AmBdun
+ s existingID=sqldata22d
+ i existingID'="" s sqldata32d="" i $d(^HBDIPCoreAlgorithmDataD(existingID),sqldata32d)
  e  g %0AmBk1
- S sqldata3d=$lg(sqldata28d,2)
- s sqldata12d=$zu(28,sqldata3d,7)
- g:'(sqldata12d=sqldata13d) %0AmBk1
- S sqldata9d=$lg(sqldata28d,11)
- s sqldata14d=$zu(28,sqldata9d,7)
+ S sqldata11d=$lg(sqldata32d,21)
+ s sqldata18d=$zu(28,sqldata11d,7)
+ g:'(sqldata18d=sqldata19d) %0AmBk1
+ g:'(sqldata18d'=" ") %0AmBk1
+ S sqldata3d=$lg(sqldata32d,2)
+ s sqldata14d=$zu(28,sqldata3d,7)
  g:'(sqldata14d=sqldata15d) %0AmBk1
- S sqldata5d=$lg(sqldata28d,8),sqldata7d=$lg(sqldata28d,9)
- goto:sqldata19d'=1 %0AmBuncommitted
- if sqldata19d=1 {
+ S sqldata9d=$lg(sqldata32d,11)
+ s sqldata16d=$zu(28,sqldata9d,7)
+ g:'(sqldata16d=sqldata17d) %0AmBk1
+ S sqldata5d=$lg(sqldata32d,8),sqldata7d=$lg(sqldata32d,9)
+ goto:sqldata23d'=1 %0AmBuncommitted
+ if sqldata23d=1 {
  	lock +^HBDIPCoreAlgorithmDataD($p(existingID,"||",1))#"S":$zu(115,4)
- 	if $t { set sqldata21d=$name(^HBDIPCoreAlgorithmDataD($p(existingID,"||",1)))_"#""SI""",sqldata20d=1 }
+ 	if $t { set sqldata25d=$name(^HBDIPCoreAlgorithmDataD($p(existingID,"||",1)))_"#""SI""",sqldata24d=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DIPCoreAlgorithmData for RowID value: "_existingID ztrap "LOCK"  }
  }
  ; asl MOD# 3
- i existingID'="" s sqldata31d="" i $d(^HBDIPCoreAlgorithmDataD(existingID),sqldata31d)
+ i existingID'="" s sqldata35d="" i $d(^HBDIPCoreAlgorithmDataD(existingID),sqldata35d)
  e  g %0AmCdun
- S sqldata3d=$lg(sqldata31d,2)
- s sqldata12d=$zu(28,sqldata3d,7)
- g:'(sqldata12d=sqldata13d) %0AmCdun
- S sqldata5d=$lg(sqldata31d,8)
- g:'(sqldata5d=sqldata6d) %0AmCdun
- S sqldata7d=$lg(sqldata31d,9)
- g:'(sqldata7d=sqldata8d) %0AmCdun
- S sqldata9d=$lg(sqldata31d,11)
- s sqldata14d=$zu(28,sqldata9d,7)
+ S sqldata11d=$lg(sqldata35d,21)
+ s sqldata18d=$zu(28,sqldata11d,7)
+ g:'(sqldata18d=sqldata19d) %0AmCdun
+ g:'(sqldata18d'=" ") %0AmCdun
+ S sqldata3d=$lg(sqldata35d,2)
+ s sqldata14d=$zu(28,sqldata3d,7)
  g:'(sqldata14d=sqldata15d) %0AmCdun
+ S sqldata5d=$lg(sqldata35d,8)
+ g:'(sqldata5d=sqldata6d) %0AmCdun
+ S sqldata7d=$lg(sqldata35d,9)
+ g:'(sqldata7d=sqldata8d) %0AmCdun
+ S sqldata9d=$lg(sqldata35d,11)
+ s sqldata16d=$zu(28,sqldata9d,7)
+ g:'(sqldata16d=sqldata17d) %0AmCdun
 %0AmBuncommitted ;
  s SQLCODE=0 g %0Ac
-%0AmCdun if $g(sqldata19d)=1 { if $g(sqldata20d)=1 { l -@sqldata21d s sqldata20d=0 } elseif $g(sqldata20d)=2 { do $classmethod($li(sqldata21d),"%UnlockId",$li(sqldata21d,2),1,1)  s sqldata20d=0 }}
+%0AmCdun if $g(sqldata23d)=1 { if $g(sqldata24d)=1 { l -@sqldata25d s sqldata24d=0 } elseif $g(sqldata24d)=2 { do $classmethod($li(sqldata25d),"%UnlockId",$li(sqldata25d,2),1,1)  s sqldata24d=0 }}
  g %0AmBk1
 %0AmBdun 
 %0AmAdun 
 %0Ac set %ROWCOUNT='SQLCODE
- if $g(sqldata19d)=1 {
- 	if $g(sqldata20d)=1 { l -@sqldata21d s sqldata20d=0 } elseif $g(sqldata20d)=2 { do $classmethod($li(sqldata21d),"%UnlockId",$li(sqldata21d,2),1,1)  s sqldata20d=0 }
+ if $g(sqldata23d)=1 {
+ 	if $g(sqldata24d)=1 { l -@sqldata25d s sqldata24d=0 } elseif $g(sqldata24d)=2 { do $classmethod($li(sqldata25d),"%UnlockId",$li(sqldata25d,2),1,1)  s sqldata24d=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(sqldata32d)+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(sqldata36d)+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
- s tmp=$g(context.Stats($namespace,"D3YxoIJQp2g4JLqOFXry31ILeZg="))
+ s tmp=$g(context.Stats($namespace,"O+Wusv3PxrZAVRcqzUEABg6wkWI="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
- s context.Stats($namespace,"D3YxoIJQp2g4JLqOFXry31ILeZg=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ s context.Stats($namespace,"O+Wusv3PxrZAVRcqzUEABg6wkWI=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
  q
 %0Aerr s $zt=""
  d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
@@ -309,6 +320,7 @@ zConfirmImportDRGCoreAlgorithm(jsonObj)
         set fixmedinsCode=params.fixmedinsCode
         set fixmedinsName=params.fixmedinsName
         set medinsLv=params.medinsLv
+        set year=params.year  //分组方案年份（导入必选）
         if (provinceID="")||(cityID="")
         {
             set resultObj.errorCode="-1"
@@ -372,11 +384,11 @@ zConfirmImportDRGCoreAlgorithm(jsonObj)
                 do failList.%Push(failObj)
                 continue
             }
-            // 检查是否已存在
+            // 检查是否已存在（含年份）
             set existingID=""
              ;---&sql(SELECT ID INTO :existingID FROM HB_DRGCoreAlgorithmData 
-              ;---                 WHERE DRG=:drgCode AND MdtrtArea=:mdtrtArea AND FixmedinsCode=:fixmedinsCode)
-              ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, drgCode, existingID, fixmedinsCode, mdtrtArea
+              ;---                 WHERE DRG=:drgCode AND MdtrtArea=:mdtrtArea AND FixmedinsCode=:fixmedinsCode AND Year=:year)
+              ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, drgCode, existingID, fixmedinsCode, mdtrtArea, year
             do %0Co
             // 构建数据对象
             set dataObj={}
@@ -392,6 +404,7 @@ zConfirmImportDRGCoreAlgorithm(jsonObj)
             set dataObj.FixmedinsCode=fixmedinsCode
             set dataObj.FixmedinsName=fixmedinsName
             set dataObj.MedinsLv=medinsLv
+            set dataObj.Year=year
             set dataObj.StartDate=$zd($h,3)
             set dataObj.StopDate=""
             set dataObj.CreateDate=$zd($h,3)
@@ -452,88 +465,97 @@ zConfirmImportDRGCoreAlgorithm(jsonObj)
     }
     quit resultObj
  q
-%0Co n sqldata18d,sqldata19d,sqldata20d,sqldata29d,sqldata30d,sqldata31d,sqldata32d,sqldata33d,sqldata36d,sqldata39d,sqldata40d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata14d,sqldata15d,sqldata16d,sqldata17d,sqldata5d,sqldata12d,sqldata13d,sqldata3d,sqldata7d
+%0Co n sqldata22d,sqldata23d,sqldata24d,sqldata34d,sqldata35d,sqldata36d,sqldata37d,sqldata38d,sqldata41d,sqldata44d,sqldata45d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata12d,sqldata13d,sqldata16d,sqldata17d,sqldata18d,sqldata19d,sqldata20d,sqldata21d,sqldata5d,sqldata14d,sqldata15d,sqldata3d,sqldata7d,sqldata9d
  s $zt="%0Cerr"
  n %sqltime s %sqltime=$zh
- s sqldata18d=$zu(115,2)
- s sqldata19d=0,sqldata20d=""
+ s sqldata22d=$zu(115,2)
+ s sqldata23d=0,sqldata24d=""
  d:$zu(115,15) $system.ECP.Sync()
- s sqldata4d=$g(drgCode),sqldata6d=$g(mdtrtArea),sqldata8d=$g(fixmedinsCode)
+ s sqldata4d=$g(drgCode),sqldata6d=$g(mdtrtArea),sqldata8d=$g(fixmedinsCode),sqldata10d=$g(year)
  s SQLCODE=100
- s sqldata13d=$zu(28,sqldata6d,7)
- s sqldata15d=$zu(28,sqldata8d,7)
- s sqldata11d=$zu(28,sqldata4d,7)
- k sqldata29d
+ s sqldata15d=$zu(28,sqldata6d,7)
+ s sqldata19d=$zu(28,sqldata10d,7)
+ s sqldata17d=$zu(28,sqldata8d,7)
+ s sqldata13d=$zu(28,sqldata4d,7)
+ k sqldata34d
  ; asl MOD# 3
  d %0CmBMod
- s sqldata30d="",sqldata31d="",sqldata33d=1
-%0CmCk1 f  s sqldata33d=$bitfind(sqldata31d,1,sqldata33d+1) i sqldata33d { s existingID=sqldata32d+sqldata33d-1 q } s sqldata30d=$o(sqldata29d(sqldata30d),1,sqldata31d) q:sqldata30d=""  s sqldata32d=sqldata30d-1*64000
- i sqldata30d="" g %0CmCdun
- s sqldata36d="" i $d(^User.HBDRGCoreAlgorithmDataD(existingID),sqldata36d)
+ s sqldata35d="",sqldata36d="",sqldata38d=1
+%0CmCk1 f  s sqldata38d=$bitfind(sqldata36d,1,sqldata38d+1) i sqldata38d { s existingID=sqldata37d+sqldata38d-1 q } s sqldata35d=$o(sqldata34d(sqldata35d),1,sqldata36d) q:sqldata35d=""  s sqldata37d=sqldata35d-1*64000
+ i sqldata35d="" g %0CmCdun
+ s sqldata41d="" i $d(^HBDRGCoreAlgorithmDataD(existingID),sqldata41d)
  e  g %0CmCk1
- S sqldata5d=$lg(sqldata36d,13)
- s sqldata12d=$zu(28,sqldata5d,7)
- g:'(sqldata12d=sqldata13d) %0CmCk1
- g:'(sqldata12d'=" ") %0CmCk1
- S sqldata3d=$lg(sqldata36d,2),sqldata7d=$lg(sqldata36d,16)
- s sqldata10d=$zu(28,sqldata3d,7)
- s sqldata14d=$zu(28,sqldata7d,7)
- goto:sqldata18d'=1 %0CmCuncommitted
- if sqldata18d=1 {
- 	lock +^User.HBDRGCoreAlgorithmDataD($p(existingID,"||",1))#"S":$zu(115,4)
- 	if $t { set sqldata20d=$name(^User.HBDRGCoreAlgorithmDataD($p(existingID,"||",1)))_"#""SI""",sqldata19d=1 }
+ S sqldata5d=$lg(sqldata41d,13)
+ s sqldata14d=$zu(28,sqldata5d,7)
+ g:'(sqldata14d=sqldata15d) %0CmCk1
+ g:'(sqldata14d'=" ") %0CmCk1
+ S $lg(,sqldata3d,,,,,,,,,,,,,,sqldata7d,,,,,,sqldata9d)=sqldata41d
+ s sqldata12d=$zu(28,sqldata3d,7)
+ s sqldata16d=$zu(28,sqldata7d,7)
+ s sqldata18d=$zu(28,sqldata9d,7)
+ goto:sqldata22d'=1 %0CmCuncommitted
+ if sqldata22d=1 {
+ 	lock +^HBDRGCoreAlgorithmDataD($p(existingID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata24d=$name(^HBDRGCoreAlgorithmDataD($p(existingID,"||",1)))_"#""SI""",sqldata23d=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGCoreAlgorithmData for RowID value: "_existingID ztrap "LOCK"  }
  }
  ; asl MOD# 4
- i existingID'="" s sqldata39d="" i $d(^User.HBDRGCoreAlgorithmDataD(existingID),sqldata39d)
+ i existingID'="" s sqldata44d="" i $d(^HBDRGCoreAlgorithmDataD(existingID),sqldata44d)
  e  g %0CmDdun
- S sqldata3d=$lg(sqldata39d,2)
- s sqldata10d=$zu(28,sqldata3d,7)
- g:'(sqldata10d=sqldata11d) %0CmDdun
- g:'(sqldata10d'=" ") %0CmDdun
- S sqldata5d=$lg(sqldata39d,13)
- s sqldata12d=$zu(28,sqldata5d,7)
+ S sqldata3d=$lg(sqldata44d,2)
+ s sqldata12d=$zu(28,sqldata3d,7)
  g:'(sqldata12d=sqldata13d) %0CmDdun
  g:'(sqldata12d'=" ") %0CmDdun
- S sqldata7d=$lg(sqldata39d,16)
- s sqldata14d=$zu(28,sqldata7d,7)
+ S sqldata5d=$lg(sqldata44d,13)
+ s sqldata14d=$zu(28,sqldata5d,7)
  g:'(sqldata14d=sqldata15d) %0CmDdun
+ g:'(sqldata14d'=" ") %0CmDdun
+ S sqldata9d=$lg(sqldata44d,22)
+ s sqldata18d=$zu(28,sqldata9d,7)
+ g:'(sqldata18d=sqldata19d) %0CmDdun
+ g:'(sqldata18d'=" ") %0CmDdun
+ S sqldata7d=$lg(sqldata44d,16)
+ s sqldata16d=$zu(28,sqldata7d,7)
+ g:'(sqldata16d=sqldata17d) %0CmDdun
 %0CmCuncommitted ;
  s SQLCODE=0 g %0Cc
-%0CmDdun if $g(sqldata18d)=1 { if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }}
+%0CmDdun if $g(sqldata22d)=1 { if $g(sqldata23d)=1 { l -@sqldata24d s sqldata23d=0 } elseif $g(sqldata23d)=2 { do $classmethod($li(sqldata24d),"%UnlockId",$li(sqldata24d,2),1,1)  s sqldata23d=0 }}
  g %0CmCk1
 %0CmCdun 
 %0CmAdun 
 %0Cc set %ROWCOUNT='SQLCODE
- if $g(sqldata18d)=1 {
- 	if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }
+ if $g(sqldata22d)=1 {
+ 	if $g(sqldata23d)=1 { l -@sqldata24d s sqldata23d=0 } elseif $g(sqldata23d)=2 { do $classmethod($li(sqldata24d),"%UnlockId",$li(sqldata24d,2),1,1)  s sqldata23d=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(sqldata40d)+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(sqldata45d)+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
- s tmp=$g(context.Stats($namespace,"u7QeXSOXDK4cFwAsPHWSrzkFNdw="))
+ s tmp=$g(context.Stats($namespace,"NVTBNr0Q29h5bDXcR7hggWJVKxw="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
- s context.Stats($namespace,"u7QeXSOXDK4cFwAsPHWSrzkFNdw=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ s context.Stats($namespace,"NVTBNr0Q29h5bDXcR7hggWJVKxw=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
  q
 %0Cerr s $zt=""
  d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
  g %0Cc
 %0CmBMod ; asl MOD# 2
- s sqldata10d=sqldata11d
- s sqldata14d=sqldata15d
- i sqldata10d="" g %0CmBdun
- i '(sqldata10d'=" ") g %0CmBdun
- s sqldata16d=""
-%0CmBk1 s sqldata16d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d))
- i sqldata16d="" g %0CmBdun
- s sqldata17d=""
-%0CmBk2 s sqldata17d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d,sqldata17d))
- i sqldata17d="" g %0CmBk1
- i sqldata14d="" g %0CmBk2
+ s sqldata12d=sqldata13d
+ s sqldata16d=sqldata17d
+ s sqldata18d=sqldata19d
+ i sqldata12d="" g %0CmBdun
+ i '(sqldata12d'=" ") g %0CmBdun
+ s sqldata20d=""
+%0CmBk1 s sqldata20d=$o(^HBDRGCoreAlgorithmDataI("Index",sqldata12d,sqldata20d))
+ i sqldata20d="" g %0CmBdun
+ s sqldata21d=""
+%0CmBk2 s sqldata21d=$o(^HBDRGCoreAlgorithmDataI("Index",sqldata12d,sqldata20d,sqldata21d))
+ i sqldata21d="" g %0CmBk1
+ i sqldata16d="" g %0CmBk2
+ i sqldata18d="" g %0CmBk2
+ i '(sqldata18d'=" ") g %0CmBk2
  s existingID=""
-%0CmBk3 s existingID=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d,sqldata17d,sqldata14d,existingID))
+%0CmBk3 s existingID=$o(^HBDRGCoreAlgorithmDataI("Index",sqldata12d,sqldata20d,sqldata21d,sqldata16d,sqldata18d,existingID))
  i existingID="" g %0CmBk2
- s $bit(sqldata29d(existingID\64000+1),existingID#64000+1)=1
+ s $bit(sqldata34d(existingID\64000+1),existingID#64000+1)=1
  g %0CmBk3
 %0CmBdun q
 zDeleteDIPCoreAlgorithm(jsonObj)
@@ -670,10 +692,11 @@ zGetDRGCoreAlgorithm(jsonObj)
 		set provinceID=params.provinceID
 		set insuType=params.insuType
 		set status=params.status
+		set year=params.year  //分组方案年份
 		set sql =" SELECT ID,DRG,DRGDESC,Points,PipValue,DGDOV,PayStandard,InsuType,MdtrtArea,MedinsLv,"
 		        _" Province_Dr as ProvinceID,Province_Dr->Descripts as ProvinceDesc,"
 		        _" City_Dr as CityID,City_Dr->Descripts as CityDesc,StartDate,StopDate," 
-			    _" FixmedinsCode,FixmedinsName,Identification,Remark,CreateDate,CreateTime "
+			    _" FixmedinsCode,FixmedinsName,Identification,Remark,CreateDate,CreateTime,Year "
 			    _" FROM HB_DRGCoreAlgorithmData where 1=1"
 		if DRG'=""
 		{
@@ -698,6 +721,10 @@ zGetDRGCoreAlgorithm(jsonObj)
 		if insuType'=""
 		{
 			set sql=sql_" and insuType = "_insuType 
+		}
+		if year'=""
+		{
+			set sql=sql_" and Year = '"_year_"'" 
 		}										
 		set sqlObj=##class(%SQL.Statement).%New(1)
 		set sc=sqlObj.%Prepare(sql)
@@ -726,7 +753,8 @@ zGetDRGCoreAlgorithm(jsonObj)
 		    set dataObj.fixmedinsCode=result.%Get("FixmedinsCode")
 		    set dataObj.fixmedinsName=result.%Get("FixmedinsName")
 		    set dataObj.identification=result.%Get("Identification")
-		    set dataObj.remark=result.%Get("Remark")				
+		    set dataObj.remark=result.%Get("Remark")
+		    set dataObj.year=result.%Get("Year")				
 			if startDate'=""{
 				set startDate=$zdh(startDate,3)
 			}
@@ -789,6 +817,7 @@ zPreviewImportDIPCoreAlgorithm(jsonObj)
         set medinsLv=params.medinsLv
         set mdtrtArea=params.mdtrtArea
         set fileData=params.fileData
+        set year=params.year  //分组方案年份（导入必选）
         // 参数校验
         if provinceID="" {
             set resultObj.errorCode="01000007"
@@ -922,11 +951,11 @@ zPreviewImportDIPCoreAlgorithm(jsonObj)
                 do previewList.%Push(previewObj)
                 continue
             }
-            // 检查是否已存在（主要诊断代码+省+市+机构等级）
+            // 检查是否已存在（主要诊断代码+省+市+机构等级+年份）
             set existingID=""
              ;---&sql(SELECT ID INTO :existingID FROM SQLUser.HB_DIPCoreAlgorithmData 
-              ;---                 WHERE PrincipalDiagnosis=:principalDiagnosis AND Province_Dr=:provinceID AND City_Dr=:cityID AND MedinsLv=:medinsLv)
-              ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, cityID, existingID, medinsLv, principalDiagnosis, provinceID
+              ;---                 WHERE PrincipalDiagnosis=:principalDiagnosis AND Province_Dr=:provinceID AND City_Dr=:cityID AND MedinsLv=:medinsLv AND Year=:year)
+              ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, cityID, existingID, medinsLv, principalDiagnosis, provinceID, year
             do %0Eo
             if existingID'="" 
             {
@@ -959,99 +988,108 @@ zPreviewImportDIPCoreAlgorithm(jsonObj)
     }
     quit resultObj
  q
-%0Eo n sqldata19d,sqldata20d,sqldata21d,sqldata22d,sqldata23d,sqldata24d,sqldata25d,sqldata28d,sqldata31d,sqldata32d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata7d,sqldata16d,sqldata17d,sqldata18d,sqldata3d,sqldata12d,sqldata13d,sqldata9d,sqldata14d,sqldata15d,sqldata5d
+%0Eo n sqldata23d,sqldata24d,sqldata25d,sqldata26d,sqldata27d,sqldata28d,sqldata29d,sqldata32d,sqldata35d,sqldata36d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata12d,sqldata7d,sqldata20d,sqldata21d,sqldata22d,sqldata11d,sqldata18d,sqldata19d,sqldata3d,sqldata14d,sqldata15d,sqldata9d,sqldata16d,sqldata17d,sqldata5d
  s $zt="%0Eerr"
  n %sqltime s %sqltime=$zh
- s sqldata19d=$zu(115,2)
- s sqldata20d=0,sqldata21d=""
+ s sqldata23d=$zu(115,2)
+ s sqldata24d=0,sqldata25d=""
  d:$zu(115,15) $system.ECP.Sync()
- s sqldata4d=$g(principalDiagnosis),sqldata6d=$s($g(provinceID)="":"",$isvalidnum(provinceID):+provinceID,1:provinceID),sqldata8d=$s($g(cityID)="":"",$isvalidnum(cityID):+cityID,1:cityID),sqldata10d=$g(medinsLv)
+ s sqldata4d=$g(principalDiagnosis),sqldata6d=$s($g(provinceID)="":"",$isvalidnum(provinceID):+provinceID,1:provinceID),sqldata8d=$s($g(cityID)="":"",$isvalidnum(cityID):+cityID,1:cityID),sqldata10d=$g(medinsLv),sqldata12d=$g(year)
  s SQLCODE=100
- s sqldata15d=$zu(28,sqldata10d,7)
- s sqldata13d=$zu(28,sqldata4d,7)
+ s sqldata17d=$zu(28,sqldata10d,7)
+ s sqldata15d=$zu(28,sqldata4d,7)
+ s sqldata19d=$zu(28,sqldata12d,7)
  ; asl MOD# 2
  s sqldata7d=sqldata8d
- s sqldata16d="",sqldata22d=1,sqldata17d="",sqldata23d=1,sqldata18d=""
+ s sqldata20d="",sqldata26d=1,sqldata21d="",sqldata27d=1,sqldata22d=""
  g %0EmBk1
-%0EmBqt1 s sqldata16d="" q
-%0EmBpt1 s sqldata22d=0
- s sqldata24d=sqldata8d
- g %0EmBqt1:sqldata24d=""
- g %0EmBft1:sqldata16d=""
-%0EmBat1 g %0EmBpt1:sqldata22d
- g %0EmBgt1:$d(^HBDIPCoreAlgorithmDataI("City",sqldata24d,sqldata16d))
-%0EmBft1 g %0EmBpt1:sqldata22d
- s sqldata16d=$o(^HBDIPCoreAlgorithmDataI("City",sqldata24d,sqldata16d))
- q:sqldata16d=""
+%0EmBqt1 s sqldata20d="" q
+%0EmBpt1 s sqldata26d=0
+ s sqldata28d=sqldata8d
+ g %0EmBqt1:sqldata28d=""
+ g %0EmBft1:sqldata20d=""
+%0EmBat1 g %0EmBpt1:sqldata26d
+ g %0EmBgt1:$d(^HBDIPCoreAlgorithmDataI("City",sqldata28d,sqldata20d))
+%0EmBft1 g %0EmBpt1:sqldata26d
+ s sqldata20d=$o(^HBDIPCoreAlgorithmDataI("City",sqldata28d,sqldata20d))
+ q:sqldata20d=""
 %0EmBgt1 q
-%0EmBqt2 s sqldata17d="" q
-%0EmBpt2 s sqldata23d=0
- s sqldata25d=sqldata6d
- g %0EmBqt2:sqldata25d=""
- g %0EmBft2:sqldata17d=""
-%0EmBat2 g %0EmBpt2:sqldata23d
- g %0EmBgt2:$d(^HBDIPCoreAlgorithmDataI("Province",sqldata25d,sqldata17d))
-%0EmBft2 g %0EmBpt2:sqldata23d
- s sqldata17d=$o(^HBDIPCoreAlgorithmDataI("Province",sqldata25d,sqldata17d))
- q:sqldata17d=""
+%0EmBqt2 s sqldata21d="" q
+%0EmBpt2 s sqldata27d=0
+ s sqldata29d=sqldata6d
+ g %0EmBqt2:sqldata29d=""
+ g %0EmBft2:sqldata21d=""
+%0EmBat2 g %0EmBpt2:sqldata27d
+ g %0EmBgt2:$d(^HBDIPCoreAlgorithmDataI("Province",sqldata29d,sqldata21d))
+%0EmBft2 g %0EmBpt2:sqldata27d
+ s sqldata21d=$o(^HBDIPCoreAlgorithmDataI("Province",sqldata29d,sqldata21d))
+ q:sqldata21d=""
 %0EmBgt2 q
-%0EmBat3 s sqldata16d=sqldata18d d %0EmBat1
- i sqldata16d="" s sqldata18d="" q
+%0EmBat3 s sqldata20d=sqldata22d d %0EmBat1
+ i sqldata20d="" s sqldata22d="" q
  g %0EmBlt3
 %0EmBft3 d %0EmBft1
- i sqldata16d="" s sqldata18d="" q
-%0EmBlt3 s sqldata17d=sqldata16d d %0EmBat2
- i sqldata17d="" s sqldata18d="" q
- i sqldata17d]]sqldata16d s sqldata16d=sqldata17d d %0EmBat1 i sqldata16d="" s sqldata18d="" q
- i sqldata16d=sqldata17d s sqldata18d=sqldata16d q
+ i sqldata20d="" s sqldata22d="" q
+%0EmBlt3 s sqldata21d=sqldata20d d %0EmBat2
+ i sqldata21d="" s sqldata22d="" q
+ i sqldata21d]]sqldata20d s sqldata20d=sqldata21d d %0EmBat1 i sqldata20d="" s sqldata22d="" q
+ i sqldata20d=sqldata21d s sqldata22d=sqldata20d q
  g %0EmBlt3
 %0EmBk1 d %0EmBft3
- i sqldata18d="" g %0EmBdun
- s existingID=sqldata18d
- i existingID'="" s sqldata28d="" i $d(^HBDIPCoreAlgorithmDataD(existingID),sqldata28d)
+ i sqldata22d="" g %0EmBdun
+ s existingID=sqldata22d
+ i existingID'="" s sqldata32d="" i $d(^HBDIPCoreAlgorithmDataD(existingID),sqldata32d)
  e  g %0EmBk1
- S sqldata3d=$lg(sqldata28d,2)
- s sqldata12d=$zu(28,sqldata3d,7)
- g:'(sqldata12d=sqldata13d) %0EmBk1
- S sqldata9d=$lg(sqldata28d,11)
- s sqldata14d=$zu(28,sqldata9d,7)
+ S sqldata11d=$lg(sqldata32d,21)
+ s sqldata18d=$zu(28,sqldata11d,7)
+ g:'(sqldata18d=sqldata19d) %0EmBk1
+ g:'(sqldata18d'=" ") %0EmBk1
+ S sqldata3d=$lg(sqldata32d,2)
+ s sqldata14d=$zu(28,sqldata3d,7)
  g:'(sqldata14d=sqldata15d) %0EmBk1
- S sqldata5d=$lg(sqldata28d,8),sqldata7d=$lg(sqldata28d,9)
- goto:sqldata19d'=1 %0EmBuncommitted
- if sqldata19d=1 {
+ S sqldata9d=$lg(sqldata32d,11)
+ s sqldata16d=$zu(28,sqldata9d,7)
+ g:'(sqldata16d=sqldata17d) %0EmBk1
+ S sqldata5d=$lg(sqldata32d,8),sqldata7d=$lg(sqldata32d,9)
+ goto:sqldata23d'=1 %0EmBuncommitted
+ if sqldata23d=1 {
  	lock +^HBDIPCoreAlgorithmDataD($p(existingID,"||",1))#"S":$zu(115,4)
- 	if $t { set sqldata21d=$name(^HBDIPCoreAlgorithmDataD($p(existingID,"||",1)))_"#""SI""",sqldata20d=1 }
+ 	if $t { set sqldata25d=$name(^HBDIPCoreAlgorithmDataD($p(existingID,"||",1)))_"#""SI""",sqldata24d=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DIPCoreAlgorithmData for RowID value: "_existingID ztrap "LOCK"  }
  }
  ; asl MOD# 3
- i existingID'="" s sqldata31d="" i $d(^HBDIPCoreAlgorithmDataD(existingID),sqldata31d)
+ i existingID'="" s sqldata35d="" i $d(^HBDIPCoreAlgorithmDataD(existingID),sqldata35d)
  e  g %0EmCdun
- S sqldata3d=$lg(sqldata31d,2)
- s sqldata12d=$zu(28,sqldata3d,7)
- g:'(sqldata12d=sqldata13d) %0EmCdun
- S sqldata5d=$lg(sqldata31d,8)
- g:'(sqldata5d=sqldata6d) %0EmCdun
- S sqldata7d=$lg(sqldata31d,9)
- g:'(sqldata7d=sqldata8d) %0EmCdun
- S sqldata9d=$lg(sqldata31d,11)
- s sqldata14d=$zu(28,sqldata9d,7)
+ S sqldata11d=$lg(sqldata35d,21)
+ s sqldata18d=$zu(28,sqldata11d,7)
+ g:'(sqldata18d=sqldata19d) %0EmCdun
+ g:'(sqldata18d'=" ") %0EmCdun
+ S sqldata3d=$lg(sqldata35d,2)
+ s sqldata14d=$zu(28,sqldata3d,7)
  g:'(sqldata14d=sqldata15d) %0EmCdun
+ S sqldata5d=$lg(sqldata35d,8)
+ g:'(sqldata5d=sqldata6d) %0EmCdun
+ S sqldata7d=$lg(sqldata35d,9)
+ g:'(sqldata7d=sqldata8d) %0EmCdun
+ S sqldata9d=$lg(sqldata35d,11)
+ s sqldata16d=$zu(28,sqldata9d,7)
+ g:'(sqldata16d=sqldata17d) %0EmCdun
 %0EmBuncommitted ;
  s SQLCODE=0 g %0Ec
-%0EmCdun if $g(sqldata19d)=1 { if $g(sqldata20d)=1 { l -@sqldata21d s sqldata20d=0 } elseif $g(sqldata20d)=2 { do $classmethod($li(sqldata21d),"%UnlockId",$li(sqldata21d,2),1,1)  s sqldata20d=0 }}
+%0EmCdun if $g(sqldata23d)=1 { if $g(sqldata24d)=1 { l -@sqldata25d s sqldata24d=0 } elseif $g(sqldata24d)=2 { do $classmethod($li(sqldata25d),"%UnlockId",$li(sqldata25d,2),1,1)  s sqldata24d=0 }}
  g %0EmBk1
 %0EmBdun 
 %0EmAdun 
 %0Ec set %ROWCOUNT='SQLCODE
- if $g(sqldata19d)=1 {
- 	if $g(sqldata20d)=1 { l -@sqldata21d s sqldata20d=0 } elseif $g(sqldata20d)=2 { do $classmethod($li(sqldata21d),"%UnlockId",$li(sqldata21d,2),1,1)  s sqldata20d=0 }
+ if $g(sqldata23d)=1 {
+ 	if $g(sqldata24d)=1 { l -@sqldata25d s sqldata24d=0 } elseif $g(sqldata24d)=2 { do $classmethod($li(sqldata25d),"%UnlockId",$li(sqldata25d,2),1,1)  s sqldata24d=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(sqldata32d)+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(sqldata36d)+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
- s tmp=$g(context.Stats($namespace,"6Upm851+MnzbEzR/hMbSv8DBSyw="))
+ s tmp=$g(context.Stats($namespace,"W4khJnx2jxooziEQvcCK1c39iiU="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
- s context.Stats($namespace,"6Upm851+MnzbEzR/hMbSv8DBSyw=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ s context.Stats($namespace,"W4khJnx2jxooziEQvcCK1c39iiU=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
  q
 %0Eerr s $zt=""
  d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
@@ -1070,6 +1108,7 @@ zPreviewImportDRGCoreAlgorithm(jsonObj)
         set mdtrtArea=params.mdtrtArea
         set fixmedinsCode=params.fixmedinsCode
         set fixmedinsName=params.fixmedinsName
+        set year=params.year  //分组方案年份（导入必选）
         set medinsLv=params.medinsLv
         // 参数校验
         if provinceID="" {
@@ -1209,11 +1248,11 @@ zPreviewImportDRGCoreAlgorithm(jsonObj)
                 do previewList.%Push(previewObj)
                 continue
             }
-            // 检查是否已存在（DRG代码+行政区划+机构代码）
+            // 检查是否已存在（DRG代码+行政区划+机构代码+年份）
             set existingID=""
              ;---&sql(SELECT ID INTO :existingID FROM SQLUser.HB_DRGCoreAlgorithmData 
-              ;---                 WHERE DRG=:drgCode AND MdtrtArea=:mdtrtArea AND FixmedinsCode=:fixmedinsCode)
-              ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, drgCode, existingID, fixmedinsCode, mdtrtArea
+              ;---                 WHERE DRG=:drgCode AND MdtrtArea=:mdtrtArea AND FixmedinsCode=:fixmedinsCode AND Year=:year)
+              ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, drgCode, existingID, fixmedinsCode, mdtrtArea, year
             do %0Go
             if existingID'="" 
             {
@@ -1245,88 +1284,97 @@ zPreviewImportDRGCoreAlgorithm(jsonObj)
     }
     quit resultObj
  q
-%0Go n sqldata18d,sqldata19d,sqldata20d,sqldata29d,sqldata30d,sqldata31d,sqldata32d,sqldata33d,sqldata36d,sqldata39d,sqldata40d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata11d,sqldata14d,sqldata15d,sqldata16d,sqldata17d,sqldata5d,sqldata12d,sqldata13d,sqldata3d,sqldata7d
+%0Go n sqldata22d,sqldata23d,sqldata24d,sqldata34d,sqldata35d,sqldata36d,sqldata37d,sqldata38d,sqldata41d,sqldata44d,sqldata45d,sqldata4d,sqldata6d,sqldata8d,sqldata10d,sqldata12d,sqldata13d,sqldata16d,sqldata17d,sqldata18d,sqldata19d,sqldata20d,sqldata21d,sqldata5d,sqldata14d,sqldata15d,sqldata3d,sqldata7d,sqldata9d
  s $zt="%0Gerr"
  n %sqltime s %sqltime=$zh
- s sqldata18d=$zu(115,2)
- s sqldata19d=0,sqldata20d=""
+ s sqldata22d=$zu(115,2)
+ s sqldata23d=0,sqldata24d=""
  d:$zu(115,15) $system.ECP.Sync()
- s sqldata4d=$g(drgCode),sqldata6d=$g(mdtrtArea),sqldata8d=$g(fixmedinsCode)
+ s sqldata4d=$g(drgCode),sqldata6d=$g(mdtrtArea),sqldata8d=$g(fixmedinsCode),sqldata10d=$g(year)
  s SQLCODE=100
- s sqldata13d=$zu(28,sqldata6d,7)
- s sqldata15d=$zu(28,sqldata8d,7)
- s sqldata11d=$zu(28,sqldata4d,7)
- k sqldata29d
+ s sqldata15d=$zu(28,sqldata6d,7)
+ s sqldata19d=$zu(28,sqldata10d,7)
+ s sqldata17d=$zu(28,sqldata8d,7)
+ s sqldata13d=$zu(28,sqldata4d,7)
+ k sqldata34d
  ; asl MOD# 3
  d %0GmBMod
- s sqldata30d="",sqldata31d="",sqldata33d=1
-%0GmCk1 f  s sqldata33d=$bitfind(sqldata31d,1,sqldata33d+1) i sqldata33d { s existingID=sqldata32d+sqldata33d-1 q } s sqldata30d=$o(sqldata29d(sqldata30d),1,sqldata31d) q:sqldata30d=""  s sqldata32d=sqldata30d-1*64000
- i sqldata30d="" g %0GmCdun
- s sqldata36d="" i $d(^User.HBDRGCoreAlgorithmDataD(existingID),sqldata36d)
+ s sqldata35d="",sqldata36d="",sqldata38d=1
+%0GmCk1 f  s sqldata38d=$bitfind(sqldata36d,1,sqldata38d+1) i sqldata38d { s existingID=sqldata37d+sqldata38d-1 q } s sqldata35d=$o(sqldata34d(sqldata35d),1,sqldata36d) q:sqldata35d=""  s sqldata37d=sqldata35d-1*64000
+ i sqldata35d="" g %0GmCdun
+ s sqldata41d="" i $d(^HBDRGCoreAlgorithmDataD(existingID),sqldata41d)
  e  g %0GmCk1
- S sqldata5d=$lg(sqldata36d,13)
- s sqldata12d=$zu(28,sqldata5d,7)
- g:'(sqldata12d=sqldata13d) %0GmCk1
- g:'(sqldata12d'=" ") %0GmCk1
- S sqldata3d=$lg(sqldata36d,2),sqldata7d=$lg(sqldata36d,16)
- s sqldata10d=$zu(28,sqldata3d,7)
- s sqldata14d=$zu(28,sqldata7d,7)
- goto:sqldata18d'=1 %0GmCuncommitted
- if sqldata18d=1 {
- 	lock +^User.HBDRGCoreAlgorithmDataD($p(existingID,"||",1))#"S":$zu(115,4)
- 	if $t { set sqldata20d=$name(^User.HBDRGCoreAlgorithmDataD($p(existingID,"||",1)))_"#""SI""",sqldata19d=1 }
+ S sqldata5d=$lg(sqldata41d,13)
+ s sqldata14d=$zu(28,sqldata5d,7)
+ g:'(sqldata14d=sqldata15d) %0GmCk1
+ g:'(sqldata14d'=" ") %0GmCk1
+ S $lg(,sqldata3d,,,,,,,,,,,,,,sqldata7d,,,,,,sqldata9d)=sqldata41d
+ s sqldata12d=$zu(28,sqldata3d,7)
+ s sqldata16d=$zu(28,sqldata7d,7)
+ s sqldata18d=$zu(28,sqldata9d,7)
+ goto:sqldata22d'=1 %0GmCuncommitted
+ if sqldata22d=1 {
+ 	lock +^HBDRGCoreAlgorithmDataD($p(existingID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata24d=$name(^HBDRGCoreAlgorithmDataD($p(existingID,"||",1)))_"#""SI""",sqldata23d=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGCoreAlgorithmData for RowID value: "_existingID ztrap "LOCK"  }
  }
  ; asl MOD# 4
- i existingID'="" s sqldata39d="" i $d(^User.HBDRGCoreAlgorithmDataD(existingID),sqldata39d)
+ i existingID'="" s sqldata44d="" i $d(^HBDRGCoreAlgorithmDataD(existingID),sqldata44d)
  e  g %0GmDdun
- S sqldata3d=$lg(sqldata39d,2)
- s sqldata10d=$zu(28,sqldata3d,7)
- g:'(sqldata10d=sqldata11d) %0GmDdun
- g:'(sqldata10d'=" ") %0GmDdun
- S sqldata5d=$lg(sqldata39d,13)
- s sqldata12d=$zu(28,sqldata5d,7)
+ S sqldata3d=$lg(sqldata44d,2)
+ s sqldata12d=$zu(28,sqldata3d,7)
  g:'(sqldata12d=sqldata13d) %0GmDdun
  g:'(sqldata12d'=" ") %0GmDdun
- S sqldata7d=$lg(sqldata39d,16)
- s sqldata14d=$zu(28,sqldata7d,7)
+ S sqldata5d=$lg(sqldata44d,13)
+ s sqldata14d=$zu(28,sqldata5d,7)
  g:'(sqldata14d=sqldata15d) %0GmDdun
+ g:'(sqldata14d'=" ") %0GmDdun
+ S sqldata9d=$lg(sqldata44d,22)
+ s sqldata18d=$zu(28,sqldata9d,7)
+ g:'(sqldata18d=sqldata19d) %0GmDdun
+ g:'(sqldata18d'=" ") %0GmDdun
+ S sqldata7d=$lg(sqldata44d,16)
+ s sqldata16d=$zu(28,sqldata7d,7)
+ g:'(sqldata16d=sqldata17d) %0GmDdun
 %0GmCuncommitted ;
  s SQLCODE=0 g %0Gc
-%0GmDdun if $g(sqldata18d)=1 { if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }}
+%0GmDdun if $g(sqldata22d)=1 { if $g(sqldata23d)=1 { l -@sqldata24d s sqldata23d=0 } elseif $g(sqldata23d)=2 { do $classmethod($li(sqldata24d),"%UnlockId",$li(sqldata24d,2),1,1)  s sqldata23d=0 }}
  g %0GmCk1
 %0GmCdun 
 %0GmAdun 
 %0Gc set %ROWCOUNT='SQLCODE
- if $g(sqldata18d)=1 {
- 	if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }
+ if $g(sqldata22d)=1 {
+ 	if $g(sqldata23d)=1 { l -@sqldata24d s sqldata23d=0 } elseif $g(sqldata23d)=2 { do $classmethod($li(sqldata24d),"%UnlockId",$li(sqldata24d,2),1,1)  s sqldata23d=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(sqldata40d)+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(sqldata45d)+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
- s tmp=$g(context.Stats($namespace,"X15ePRrlPG+7nGoxKQaCA9rWmYI="))
+ s tmp=$g(context.Stats($namespace,"DE+4FW8g1xy8tjTZrwHLIqPH9vQ="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
- s context.Stats($namespace,"X15ePRrlPG+7nGoxKQaCA9rWmYI=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ s context.Stats($namespace,"DE+4FW8g1xy8tjTZrwHLIqPH9vQ=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
  q
 %0Gerr s $zt=""
  d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
  g %0Gc
 %0GmBMod ; asl MOD# 2
- s sqldata10d=sqldata11d
- s sqldata14d=sqldata15d
- i sqldata10d="" g %0GmBdun
- i '(sqldata10d'=" ") g %0GmBdun
- s sqldata16d=""
-%0GmBk1 s sqldata16d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d))
- i sqldata16d="" g %0GmBdun
- s sqldata17d=""
-%0GmBk2 s sqldata17d=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d,sqldata17d))
- i sqldata17d="" g %0GmBk1
- i sqldata14d="" g %0GmBk2
+ s sqldata12d=sqldata13d
+ s sqldata16d=sqldata17d
+ s sqldata18d=sqldata19d
+ i sqldata12d="" g %0GmBdun
+ i '(sqldata12d'=" ") g %0GmBdun
+ s sqldata20d=""
+%0GmBk1 s sqldata20d=$o(^HBDRGCoreAlgorithmDataI("Index",sqldata12d,sqldata20d))
+ i sqldata20d="" g %0GmBdun
+ s sqldata21d=""
+%0GmBk2 s sqldata21d=$o(^HBDRGCoreAlgorithmDataI("Index",sqldata12d,sqldata20d,sqldata21d))
+ i sqldata21d="" g %0GmBk1
+ i sqldata16d="" g %0GmBk2
+ i sqldata18d="" g %0GmBk2
+ i '(sqldata18d'=" ") g %0GmBk2
  s existingID=""
-%0GmBk3 s existingID=$o(^User.HBDRGCoreAlgorithmDataI("Index",sqldata10d,sqldata16d,sqldata17d,sqldata14d,existingID))
+%0GmBk3 s existingID=$o(^HBDRGCoreAlgorithmDataI("Index",sqldata12d,sqldata20d,sqldata21d,sqldata16d,sqldata18d,existingID))
  i existingID="" g %0GmBk2
- s $bit(sqldata29d(existingID\64000+1),existingID#64000+1)=1
+ s $bit(sqldata34d(existingID\64000+1),existingID#64000+1)=1
  g %0GmBk3
 %0GmBdun q
 zQueryDIPCoreAlgorithm(jsonObj)
@@ -1349,6 +1397,7 @@ zQueryDIPCoreAlgorithm(jsonObj)
 		set provinceID=params.provinceID
 		set cityID=params.cityID
 		set medinsLv=params.medinsLv
+		set year=params.year  //分组方案年份
 		set sql =" SELECT ID,PrincipalDiagnosis,PrincipalDiagnosisName,"
 		        _" MajorProcedure,MajorProcedureName,"
 		        _" SecondaryProcedure,SecondaryProcedureName,"
@@ -1357,7 +1406,7 @@ zQueryDIPCoreAlgorithm(jsonObj)
 		        _" MdtrtArea,MedinsLv,"
 		        _" ScoreValue,AdjustCoefficient,"
 		        _" PrimaryAdjustCoefficient,SecondaryAdjustCoefficient,ThirdAdjustCoefficient,"
-		        _" CreateDate,CreateTime "
+		        _" CreateDate,CreateTime,Year "
 		        _" FROM HB_DIPCoreAlgorithmData where 1=1"
 		if principalDiagnosis'=""
 		{
@@ -1387,6 +1436,10 @@ zQueryDIPCoreAlgorithm(jsonObj)
 		{
 			set sql=sql_" and MedinsLv = '"_medinsLv_"'" 
 		}
+		if year'=""
+		{
+			set sql=sql_" and Year = '"_year_"'" 
+		}
 		set sql=sql_" ORDER BY ID DESC"
 		set sqlObj=##class(%SQL.Statement).%New(1)
 		set sc=sqlObj.%Prepare(sql)
@@ -1414,6 +1467,7 @@ zQueryDIPCoreAlgorithm(jsonObj)
 			set dataObj.thirdAdjustCoefficient=result.%Get("ThirdAdjustCoefficient")
 			set dataObj.createDate=result.%Get("CreateDate")
 			set dataObj.createTime=result.%Get("CreateTime")
+			set dataObj.year=result.%Get("Year")
 			set count=count+1
 			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
 			do dataArr.%Push(dataObj)
@@ -1456,6 +1510,7 @@ zSaveDIPCoreAlgorithm(postObj)
 		set primaryAdjustCoefficient=params.primaryAdjustCoefficient
 		set secondaryAdjustCoefficient=params.secondaryAdjustCoefficient
 		set thirdAdjustCoefficient=params.thirdAdjustCoefficient
+		set year=params.year  //分组方案年份
 		// 必填校验
 		if (principalDiagnosis="")
 		{
@@ -1511,6 +1566,7 @@ zSaveDIPCoreAlgorithm(postObj)
 		set dataObj.PrimaryAdjustCoefficient=primaryAdjustCoefficient
 		set dataObj.SecondaryAdjustCoefficient=secondaryAdjustCoefficient
 		set dataObj.ThirdAdjustCoefficient=thirdAdjustCoefficient
+		set dataObj.Year=year
 		set dataObj.CreateDate=$zd($h,3)
 		set dataObj.CreateTime=$zt($p($h,",",2),1)
 		set dataObj.CreateUserDr="158" //userID
@@ -1572,6 +1628,7 @@ zUpdateDRGCoreAlgorithm(postObj)
 		set stopDate=params.stopDate
 		set identification=params.identification
 		set remark=params.remark
+		set year=params.year //分组方案年份
 		if (startDate'="")&&(stopDate'="")
 		{
 			set startDate=$zdh(startDate,3)
@@ -1631,7 +1688,8 @@ zUpdateDRGCoreAlgorithm(postObj)
 		set dataObj.FixmedinsCode=fixmedinsCode
 		set dataObj.FixmedinsName=fixmedinsName
 		set dataObj.Identification=identification
-		set dataObj.Remark=remark		
+		set dataObj.Remark=remark
+		set dataObj.Year=year		
 		set insObj={}
 		set insObj.className="User.HBDRGCoreAlgorithmData"
 		set insObj.updateUserID= "0" //userID	

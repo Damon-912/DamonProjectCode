@@ -1,6 +1,6 @@
 ROUTINE src.DRG.BasicData.DictionaryData.1 [Type=INT,Generated]
  ;src.DRG.BasicData.DictionaryData.1
- ;Generated for class src.DRG.BasicData.DictionaryData.  Do NOT edit. 04/21/2026 04:19:07PM
+ ;Generated for class src.DRG.BasicData.DictionaryData.  Do NOT edit. 05/14/2026 03:00:02PM
  ;;6B475662;src.DRG.BasicData.DictionaryData
  ;
 zDeleteDIPCoreGroupsList(jsonObj)

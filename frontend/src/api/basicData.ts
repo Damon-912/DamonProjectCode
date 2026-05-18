@@ -273,6 +273,7 @@ export interface CoreAlgorithmItem {
   dgdov: string;
   payStandard: string;
   PayStandard?: string;
+  year?: string;
   pay_standard?: string;
   insuType: string;
   mdtrtArea: string;
@@ -974,6 +975,7 @@ export interface DrgCoreAlgorithmImportParams {
   medinsLv: string;        // 机构等级（来自医疗机构的HospGrade_Dr）
   fileData: string;
   fileName: string;
+  year?: string;
 }
 
 /** 下载DRG核心算法配置导入模板 (02010052) */
@@ -1019,6 +1021,7 @@ export interface DipCoreAlgorithmItem {
   thirdAdjustCoefficient: string;
   createDate: string;
   createTime: string;
+  year?: string;
 }
 
 /** 查询DIP核心算法配置参数 */
@@ -1127,6 +1130,7 @@ export interface DipCoreAlgorithmImportParams {
   medinsLv: string;
   fileData: string;
   fileName: string;
+  year?: string;
 }
 
 /** 下载DIP核心算法配置导入模板 (02010056) */

@@ -85,6 +85,138 @@ ClassMethod GetSettlementType(insuranceAreaCode As %String, mdtrtareaAreaCode As
     quit "异地"
 }
 
+/// 将分隔符分割的编码字符串拆分为$LIST列表
+/// 支持：英文逗号"," 中文逗号"，" 分号";" 斜杠"/" 加号"+" 空格" "作为分隔符
+ClassMethod SplitCodes(codeStr As %String) As %List
+{
+	if (codeStr = "")
+	{
+		quit ""
+	}
+	
+	// 将所有分隔符统一替换为英文逗号
+	set normalized = $TRANSLATE(codeStr, "，;/+ ", ",,,,,,")
+	
+	set list = ""
+	set count = $LENGTH(normalized, ",")
+	for i = 1:1:count
+	{
+		set oneCode = $ZSTRIP($PIECE(normalized, ",", i), "<>W")
+		if (oneCode '= "")
+		{
+			set list = list _ $LISTBUILD(oneCode)
+		}
+	}
+	quit list
+}
+
+/// 计算输入编码列表在存储字段中的匹配数量
+/// 支持ICD编码层级：一方是另一方的前缀即视为匹配
+/// inputList  : $LIST格式的入参编码列表
+/// storedField: 表内存储的字段值（可能包含多个逗号分隔的编码）
+/// 返回       : 匹配到的编码数量
+ClassMethod CountCodeMatches(inputList As %List, storedField As %String) As %Integer
+{
+	if (inputList = "") || (storedField = "")
+	{
+		quit 0
+	}
+	
+	// 将存储字段也拆分为列表
+	set storedList = ..SplitCodes(storedField)
+	set storedCount = $LISTLENGTH(storedList)
+	if (storedCount = 0)
+	{
+		quit 0
+	}
+	
+	set matchCount = 0
+	set inputCount = $LISTLENGTH(inputList)
+	
+	// 逐个比较入参编码与存储编码（ICD层级匹配：前缀关系）
+	for i = 1:1:inputCount
+	{
+		set oneInput = $LISTGET(inputList, i)
+		if (oneInput = "") { continue }
+		
+		for j = 1:1:storedCount
+		{
+			set oneStored = $LISTGET(storedList, j)
+			if (oneStored = "") { continue }
+			
+			// 双向前缀匹配：入参可能是存储编码的子类（如H25.900匹配H25.9），或反之
+			if (..IsCodeMatch(oneInput, oneStored))
+			{
+				set matchCount = matchCount + 1
+				quit  // 一个入参编码只匹配一次
+			}
+		}
+	}
+	quit matchCount
+}
+
+/// 判断两个ICD编码是否匹配（双向包含/前缀关系）
+/// 入参H25.900 能匹配 存储的H25.9、H25（子类→父类）
+/// 入参H25     能匹配 存储的H25.9、H25.001（父类→子类）
+ClassMethod IsCodeMatch(code1 As %String, code2 As %String) As %Boolean
+{
+	if (code1 = "") || (code2 = "")
+	{
+		quit 0
+	}
+	
+	// 精确相等直接匹配
+	if (code1 = code2)
+	{
+		quit 1
+	}
+	
+	// 双向包含判断：一方是另一方的子串
+	// code1包含code2 → code2是code1的前缀（如code1=H25.900, code2=H25）
+	if ($FIND(code1, code2) = ($LENGTH(code2) + 1))
+	{
+		quit 1
+	}
+	// code2包含code1 → code1是code2的前缀（如code1=H25, code2=H25.9）
+	if ($FIND(code2, code1) = ($LENGTH(code1) + 1))
+	{
+		quit 1
+	}
+	
+	quit 0
+}
+
+/// 构建多编码WHERE条件（OR组合）
+/// fieldName: 表字段名
+/// codeList : $LIST格式的编码列表
+/// 支持ICD编码层级匹配：入参编码与存储编码双向包含（前缀关系）
+ClassMethod BuildMultiCodeWhere(fieldName As %String, codeList As %List) As %String
+{
+	set codeCount = $LISTLENGTH(codeList)
+	if (codeCount = 0)
+	{
+		quit ""
+	}
+	
+	set where = " AND ("
+	for i = 1:1:codeCount
+	{
+		set oneCode = $LISTGET(codeList, i)
+		if (oneCode = "") { continue }
+		
+		if (i > 1)
+		{
+			set where = where _ " OR "
+		}
+		// 双向前缀匹配：支持ICD编码层级（如入参H25.900可匹配存储的H25.9、H25）
+		set where = where _ " (INSTR("_fieldName_", '"_oneCode_"') > 0 "
+		        _ " OR INSTR('"_oneCode_"', "_fieldName_") > 0) "
+	}
+	set where = where _ ")"
+	quit where
+}
+
+/// 通过序号获取对应的并发症情况说明
 ClassMethod GetComplicationDesc(num As %String) As %String
 {
     set descripts = $select(
@@ -106,9 +238,19 @@ ClassMethod GetComplicationDesc(num As %String) As %String
 ClassMethod CheckNoRulesList(code As %String) As %String
 {
     set iCount = 0
-    &sql(SELECT COUNT(*) INTO :iCount 
-         FROM HB_DRGBasicDataSub 
+    &sql(SELECT COUNT(*) INTO :iCount FROM HB_DRGBasicDataSub 
          WHERE HBDictionaries_Dr->InsuCode IN ('NoRuleOfDiagnosis', 'NoRuleOfOperation') 
+         AND Code = :code)
+    
+    quit iCount
+}
+
+/// 校验是否存在 合并症或并发症排除列表 表6-3-1 —— 表6-3-211
+ClassMethod CheckNoComplicationList(code As %String) As %String
+{
+    set iCount = 0
+    &sql(SELECT COUNT(*) INTO :iCount FROM HB_DRGBasicDataSub 
+         WHERE HBDictionaries_Dr->InsuCode ='NoComplicationList'
          AND Code = :code)
     
     quit iCount
@@ -346,7 +488,7 @@ ClassMethod GroupPreMDC(jsonObj As %Library.DynamicObject) As %Library.DynamicOb
 			}
 			else
 			{
-			    set resultObj = ..SetErrorResult("-1", "通过主诊断 "_mainDiagCode_", 主诊断大类MDC分组失败！")	
+			    set resultObj = ..SetErrorResult("-1", "通过主诊断 "_mainDiagCode_", 主诊断大类MDC分组失败, 请先检查传入的诊断编码是否为医保诊断编码！")	
 			}	        	                    
         }
 
@@ -934,6 +1076,11 @@ ClassMethod GroupComplication(jsonObj As %Library.DynamicObject) As %Library.Dyn
                 {
 	                 continue
 	            }
+	            //存在合并症或并发症排除列表中
+	            elseif (..CheckNoComplicationList(diagCode)>0)
+                {
+	                 continue
+	            }
 	            else
 	            {
 	                set (levelA,levelB)=0			        	    
@@ -1054,6 +1201,7 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
         set complication = params.complication  // 并发症 CC/MCC        
         set complicationInfo = params.complicationInfo  // 并发症 CC/MCC        
 		set mainDiagCode = params.mainDiagnosisCode  // 主诊断代码
+		set mainOpCode = params.mainOperationCode    // 主手术代码
         set age = params.age                         // 年龄(默认0)	
         set dischargeType = params.dischargeType     //离院方式	
         
@@ -1081,7 +1229,7 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
         {
             set item = adrgInfo.%Get(i)
             set adrgCode = item.code
-            set adrgDesc = item.desc                                 
+            set adrgDesc = item.desc
             
 		    set num="9"
 		    if (age>=17)
@@ -1092,7 +1240,7 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
 	    	    }
 		        elseif (complication="MCC")
 	    	    {
-		            set num="1"		    	
+		            set num="1"    	
 	    	    }
 	    	    elseif (complication="")&&(iCount>0)
 		        {
@@ -1132,7 +1280,7 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
 		        set drgDesc= adrgDesc_"："_desc	  			    
 			}
 			*/
-		
+
 			set drg =adrgCode_num
 			set desc=..GetComplicationDesc(num)	
 			set drgDesc= adrgDesc_"："_desc		
@@ -1145,7 +1293,8 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
                 {
                     set itemObj = hospInfo.%Get(i)           
                     set hospCode = itemObj.code
-                                        
+                    set hospArea = itemObj.areaAdmvs
+                                       
                     set (provID,cityID)=""
                     &sql(SELECT ProvID_Dr,CityID_Dr into :provID,:cityID FROM CB_Hospital where OrganizationCode=:hospCode)
                 		    
@@ -1158,12 +1307,19 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
                         set segFlag=0
                         &sql(SELECT SegmentationFlag into :segFlag FROM HB_DRGSegmentationRules Where ADRG=:adrgCode)		    
 		                if (segFlag=0)
-		                {			  
+		                {
 		                    set drg =adrgCode_"9" 
 		                    set desc=..GetComplicationDesc("9")		
 		                    set drgDesc= adrgDesc_"："_desc	  			    			    
-		                }		                		                
-		            }	                                  
+		                }		                
+		            }
+		            
+	                //安徽省：当主手术是 后入路玻璃体切割及玻璃体硅油取出术 直接判定入组
+                    if (adrgCode="CB4")&&(mainOpCode="14.7401")&&($E(hospArea,1,2)="34")
+                    {
+	                    set drg = "CB46"
+	                    set drgDesc = "后入路玻璃体切割及玻璃体硅油取出术"
+	                }
                 }   
 			}
 			else //没有传医疗机构信息，按CHS-DRG国家医保局DRGs目录处理
@@ -1173,16 +1329,21 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
                 set segFlag=0
                 &sql(SELECT SegmentationFlag into :segFlag FROM HB_DRGSegmentationRules Where ADRG=:adrgCode)		    
 		        if (segFlag="0")
-		        {			  
+		        {
 		            set drg =adrgCode_"9" 
 		            set desc=..GetComplicationDesc("9")		
 		            set drgDesc= adrgDesc_"："_desc	  			    			    
-		        }       
+		        }
 		    }
+		    
+			if (complication="CC")||(complication="MCC")
+			{
+			    set drgDesc = drgDesc_"【"_diagCode_"："_diagName_"】"	
+			}
                 		                		 		      
             set row={}
             set row.code = drg
-            set row.desc = drgDesc                    
+            set row.desc = drgDesc                  
             do rows.%Push(row)
             
             set iCount = iCount+1		    		                                                            
@@ -1274,6 +1435,10 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 		set settleDateTime=params.settleDateTime //结算时间
 		set unionOprnFlag=params.unionOprnFlag //联合手术标志 
 
+		//分组方案年份（由前端传入，默认当前年份）
+		set groupYear = params.groupYear
+		if (groupYear = "") set groupYear = $PIECE($ZDATE($HOROLOG,3),"-",1)
+
     	// 如果为空字符串或非数组，设置为空数组
     	if (diseinfo = "") || ('$ISOBJECT(diseinfo)) set diseinfo = []
     	if (oprninfo = "") || ('$ISOBJECT(oprninfo)) set oprninfo = []		
@@ -1327,7 +1492,7 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 		{
 			//返回结果是数组对象,可能存在多个ADRG分组结果
 			set totalCount = joRtn.totalCount //返回记录数
-			set jaADRG= joRtn.result	
+			set jaADRG= joRtn.result
 			if (totalCount = 0)
 			{
 			    set resultObj=..SetErrorResult("-4","4.2 ADRG分组失败,请检查主诊断大类【"_MDC_"："_MDCDesc_"】的分组规则是否维护！0000组入组条件：主要诊断大类(MDC),或者未入任何ADRG分组！")	
@@ -1386,14 +1551,25 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
             set hospName = itemObj.name
             set mdtrtArea="",policyType=""
             set iCount=0
-            //set (points,pipValue,dgdov,payStandard)="0.00"
+            set (points,pipValue,dgdov,payStandard)="0.00"
             
             //根据医院信息获取对应的就医地区划代码 - 医疗机构信息表数据确保完善
             &sql(SELECT CityID_Dr->Code,PolicyType_Dr->Descripts into :mdtrtareaAreaCode,:policyType FROM CB_Hospital WHERE OrganizationCode=:hospCode)
             //根据参保地和就医地区划，解析获取 市本级/省直/异地	   
             set insuAreaDesc=..GetSettlementType(insuranceAreaCode,mdtrtareaAreaCode)	        
-	        //查询算法配置表数据，获取当前医院是否配置 市本级、省直、异地	        
-            &sql(SELECT Count(*) into :iCount FROM HB_DRGCoreAlgorithmData WHERE FixmedinsCode=:hospCode AND DRG=:DRG)	        
+
+            //按年份查询算法配置：优先查询当前年份，无数据时回退到上一年
+            set queryYear = groupYear
+            &sql(SELECT Count(*) into :iCount FROM HB_DRGCoreAlgorithmData WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND (Year=:groupYear OR Year IS NULL OR Year=''))
+            if (iCount = 0)&&(groupYear '= "") {
+                set queryYear = groupYear - 1
+                &sql(SELECT Count(*) into :iCount FROM HB_DRGCoreAlgorithmData WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND (Year=:queryYear OR Year IS NULL OR Year=''))
+                if (iCount = 0) {
+                    //上一年也无数据，回退到原查询模式（不过滤年份）
+                    set queryYear = ""
+                    &sql(SELECT Count(*) into :iCount FROM HB_DRGCoreAlgorithmData WHERE FixmedinsCode=:hospCode AND DRG=:DRG)
+                }
+            }
 	        //如果存在多条数据表示,当前医院存在多个算法配置,DRG医疗机构算法配置表数据确保完善 
 	        if (iCount>1)
 	        {
@@ -1410,14 +1586,32 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 			        set mdtrtArea=$E(mdtrtareaAreaCode,1,2)_"0000"     
 			    }
 			    
-                &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
-                     WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND MdtrtArea=:mdtrtArea)    			    
+                if (queryYear '= "") {
+                    &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
+                         WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND MdtrtArea=:mdtrtArea AND (Year=:queryYear OR Year IS NULL OR Year=''))
+                } else {
+                    &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
+                         WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND MdtrtArea=:mdtrtArea)
+                }    			    
 		    }
-		    else //只存在一条记录，表示当前医院市本级、省直、异地算法配置都一样,直接取市本级数据
+		    elseif (iCount=1) //只存在一条记录，表示当前医院市本级、省直、异地算法配置都一样,直接取市本级数据
 		    {
 			    set insuAreaDesc="市本级"
-                &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
-                     WHERE FixmedinsCode=:hospCode AND DRG=:DRG)
+                if (queryYear '= "") {
+                    &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
+                         WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND (Year=:queryYear OR Year IS NULL OR Year=''))
+                } else {
+                    &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
+                         WHERE FixmedinsCode=:hospCode AND DRG=:DRG)
+                }
+			}
+			else //iCount=0 当前年份/上一年份均无匹配数据
+			{
+				set (points,pipValue,dgdov,payStandard)="0.00"
+				set insuAreaDesc=""
+				if (groupYear '= "") {
+					set insuAreaDesc="未维护【"_groupYear_"年】DRG分组数据"
+				}
 			}	        
                                                            
 		    if (payStandard="0.00")||(payStandard="")		    
@@ -1456,8 +1650,8 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
             if (discrepancyAmt > 0)
             {
 	            set jo.preProfit = $FNUMBER(discrepancyAmt,"L",2) //盈利
-	            set jo.preLoss = "0.00" //亏损
-	            set jo.profitLoss = "盈利"  
+            set jo.preLoss = "0.00" //亏损
+            set jo.profitLoss = "盈利"  
 	        }
 	        elseif (discrepancyAmt < 0)
 	        {
@@ -1473,6 +1667,7 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 		    }
 		    	
 		    set jo.discrepancyRate = discrepancyRate //差异率%
+		    set jo.groupPlanYear = queryYear //实际使用的分组方案年份
 		    
 			do jaAlgorithm.%Push(jo)     	                                                                     
         }
@@ -1655,7 +1850,7 @@ ClassMethod DeviceFeeWarning(jsonObj As %Library.DynamicObject) As %Library.Dyna
 		    set joRtn=##class(src.DRG.Warning).AddWarningRecord(jsonObj)	
 		    if (joRtn.errorCode '=0) 
 		    {
-                set resultObj = ..SetErrorResult("-1", "DRG分组结果费用预警失败："_joRtn.errorMessage)
+                set resultObj = ..SetErrorResult("-1", "DRG分组结果费用预警失败：DRG分组【"_drgCode_"："_drgDesc_"】"_joRtn.errorMessage)
                 quit   
 			}   
 			else
@@ -1722,6 +1917,8 @@ ClassMethod GetDIPGroupScore(jsonObj As %Library.DynamicObject) As %Library.Dyna
 	    set mdtrtArea = params.mdtrtArea              // 行政区划代码（选填）	   
 	    set fixmedinsCode = params.fixmedinsCode      // 医疗机构代码（选填）
 	    set fixmedinsName = params.fixmedinsName      // 医疗机构名称（选填）
+	    set groupYear = params.groupYear             // 分组方案年份（选填，默认当前年份）
+	    if (groupYear = "") set groupYear = $PIECE($ZDATE($HOROLOG,3),"-",1)
 	    
 	    // 4. 必填项校验
 	    if (mainDiagCode = "")
@@ -1807,26 +2004,55 @@ ClassMethod GetDIPGroupScore(jsonObj As %Library.DynamicObject) As %Library.Dyna
 	        set sql = sql _ " AND MdtrtArea = "_mdtrtArea
 	    }
 	    
-	    // 省市条件 - 通过医疗机构关联获取
-	    if (provID '= "")
-	    {
-	        set sql = sql _ " AND Province_Dr = "_provID
-	    }
-	    if (cityID '= "")
-	    {
-	        set sql = sql _ " AND City_Dr = "_cityID
-	    }
-	    
-	    set sql = sql _ " ORDER BY ID DESC"
-	    
-	    // 9. 执行查询并对每条候选记录进行匹配度评分，保留最高分记录
-	    set rows = ##class(%DynamicArray).%New()
-	    set bestScore = -1
-	    set bestRow = ""
-	    
-		set sqlObj=##class(%SQL.Statement).%New(1)
-		set sc=sqlObj.%Prepare(sql)
-		set rs=sqlObj.%Execute()
+    // 省市条件 - 通过医疗机构关联获取
+    if (provID '= "")
+    {
+        set sql = sql _ " AND Province_Dr = "_provID
+    }
+    if (cityID '= "")
+    {
+        set sql = sql _ " AND City_Dr = "_cityID
+    }
+    
+    // 年份过滤：优先查当前年份，无数据回退上一年（兼容Year为空的存量数据）
+    set queryYear = groupYear
+    set yearCondition = " AND (Year='"_queryYear_"' OR Year IS NULL OR Year='')"
+    set sqlYear = sql _ yearCondition _ " ORDER BY ID DESC"
+    
+    //先查当前年份
+    set sqlObj=##class(%SQL.Statement).%New(1)
+    set sc=sqlObj.%Prepare(sqlYear)
+    set rs=sqlObj.%Execute()
+    
+    // 如果当前年份无数据，尝试回退到上一年
+    if ('rs.%Next(sc))
+    {
+        set queryYear = groupYear - 1
+        set yearCondition = " AND (Year='"_queryYear_"' OR Year IS NULL OR Year='')"
+        set sqlYear = sql _ yearCondition _ " ORDER BY ID DESC"
+        set sc=sqlObj.%Prepare(sqlYear)
+        set rs=sqlObj.%Execute()
+        
+        // 上一年也无数据，回退到不过滤年份
+        if ('rs.%Next(sc))
+        {
+            set sqlYear = sql _ " ORDER BY ID DESC"
+            set sc=sqlObj.%Prepare(sqlYear)
+            set rs=sqlObj.%Execute()
+        }
+        else
+        {
+            // 回退到上一年的第一条数据，重置游标
+            set sc=sqlObj.%Prepare(sqlYear)
+            set rs=sqlObj.%Execute()
+        }
+    }
+    
+    // 9. 执行查询并对每条候选记录进行匹配度评分，保留最高分记录
+    set rows = ##class(%DynamicArray).%New()
+    set bestScore = -1
+    set bestRow = ""
+    set (dipCode,dipDesc)=""
 		while rs.%Next(sc)
 	    {
 	        set storedDiag = rs.%Get("PrincipalDiagnosis")
@@ -1881,9 +2107,14 @@ ClassMethod GetDIPGroupScore(jsonObj As %Library.DynamicObject) As %Library.Dyna
 	        // 只保留得分最高的记录
 	        if (score > bestScore)
 	        {
+		        set dipCode = storedDiag_"+"_storedMajorProc
+		        set dipDesc = rs.%Get("PrincipalDiagnosisName")_"+"_rs.%Get("MajorProcedureName")
+		        
 	            set bestScore = score
 	            set dataObj = {}
 	            set dataObj.id = rs.%Get("ID")
+	            set dataObj.dipCode = dipCode
+	            set dataObj.dipDesc = dipDesc
 	            set dataObj.principalDiagnosis = storedDiag
 	            set dataObj.principalDiagnosisName = rs.%Get("PrincipalDiagnosisName")
 	            set dataObj.majorProcedure = storedMajorProc
@@ -1902,6 +2133,8 @@ ClassMethod GetDIPGroupScore(jsonObj As %Library.DynamicObject) As %Library.Dyna
 	            set dataObj.secondaryAdjustCoefficient = rs.%Get("SecondaryAdjustCoefficient")
 	            set dataObj.thirdAdjustCoefficient = rs.%Get("ThirdAdjustCoefficient")
 	            set dataObj.averageCost = rs.%Get("AverageCost")
+	            set dataObj.groupPlanYear = queryYear //实际使用的分组方案年份
+	            set dataObj.checkTime = $ZDATETIME($HOROLOG,3)
 	            set bestRow = dataObj
 	        }
 	    }
@@ -1915,9 +2148,21 @@ ClassMethod GetDIPGroupScore(jsonObj As %Library.DynamicObject) As %Library.Dyna
 	    else
 	    {
 	        set totalCount = 0
-	    }
+	    }	   
 	    
-	    set resultObj = ..SetJarraySuccessResult(rows, totalCount)
+	    set jo={}
+	    set jo.dipCode = dipCode
+	    set jo.dipDesc = dipDesc
+	    set jo.checkTime=$ZDATETIME($HOROLOG,3)	
+	    set jo.dipInfo=rows
+	
+	    set resultObj={}
+	    set resultObj.errorCode="0"
+	    set resultObj.errorMessage=""
+        set resultObj.result=jo
+        set resultObj.totalCount=totalCount
+        
+        // set resultObj = ..SetJarraySuccessResult(rows, totalCount)
 	}
 	catch(e)
 	{
@@ -1933,137 +2178,6 @@ ClassMethod GetDIPGroupScore(jsonObj As %Library.DynamicObject) As %Library.Dyna
 	}
 	
 	quit resultObj
-}
-
-/// 将分隔符分割的编码字符串拆分为$LIST列表
-/// 支持：英文逗号"," 中文逗号"，" 分号";" 斜杠"/" 加号"+" 空格" "作为分隔符
-ClassMethod SplitCodes(codeStr As %String) As %List
-{
-	if (codeStr = "")
-	{
-		quit ""
-	}
-	
-	// 将所有分隔符统一替换为英文逗号
-	set normalized = $TRANSLATE(codeStr, "，;/+ ", ",,,,,,")
-	
-	set list = ""
-	set count = $LENGTH(normalized, ",")
-	for i = 1:1:count
-	{
-		set oneCode = $ZSTRIP($PIECE(normalized, ",", i), "<>W")
-		if (oneCode '= "")
-		{
-			set list = list _ $LISTBUILD(oneCode)
-		}
-	}
-	quit list
-}
-
-/// 计算输入编码列表在存储字段中的匹配数量
-/// 支持ICD编码层级：一方是另一方的前缀即视为匹配
-/// inputList  : $LIST格式的入参编码列表
-/// storedField: 表内存储的字段值（可能包含多个逗号分隔的编码）
-/// 返回       : 匹配到的编码数量
-ClassMethod CountCodeMatches(inputList As %List, storedField As %String) As %Integer
-{
-	if (inputList = "") || (storedField = "")
-	{
-		quit 0
-	}
-	
-	// 将存储字段也拆分为列表
-	set storedList = ..SplitCodes(storedField)
-	set storedCount = $LISTLENGTH(storedList)
-	if (storedCount = 0)
-	{
-		quit 0
-	}
-	
-	set matchCount = 0
-	set inputCount = $LISTLENGTH(inputList)
-	
-	// 逐个比较入参编码与存储编码（ICD层级匹配：前缀关系）
-	for i = 1:1:inputCount
-	{
-		set oneInput = $LISTGET(inputList, i)
-		if (oneInput = "") { continue }
-		
-		for j = 1:1:storedCount
-		{
-			set oneStored = $LISTGET(storedList, j)
-			if (oneStored = "") { continue }
-			
-			// 双向前缀匹配：入参可能是存储编码的子类（如H25.900匹配H25.9），或反之
-			if (..IsCodeMatch(oneInput, oneStored))
-			{
-				set matchCount = matchCount + 1
-				quit  // 一个入参编码只匹配一次
-			}
-		}
-	}
-	quit matchCount
-}
-
-/// 判断两个ICD编码是否匹配（双向包含/前缀关系）
-/// 入参H25.900 能匹配 存储的H25.9、H25（子类→父类）
-/// 入参H25     能匹配 存储的H25.9、H25.001（父类→子类）
-ClassMethod IsCodeMatch(code1 As %String, code2 As %String) As %Boolean
-{
-	if (code1 = "") || (code2 = "")
-	{
-		quit 0
-	}
-	
-	// 精确相等直接匹配
-	if (code1 = code2)
-	{
-		quit 1
-	}
-	
-	// 双向包含判断：一方是另一方的子串
-	// code1包含code2 → code2是code1的前缀（如code1=H25.900, code2=H25）
-	if ($FIND(code1, code2) = ($LENGTH(code2) + 1))
-	{
-		quit 1
-	}
-	// code2包含code1 → code1是code2的前缀（如code1=H25, code2=H25.9）
-	if ($FIND(code2, code1) = ($LENGTH(code1) + 1))
-	{
-		quit 1
-	}
-	
-	quit 0
-}
-
-/// 构建多编码WHERE条件（OR组合）
-/// fieldName: 表字段名
-/// codeList : $LIST格式的编码列表
-/// 支持ICD编码层级匹配：入参编码与存储编码双向包含（前缀关系）
-ClassMethod BuildMultiCodeWhere(fieldName As %String, codeList As %List) As %String
-{
-	set codeCount = $LISTLENGTH(codeList)
-	if (codeCount = 0)
-	{
-		quit ""
-	}
-	
-	set where = " AND ("
-	for i = 1:1:codeCount
-	{
-		set oneCode = $LISTGET(codeList, i)
-		if (oneCode = "") { continue }
-		
-		if (i > 1)
-		{
-			set where = where _ " OR "
-		}
-		// 双向前缀匹配：支持ICD编码层级（如入参H25.900可匹配存储的H25.9、H25）
-		set where = where _ " (INSTR("_fieldName_", '"_oneCode_"') > 0 "
-		        _ " OR INSTR('"_oneCode_"', "_fieldName_") > 0) "
-	}
-	set where = where _ ")"
-	quit where
 }
 
 /// Creator:     System
@@ -2242,11 +2356,21 @@ ClassMethod SaveDRGGroupRecord(jsonObj As %Library.DynamicObject) As %Library.Dy
             }
         }
         
-        // 11. 查询DRG指向（HB_DRGCoreAlgorithmData表）
+        // 11. 查询DRG指向（HB_DRGCoreAlgorithmData表），按年份优先匹配
         if (drg '= "")&&(mdtrtareaAreaCode '="")&&(fixmedinsCode '="")
         {
             set drgDr = ""
-            &sql(SELECT ID INTO :drgDr FROM HB_DRGCoreAlgorithmData WHERE DRG = :drg and FixmedinsCode=:fixmedinsCode and MdtrtArea=:mdtrtareaAreaCode)
+            //先查当前年份
+            &sql(SELECT ID INTO :drgDr FROM HB_DRGCoreAlgorithmData WHERE DRG = :drg and FixmedinsCode=:fixmedinsCode and MdtrtArea=:mdtrtareaAreaCode AND (Year=:groupYear OR Year IS NULL OR Year=''))
+            if (drgDr = "") {
+                //回退查上一年
+                set prevYear = groupYear - 1
+                &sql(SELECT ID INTO :drgDr FROM HB_DRGCoreAlgorithmData WHERE DRG = :drg and FixmedinsCode=:fixmedinsCode and MdtrtArea=:mdtrtareaAreaCode AND (Year=:prevYear OR Year IS NULL OR Year=''))
+            }
+            if (drgDr = "") {
+                //最后不过滤年份
+                &sql(SELECT ID INTO :drgDr FROM HB_DRGCoreAlgorithmData WHERE DRG = :drg and FixmedinsCode=:fixmedinsCode and MdtrtArea=:mdtrtareaAreaCode)
+            }
             if (drgDr '= "") set record.DRGDr = drgDr
         }
         

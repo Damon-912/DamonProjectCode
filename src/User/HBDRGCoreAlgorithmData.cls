@@ -54,7 +54,7 @@ Property FixmedinsCode As %String [ Required, SqlColumnNumber = 16, SqlFieldName
 
 Index FixmedinsCode On FixmedinsCode;
 
-Index Index On (DRG, ProvinceDr, CityDr, FixmedinsCode);
+Index Index On (DRG, ProvinceDr, CityDr, FixmedinsCode, Year);
 
 /// 创建日期 系统自动产生
 Property CreateDate As %Date [ Required, SqlColumnNumber = 17, SqlFieldName = CreateDate ];
@@ -70,6 +70,9 @@ Property Identification As %String [ SqlColumnNumber = 20, SqlFieldName = Identi
 
 /// 备注
 Property Remark As %String(MAXLEN = 99999) [ SqlColumnNumber = 21, SqlFieldName = Remark ];
+
+/// 年份（分组方案年份，4位数字）
+Property Year As %String(MAXLEN = 4) [ SqlColumnNumber = 22, SqlFieldName = Year ];
 
 Storage Default
 {
@@ -136,6 +139,9 @@ Storage Default
 </Value>
 <Value name="21">
 <Value>Remark</Value>
+</Value>
+<Value name="22">
+<Value>Year</Value>
 </Value>
 </Data>
 <DataLocation>^HBDRGCoreAlgorithmDataD</DataLocation>

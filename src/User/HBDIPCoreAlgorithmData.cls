@@ -67,6 +67,9 @@ Property CreateTime As %Time [ Required, SqlColumnNumber = 19, SqlFieldName = Cr
 /// 创建人员ID 指向HB_User表
 Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 20, SqlFieldName = CreateUser_Dr ];
 
+/// 年份（分组方案年份，4位数字）
+Property Year As %String(MAXLEN = 4) [ SqlColumnNumber = 21, SqlFieldName = Year ];
+
 Storage Default
 {
 <Data name="HBDIPCoreAlgorithmDataDefaultData">
@@ -129,6 +132,9 @@ Storage Default
 </Value>
 <Value name="20">
 <Value>AverageCost</Value>
+</Value>
+<Value name="21">
+<Value>Year</Value>
 </Value>
 </Data>
 <DataLocation>^HBDIPCoreAlgorithmDataD</DataLocation>

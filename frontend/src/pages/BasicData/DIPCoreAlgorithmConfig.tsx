@@ -14,6 +14,7 @@ import {
 } from '@ant-design/icons';
 import type { UploadFile } from 'antd/es/upload/interface';
 import type { ColumnsType } from 'antd/es/table';
+import dayjs from 'dayjs';
 import CustomPagination from '../../components/CustomPagination';
 import {
   queryDipCoreAlgorithm, deleteDipCoreAlgorithm,
@@ -46,6 +47,7 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
   const [provinceId, setProvinceId] = useState('');
   const [cityId, setCityId] = useState('');
   const [medinsLv, setMedinsLv] = useState('');
+  const [year, setYear] = useState('');
 
   // 弹窗
   const [modalVisible, setModalVisible] = useState(false);
@@ -133,6 +135,7 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
         provinceID: provinceId,
         cityID: cityId,
         medinsLv,
+        year: year || undefined,
       };
       const res = await queryDipCoreAlgorithm(filters, {
         pageSize,
@@ -149,7 +152,7 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [principalDiagnosis, principalDiagnosisName, majorProcedure, majorProcedureName, provinceId, cityId, medinsLv, currentPage, pageSize]);
+  }, [principalDiagnosis, principalDiagnosisName, majorProcedure, majorProcedureName, provinceId, cityId, medinsLv, year, currentPage, pageSize]);
 
   useEffect(() => {
     fetchData();
@@ -170,6 +173,7 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
     setProvinceId('');
     setCityId('');
     setMedinsLv('');
+    setYear('');
     setCityList([]);
     setCurrentPage(1);
   };
@@ -233,6 +237,9 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
     setModalCityList([]);
     setModalVisible(true);
     loadModalProvinces();
+    setTimeout(() => {
+      form.setFieldsValue({ year: dayjs().year() });
+    }, 0);
   };
 
   // 编辑
@@ -259,6 +266,7 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
             primaryAdjustCoefficient: record.primaryAdjustCoefficient ? parseFloat(record.primaryAdjustCoefficient) : undefined,
             secondaryAdjustCoefficient: record.secondaryAdjustCoefficient ? parseFloat(record.secondaryAdjustCoefficient) : undefined,
             thirdAdjustCoefficient: record.thirdAdjustCoefficient ? parseFloat(record.thirdAdjustCoefficient) : undefined,
+            year: record.year || '',
           });
         });
       } else {
@@ -279,6 +287,7 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
           primaryAdjustCoefficient: record.primaryAdjustCoefficient ? parseFloat(record.primaryAdjustCoefficient) : undefined,
           secondaryAdjustCoefficient: record.secondaryAdjustCoefficient ? parseFloat(record.secondaryAdjustCoefficient) : undefined,
           thirdAdjustCoefficient: record.thirdAdjustCoefficient ? parseFloat(record.thirdAdjustCoefficient) : undefined,
+          year: record.year || '',
         });
       }
     });
@@ -480,7 +489,8 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
       mdtrtArea: selectedCity?.code || '',
       medinsLv: medinsLv,
       fileData: fileContentRef.current,
-      fileName: fileNameRef.current
+      fileName: fileNameRef.current,
+      year: importForm.getFieldValue('importYear') || '',
     };
 
     try {
@@ -533,7 +543,8 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
       mdtrtArea: selectedCity?.code || '',
       medinsLv: medinsLv,
       fileData: fileContentRef.current,
-      fileName: fileNameRef.current
+      fileName: fileNameRef.current,
+      year: importForm.getFieldValue('importYear') || '',
     };
 
     try {
@@ -592,6 +603,12 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
       dataIndex: 'principalDiagnosisName',
       key: 'principalDiagnosisName',
       width: 180,
+    },
+    {
+      title: '年份',
+      dataIndex: 'year',
+      key: 'year',
+      width: 80,
     },
     {
       title: '主要手术代码',
@@ -737,7 +754,7 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
                 />
               </Form.Item>
             </Col>
-            <Col span={3}>
+            <Col span={2}>
               <Form.Item label="省">
                 <Select
                   placeholder="请选择省"
@@ -753,7 +770,7 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
                 </Select>
               </Form.Item>
             </Col>
-            <Col span={3}>
+            <Col span={2}>
               <Form.Item label="市">
                 <Select
                   placeholder="请选择市"
@@ -785,7 +802,20 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
                 </Select>
               </Form.Item>
             </Col>
-             <Col span={4}>
+            <Col span={2}>
+              <Form.Item label="年份">
+                <InputNumber
+                  placeholder="全部"
+                  value={year ? Number(year) : undefined}
+                  onChange={v => setYear(v ? String(v) : '')}
+                  style={{ width: '100%' }}
+                  min={2020}
+                  max={2099}
+                  precision={0}
+                />
+              </Form.Item>
+            </Col>
+             <Col span={3}>
               <Form.Item label=" " style={{ marginBottom: 0 }}>
                 <Space>
                   <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
@@ -992,6 +1022,16 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
               />
             </Form.Item>
           </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
+            <Form.Item
+              label="分组方案年份"
+              name="year"
+              rules={[{ required: true, message: '请输入年份' }]}
+            >
+              <InputNumber placeholder="请输入年份" style={{ width: '100%' }} min={2020} max={2099} precision={0} />
+            </Form.Item>
+          </div>
         </Form>
       </Modal>
 
@@ -1076,6 +1116,19 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
                       <Option value="2">二级</Option>
                       <Option value="3">三级</Option>
                     </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Form.Item
+                    name="importYear"
+                    label="分组方案年份"
+                    rules={[{ required: true, message: '请输入年份' }]}
+                    initialValue={dayjs().year()}
+                  >
+                    <InputNumber placeholder="请输入年份" style={{ width: '100%' }} min={2020} max={2099} precision={0} />
                   </Form.Item>
                 </Col>
               </Row>
