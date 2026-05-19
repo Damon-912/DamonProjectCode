@@ -169,6 +169,7 @@ const menuTitleMap: Record<string, string> = {
   'dip-core-algorithm': 'DIP算法配置',
   'system-user': '用户管理',
   'system-role': '角色权限',
+  'system-role-manage': '角色管理',
   'system-menu': '菜单配置',
   'system-hospital': '医疗机构管理',
   'system-api': '接口服务配置',
@@ -335,25 +336,55 @@ function App() {
 
   // 使用动态菜单（如果有）或默认菜单
   const menuItems = isLoaded && dynamicMenuItems.length > 0 ? dynamicMenuItems : defaultMenuItems;
+  
+  // ★ 运行时日志：记录当前菜单状态，便于排查角色菜单过滤问题
+  useEffect(() => {
+    console.log('[App] 菜单状态 - isLoaded:', isLoaded, '| dynamicMenuItems.length:', dynamicMenuItems.length, '| 实际使用菜单项数:', menuItems?.length);
+    if (dynamicMenuItems.length > 0) {
+      console.log('[App] ★ 使用角色动态菜单:', JSON.stringify(dynamicMenuItems, null, 2));
+    } else if (!isLoaded) {
+      console.warn('[App] ⚠️ 菜单未加载(isLoaded=false)，使用默认全量菜单（所有用户看到所有菜单）');
+    } else {
+      console.warn('[App] ⚠️ 菜单已加载但为空(isLoaded=true, dynamicMenuItems=[])，当前角色无菜单权限');
+    }
+  }, [isLoaded, dynamicMenuItems, menuItems]);
 
   // 获取用户菜单的函数
   const fetchUserMenus = async (session: NonNullable<ReturnType<typeof getSession>>) => {
     try {
+      const groupID = session.groupID || '';
+      const userCode = session.userCode || '';
+      console.log('[App] fetchUserMenus 开始, userCode:', userCode, 'groupID:', groupID);
+      
       const res = await getUserMenus({
-        userCode: session.userCode || '',
-        groupID: session.groupID || ''
+        userCode,
+        groupID
       });
       
+      console.log('[App] getUserMenus原始响应:', JSON.stringify(res, null, 2));
+      
       // getUserMenus 返回的是 MenuItem[] 或 ApiResponse<MenuItem[]>
-      const menus = Array.isArray(res.result) ? res.result : (res.result as any)?.rows;
-      if (String(res.errorCode) === '0' && menus && menus.length > 0) {
-        console.log('[App] 从后端获取到用户菜单:', menus.length, '项');
+      let menus: any[] | null = null;
+      if (String(res.errorCode) === '0' && res.result) {
+        if (Array.isArray(res.result)) {
+          menus = res.result;
+        } else if ((res.result as any)?.rows && Array.isArray((res.result as any).rows)) {
+          menus = (res.result as any).rows;
+        }
+      }
+      
+      if (menus && menus.length > 0) {
+        console.log('[App] 从后端获取到用户菜单:', menus.length, '项, groupID:', groupID);
         loadMenusFromLogin(menus);
       } else {
-        console.warn('[App] 获取用户菜单失败或无权限菜单:', res.errorMessage);
+        console.warn('[App] 获取用户菜单失败或无权限菜单, groupID:', groupID, ', errorMessage:', res.errorMessage);
+        // ★ 即使菜单为空也标记已加载，避免回退到默认全量菜单
+        loadMenusFromLogin([]);
       }
     } catch (error) {
       console.error('[App] 获取用户菜单异常:', error);
+      // 异常时也标记已加载，避免回退到默认菜单
+      loadMenusFromLogin([]);
     }
   };
 
@@ -679,6 +710,7 @@ function App() {
       case 'system-user':
         return <SystemUsers />;
       case 'system-role':
+      case 'system-role-manage':
         return <SystemRoles />;
       case 'system-menu':
         return <SystemMenus />;

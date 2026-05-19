@@ -26,6 +26,7 @@ import {
   type DrgCoreAlgorithmImportParams
 } from '../../api/basicData';
 import CustomPagination from '../../components/CustomPagination';
+import { getCurrentGroupName, getCurrentHospName } from '../../utils/auth';
 
 const { Option } = Select;
 
@@ -94,11 +95,28 @@ const CoreAlgorithmConfig: React.FC = () => {
   const fileContentRef = useRef<string>('');
   const fileNameRef = useRef<string>('');
 
+  // 当前用户是否为管理员
+  const [isAdmin, setIsAdmin] = useState(false);
+
   // 固定险种选项
   const insuTypeOptions = [
     { code: '310', name: '职工' },
     { code: '390', name: '居民' },
   ];
+
+  // 初始化：根据登录用户角色判断是否为管理员，非管理员默认锁定医疗机构
+  useEffect(() => {
+    const roleName = getCurrentGroupName();
+    if (roleName === '管理员') {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+      const hospName = getCurrentHospName();
+      if (hospName) {
+        setFixmedinsName(hospName);
+      }
+    }
+  }, []);
 
   const fetchData = useCallback(async (page = currentPage, size = pageSize) => {
     setLoading(true);
@@ -192,7 +210,7 @@ const CoreAlgorithmConfig: React.FC = () => {
 
   const handleReset = () => {
     setDrg('');
-    setFixmedinsName('');
+    setFixmedinsName(isAdmin ? '' : getCurrentHospName());
     setProvinceId('');
     setCityId('');
     setQueryInsuType('');
@@ -850,9 +868,10 @@ const CoreAlgorithmConfig: React.FC = () => {
               onChange={v => setFixmedinsName(v || '')}
               loading={queryHospitalLoading}
               style={{ width: 180 }}
-              allowClear
+              allowClear={isAdmin}
               showSearch
               optionFilterProp="children"
+              disabled={!isAdmin}
             >
               {queryHospitalList.map(item => (
                 <Option key={item.code} value={item.descripts}>

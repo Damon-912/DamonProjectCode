@@ -22,6 +22,7 @@ import {
   setSession
 } from '../../utils/auth';
 import { useMenu } from '../../context/MenuContext';
+import { getUserMenus } from '../../api/menu';
 import type { UserLogonLocItem } from '../../api/logon';
 import type { MenuItem } from '../../api/menu';
 
@@ -108,7 +109,7 @@ const SelectHospRole: React.FC<SelectHospRoleProps> = ({ onSelectSuccess, onBack
 
       if (String(res.errorCode) === '0' && res.result && res.result.length > 0) {
         const sessionData = res.result[0] as any;
-        console.log('登录接口返回的sessionData:', JSON.stringify(sessionData, null, 2));
+        console.log('[SelectHospRole] 登录接口返回的sessionData:', JSON.stringify(sessionData, null, 2));
         
         // 合并选择页面传入的角色和医院信息到sessionData
         if (permission.groupDesc && !sessionData.groupDesc) {
@@ -124,13 +125,54 @@ const SelectHospRole: React.FC<SelectHospRoleProps> = ({ onSelectSuccess, onBack
           sessionData.hospID = String(permission.hospID);
         }
         
-        console.log('合并后的sessionData:', JSON.stringify(sessionData, null, 2));
+        console.log('[SelectHospRole] 合并后的sessionData:', JSON.stringify(sessionData, null, 2));
         setSession(sessionData);
         clearTempUserInfo();
         
-        // 登录成功后保存用户菜单
+        // ★ 登录成功后确保加载用户角色菜单
+        let menusLoaded = false;
         if (sessionData.menus && sessionData.menus.length > 0) {
+          console.log('[SelectHospRole] 从登录接口返回的menus直接加载菜单:', sessionData.menus.length, '项');
           loadMenusFromLogin(sessionData.menus as MenuItem[]);
+          menusLoaded = true;
+        }
+        
+        // 如果登录接口未返回menus，调用getUserMenus接口获取角色菜单
+        if (!menusLoaded) {
+          console.log('[SelectHospRole] 登录接口未返回menus，调用getUserMenus获取角色菜单...');
+          try {
+            const menuRes = await getUserMenus({
+              userCode: userInfo.userCode,
+              groupID: String(permission.groupID || sessionData.groupID || '')
+            });
+            console.log('[SelectHospRole] getUserMenus原始响应:', JSON.stringify(menuRes, null, 2));
+            
+            // 解析getUserMenus返回的菜单数据
+            let roleMenus: MenuItem[] | null = null;
+            if (String(menuRes.errorCode) === '0' && menuRes.result) {
+              if (Array.isArray(menuRes.result)) {
+                roleMenus = menuRes.result;
+              } else if ((menuRes.result as any)?.rows && Array.isArray((menuRes.result as any).rows)) {
+                roleMenus = (menuRes.result as any).rows;
+              }
+            }
+            
+            if (roleMenus && roleMenus.length > 0) {
+              console.log('[SelectHospRole] getUserMenus获取到角色菜单:', roleMenus.length, '项');
+              // 同时把菜单存入session，便于刷新时恢复
+              sessionData.menus = roleMenus;
+              setSession(sessionData);
+              loadMenusFromLogin(roleMenus);
+            } else {
+              console.warn('[SelectHospRole] getUserMenus未获取到菜单，响应:', menuRes);
+              // 如果getUserMenus也没返回菜单，标记为已加载（空菜单），避免fallback到默认全量菜单
+              loadMenusFromLogin([]);
+            }
+          } catch (menuError) {
+            console.error('[SelectHospRole] getUserMenus调用异常:', menuError);
+            // 异常情况下也标记为已加载，避免显示全量菜单
+            loadMenusFromLogin([]);
+          }
         }
         
         message.success('登录成功');

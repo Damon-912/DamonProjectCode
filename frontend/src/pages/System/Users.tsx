@@ -49,6 +49,7 @@ import {
 } from '../../api/system';
 import { queryHospitals, type HospitalItem } from '../../api/hospital';
 import CustomPagination from '../../components/CustomPagination';
+import { getCurrentGroupName, getCurrentHospId } from '../../utils/auth';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -114,6 +115,23 @@ const Users: React.FC = () => {
   // 医院列表
   const [hospitals, setHospitals] = useState<HospitalItem[]>([]);
   const [hospitalLoading, setHospitalLoading] = useState(false);
+
+  // 当前用户是否为管理员
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // 初始化：根据登录用户角色判断是否为管理员，非管理员默认锁定所属医院
+  useEffect(() => {
+    const roleName = getCurrentGroupName();
+    if (roleName === '管理员') {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+      const hospId = getCurrentHospId();
+      if (hospId) {
+        setSearchHosp(hospId);
+      }
+    }
+  }, []);
 
   // 角色列表
   const [groups, setGroups] = useState<GroupOptionItem[]>([]);
@@ -382,7 +400,7 @@ const Users: React.FC = () => {
     setSearchCode('');
     setSearchName('');
     setSearchStatus('');
-    setSearchHosp('');
+    setSearchHosp(isAdmin ? '' : getCurrentHospId());
     setPagination(prev => ({ ...prev, current: 1 }));
     fetchData(1, pagination.pageSize);
   };
@@ -902,9 +920,10 @@ const Users: React.FC = () => {
               value={searchHosp || undefined}
               onChange={v => setSearchHosp(v || '')}
               style={{ width: 180 }}
-              allowClear
+              allowClear={isAdmin}
               loading={hospitalLoading}
               showSearch
+              disabled={!isAdmin}
               filterOption={(input, option) =>
                 String(option?.label ?? '').toLowerCase().includes(input.toLowerCase())
               }

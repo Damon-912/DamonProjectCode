@@ -29,6 +29,7 @@ import {
   type DipCoreAlgorithmImportParams,
   type ProvinceItem, type CityItem
 } from '../../api/basicData';
+import { getCurrentGroupName, getSession } from '../../utils/auth';
 
 const { Option } = Select;
 
@@ -82,6 +83,31 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
   const [importResult, setImportResult] = useState<DipCoreAlgorithmImportResult | null>(null);
   const fileContentRef = useRef<string>('');
   const fileNameRef = useRef<string>('');
+
+  // 当前用户是否为管理员
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // 初始化：根据登录用户角色判断是否为管理员，非管理员默认锁定省份/市/机构等级
+  useEffect(() => {
+    const roleName = getCurrentGroupName();
+    if (roleName === '管理员') {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+      const session = getSession();
+      if (session) {
+        if (session.provID) {
+          setProvinceId(session.provID);
+        }
+        if (session.cityID) {
+          setCityId(session.cityID);
+        }
+        if (session.medinsLv) {
+          setMedinsLv(session.medinsLv);
+        }
+      }
+    }
+  }, []);
 
   // 加载省数据（查询）
   const loadProvinces = useCallback(async () => {
@@ -170,9 +196,16 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
     setPrincipalDiagnosisName('');
     setMajorProcedure('');
     setMajorProcedureName('');
-    setProvinceId('');
-    setCityId('');
-    setMedinsLv('');
+    if (isAdmin) {
+      setProvinceId('');
+      setCityId('');
+      setMedinsLv('');
+    } else {
+      const session = getSession();
+      setProvinceId(session?.provID || '');
+      setCityId(session?.cityID || '');
+      setMedinsLv(session?.medinsLv || '');
+    }
     setYear('');
     setCityList([]);
     setCurrentPage(1);
@@ -760,8 +793,9 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
                   placeholder="请选择省"
                   value={provinceId || undefined}
                   onChange={handleProvinceChange}
-                  allowClear
+                  allowClear={isAdmin}
                   loading={provinceLoading}
+                  disabled={!isAdmin}
                   style={{ width: '100%' }}
                 >
                   {provinceList.map(item => (
@@ -776,8 +810,8 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
                   placeholder="请选择市"
                   value={cityId || undefined}
                   onChange={setCityId}
-                  allowClear
-                  disabled={!provinceId}
+                  allowClear={isAdmin}
+                  disabled={!isAdmin || (!provinceId && isAdmin)}
                   loading={cityLoading}
                   style={{ width: '100%' }}
                 >
@@ -793,7 +827,8 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
                   placeholder="全部"
                   value={medinsLv || undefined}
                   onChange={setMedinsLv}
-                  allowClear
+                  allowClear={isAdmin}
+                  disabled={!isAdmin}
                   style={{ width: '100%' }}
                 >
                   {medinsLvOptions.map(item => (
