@@ -86,6 +86,8 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
 
   // 当前用户是否为管理员
   const [isAdmin, setIsAdmin] = useState(false);
+  // ★ 标记筛选条件默认值是否已完成赋值
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // 初始化：根据登录用户角色判断是否为管理员，非管理员默认锁定省份/市/机构等级
   useEffect(() => {
@@ -107,6 +109,8 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
         }
       }
     }
+    // ★ 默认值赋值完成，标记已初始化
+    setIsInitialized(true);
   }, []);
 
   // 加载省数据（查询）
@@ -181,8 +185,11 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
   }, [principalDiagnosis, principalDiagnosisName, majorProcedure, majorProcedureName, provinceId, cityId, medinsLv, year, currentPage, pageSize]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    // ★ 仅在筛选条件默认值赋值完成后才执行查询
+    if (isInitialized) {
+      fetchData();
+    }
+  }, [fetchData, isInitialized]);
 
   // 查询
   const handleSearch = () => {
@@ -220,6 +227,13 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
       loadCities(value);
     }
   };
+
+  // ★ 初始化或省值变更时自动加载市列表（解决非手动切换省时市下拉为空的问题）
+  useEffect(() => {
+    if (provinceId) {
+      loadCities(provinceId);
+    }
+  }, [provinceId, loadCities]);
 
   // 分页变化
   const handlePageChange = (page: number, size: number) => {

@@ -228,8 +228,10 @@ const Users: React.FC = () => {
       async onOk() {
         setPwdLoading(true);
         try {
-          const res = await invoke('InitUserPassword', [{
-            userID: pwdUserId
+          const res = await invoke('01040091', [{
+            userID: pwdUserId,
+            password: '123456',
+            confirmPassword: '123456'
           }]);
 
           if (String(res.errorCode) === '0') {

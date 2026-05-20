@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Layout, Menu, Card, Row, Col, Statistic, Table, Tag, Progress, List, Avatar, Typography, Tabs, Input, Dropdown, Badge, Button, Popconfirm, message, Modal, Form } from 'antd';
 import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
@@ -26,13 +26,14 @@ import {
   LogoutOutlined,
   DownOutlined,
   LockOutlined,
-  SyncOutlined
+  SyncOutlined,
+  SwapOutlined
 } from '@ant-design/icons';
 import type { MenuProps, TabsProps } from 'antd';
 import './App.css';
 import { invoke } from './api/request';
 import { getUserMenus } from './api/menu';
-import { getSession } from './utils/auth';
+import { getSession, setTempUserInfo } from './utils/auth';
 import { encryptPassword } from './utils/encryption';
 import { MenuProvider, useMenu, defaultMenuItems } from './context/MenuContext';
 import DRGCustomQuery from './pages/DRG/CustomQuery';
@@ -320,6 +321,9 @@ function App() {
   const [authState, setAuthState] = useState<AuthState>('login');
   const [userInfo, setUserInfo] = useState<{ userName: string; hospName: string; roleName: string; userID?: string } | null>(null);
 
+  // ★ 标记是否为"切换登录"操作，用于判断是否需要关闭所有已打开标签页
+  const isSwitchingLogin = useRef(false);
+
   // 修改密码弹窗状态
   const [pwdModalVisible, setPwdModalVisible] = useState(false);
   const [pwdForm] = Form.useForm();
@@ -435,6 +439,29 @@ function App() {
     message.success('已登出');
   };
 
+  // 处理切换登录角色
+  const handleSwitchLogin = () => {
+    // ★ 标记为切换登录操作，登录成功后需要关闭所有标签页
+    isSwitchingLogin.current = true;
+    
+    // 保存当前用户信息到临时存储，避免重新输入密码
+    if (userInfo?.userID && userInfo?.userName) {
+      const session = getSession();
+      setTempUserInfo({
+        userID: userInfo.userID,
+        userCode: session?.userCode || '',
+        userName: userInfo.userName
+      });
+    }
+    // 清除当前session和菜单
+    localStorage.removeItem('drg_session');
+    clearMenus();
+    // 跳转到选择角色页面
+    setAuthState('select');
+    setUserInfo(null);
+    message.success('请选择新的登录角色');
+  };
+
   // 处理打开修改密码弹窗
   const handleOpenPwdModal = () => {
     pwdForm.resetFields();
@@ -511,8 +538,10 @@ function App() {
             return;
           }
 
-          const res = await invoke('InitUserPassword', [{
-            userID: userID
+          const res = await invoke('01040091', [{
+            userID: String(userID),
+            password: '123456',
+            confirmPassword: '123456'
           }]);
 
           if (String(res.errorCode) === '0') {
@@ -789,6 +818,15 @@ function App() {
               roleName: session.groupDesc,
               userID: session.userID
             });
+            
+            // ★ 切换登录时关闭所有已打开的标签页
+            if (isSwitchingLogin.current) {
+              console.log('[App] 切换登录完成，关闭所有标签页');
+              setOpenTabs([{ key: 'dashboard', label: '监控仪表盘', closable: false }]);
+              setCurrentMenu('dashboard');
+              isSwitchingLogin.current = false;
+            }
+            
             setUserInfo({
               userName: session.userName || '管理员',
               hospName: session.hospDesc || session.hospID || '',
@@ -952,6 +990,15 @@ function App() {
             <Dropdown
               menu={{
                 items: [
+                  {
+                    key: 'switch-login',
+                    icon: <SwapOutlined />,
+                    label: '切换登录',
+                    onClick: handleSwitchLogin
+                  },
+                  {
+                    type: 'divider'
+                  },
                   {
                     key: 'password',
                     icon: <LockOutlined />,

@@ -370,6 +370,56 @@ ClassMethod UpdateUserPassword(jsonObj)
 }
 
 /// Creator:     CodeBuddy
+/// CreatDate:   2026-05-20
+/// Description: 初始化用户登录密码（无需原密码验证，接收明文密码）
+/// Input:       {"params":[{"userID":"","password":"明文密码","confirmPassword":"明文密码"}],"session":[...]}
+/// Return:      {"errorCode":"0","errorMessage":"成功"}
+/// Debug:       w ##class(src.Encryption.HBUser).InitUserPassword(a)
+ClassMethod InitUserPassword(jsonObj)
+{
+	new (jsonObj)
+	set resultObj={"errorCode":"-1","errorMessage":"密码初始化失败"}
+	set params=jsonObj.params.%Get(0)
+	set session=jsonObj.session.%Get(0)
+	set userPassword=params.password
+	set userConfirmPassword=params.confirmPassword
+	set userID=params.userID
+	
+	// 检查用户是否存在
+	quit:'$d(^HBUserD(userID)) {"errorCode":"-1","errorMessage":"用户不存在"}
+	
+	// 验证两次密码一致性
+	if (userPassword'=userConfirmPassword) {
+		quit {"errorCode":"-2","errorMessage":"新密码不一致"}
+	}
+	
+	// ★ 使用 FromatPassword 对明文密码进行双层加密（与登录校验一致）
+	set formatResult=..FromatPassword(userPassword)
+	if ($p(formatResult,"^",1)'="0") {
+		quit {"errorCode":"01040142","errorMessage":"密码格式化失败: "_$p(formatResult,"^",2)}
+	}
+	set passWord=$p(formatResult,"^",2)
+	
+	// 更新密码到HB_User表
+	if passWord'=""
+	{
+		set dataObj={},dataArr=[]
+		set dataObj.ID=userID
+		set dataObj.Password=passWord
+		do dataArr.%Push(dataObj)
+		set operateObj={}
+		set operateObj.updateUserID=session.userID
+		set operateObj.className="User.HBUser"			
+		set operateObj.data=dataArr		
+		set rtn=##class(src.util.operatetable).Update(.operateObj)
+	    set resultObj.errorCode=rtn.errorCode
+    	set resultObj.errorMessage=rtn.errorMessage
+    }
+    
+    quit resultObj
+}
+
+/// Creator:     CodeBuddy
 /// CreatDate:   2026-04-10
 /// Description: 查看用户明文密码（临时调试用）
 /// Input:       userCode: 用户编码

@@ -11,6 +11,8 @@ import { useNavigate } from 'react-router-dom';
 import { logout, getLogonGroupByUserId, updateLogonGroupById } from '../../api/logon';
 import { queryHospitals } from '../../api/hospital';
 import { invoke } from '../../api/request';
+import { getSession } from '../../utils/auth';
+import { encryptPassword } from '../../utils/encryption';
 import { useMenu } from '../../context/MenuContext';
 
 const { Header, Content } = Layout;
@@ -195,8 +197,10 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       async onOk() {
         setPwdLoading(true);
         try {
-          const res = await invoke('InitUserPassword', [{
-            userID: currentUser?.userID
+          const res = await invoke('01040091', [{
+            userID: currentUser?.userID,
+            password: '123456',
+            confirmPassword: '123456'
           }]);
 
           if (String(res.errorCode) === '0') {
