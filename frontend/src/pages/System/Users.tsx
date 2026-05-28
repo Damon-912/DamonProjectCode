@@ -50,6 +50,8 @@ import {
 import { queryHospitals, type HospitalItem } from '../../api/hospital';
 import CustomPagination from '../../components/CustomPagination';
 import { getCurrentGroupName, getCurrentHospId } from '../../utils/auth';
+import { useDict } from '../../hooks/useDict';
+import { getDictLabel } from '../../utils/dict';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -61,21 +63,12 @@ interface PaginationParams {
   total: number;
 }
 
-// 性别选项
-const sexOptions = [
-  { value: '1', label: '男' },
-  { value: '2', label: '女' },
-];
-
-// 证件类型选项
-const credTypeOptions = [
-  { value: '1', label: '身份证' },
-  { value: '2', label: '护照' },
-  { value: '3', label: '军官证' },
-  { value: '4', label: '其他' },
-];
-
 const Users: React.FC = () => {
+  // 字典数据
+  const { options: sexOptions } = useDict('SEX');
+  const { options: credTypeOptions } = useDict('CRED_TYPE');
+  const { map: commonStatusMap, options: commonStatusOptions } = useDict('COMMON_STATUS');
+
   const [modalForm] = Form.useForm();
   const [roleForm] = Form.useForm();
   const [editRoleForm] = Form.useForm();
@@ -302,7 +295,7 @@ const Users: React.FC = () => {
       width: 80,
       render: (status: string) => (
         <Tag color={status === 'Y' ? 'green' : 'red'}>
-          {status === 'Y' ? '启用' : '停用'}
+          {getDictLabel(commonStatusMap, status)}
         </Tag>
       )
     },
@@ -910,10 +903,7 @@ const Users: React.FC = () => {
               onChange={v => setSearchStatus(v || '')}
               style={{ width: 100 }}
               allowClear
-              options={[
-                { value: 'Y', label: '启用' },
-                { value: 'N', label: '停用' }
-              ]}
+              options={commonStatusOptions}
             />
           </Col>
           <Col>
@@ -1030,10 +1020,7 @@ const Users: React.FC = () => {
               >
                 <Select 
                   placeholder="请选择状态"
-                  options={[
-                    { value: 'Y', label: '启用' },
-                    { value: 'N', label: '停用' }
-                  ]}
+                  options={commonStatusOptions}
                 />
               </Form.Item>
             </Col>
@@ -1259,7 +1246,7 @@ const Users: React.FC = () => {
                 <Col span={12}>
                   <p><strong>状态：</strong>
                     <Tag color={detailRecord.statusFlag === 'Y' ? 'green' : 'red'}>
-                      {detailRecord.statusFlag === 'Y' ? '启用' : '停用'}
+                      {getDictLabel(commonStatusMap, detailRecord.statusFlag)}
                     </Tag>
                   </p>
                 </Col>

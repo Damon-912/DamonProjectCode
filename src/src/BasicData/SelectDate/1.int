@@ -1,7 +1,7 @@
 ROUTINE src.BasicData.SelectDate.1 [Type=INT,Generated]
  ;src.BasicData.SelectDate.1
- ;Generated for class src.BasicData.SelectDate.  Do NOT edit. 04/17/2026 05:33:09PM
- ;;4144582F;src.BasicData.SelectDate
+ ;Generated for class src.BasicData.SelectDate.  Do NOT edit. 05/25/2026 06:57:57PM
+ ;;506F3077;src.BasicData.SelectDate
  ;
 zFindHospDetail(postObj)
     new (postObj)
@@ -12,7 +12,11 @@ zFindHospDetail(postObj)
 	set dataArr=[]
 	set params=postObj.params.%Get(0)
 	set provID=params.provID
-	set cityID=params.cityID	
+	set cityID=params.cityID
+	if provID=""
+	{
+	    set provID=params.provinceID	
+	}
 	try
 	{
 		set tStatement = ##class(%SQL.Statement).%New(1)

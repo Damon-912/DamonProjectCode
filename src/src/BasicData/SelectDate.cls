@@ -290,7 +290,13 @@ ClassMethod FindHospDetail(postObj)
 	
 	set params=postObj.params.%Get(0)
 	set provID=params.provID
-	set cityID=params.cityID	
+	set cityID=params.cityID
+	
+	if provID=""
+	{
+	    set provID=params.provinceID	
+	}
+		
 	try
 	{
 		set tStatement = ##class(%SQL.Statement).%New(1)

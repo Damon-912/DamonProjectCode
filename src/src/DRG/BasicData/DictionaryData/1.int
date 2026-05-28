@@ -1,7 +1,7 @@
 ROUTINE src.DRG.BasicData.DictionaryData.1 [Type=INT,Generated]
  ;src.DRG.BasicData.DictionaryData.1
- ;Generated for class src.DRG.BasicData.DictionaryData.  Do NOT edit. 05/14/2026 03:00:02PM
- ;;6B475662;src.DRG.BasicData.DictionaryData
+ ;Generated for class src.DRG.BasicData.DictionaryData.  Do NOT edit. 05/28/2026 05:10:22PM
+ ;;66526274;src.DRG.BasicData.DictionaryData
  ;
 zDeleteDIPCoreGroupsList(jsonObj)
     new (jsonObj)
@@ -320,6 +320,7 @@ zGetDRGBasicData(jsonObj)
 			set currentPage=pagationObj.currentPage
 		}
 		set params=jsonObj.params.%Get(0)
+		set insuCode=params.insuCode
 		set insuDesc=params.insuDesc
 		set status=params.status
 		set sql =" SELECT ID,InsuCode,InsuDesc,Province_Dr as provinceID,"
@@ -332,6 +333,10 @@ zGetDRGBasicData(jsonObj)
 		{
 		    set sql=sql_" and InsuDesc like '%"_insuDesc_"%'" 
 	    }	
+	    if insuCode'=""
+		{
+		    set sql=sql_" and InsuCode like '%"_insuCode_"%'" 
+	    }
 		set sqlObj=##class(%SQL.Statement).%New(1)
 		set sc=sqlObj.%Prepare(sql)
 		set result=sqlObj.%Execute()
@@ -412,6 +417,7 @@ zGetDRGBasicDataSub(jsonObj)
 		}
 		set params=jsonObj.params.%Get(0)
 		set dictID=params.dictID
+		set code=params.code
 		set desc=params.desc
 		set status=params.status
 		set insuCode=params.insuCode
@@ -425,6 +431,10 @@ zGetDRGBasicDataSub(jsonObj)
 		{
 		    set sql = sql_" And HBDictionaries_Dr="_dictID	
 		}
+		if code'=""
+		{
+			set sql = sql_" And Code like '%"_code_"%'" 		
+		}			
 		if desc'=""
 		{
 			set sql = sql_" And Descripts like '%"_desc_"%'" 		

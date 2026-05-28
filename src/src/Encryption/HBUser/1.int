@@ -1,7 +1,7 @@
 ROUTINE src.Encryption.HBUser.1 [Type=INT,Generated]
  ;src.Encryption.HBUser.1
- ;Generated for class src.Encryption.HBUser.  Do NOT edit. 04/14/2026 03:20:36PM
- ;;61694844;src.Encryption.HBUser
+ ;Generated for class src.Encryption.HBUser.  Do NOT edit. 05/20/2026 06:42:20PM
+ ;;686B4450;src.Encryption.HBUser
  ;
 zFromatPassword(password)
 	new (password)
@@ -183,6 +183,42 @@ zHaveOtherLoc(userID)
 %0AmCdun d $i(number,1'="")
  g %0AmBk1
 %0AmBdun q
+zInitUserPassword(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"-1","errorMessage":"密码初始化失败"}
+	set params=jsonObj.params.%Get(0)
+	set session=jsonObj.session.%Get(0)
+	set userPassword=params.password
+	set userConfirmPassword=params.confirmPassword
+	set userID=params.userID
+	// 检查用户是否存在
+	quit:'$d(^HBUserD(userID)) {"errorCode":"-1","errorMessage":"用户不存在"}
+	// 验证两次密码一致性
+	if (userPassword'=userConfirmPassword) {
+		quit {"errorCode":"-2","errorMessage":"新密码不一致"}
+	}
+	// ★ 使用 FromatPassword 对明文密码进行双层加密（与登录校验一致）
+	set formatResult=..FromatPassword(userPassword)
+	if ($p(formatResult,"^",1)'="0") {
+		quit {"errorCode":"01040142","errorMessage":"密码格式化失败: "_$p(formatResult,"^",2)}
+	}
+	set passWord=$p(formatResult,"^",2)
+	// 更新密码到HB_User表
+	if passWord'=""
+	{
+		set dataObj={},dataArr=[]
+		set dataObj.ID=userID
+		set dataObj.Password=passWord
+		do dataArr.%Push(dataObj)
+		set operateObj={}
+		set operateObj.updateUserID=session.userID
+		set operateObj.className="User.HBUser"			
+		set operateObj.data=dataArr		
+		set rtn=##class(src.util.operatetable).Update(.operateObj)
+	    set resultObj.errorCode=rtn.errorCode
+    	set resultObj.errorMessage=rtn.errorMessage
+    }
+    quit resultObj
 zIsValidUser(userCode,password,expstr)
 	new (userCode,password,expstr)
 	Return:userCode="" "XYS1001^用户或密码错误"

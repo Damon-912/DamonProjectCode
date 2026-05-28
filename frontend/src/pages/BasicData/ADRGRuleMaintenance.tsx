@@ -10,10 +10,13 @@ import {
   queryAdrgRules, saveAdrgRule, deleteAdrgRule,
   type AdrgRuleItem, type SaveAdrgRuleParams
 } from '../../api/basicData';
+import { useDict } from '../../hooks/useDict';
+import { getDictLabel } from '../../utils/dict';
 
 const { Option } = Select;
 
 const ADRGRuleMaintenance: React.FC = () => {
+  const { options: yesNoOptions, map: yesNoMap } = useDict('YES_NO_FLAG');
   const [data, setData] = useState<AdrgRuleItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -175,13 +178,13 @@ const ADRGRuleMaintenance: React.FC = () => {
       title: '联合标志',
       dataIndex: 'unionFlag',
       width: 80,
-      render: (v: string) => v === '1' ? <Tag color="blue">是</Tag> : <Tag>否</Tag>,
+      render: (v: string) => <Tag color={v === '1' ? 'blue' : 'default'}>{getDictLabel(yesNoMap, v)}</Tag>,
     },
     {
       title: '细分标志',
       dataIndex: 'segmentationFlag',
       width: 80,
-      render: (v: string) => v === '1' ? <Tag color="blue">是</Tag> : <Tag>否</Tag>,
+      render: (v: string) => <Tag color={v === '1' ? 'blue' : 'default'}>{getDictLabel(yesNoMap, v)}</Tag>,
     },
     {
       title: '状态',
@@ -291,7 +294,7 @@ const ADRGRuleMaintenance: React.FC = () => {
                   <Col span={8}><strong>其他手术名称：</strong>{record.secondaryProcedureName || '-'}</Col>
                   <Col span={8}><strong>第三手术编码：</strong>{record.thirdlyProcedure || '-'}</Col>
                   <Col span={8}><strong>第三手术名称：</strong>{record.thirdlyProcedureName || '-'}</Col>
-                  <Col span={8}><strong>细分标志：</strong>{record.segmentationFlag === '1' ? '是' : '否'}</Col>
+                  <Col span={8}><strong>细分标志：</strong>{getDictLabel(yesNoMap, record.segmentationFlag)}</Col>
                   <Col span={8}><strong>入组条件：</strong>{record.selectionCriteria || '-'}</Col>
                   <Col span={8}><strong>省：</strong>{record.provinceDesc || record.provinceId || '-'}</Col>
                   <Col span={8}><strong>市：</strong>{record.cityDesc || record.cityId || '-'}</Col>
@@ -345,18 +348,12 @@ const ADRGRuleMaintenance: React.FC = () => {
               </Col>
               <Col span={8}>
                 <Form.Item name="unionFlag" label="联合标志">
-                  <Select>
-                    <Option value="0">否</Option>
-                    <Option value="1">是</Option>
-                  </Select>
+                  <Select options={yesNoOptions} />
                 </Form.Item>
               </Col>
               <Col span={8}>
                 <Form.Item name="segmentationFlag" label="细分标志">
-                  <Select>
-                    <Option value="0">否</Option>
-                    <Option value="1">是</Option>
-                  </Select>
+                  <Select options={yesNoOptions} />
                 </Form.Item>
               </Col>
               <Col span={8}>

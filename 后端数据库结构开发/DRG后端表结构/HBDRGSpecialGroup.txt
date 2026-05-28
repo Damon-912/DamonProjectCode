@@ -1,0 +1,73 @@
+Class User.HBDRGSpecialGroup Extends (%Persistent, %XML.Adaptor, src.util.DynamicObject.Adapter) [ ClassType = persistent, Inheritance = right, Not ProcedureBlock, SqlRowIdName = ID, SqlTableName = HB_DRGSpecialGroup ]
+{
+
+/// DRG编码 必填（前3位为ADRG编码），大写排序
+Property DRGCode As %String(COLLATION = "UPPER", MAXLEN = 10, TRUNCATE = 1) [ Required, SqlColumnNumber = 2, SqlFieldName = DRGCode ];
+
+/// DRG编码索引
+Index DRGCodeIdx On DRGCode;
+
+/// DRG名称 必填
+Property DRGName As %String(COLLATION = "UPPER", MAXLEN = 200, TRUNCATE = 1) [ Required, SqlColumnNumber = 3, SqlFieldName = DRGName ];
+
+/// 主要诊断编码（逗号分隔多个）
+Property PrincipalDiagnosis As %String(MAXLEN = 500) [ SqlColumnNumber = 4, SqlFieldName = PrincipalDiagnosis ];
+
+/// 主要诊断名称
+Property PrincipalDiagnosisName As %String(MAXLEN = 2000) [ SqlColumnNumber = 5, SqlFieldName = PrincipalDiagnosisName ];
+
+/// 次要诊断编码（逗号分隔多个）
+Property SecondaryDiagnosis As %String(MAXLEN = 500) [ SqlColumnNumber = 6, SqlFieldName = SecondaryDiagnosis ];
+
+/// 次要诊断名称
+Property SecondaryDiagnosisName As %String(MAXLEN = 2000) [ SqlColumnNumber = 7, SqlFieldName = SecondaryDiagnosisName ];
+
+/// 主要手术编码（逗号分隔多个）
+Property MajorProcedure As %String(MAXLEN = 500) [ SqlColumnNumber = 8, SqlFieldName = MajorProcedure ];
+
+/// 主要手术名称
+Property MajorProcedureName As %String(MAXLEN = 2000) [ SqlColumnNumber = 9, SqlFieldName = MajorProcedureName ];
+
+/// 次要手术编码（逗号分隔多个）
+Property SecondaryProcedure As %String(MAXLEN = 500) [ SqlColumnNumber = 10, SqlFieldName = SecondaryProcedure ];
+
+/// 次要手术名称
+Property SecondaryProcedureName As %String(MAXLEN = 2000) [ SqlColumnNumber = 11, SqlFieldName = SecondaryProcedureName ];
+
+/// 入组因素说明（结构化：+表示AND，或表示OR）
+Property GroupFactors As %String(MAXLEN = 200) [ SqlColumnNumber = 12, SqlFieldName = GroupFactors ];
+
+/// 备注
+Property Remark As %String(MAXLEN = 500) [ SqlColumnNumber = 13, SqlFieldName = Remark ];
+
+/// 行政区划代码 必填
+Property Admvs As %String(MAXLEN = 10, TRUNCATE = 1) [ Required, SqlColumnNumber = 14, SqlFieldName = Admvs ];
+
+/// 省 指向CB_Province 必填
+Property ProvinceDr As CBProvince [ Required, SqlColumnNumber = 15, SqlFieldName = Province_Dr ];
+
+/// 市 指向CB_City 必填
+Property CityDr As CBCity [ Required, SqlColumnNumber = 16, SqlFieldName = City_Dr ];
+
+/// 分组方案年份 必填
+Property Year As %String(MAXLEN = 4, TRUNCATE = 1) [ Required, SqlColumnNumber = 17, SqlFieldName = Year ];
+
+/// 生效日期
+Property StartDate As %Date [ SqlColumnNumber = 18, SqlFieldName = StartDate ];
+
+/// 失效日期
+Property StopDate As %Date [ SqlColumnNumber = 19, SqlFieldName = StopDate ];
+
+/// 创建日期 系统自动产生
+Property CreateDate As %Date [ Required, SqlColumnNumber = 20, SqlFieldName = CreateDate ];
+
+/// 创建时间 系统自动产生
+Property CreateTime As %Time [ Required, SqlColumnNumber = 21, SqlFieldName = CreateTime ];
+
+/// 创建人员ID 指向HB_User表
+Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 22, SqlFieldName = CreateUser_Dr ];
+
+/// (Admvs, ProvinceDr, CityDr, Year) 联合索引
+Index AdmvsProvCityYearIdx On (Admvs, ProvinceDr, CityDr, Year);
+
+}

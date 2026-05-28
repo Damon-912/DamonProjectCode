@@ -4,10 +4,10 @@ Class User.HBDRGCoreAlgorithmData Extends (%Persistent, %XML.Adaptor, src.util.D
 Parameter %JSONREFERENCE = "ID";
 
 /// DRG
-Property DRG As %String [ SqlColumnNumber = 2, SqlFieldName = DRG ];
+Property DRG As %String [ Required, SqlColumnNumber = 2, SqlFieldName = DRG ];
 
 /// 描述
-Property DRGDESC As %String [ SqlColumnNumber = 3, SqlFieldName = DRGDESC ];
+Property DRGDESC As %String [ Required, SqlColumnNumber = 3, SqlFieldName = DRGDESC ];
 
 /// 基准点数(Points)
 Property Points As %String [ SqlColumnNumber = 4, SqlFieldName = Points ];
@@ -72,7 +72,7 @@ Property Identification As %String [ SqlColumnNumber = 20, SqlFieldName = Identi
 Property Remark As %String(MAXLEN = 99999) [ SqlColumnNumber = 21, SqlFieldName = Remark ];
 
 /// 年份（分组方案年份，4位数字）
-Property Year As %String(MAXLEN = 4) [ SqlColumnNumber = 22, SqlFieldName = Year ];
+Property Year As %String(MAXLEN = 4) [ Required, SqlColumnNumber = 22, SqlFieldName = Year ];
 
 Storage Default
 {

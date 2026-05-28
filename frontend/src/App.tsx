@@ -48,7 +48,9 @@ import DIPDisease from './pages/BasicData/DIPDisease';
 import TableDataMaintenance from './pages/BasicData/TableDataMaintenance';
 import DRGCataLog from './pages/BasicData/DRGCataLog';
 import DRGSegmentationRules from './pages/BasicData/DRGSegmentationRules';
+import SpecialDRGGrouping from './pages/BasicData/SpecialDRGGrouping';
 import DIPCoreAlgorithmConfig from './pages/BasicData/DIPCoreAlgorithmConfig';
+import DRGDictManagement from './pages/BasicData/DRGDictManagement';
 
 // DRG pages
 import DRGWorkbench from './pages/DRG/Workbench';
@@ -63,6 +65,7 @@ import DIPVarianceAnalysis from './pages/DIP/VarianceAnalysis';
 import WarningCenter from './pages/Warning/Center';
 import WarningRules from './pages/Warning/Rules';
 import WarningRecords from './pages/Warning/Records';
+import WarningAnalysis from './pages/Warning/Analysis';
 
 // Profit pages
 import ProfitDept from './pages/Profit/Dept';
@@ -147,6 +150,7 @@ const menuTitleMap: Record<string, string> = {
   'warning-monitor': '预警监控中心',
   'warning-rules': '预警规则配置',
   'warning-records': '预警处理记录',
+  'warning-analysis': '费用预警分析',
   'profit-dept': '科室盈亏报表',
   'profit-doctor': '医生盈亏分析',
   'profit-disease': '病种盈亏统计',
@@ -158,14 +162,16 @@ const menuTitleMap: Record<string, string> = {
   'data-settlement': '结算清单管理',
   'data-sync': '数据同步监控',
   'basic-data-dict': 'DRG基础数据维护',
+  'basic-data-drg-dict': '字典数据管理',
   'basic-data-table': '基础表数据维护',
   'basic-data-icd-mapping': 'ICD编码映射',
   'basic-data-icd-query': 'ICD编码查询',
   'basic-data-adrg-rules': 'ADRG分组规则维护',
   'basic-data-core-algorithm': 'DRG算法配置维护',
   'basic-data-dip': 'DIP付费病种库',
-  'basic-data-drg-catalog': 'DRGs目录信息',
+  'basic-data-drg-catalog': 'DRG目录信息',
   'basic-data-segmentation-rules': 'ADRG细分规则',
+  'basic-data-special-grouping': '特异化DRG分组规则',
   'basic-data-dip-core-algorithm': 'DIP算法配置',
   'dip-core-algorithm': 'DIP算法配置',
   'system-user': '用户管理',
@@ -210,6 +216,7 @@ const menuItems: MenuProps['items'] = [
     label: '费用预警',
     children: [
       { key: 'warning-monitor', label: '预警监控中心' },
+      { key: 'warning-analysis', label: '费用预警分析' },
       { key: 'warning-rules', label: '预警规则配置' },
       { key: 'warning-records', label: '预警处理记录' },
     ],
@@ -251,13 +258,15 @@ const menuItems: MenuProps['items'] = [
     label: '数据管理',
     children: [
       { key: 'basic-data-dict', label: 'DRG基础数据' },
+      { key: 'basic-data-drg-dict', label: '字典管理' },
       { key: 'basic-data-icd-mapping', label: 'ICD编码映射' },
       { key: 'basic-data-icd-query', label: 'ICD编码查询' },
       { key: 'basic-data-adrg-rules', label: 'ADRG分组规则' },
       { key: 'basic-data-core-algorithm', label: 'DRG算法配置' },
       { key: 'basic-data-dip', label: 'DIP付费病种库' },
-      { key: 'basic-data-drg-catalog', label: 'DRGs目录信息' },
+      { key: 'basic-data-drg-catalog', label: 'DRG目录信息' },
       { key: 'basic-data-segmentation-rules', label: 'ADRG细分规则' },
+      { key: 'basic-data-special-grouping', label: '特异化分组内涵表' },
       { key: 'basic-data-dip-core-algorithm', label: 'DIP算法配置' },
     ],
   },
@@ -434,6 +443,9 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('drg_session');
     clearMenus(); // 清空菜单
+    // ★ 关闭所有已打开的标签页，确保再次登录时以全新状态开始
+    setOpenTabs([{ key: 'dashboard', label: '监控仪表盘', closable: false }]);
+    setCurrentMenu('dashboard');
     setAuthState('login');
     setUserInfo(null);
     message.success('已登出');
@@ -691,6 +703,8 @@ function App() {
         return <DIPVarianceAnalysis />;
       case 'warning-monitor':
         return <WarningCenter />;
+      case 'warning-analysis':
+        return <WarningAnalysis />;
       case 'warning-rules':
         return <WarningRules />;
       case 'warning-records':
@@ -725,6 +739,8 @@ function App() {
         return <CoreAlgorithmConfig />;
       case 'basic-data-dict':
         return <BasicDataMaintenance />;
+      case 'basic-data-drg-dict':
+        return <DRGDictManagement />;
       case 'basic-data-table':
         return <TableDataMaintenance />;
       case 'basic-data-dip':
@@ -733,6 +749,8 @@ function App() {
         return <DRGCataLog />;
       case 'basic-data-segmentation-rules':
         return <DRGSegmentationRules />;
+      case 'basic-data-special-grouping':
+        return <SpecialDRGGrouping />;
       case 'basic-data-dip-core-algorithm':
       case 'dip-core-algorithm':
         return <DIPCoreAlgorithmConfig />;

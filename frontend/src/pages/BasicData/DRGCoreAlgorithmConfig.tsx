@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useDict } from '../../hooks/useDict';
 import {
   Card, Table, Button, Input, InputNumber, Select, Space, Modal, Form,
   Row, Col, Tag, message, Popconfirm, DatePicker, Upload,
@@ -44,7 +45,7 @@ const CoreAlgorithmConfig: React.FC = () => {
   const [cityId, setCityId] = useState('');
   const [queryInsuType, setQueryInsuType] = useState('');
   const [status, setStatus] = useState('');
-  const [year, setYear] = useState('');
+  const [year, setYear] = useState(String(dayjs().year()));
 
   // 弹窗
   const [modalOpen, setModalOpen] = useState(false);
@@ -98,11 +99,9 @@ const CoreAlgorithmConfig: React.FC = () => {
   // 当前用户是否为管理员
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // 固定险种选项
-  const insuTypeOptions = [
-    { code: '310', name: '职工' },
-    { code: '390', name: '居民' },
-  ];
+  // 字典数据
+  const { options: insuTypeDictOptions } = useDict('INSU_TYPE');
+  const insuTypeOptions = insuTypeDictOptions.map(o => ({ code: o.value, name: o.label }));
 
   // 初始化：根据登录用户角色判断是否为管理员，非管理员默认锁定医疗机构
   useEffect(() => {
@@ -288,12 +287,11 @@ const CoreAlgorithmConfig: React.FC = () => {
     const fetchFilteredHospitalData = async () => {
       setImportHospitalLoading(true);
       try {
-        // 直接传入省市的id进行过滤
+        // 只传入省进行过滤
         const res = await queryHospitalInfo({
           active: 'Y',
           descripts: '',
           provinceID: provinceId,
-          cityID: value
         });
         if (res.errorCode === '0' && res.result) {
           setImportHospitalList(res.result);
@@ -391,6 +389,7 @@ const CoreAlgorithmConfig: React.FC = () => {
     const provinceId = importForm.getFieldValue('importProvinceId');
     const cityId = importForm.getFieldValue('importCityId');
     const hospitalId = importForm.getFieldValue('importHospitalId');
+    const importYear = importForm.getFieldValue('importYear');
 
     if (!provinceId) {
       message.error('请先选择省');
@@ -402,6 +401,10 @@ const CoreAlgorithmConfig: React.FC = () => {
     }
     if (!hospitalId) {
       message.error('请先选择医疗机构');
+      return;
+    }
+    if (!importYear) {
+      message.error('请先输入分组方案年份');
       return;
     }
     if (fileList.length === 0) {
@@ -454,6 +457,7 @@ const CoreAlgorithmConfig: React.FC = () => {
     const provinceId = importForm.getFieldValue('importProvinceId');
     const cityId = importForm.getFieldValue('importCityId');
     const hospitalId = importForm.getFieldValue('importHospitalId');
+    const importYear = importForm.getFieldValue('importYear');
 
     // 验证省市和医疗机构是否已选择
     if (!provinceId) {
@@ -466,6 +470,10 @@ const CoreAlgorithmConfig: React.FC = () => {
     }
     if (!hospitalId) {
       message.error('请先选择医疗机构');
+      return;
+    }
+    if (!importYear) {
+      message.error('请先输入分组方案年份');
       return;
     }
 
@@ -722,49 +730,50 @@ const CoreAlgorithmConfig: React.FC = () => {
     {
       title: 'DRG编码',
       dataIndex: 'drg',
-      width: 90,
+      width: 55,
       fixed: 'left',
     },
     {
       title: 'DRG名称',
       dataIndex: 'drgDesc',
-      width: 160,
+      width: 220,
       ellipsis: true,
     },
-    {
-      title: '年份',
-      dataIndex: 'year',
-      width: 50,
-    },
+
     {
       title: '基准点数',
       dataIndex: 'points',
-      width: 90,
+      width: 55,
       align: 'right',
     },
     {
       title: '预估点值',
       dataIndex: 'pipValue',
-      width: 90,
+      width: 55,
       align: 'right',
     },
     {
       title: '差异系数',
       dataIndex: 'dgdov',
-      width: 85,
+      width: 55,
       align: 'right',
     },
     {
       title: '预估支付标准',
       dataIndex: 'payStandard',
-      width: 100,
+      width: 75,
       align: 'right',
-    },
+    },    
     {
       title: '险种',
       dataIndex: 'insuType',
       width: 90,
     },
+    {
+      title: '分组方案',
+      dataIndex: 'year',
+      width: 55,
+    },      
     {
       title: '医疗机构',
       dataIndex: 'fixmedinsName',
@@ -774,8 +783,9 @@ const CoreAlgorithmConfig: React.FC = () => {
     {
       title: '机构等级',
       dataIndex: 'medinsLv',
-      width: 90,
+      width: 55,
     },
+  
     {
       title: '省',
       dataIndex: 'provinceDesc',
@@ -784,12 +794,12 @@ const CoreAlgorithmConfig: React.FC = () => {
     {
       title: '市',
       dataIndex: 'cityDesc',
-      width: 80,
+      width: 50,
     },
     {
       title: '状态',
       dataIndex: 'statusDesc',
-      width: 70,
+      width: 40,
       render: (v: string) => (
         <Tag color={v === '有效' ? 'green' : 'red'}>{v || '无效'}</Tag>
       ),
@@ -797,7 +807,7 @@ const CoreAlgorithmConfig: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 120,
+      width: 100,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
@@ -857,7 +867,7 @@ const CoreAlgorithmConfig: React.FC = () => {
               placeholder="DRG编码"
               value={drg}
               onChange={e => setDrg(e.target.value)}
-              style={{ width: 140 }}
+              style={{ width: 100 }}
               allowClear
             />
           </Col>
@@ -886,7 +896,7 @@ const CoreAlgorithmConfig: React.FC = () => {
               value={provinceId || undefined}
               onChange={v => setProvinceId(v || '')}
               loading={queryProvinceLoading}
-              style={{ width: 120 }}
+              style={{ width: 160 }}
               allowClear
               showSearch
               optionFilterProp="children"
@@ -904,7 +914,7 @@ const CoreAlgorithmConfig: React.FC = () => {
               value={cityId || undefined}
               onChange={v => setCityId(v || '')}
               loading={queryCityLoading}
-              style={{ width: 120 }}
+              style={{ width: 140 }}
               allowClear
               showSearch
               optionFilterProp="children"
@@ -946,10 +956,10 @@ const CoreAlgorithmConfig: React.FC = () => {
           </Col>
           <Col>
             <InputNumber
-              placeholder="年份"
+              placeholder="分组方案：年份"
               value={year ? Number(year) : undefined}
               onChange={v => setYear(v ? String(v) : '')}
-              style={{ width: 100 }}
+              style={{ width: 130 }}
               min={2020}
               max={2099}
               precision={0}
@@ -1188,7 +1198,7 @@ const CoreAlgorithmConfig: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item name="year" label="分组方案年份" rules={[{ required: true, message: '请输入年份' }]}>
+                <Form.Item name="year" label="分组方案：年份" rules={[{ required: true, message: '请输入年份' }]}>
                   <InputNumber placeholder="请输入年份" style={{ width: '100%' }} min={2020} max={2099} precision={0} />
                 </Form.Item>
               </Col>
@@ -1303,7 +1313,7 @@ const CoreAlgorithmConfig: React.FC = () => {
                 <Col span={8}>
                   <Form.Item
                     name="importYear"
-                    label="分组方案年份"
+                    label="分组方案：年份"
                     rules={[{ required: true, message: '请输入年份' }]}
                     initialValue={dayjs().year()}
                   >
@@ -1394,6 +1404,11 @@ const CoreAlgorithmConfig: React.FC = () => {
               showIcon
               style={{ marginBottom: 16 }}
             />
+
+            <div style={{ marginBottom: 16 }}>
+              <Typography.Text type="secondary">分组方案年份：</Typography.Text>
+              <Typography.Text strong>{importForm.getFieldValue('importYear')}</Typography.Text>
+            </div>
 
             <Table
               columns={previewColumns}

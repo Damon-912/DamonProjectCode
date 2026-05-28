@@ -41,7 +41,7 @@ Property DefaultMenuType As %String(DISPLAYLIST = ",Head,Side", TRUNCATE = 1, VA
 Property CreateDate As %Date [ Required, SqlColumnNumber = 11, SqlFieldName = CreateDate ];
 
 /// 创建人员ID 指向HB_User表
-Property CreateUserDr As HBUser [ Required, SqlColumnNumber = 12, SqlFieldName = CreateUser_Dr ];
+Property CreateUserDr As HBUser [ SqlColumnNumber = 12, SqlFieldName = CreateUser_Dr ];
 
 /// 生效日期 真正开始使用日期
 Property StartDate As %Date [ Required, SqlColumnNumber = 13, SqlFieldName = StartDate ];

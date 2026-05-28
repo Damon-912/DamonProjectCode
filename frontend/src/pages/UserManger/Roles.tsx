@@ -28,6 +28,8 @@ import type { DataNode } from 'antd/es/tree';
 import CustomPagination from '../../components/CustomPagination';
 import { queryGroupList, saveGroup, getGroupMenuDetail, saveGroupMenu, type GroupItem } from '../../api/system';
 import { getMenuTree } from '../../api/menu';
+import { useDict } from '../../hooks/useDict';
+import { getDictLabel } from '../../utils/dict';
 
 const { TabPane } = Tabs;
 
@@ -45,20 +47,13 @@ interface PaginationParams {
   total: number;
 }
 
-// 安全级别选项
-const safeClassOptions = [
-  { value: '1', label: '普通' },
-  { value: '2', label: '重要' },
-  { value: '3', label: '核心' },
-];
-
-// 默认菜单类型选项
-const menuTypeOptions = [
-  { value: '1', label: '类型1' },
-  { value: '2', label: '类型2' },
-];
-
 const Roles: React.FC = () => {
+  // 字典数据
+  const { options: safeClassOptions } = useDict('SAFE_CLASS');
+  const { options: menuTypeOptions } = useDict('MENU_TYPE');
+  const { map: yesNoMap } = useDict('YES_NO_FLAG');
+  const { map: commonStatusMap } = useDict('COMMON_STATUS');
+
   const [form] = Form.useForm();
   const [data, setData] = useState<GroupItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -131,7 +126,7 @@ const Roles: React.FC = () => {
       width: 100,
       render: (value: string) => (
         <Tag color={value === 'Y' ? 'green' : 'default'}>
-          {value === 'Y' ? '是' : '否'}
+          {getDictLabel(yesNoMap, value)}
         </Tag>
       )
     },
@@ -142,7 +137,7 @@ const Roles: React.FC = () => {
       width: 105,
       render: (value: string) => (
         <Tag color={value === 'Y' ? 'green' : 'default'}>
-          {value === 'Y' ? '是' : '否'}
+          {getDictLabel(yesNoMap, value)}
         </Tag>
       )
     },    

@@ -17,6 +17,7 @@ import {
   type DIPGroupParams, type DIPGroupResult, type DIPGroupQueryParams
 } from '../../api/dip';
 import CustomPagination from '../../components/CustomPagination';
+import { useDict } from '../../hooks/useDict';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -24,6 +25,10 @@ const { RangePicker } = DatePicker;
 
 const Workbench: React.FC = () => {
   const [activeTab, setActiveTab] = useState('group');
+  
+  // 字典数据
+  const { options: sexOptions } = useDict('SEX');
+  const { options: groupStatusOptions } = useDict('GROUPING_STATUS');
   
   // 分组工作台状态
   const [groupForm] = Form.useForm();
@@ -248,10 +253,7 @@ const Workbench: React.FC = () => {
                     </Col>
                     <Col span={4}>
                       <Form.Item name="sex" label="性别">
-                        <Select placeholder="请选择">
-                          <Option value="1">男</Option>
-                          <Option value="2">女</Option>
-                        </Select>
+                        <Select placeholder="请选择" options={sexOptions} />
                       </Form.Item>
                     </Col>
                     <Col span={4}>
@@ -438,12 +440,8 @@ const Workbench: React.FC = () => {
                   onChange={v => setQueryParams({ ...queryParams, status: v })}
                   style={{ width: 100 }}
                   allowClear
-                >
-                  <Option value="">全部</Option>
-                  <Option value="1">已分组</Option>
-                  <Option value="2">分组中</Option>
-                  <Option value="0">未分组</Option>
-                </Select>
+                  options={groupStatusOptions}
+                />
               </Col>
               <Col>
                 <RangePicker

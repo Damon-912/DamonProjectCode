@@ -139,6 +139,7 @@ ClassMethod GetDRGBasicData(jsonObj) As %Library.DynamicObject
 			set currentPage=pagationObj.currentPage
 		}
 		set params=jsonObj.params.%Get(0)
+		set insuCode=params.insuCode
 		set insuDesc=params.insuDesc
 		set status=params.status
 		set sql =" SELECT ID,InsuCode,InsuDesc,Province_Dr as provinceID,"
@@ -152,6 +153,11 @@ ClassMethod GetDRGBasicData(jsonObj) As %Library.DynamicObject
 		{
 		    set sql=sql_" and InsuDesc like '%"_insuDesc_"%'" 
 	    }	
+	    
+	    if insuCode'=""
+		{
+		    set sql=sql_" and InsuCode like '%"_insuCode_"%'" 
+	    }
 						
 		set sqlObj=##class(%SQL.Statement).%New(1)
 		set sc=sqlObj.%Prepare(sql)
@@ -426,6 +432,7 @@ ClassMethod GetDRGBasicDataSub(jsonObj) As %Library.DynamicObject
 		}
 		set params=jsonObj.params.%Get(0)
 		set dictID=params.dictID
+		set code=params.code
 		set desc=params.desc
 		set status=params.status
 		set insuCode=params.insuCode
@@ -441,7 +448,10 @@ ClassMethod GetDRGBasicDataSub(jsonObj) As %Library.DynamicObject
 		{
 		    set sql = sql_" And HBDictionaries_Dr="_dictID	
 		}
-			
+		if code'=""
+		{
+			set sql = sql_" And Code like '%"_code_"%'" 		
+		}			
 		if desc'=""
 		{
 			set sql = sql_" And Descripts like '%"_desc_"%'" 		

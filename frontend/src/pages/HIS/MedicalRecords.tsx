@@ -17,12 +17,20 @@ import {
   type MedicalRecordItem, type QueryMedicalRecordParams
 } from '../../api/hisData';
 import CustomPagination from '../../components/CustomPagination';
+import { useDict } from '../../hooks/useDict';
+import { getDictLabel } from '../../utils/dict';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { TabPane } = Tabs;
 
+// 分组状态颜色映射
+const GROUP_STATUS_COLORS: Record<string, string> = { '1': '#52c41a', '0': '#999' };
+
 const MedicalRecords: React.FC = () => {
+  // 字典数据
+  const { map: groupStatusMap, options: groupStatusOptions } = useDict('GROUPING_STATUS');
+
   // 列表状态
   const [data, setData] = useState<MedicalRecordItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -179,9 +187,8 @@ const MedicalRecords: React.FC = () => {
       dataIndex: 'groupStatus',
       width: 100,
       render: (v: string) => {
-        const colorMap: { '1': '#52c41a', '0': '#999' } = { '1': '#52c41a', '0': '#999' };
-        return <Tag color={colorMap[v] || 'default'}>
-          {v === '1' ? '已分组' : v === '0' ? '未分组' : '-'}
+        return <Tag color={GROUP_STATUS_COLORS[v] || 'default'}>
+          {getDictLabel(groupStatusMap, v, '-')}
         </Tag>;
       },
     },
@@ -301,11 +308,8 @@ const MedicalRecords: React.FC = () => {
               onChange={v => setQueryParams({ ...queryParams, groupStatus: v })}
               style={{ width: 100 }}
               allowClear
-            >
-              <Option value="">全部</Option>
-              <Option value="1">已分组</Option>
-              <Option value="0">未分组</Option>
-            </Select>
+              options={groupStatusOptions}
+            />
           </Col>
           <Col>
             <RangePicker

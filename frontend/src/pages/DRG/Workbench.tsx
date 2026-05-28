@@ -47,10 +47,19 @@ import request from '../../api/request';
 import dayjs from 'dayjs';
 import { drgGroup, convertResultToLowerCamel, type DRGGroupResultLowerCamel } from '@/api/drgGrouping';
 import CustomPagination from '../../components/CustomPagination';
+import { useDict } from '../../hooks/useDict';
+import { getDictLabel } from '../../utils/dict';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
+
+// 工作台分组状态映射（含图标，值码与业务数据一致）
+const WORKBENCH_GROUP_STATUS_MAP: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
+  ungrouped: { color: 'default', text: '未分组', icon: <AlertFilled /> },
+  grouped: { color: 'success', text: '已分组', icon: <CheckCircleFilled /> },
+  failed: { color: 'error', text: '失败', icon: <CloseCircleFilled /> },
+};
 
 // 病案数据类型
 interface MedicalRecord {
@@ -94,6 +103,11 @@ interface OperationInfo {
 }
 
 const Workbench: React.FC = () => {
+  // 字典数据
+  const { options: sexOptions, map: sexMap } = useDict('SEX');
+  const { options: dischargeTypeOptions } = useDict('DISCHARGE_TYPE');
+  const { options: yesNoOptions } = useDict('YES_NO_FLAG');
+
   // 状态定义
   const [loading, setLoading] = useState(false);
   const [grouping, setGrouping] = useState(false);
@@ -444,7 +458,7 @@ const Workbench: React.FC = () => {
       title: '性别',
       dataIndex: 'sex',
       width: 50,
-      render: (text) => text === '1' ? '男' : text === '2' ? '女' : '-'
+      render: (text) => getDictLabel(sexMap, text, '-')
     },
     {
       title: '年龄',
@@ -510,12 +524,7 @@ const Workbench: React.FC = () => {
       dataIndex: 'drgGroupStatus',
       width: 80,
       render: (status) => {
-        const statusMap: Record<string, { color: string; text: string; icon: React.ReactNode }> = {
-          ungrouped: { color: 'default', text: '未分组', icon: <AlertFilled /> },
-          grouped: { color: 'success', text: '已分组', icon: <CheckCircleFilled /> },
-          failed: { color: 'error', text: '失败', icon: <CloseCircleFilled /> }
-        };
-        const config = statusMap[status] || statusMap.ungrouped;
+        const config = WORKBENCH_GROUP_STATUS_MAP[status] || WORKBENCH_GROUP_STATUS_MAP.ungrouped;
         return <Badge status={config.color as any} text={config.text} />;
       }
     },
@@ -632,11 +641,9 @@ const Workbench: React.FC = () => {
             </Col>
             <Col span={4}>
               <Form.Item name="groupStatus" label="分组状态">
-                <Select placeholder="全部状态" allowClear>
-                  <Option value="ungrouped">未分组</Option>
-                  <Option value="grouped">已分组</Option>
-                  <Option value="failed">失败</Option>
-                </Select>
+                <Select placeholder="全部状态" allowClear
+                  options={Object.entries(WORKBENCH_GROUP_STATUS_MAP).map(([k, v]) => ({ value: k, label: v.text }))}
+                />
               </Form.Item>
             </Col>
             <Col span={6}>
@@ -716,7 +723,7 @@ const Workbench: React.FC = () => {
               description={
                 <Space>
                   <span><UserOutlined /> {selectedRecord.patientName}</span>
-                  <span>{selectedRecord.sex === '1' ? '男' : '女'}</span>
+                  <span>{getDictLabel(sexMap, selectedRecord.sex, '-')}</span>
                   <span>{selectedRecord.age}岁</span>
                   <span><MedicineBoxOutlined /> {selectedRecord.department}</span>
                   <span><CalendarOutlined /> {selectedRecord.hospitalDays}天</span>
@@ -748,10 +755,7 @@ const Workbench: React.FC = () => {
               <Row gutter={16}>
                 <Col span={8}>
                   <Form.Item name="sex" label="性别">
-                    <Select>
-                      <Option value="1">男</Option>
-                      <Option value="2">女</Option>
-                    </Select>
+                    <Select options={sexOptions} />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
@@ -770,14 +774,7 @@ const Workbench: React.FC = () => {
                     label="离院方式"
                     rules={[{ required: true, message: '请选择离院方式' }]}
                   >
-                    <Select>
-                      <Option value="1">1-医嘱离院</Option>
-                      <Option value="2">2-医嘱转院</Option>
-                      <Option value="3">3-医嘱转社区卫生服务机构/乡镇卫生院</Option>
-                      <Option value="4">4-非医嘱离院</Option>
-                      <Option value="5">5-死亡</Option>
-                      <Option value="9">9-其他</Option>
-                    </Select>
+                    <Select options={dischargeTypeOptions} />
                   </Form.Item>
                 </Col>
               </Row>
@@ -785,26 +782,17 @@ const Workbench: React.FC = () => {
               <Row gutter={16}>
                 <Col span={8}>
                   <Form.Item name="newbornFlag" label="新生儿标志">
-                    <Select>
-                      <Option value="0">否</Option>
-                      <Option value="1">是</Option>
-                    </Select>
+                    <Select options={yesNoOptions} />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
                   <Form.Item name="ecmoFlag" label="ECMO标志">
-                    <Select>
-                      <Option value="0">否</Option>
-                      <Option value="1">是</Option>
-                    </Select>
+                    <Select options={yesNoOptions} />
                   </Form.Item>
                 </Col>
                 <Col span={8}>
                   <Form.Item name="hivFlag" label="HIV标志">
-                    <Select>
-                      <Option value="0">否</Option>
-                      <Option value="1">是</Option>
-                    </Select>
+                    <Select options={yesNoOptions} />
                   </Form.Item>
                 </Col>
               </Row>
@@ -911,7 +899,7 @@ const Workbench: React.FC = () => {
           <Descriptions bordered column={2}>
             <Descriptions.Item label="病案号">{selectedRecord.admissionNo}</Descriptions.Item>
             <Descriptions.Item label="患者姓名">{selectedRecord.patientName}</Descriptions.Item>
-            <Descriptions.Item label="性别">{selectedRecord.sex === '1' ? '男' : '女'}</Descriptions.Item>
+            <Descriptions.Item label="性别">{getDictLabel(sexMap, selectedRecord.sex, '-')}</Descriptions.Item>
             <Descriptions.Item label="年龄">{selectedRecord.age}岁</Descriptions.Item>
             <Descriptions.Item label="科室">{selectedRecord.department}</Descriptions.Item>
             <Descriptions.Item label="住院天数">{selectedRecord.hospitalDays}天</Descriptions.Item>
@@ -922,8 +910,8 @@ const Workbench: React.FC = () => {
             <Descriptions.Item label="主手术">{selectedRecord.mainOperationCode} {selectedRecord.mainOperationName}</Descriptions.Item>
             <Descriptions.Item label="分组状态">
               <Badge
-                status={selectedRecord.drgGroupStatus === 'grouped' ? 'success' : selectedRecord.drgGroupStatus === 'failed' ? 'error' : 'default'}
-                text={selectedRecord.drgGroupStatus === 'grouped' ? '已分组' : selectedRecord.drgGroupStatus === 'failed' ? '失败' : '未分组'}
+                status={(WORKBENCH_GROUP_STATUS_MAP[selectedRecord.drgGroupStatus]?.color || 'default') as any}
+                text={WORKBENCH_GROUP_STATUS_MAP[selectedRecord.drgGroupStatus]?.text || '未分组'}
               />
             </Descriptions.Item>
             {selectedRecord.drgCode && (

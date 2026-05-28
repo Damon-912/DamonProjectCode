@@ -30,6 +30,7 @@ import {
   type ProvinceItem, type CityItem
 } from '../../api/basicData';
 import { getCurrentGroupName, getSession } from '../../utils/auth';
+import { useDict } from '../../hooks/useDict';
 
 const { Option } = Select;
 
@@ -622,12 +623,8 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
     importForm.resetFields();
   };
 
-  // 医疗机构等级选项
-  const medinsLvOptions = [
-    { label: '一级', value: '1' },
-    { label: '二级', value: '2' },
-    { label: '三级', value: '3' },
-  ];
+  // 字典数据
+  const { options: medinsLvOptions } = useDict('MEDINS_LEVEL');
 
   // 表格列定义
   const columns = [

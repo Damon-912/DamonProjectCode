@@ -563,7 +563,6 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
 		    set preMDCFlag=1   
 		}  
 		
-        set rows = [], row={}, totalCount=0
         set (adrgCode,adrgDesc,adrgCodeList,adrgDescList)= ""	 
         Set sqlStr = " SELECT Code,Descripts,Identification FROM HB_DRGBasicDataSub WHERE HBDictionaries_Dr->InsuCode='ADRG' "  
                    _ " AND Left(Code, 1)= '"_$EXTRACT(mdc,4)_"'"
@@ -573,9 +572,7 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
 		//set list=sqlObj.%Execute()	
 		Set rs = sqlObj.%Execute()       
         while rs.%Next(sc)
-        {
-	        set iGetValue=0
-	        	        	        	        
+        {	        	        	        
 	        set adrgCode= rs.%Get("Code")      //ADRG编码
 	        set adrgDesc= rs.%Get("Descripts") //ADRG名称	  
 	        
@@ -601,7 +598,13 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
 				    set resultObj = ..SetErrorResult("-12","ADRG核心疾病诊断相关分组表CB_DRGCoreGroupsList未维护:【"_adrgCode_"："_adrgDesc_"】入组条件！")
 				    quit			        
 			    } 
-		    }  		    		    
+		    }  
+		     
+            set row={},rows = []
+            set row.code = adrgCode
+            set row.desc = adrgDesc                 
+            do rows.%Push(row)
+            set resultObj = ..SetJarraySuccessResult(rows,1)			    		    
 		    		         	        	        	               	          
 	        //1.先处理--先期分组
 	        if (preMDCFlag=1)
@@ -622,10 +625,7 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
                         set oprnName = item.oprnName 
                         
                         //存在不作为分组规则手术及操作代码表中
-                        if (..CheckNoRulesList(oprnCode)>0)
-                        {
-	                        continue
-	                    }
+                        continue:(..CheckNoRulesList(oprnCode)>0)
                                                                                                   
                         &sql(SELECT COUNT(DISTINCT ADRG) into :iCount FROM CB_DRGCoreGroupsList WHERE UnionFlag =1  
                              AND ADRG=:adrgCode AND (MajorProcedure=:oprnCode OR SecondaryProcedure=:oprnCode OR ThirdlyProcedure=:oprnCode))
@@ -635,12 +635,7 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
                             set m = m + 1
                         }
                         
-                        if (m>1)
-                        {
-	                        //set resultObj = ..SetSuccessResult(adrgCode,adrgDesc)
-	                        set iGetValue=1				            
-				            //continue	                    
-	                    }                                                	                    	                                              
+                        quit:m>1	                    	                                              
                     }			        	        			        			        			       	
 			    }
 			    //（其他诊断 或 手术或操作1）+ 手术或操作2
@@ -658,10 +653,7 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
                         set oprnName = item.oprnName
                         
                         //存在不作为分组规则手术及操作代码表中
-                        if (..CheckNoRulesList(oprnCode)>0)
-                        {
-	                        continue
-	                    }
+                        continue:(..CheckNoRulesList(oprnCode) > 0)
 	                    
                         //主要手术或操作标识不为1,序号需要为2表示第二次要手术或操作
                         if (mainFlag '= "1")&&(oprnSn="2")
@@ -678,12 +670,7 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
                         &sql(SELECT COUNT(DISTINCT ADRG) into :m FROM CB_DRGCoreGroupsList WHERE UnionFlag =1 AND ADRG=:adrgCode                                    
                              And SecondaryProcedure=:secOperationCode And ThirdlyProcedure=:thirdOperationCode)
                         // 如果SQL执行成功且有结果
-                        if (SQLCODE = 0) && (m > 0) 
-                        {
-                            //set resultObj=..SetSuccessResult(adrgCode,adrgDesc)                            
-                            set iGetValue=1
-                            //continue
-                        }	                    	                    			       
+                        quit:((SQLCODE = 0) && (m > 0))	                    	                    			       
 				    }
 			    			    			          				   				    				    				   				    				    
                     //其他诊断 + 手术或操作2		        	
@@ -697,22 +684,14 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
                         set diagName = item.diagName
                         
                         //存在不作为分组规则疾病诊断表中
-                        if (..CheckNoRulesList(diagCode)>0)
-                        {
-	                        continue
-	                    }                        
+                        continue:(..CheckNoRulesList(diagCode)>0)                        
             
                         if (mainFlag '="1") //其他诊断
                         {
                             &sql(SELECT COUNT(DISTINCT ADRG) into :n FROM CB_DRGCoreGroupsList WHERE UnionFlag =1
                                  AND ADRG=:adrgCode and (SecondaryDiagnosis=:diagCode OR ThirdlyDiagnosis=:diagCode) And ThirdlyProcedure=:thirdOperationCode)
                             // 如果SQL执行成功且有结果
-                            if (SQLCODE = 0) && (n > 0) 
-                            {
-				                //set resultObj = ..SetSuccessResult(adrgCode,adrgDesc)				                
-				                set iGetValue=1
-				                //continue
-                            }
+                            quit:((SQLCODE = 0) && (n > 0))                          
 	                    }                                                	                    	                                              
                     }			          
 				}
@@ -730,23 +709,16 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
                         set diagName = item.diagName
                         
                         //存在不作为分组规则疾病诊断表中
-                        if (..CheckNoRulesList(diagCode)>0)
-                        {
-	                        continue
-	                    } 
+                        continue:(..CheckNoRulesList(diagCode)>0)                       
 	                    	                                          
                         if (mainFlag '="1") //其他诊断
                         {
 	                        set n=0
                             &sql(SELECT COUNT(DISTINCT ADRG) into :n FROM CB_DRGCoreGroupsList WHERE UnionFlag =1                                    
                                  AND ADRG=:adrgCode AND (PrincipalDiagnosis=:mainDiagCode OR SecondaryDiagnosis=:diagCode OR ThirdlyDiagnosis=:diagCode))
+                            
                             // 如果SQL执行成功且有结果
-                            if (SQLCODE = 0) && (n > 0) 
-                            {
-				                //set resultObj = ..SetSuccessResult(adrgCode,adrgDesc)
-				                set iGetValue=1
-				                //continue
-                            }
+                            quit:((SQLCODE = 0)&&(n > 0))
 	                    }                                                	                    	                                              
                     }			
 				}
@@ -767,21 +739,14 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
                             set diagName = item.diagName
                         
                             //存在不作为分组规则疾病诊断表中
-                            if (..CheckNoRulesList(diagCode)>0)
-                            {
-	                            continue
-	                        } 
+                            continue:(..CheckNoRulesList(diagCode)>0)
 	                        
 	                        set n=0
                             &sql(SELECT COUNT(DISTINCT ADRG) into :n FROM CB_DRGCoreGroupsList WHERE UnionFlag =1 AND ADRG=:adrgCode                                     
                                  AND (PrincipalDiagnosis=:diagCode OR SecondaryDiagnosis=:diagCode OR ThirdlyDiagnosis=:diagCode))
+                                 
                             // 如果SQL执行成功且有结果
-                            if (SQLCODE = 0) && (n > 0) 
-                            {
-	                            //set resultObj = ..SetSuccessResult(adrgCode,adrgDesc)
-	                            set iGetValue=1	                            				                
-				                //continue
-                            }	                        	                        	                        
+                            quit:((SQLCODE = 0)&&(n > 0)) 	                        	                        	                        
 						}																		
 					}
 				}
@@ -791,13 +756,9 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
 	                set n=0
                     &sql(SELECT COUNT(DISTINCT ADRG) into :n FROM CB_DRGCoreGroupsList WHERE UnionFlag =0                                   
                          AND ADRG=:adrgCode AND PrincipalDiagnosis=:mainDiagCode)
-                     // 如果SQL执行成功且有结果
-                    if (SQLCODE = 0) && (n > 0) 
-                    {
-	                    //set resultObj = ..SetSuccessResult(adrgCode,adrgDesc)
-	                    set iGetValue=1				        
-				        //continue
-                    }
+                         
+                    // 如果SQL执行成功且有结果
+                    quit:((SQLCODE = 0)&&(n > 0))
 				}
 				//包含以下主要手术或操作
 				elseif ($listfind($lb("AA1","AA2","AB1","AD1","AE1","AF1","AG1","AG2","AG3","AH1",
@@ -810,13 +771,9 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
 	                        set n=0
                             &sql(SELECT COUNT(DISTINCT ADRG) into :n FROM CB_DRGCoreGroupsList WHERE UnionFlag =0                                   
                                  AND ADRG=:adrgCode AND MajorProcedure=:mainOpCode)
+                                 
                              // 如果SQL执行成功且有结果
-                            if (SQLCODE = 0) && (n > 0) 
-                            {	                            
-				                //set resultObj = ..SetSuccessResult(adrgCode,adrgDesc)
-				                set iGetValue=1
-				                //continue
-                            }	                
+                            quit:((SQLCODE = 0) && (n > 0))
 	                    }    
 	                } 		
 				}	
@@ -829,31 +786,69 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
 	                    set n=0
                         &sql(SELECT COUNT(DISTINCT ADRG) into :n FROM CB_DRGCoreGroupsList WHERE UnionFlag =1                                    
                              AND ADRG=:adrgCode AND PrincipalDiagnosis=:mainDiagCode)
+                             
                         // 如果SQL执行成功且有结果
-                        if (SQLCODE = 0) && (n > 0) 
-                        {	                        
-				            //set resultObj = ..SetSuccessResult(adrgCode,adrgDesc)
-				            set iGetValue=1
-				            //continue
-                        }	
+                        quit:((SQLCODE = 0) && (n > 0)) 	
 					}
 				}																		   		   		   
 		    }
 		    else //其他ADRG分组
-		    {		
+		    {
+			    		
                 //无手术/操作时：可以用主诊断来查找对应的ADRG（内科组）
                 //有手术/操作时：不能仅用主诊断来查找ADRG，必须用主诊断锁定MDC，再用主手术锁定该MDC下的外科/操作组ADRG    			
-    			   
-		    	     			    			    
-		    	     			    			    
-		    	     			    			    
-			    //同时包含以下手术或操作--同时包含CB4和CB5的手术或操作(CB2)--同时包含CB5和CB6的手术或操作(CB3)
-			    if ($listfind($lb("BB1","CB2","CB3","FB1","FF1"), adrgCode) = 1)
+    			
+    			//同时包含CB4和CB5的手术或操作(CB2)--至少存在两个手术
+    			if ($listfind($lb("CB2"), adrgCode) = 1)
+    			{
+			        //遍历手术或操作
+			        set m=0
+			        for i=0:1:oprninfo.%Size()-1 
+			        {
+                        // 获取手术或操作编码和名称                   
+                        set item = oprninfo.%Get(i)
+                        set oprnCode = item.oprnCode
+                        
+                        &sql(SELECT COUNT(DISTINCT ADRG) into :iCount FROM CB_DRGCoreGroupsList WHERE ADRG IN ('CB4','CB5') 
+                             and (MajorProcedure=:oprnCode OR SecondaryProcedure=:oprnCode OR ThirdlyProcedure=:oprnCode))
+                        
+                        if (SQLCODE = 0) && (iCount > 0)
+                        {
+	                        set m = m + 1
+	                    }      	                       
+			        }
+	    			
+                    quit:(m>1)                    
+	    	    }
+	    	    //同时包含CB5和CB6的手术或操作(CB3)--至少存在两个手术
+	    	    elseif ($listfind($lb("CB3"), adrgCode) = 1)
+    			{
+			        //遍历手术或操作
+			        set m=0
+			        for i=0:1:oprninfo.%Size()-1 
+			        {
+                        // 获取手术或操作编码和名称                   
+                        set item = oprninfo.%Get(i)
+                        set oprnCode = item.oprnCode
+                        
+                        &sql(SELECT COUNT(DISTINCT ADRG) into :iCount FROM CB_DRGCoreGroupsList WHERE ADRG IN ('CB5','CB6') 
+                             and (MajorProcedure=:oprnCode OR SecondaryProcedure=:oprnCode OR ThirdlyProcedure=:oprnCode))
+                        
+                        if (SQLCODE = 0) && (iCount > 0)
+                        {
+	                        set m = m + 1
+	                    }   
+			        }
+	    			
+                    quit:(m>1)	
+	    	    }   			    			    
+			    //同时包含以下手术或操作
+			    elseif ($listfind($lb("BB1","FB1","FF1"), adrgCode) = 1)
 			    {
 				    set m=0
-			       //遍历手术或操作
-			       for i=0:1:oprninfo.%Size()-1 
-			       {
+			        //遍历手术或操作
+			        for i=0:1:oprninfo.%Size()-1 
+			        {
                         // 获取手术或操作编码和名称                   
                         set item = oprninfo.%Get(i)
                         set mainFlag = item.mainFlag
@@ -862,10 +857,7 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
                         set oprnName = item.oprnName
                         
                         //存在不作为分组规则手术及操作代码表中
-                        if (..CheckNoRulesList(oprnCode)>0)
-                        {
-	                        continue
-	                    }
+                        continue:(..CheckNoRulesList(oprnCode)>0)
 	                    
                         &sql(SELECT COUNT(DISTINCT ADRG) into :iCount FROM CB_DRGCoreGroupsList WHERE UnionFlag =1 AND ADRG=:adrgCode 
                              AND (MajorProcedure=:oprnCode OR SecondaryProcedure=:oprnCode OR ThirdlyProcedure=:oprnCode))
@@ -875,12 +867,8 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
                             set m = m + 1
                         }
                         
-                        if (m>1)
-                        {	                        
-				            //set resultObj = ..SetSuccessResult(adrgCode,adrgDesc)
-				            set iGetValue=1
-				            //continue	                    
-	                    }	                                          	                         	                    	                    	                    			      
+                        quit:(m>1)
+     	                                          	                         	                    	                    	                    			      
 				    } 				    				    				   				   
 				}
 				//入组条件 1：主要诊断+主要手术或操作 1或入组条件 2：主要手术或操作 2或入组条件 3：手术或操作 3+手术或操作 4
@@ -934,51 +922,25 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
 					continue
 				}							
 			    else
-			    {
+			    {			    
 				    if (selectionCriteria ["包含以下主要手术或操作")
 				    {
 					    set (iCount)=0
  					    &sql(SELECT COUNT(DISTINCT ADRG) into :iCount FROM CB_DRGCoreGroupsList WHERE UnionFlag =0 AND ADRG=:adrgCode AND MajorProcedure=:mainOpCode)
-					    if (SQLCODE = 0)&&(iCount>0)
-					    {
-						    
-                            //set resultObj = ..SetSuccessResult(adrgCode,adrgDesc)                            
-                            //set adrgCodeList=adrgCodeList_":"_adrgCode
-                            //set adrgDescList=adrgDescList_":"_adrgDesc		                            
-                            //set resultObj = ..SetSuccessResult(adrgCodeList,adrgDescList)
-                            set iGetValue=1
-                            //continue
-						}
-						else
-						{
-                            //set resultObj = ..SetErrorResult("-1","ADRG核心疾病诊断相关分组表CB_DRGCoreGroupsList未维护:【"_adrgCode_"："_adrgDesc_"】分组规则！"_mainOpCode)	
-                            continue	
-						} 										                            
+					    
+					    quit:(SQLCODE=0)&&(iCount>0)
+                        continue										                            
 					}
 					elseif (selectionCriteria ["包含以下主要诊断")
 					{
 						set (iCount)=0
 		                &sql(SELECT COUNT(DISTINCT ADRG) into :iCount FROM CB_DRGCoreGroupsList WHERE UnionFlag =0 AND ADRG=:adrgCode AND PrincipalDiagnosis=:mainDiagCode)						
-					    if (SQLCODE = 0)&&(iCount>0)
-					    {								        					        			    
-                            //set resultObj = ..SetSuccessResult(adrgCode,adrgDesc)	                            						
-                            //set adrgCodeList=adrgCodeList_":"_adrgCode
-                            //set adrgDescList=adrgDescList_":"_adrgDesc	                            
-                            //set resultObj = ..SetSuccessResult(adrgCodeList,adrgDescList)
-                            
-                            //不存在手术操作的情况下参照诊断信息进行ADRG分组
-                            if (mainOpCode ="")
-                            {
-	                            set iGetValue=1   
-	                        }
-                            
-                            //continue						
-						}
-						else
-						{
-                            //set resultObj = ..SetErrorResult("-1","ADRG核心疾病诊断相关分组表CB_DRGCoreGroupsList未维护:【"_adrgCode_"："_adrgDesc_"】分组规则！")	                            							
-						    continue
-						}						 
+					    
+					    quit:((SQLCODE = 0) && (iCount > 0) && (mainOpCode = ""))
+                        continue:((SQLCODE '= 0) || (iCount <= 0))
+
+                        // 只有当 SQLCODE=0 且 iCount>0 且 mainOpCode 非空时，才会执行到这里
+                        // 参照诊断信息进行ADRG分组...						 
 					}
 					elseif (selectionCriteria ["XXXXXXXXXX")
 					{
@@ -989,27 +951,10 @@ ClassMethod GroupADRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
 
 					}          				       
 				}
-		    }		    
-		    		    
-	        //在以下的业务逻辑中判断是否为true,如果为真则push一个adrgCode和adrgDesc的json对象,反之继续continue,一直到循环结束
-            if (iGetValue=1)&&( adrgCode '="")
-            {
-	            set totalCount = totalCount+1
-                set row={}
-                set row.code = adrgCode
-                set row.desc = adrgDesc  
-                //set row.diagCode=diagCode
-                //set row.diagName=diagName                  
-                do rows.%Push(row)	
-                //set resultObj=..SetSuccessResult(adrgCodeList,adrgDescList)                              	            
-	        }	
-	        else
-	        {	            
-                continue    
-		    }	    
+		    }		    	    
 	    } 
 	    
-	    set resultObj=..SetJarraySuccessResult(rows,totalCount)                	                      
+	    set resultObj=..SetJarraySuccessResult(rows,1)                	                      
     } 
     catch(e) 
     {
@@ -1038,9 +983,7 @@ ClassMethod GroupComplication(jsonObj As %Library.DynamicObject) As %Library.Dyn
     //DRG分组器的核心逻辑是：如果患者同时患有多个次要诊断（其他诊断），其中只要存在一个被定义为MCC的诊断，那么该病例在“并发症与合并症”的层级上，
     //就直接被归类为 MCC层。即使病历中同时包含10个CC和1个MCC，分组结果依然是 MCC。
     //只有当一个MCC都没有，但存在至少一个CC时，才会被归为 CC层	
-		
-	//new (jsonObj)
-	//set params = ##class(%DynamicArray).%New()			
+
 	try
 	{
         // 1. 初始化返回对象（标准化结构）
@@ -1099,7 +1042,7 @@ ClassMethod GroupComplication(jsonObj As %Library.DynamicObject) As %Library.Dyn
                             Set complication = "MCC"
                             Set complicationDesc = "严重并发症"
                         } 
-                        ElseIf (levelB > 0) 
+                        elseIf (levelB > 0) 
                         {
                             Set complication = "CC"
                             Set complicationDesc = "并发症"
@@ -1202,24 +1145,31 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
         set complicationInfo = params.complicationInfo  // 并发症 CC/MCC        
 		set mainDiagCode = params.mainDiagnosisCode  // 主诊断代码
 		set mainOpCode = params.mainOperationCode    // 主手术代码
+        set diseinfo = params.diseInfo  // 疾病诊断-数组对象   
+    	set oprninfo = params.oprnInfo  // 手术操作-数组对象		
+		
         set age = params.age                         // 年龄(默认0)	
         set dischargeType = params.dischargeType     //离院方式	
         
-        if (hospInfo = "") || ('$ISOBJECT(hospInfo)) set hospInfo = []	
+		//分组方案年份（由前端传入，默认当前年份）
+		set groupYear = params.groupYear
+		if (groupYear = "") set groupYear = $PIECE($ZDATE($HOROLOG,3),"-",1)
+
+    	// 如果为空字符串或非数组，设置为空数组
+    	if (diseinfo = "") || ('$ISOBJECT(diseinfo)) set diseinfo = []
+    	if (oprninfo = "") || ('$ISOBJECT(oprninfo)) set oprninfo = []                
+        if (hospInfo = "") || ('$ISOBJECT(hospInfo)) set hospInfo = []
 						
 		//遍历并发症信息-MCC覆盖CC
 		for i = 0:1:complicationInfo.%Size()-1 
 		{
             set item = complicationInfo.%Get(i)
-                set diagCode = item.diagCode
-                set diagName = item.diagName                 
-                set complicationDesc = item.complicationDesc
-                set complication=item.complication  
+            set diagCode = item.diagCode
+            set diagName = item.diagName                 
+            set complicationDesc = item.complicationDesc
+            set complication=item.complication  
                 
-            if (complication="MCC")
-            {	            	        	            
-	            quit 
-	        }			
+            quit:(complication="MCC")		
 		}
 		
         set rows = []
@@ -1230,7 +1180,7 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
             set item = adrgInfo.%Get(i)
             set adrgCode = item.code
             set adrgDesc = item.desc
-            
+ 
 		    set num="9"
 		    if (age>=17)
 		    {
@@ -1262,44 +1212,43 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
 			    set num="7"	
 			}
 			
-			/*						
-		    //方式一：基于CHS-DRG国家医保局发布细分规则为0表示该ADRG第四位编码确定为9，不再根据其它因素继续判断分组
-            //先根据细分规则判断第四位编码
-            set segFlag=0
-            &sql(SELECT SegmentationFlag into :segFlag FROM HB_DRGSegmentationRules Where ADRG=:adrgCode)		    
-		    if (segFlag="0")
-		    {			  
-		        set drg =adrgCode_"9" 
-		        set desc=..GetComplicationDesc("9")		
-		        set drgDesc= adrgDesc_"："_desc	  			    			    
-		    }
-		    else
-		    {
-		        set drg =adrgCode_num 
-		        set desc=..GetComplicationDesc(num)		
-		        set drgDesc= adrgDesc_"："_desc	  			    
-			}
-			*/
-
 			set drg =adrgCode_num
 			set desc=..GetComplicationDesc(num)	
 			set drgDesc= adrgDesc_"："_desc		
 		
-		    //方式二：基于地方查找各地方的DRGs目录表，判断是否存在；优先匹配地方DRGs目录
-		    //传医疗机构信息则查找对应机构所在地区维护的DRGs目录
+		    //最高优先查找地方的DRG特异化分组方案
 		    if (hospInfo.%Size()>0) 
 		    {			    
                 for i = 0:1:hospInfo.%Size()-1 
                 {
                     set itemObj = hospInfo.%Get(i)           
                     set hospCode = itemObj.code
-                    set hospArea = itemObj.areaAdmvs
+                    set hospArea = itemObj.areaAdmvs                                        
                                        
                     set (provID,cityID)=""
                     &sql(SELECT ProvID_Dr,CityID_Dr into :provID,:cityID FROM CB_Hospital where OrganizationCode=:hospCode)
+                    
+                    
+                    
+                    
+                    
+                    
+                    set m=0
+                    //优先找地方特异化DRG分组方案，都不匹配后再根据国家医保局发布的基础版去匹配
+                    &sql(SELECT COUNT(*) into :m FROM HB_DRGSpecialGroup WHERE LEFT(DRGCode,3)=:adrgCode 
+                         AND Province_Dr=:provID AND City_Dr=:cityID AND Year=:groupYear)
+                    if (m>0)
+                    {
+	                      
+	                }
+                    
+                    
+                    
                 		    
+                		    
+                
 		            set iCount=0
-                    &sql(SELECT Count(*) into :iCount FROM HB_DRGCataLog Where Code=:drg and Province_Dr=:provID AND City_Dr=:cityID)
+                    &sql(SELECT Count(*) into :iCount FROM HB_DRGCoreAlgorithmData Where DRG=:drg and Province_Dr=:provID AND City_Dr=:cityID)
                     if (iCount = 0)
 	                {
 		                //地方DRG目录没有这个DRGs编码,参考CHS-DRG国家医保局DRGs目录
@@ -1367,13 +1316,336 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
     quit resultObj
 }
 
+/// Creator:     系统
+/// CreatDate:   2026-05-26
+/// Description: 分组器（改动前原始版本备案）
+///              此方法为Device方法改动前的完整备份，用于紧急回退
+///              对应原Device方法的全部逻辑，无特异化分组步骤
+ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
+{
+	///病例实际费用 ÷ 该病组标准费用（次均费用 / 支付标准）」算出倍率，再按当地医保阈值划分为：高倍率、正常倍率、低倍率。
+	///DRG 权重RW与基准点数本质是同一个 "相对资源值"，只是单位与叫法不同：权重是小数（比值）基准点数 = DRG 权重 × 100（或 ×1000，各地不同）
+	try
+	{
+        // 初始化返回对象（标准化结构）
+        set resultObj = ..SetSuccessResult("0","")
+        
+        // 参数合法性校验（核心前置检查）
+        if (jsonObj = "") || (jsonObj.params = "") 
+        {
+            set resultObj = ..SetErrorResult("-1", "入参异常：缺少params参数或参数为空")
+            quit 
+        }
+        	    
+        // 提取入参并设置默认值（避免空值报错）
+        set params = jsonObj.params.%Get(0)
+        set mainDiagCode = params.mainDiagnosisCode  
+        set diseinfo = params.diseInfo  // 疾病诊断-数组对象   
+		set mainOperationCode = params.mainOperationCode    // 主手术代码
+    	set oprninfo = params.oprnInfo  // 手术操作-数组对象（兼容空数组）  
+    	set hospinfo = params.hospInfo  // 医疗机构-数组对象   	
+        set sex = params.sex                       // 性别
+        set age = params.age                         // 年龄（默认0）
+        set ageGroupDays = params.ageGroupDays        // 新生儿出生天数（默认0）
+        set newbornFlag = params.newbornFlag        // 新生儿标志（默认0）
+        set respiratorTime = params.respiratorTime    // 有创呼吸机时长（默认0）
+        set ecmoFlag = params.ecmoFlag             // ECMO标志（默认0）
+        set transplantFlag = params.transplantFlag  // 器官移植标志（默认0）
+        set marrowTransplantFlag = params.marrowTransplantFlag // 骨髓移植标志
+        set hivFlag = params.hivFlag                // HIV标志（默认0）
+        set traumaLevel = params.traumaLevel          // 多发创伤等级（默认0）
+		set department = params.department           // 科室编码
+		set departmentDesc = params.departmentDesc   // 科室名称
+		set dischargeType = params.dischargeType // 离院方式 1医嘱离院;2医嘱转院;3医嘱转社区卫生服务机构/乡镇卫生院;4非医嘱离院;5死亡;9其他 代码 2（医嘱转院） 和 4（非医嘱离院） 在DRG分组中会被特别标记
+		set hospitalDays = params.hospitalDays   //住院天数 	
+		set totalCost = params.totalCost             //住院已发生费用合计
+		
+		set patientName=params.patientName //患者姓名
+		set deptCode=params.deptCode //HIS科室编码
+		set deptName=params.deptName //HIS科室名称			
+		set doctorCode=params.doctorCode //HIS医生编码
+		set doctorName=params.doctorName //HIS医生名称
+		set medicalRecordID=params.medicalRecordDr //病案号	
+		set hisAdmID=params.hisAdmID //HIS就诊号				
+
+		//增加HIS患者就诊信息
+		set psnNo=params.psnNo //医保个人编号
+		set insuranceAreaCode=params.insuranceAreaCode //参保地区划代码 
+		set mdtrtareaAreaCode=params.mdtrtareaAreaCode //就医地区划代码
+		set insuType=params.insuType //险种类型								
+		set diagnosisCode=params.diagnosisCode //病种编码
+		set diagnosisName=params.diagnosisName //病种名称
+		set groupStage=params.groupStage  //分组阶段 1.事前 2.事中 3.事后
+		set diaTypeCode=params.diaTypeCode //诊断类型编码 ADD入院 OPD门诊 DIS出院		
+		set admDateTime=params.admDateTime //入院时间
+		set discgDateTime=params.discgDateTime //出院时间
+		set settleDateTime=params.settleDateTime //结算时间
+		set unionOprnFlag=params.unionOprnFlag //联合手术标志 
+
+		//分组方案年份（由前端传入，默认当前年份）
+		set groupYear = params.groupYear
+		if (groupYear = "") set groupYear = $PIECE($ZDATE($HOROLOG,3),"-",1)
+
+    	// 如果为空字符串或非数组，设置为空数组
+    	if (diseinfo = "") || ('$ISOBJECT(diseinfo)) set diseinfo = []
+    	if (oprninfo = "") || ('$ISOBJECT(oprninfo)) set oprninfo = []		
+    	if (hospinfo = "") || ('$ISOBJECT(hospinfo)) set hospinfo = []    	    		  	                    
+							
+		set (MDC,MDCDesc,ADRG,ADRGDesc,DRG,DRGDesc,Complication,ComplicationDesc)=""		
+		         	
+		//1.分组流程前 校验入参 
+		set joRtn=..CheckRules(jsonObj)
+		if (joRtn.errorCode '= "0")
+		{
+            set resultObj = ..SetErrorResult("-1", "进入分组流程前CheckRules校验失败："_joRtn.errorMessage)
+            quit
+		}
+
+		//2.第一步：MDC先期分组      
+		set joRtn=..GroupPreMDC(jsonObj)
+		if (joRtn.errorCode '= "0")
+		{
+            set resultObj = ..SetErrorResult("-2", "2.MDC先期分组失败："_joRtn.errorMessage)
+            quit
+		}
+		else
+		{
+			set MDC=joRtn.result.code
+			set MDCDesc=joRtn.result.desc
+		}
+		
+		//3.第二步：判断QY歧义组
+        set params.mdc = MDC
+        set params.mdcDesc = MDCDesc
+		set joRtn=..CheckGroupQY(jsonObj)
+		if (joRtn.errorCode '= "0")
+		{	
+		    //返回不为0表示 进入歧义组		
+            set resultObj = ..SetErrorResult("-3", "3.QY歧义组判断："_joRtn.errorMessage)
+            quit
+		}
+
+		//4.第三步：ADRG分组        
+        set params.mdc = MDC
+        set params.mdcDesc = MDCDesc
+		set joRtn=..GroupADRG(jsonObj)
+		
+		if (joRtn.errorCode '= "0")
+		{
+            set resultObj = ..SetErrorResult("-4", "4.1 ADRG分组失败："_joRtn.errorMessage)
+            quit
+		}
+		else
+		{
+			set totalCount = joRtn.totalCount //返回记录数
+			set jaADRG= joRtn.result
+			if (totalCount = 0)
+			{
+			    set resultObj=..SetErrorResult("-4","4.2 ADRG分组失败,请检查主诊断大类【"_MDC_"："_MDCDesc_"】的分组规则是否维护！0000组入组条件：主要诊断大类(MDC),或者未入任何ADRG分组！")	
+			    quit
+			}				
+		}
+
+		//第四步：并发症确认CC/MCC
+		set params.adrgInfo = jaADRG
+		set joRtn=..GroupComplication(jsonObj)	
+
+		if (joRtn.errorCode '= "0")
+		{
+            set resultObj = ..SetErrorResult("-5", "5.1 并发症确认CC/MCC失败："_joRtn.errorMessage)
+            quit
+		}
+		else
+		{
+			set totalCount = joRtn.totalCount //返回记录数
+			set jaComplication= joRtn.result
+		}
+
+		//第五步：DRG分组
+        set params.complicationInfo= jaComplication                       
+		set joRtn=..GroupDRG(jsonObj)								
+		if (joRtn.errorCode '= "0")
+		{
+            set resultObj = ..SetErrorResult("-7", "7.1 DRG分组失败："_joRtn.errorMessage)
+            quit
+		}
+		else
+		{
+			//返回数组对象,可能存在多个DRG分组结果
+			set totalCount = joRtn.totalCount 
+			set jaDRG= joRtn.result	
+			if (totalCount =0)
+			{
+			    set resultObj=..SetErrorResult("-7","7.2 DRG分组失败："_joRtn.errorMessage)	
+			    quit
+			}
+			
+            set itemObj = jaDRG.%Get(0)
+            set DRG = itemObj.code
+            set DRGDesc = itemObj.desc									
+		}
+		
+		//第六步：查询DRG对应医疗机构算法配置信息		
+        //循环医疗机构信息数组
+        set jaAlgorithm=[]
+        for i = 0:1:hospinfo.%Size()-1 
+        {
+            set itemObj = hospinfo.%Get(i)
+            set hisHospCode=itemObj.hisHospCode            
+            set hospCode = itemObj.code
+            set hospName = itemObj.name
+            set mdtrtArea="",policyType=""
+            set iCount=0
+            set (points,pipValue,dgdov,payStandard)="0.00"
+            
+            //根据医院信息获取对应的就医地区划代码
+            &sql(SELECT CityID_Dr->Code,PolicyType_Dr->Descripts into :mdtrtareaAreaCode,:policyType FROM CB_Hospital WHERE OrganizationCode=:hospCode)
+            set insuAreaDesc=..GetSettlementType(insuranceAreaCode,mdtrtareaAreaCode)	        
+
+            //按年份查询算法配置
+            set queryYear = groupYear
+            &sql(SELECT Count(*) into :iCount FROM HB_DRGCoreAlgorithmData WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND (Year=:groupYear OR Year IS NULL OR Year=''))
+            if (iCount = 0)&&(groupYear '= "") 
+            {
+                set queryYear = groupYear - 1
+                &sql(SELECT Count(*) into :iCount FROM HB_DRGCoreAlgorithmData WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND (Year=:queryYear OR Year IS NULL OR Year=''))
+                if (iCount = 0) {
+                    set queryYear = ""
+                    &sql(SELECT Count(*) into :iCount FROM HB_DRGCoreAlgorithmData WHERE FixmedinsCode=:hospCode AND DRG=:DRG)
+                }
+            }
+            
+	        if (iCount>1)
+	        {
+		        if (insuAreaDesc="市本级") { set mdtrtArea=$E(mdtrtareaAreaCode,1,4)_"00" }
+			    elseif (insuAreaDesc="省直") { set mdtrtArea=$E(mdtrtareaAreaCode,1,2)_"9900" }
+			    elseif (insuAreaDesc="异地") { set mdtrtArea=$E(mdtrtareaAreaCode,1,2)_"0000" }
+
+                if (queryYear '= "") 
+                {
+                    &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
+                         WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND MdtrtArea=:mdtrtArea AND (Year=:queryYear OR Year IS NULL OR Year=''))
+                } 
+                else 
+                {
+                    &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
+                         WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND MdtrtArea=:mdtrtArea)
+                }
+		    }
+		    elseif (iCount=1)
+		    {
+			    set insuAreaDesc="市本级"
+                if (queryYear '= "") 
+                {
+                    &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
+                         WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND (Year=:queryYear OR Year IS NULL OR Year=''))
+                } 
+                else 
+                {
+                    &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
+                         WHERE FixmedinsCode=:hospCode AND DRG=:DRG)
+                }
+			}
+			else
+			{
+				set (points,pipValue,dgdov,payStandard)="0.00"
+				set insuAreaDesc=""
+				if (groupYear '= "") { set insuAreaDesc="未维护【"_groupYear_"年】DRG分组数据" }
+			}	        
+                                                           
+		    if (payStandard="0.00")||(payStandard="") { set (points,pipValue,dgdov,payStandard)="0.00" }
+            
+            set jo={}
+            set jo.hisHospCode = hisHospCode
+            set jo.hospCode = hospCode
+            set jo.hospName = hospName_"["_queryYear_"年"_insuAreaDesc_"DRG分组方案]"
+            set jo.algorithm= insuAreaDesc
+            set jo.policyType= policyType
+            set jo.drg = DRG 
+            set jo.drgDesc = DRGDesc                       
+            set jo.points = points
+            set jo.pipValue = pipValue
+            set jo.dgdov = dgdov
+            set jo.payStandard = payStandard                        
+            set jo.totalCost = totalCost
+
+            if (payStandard="0.00")||(payStandard="")
+            {
+                set discrepancyRate = 100                    
+                set discrepancyAmt = payStandard - totalCost
+	        }
+	        else
+	        {
+                set discrepancyRate = $FNUMBER(($ZABS(totalCost - payStandard)/payStandard)*100,"L",2)                       
+                set discrepancyAmt = payStandard - totalCost   
+		    }
+                        
+            if (discrepancyAmt > 0)
+            {
+	            set jo.preProfit = $FNUMBER(discrepancyAmt,"L",2)
+                set jo.preLoss = "0.00"
+                set jo.profitLoss = "盈利"  
+	        }
+	        elseif (discrepancyAmt < 0)
+	        {
+	            set jo.preProfit = "0.00"
+	            set jo.preLoss = $FNUMBER(discrepancyAmt,"L",2)
+	            set jo.profitLoss = "亏损"  
+		    }
+	        elseif (discrepancyAmt = 0)
+	        {
+	            set jo.preProfit = "0.00"
+	            set jo.preLoss = "0.00"
+	            set jo.profitLoss = ""  
+		    }
+		    	
+		    set jo.discrepancyRate = discrepancyRate
+		    set jo.groupPlanYear = queryYear
+		    
+			do jaAlgorithm.%Push(jo)     	                                                                     
+        }
+       
+        //第七步：封装返回值
+		set DRG=joRtn.result.code
+		set DRGDesc=joRtn.result.desc
+		set resultObj = ..SetSuccessResult(DRG,DRGDesc)
+
+		set joRtn={}
+		set joRtn.mdc=MDC
+		set joRtn.mdcDesc=MDCDesc
+		set joRtn.complicationInfo=jaComplication
+		set joRtn.drgInfo=jaDRG
+		set joRtn.hospAlgorithmInfo=jaAlgorithm
+		set joRtn.checkTime = $ZDATETIME($HOROLOG,3)
+
+    	set resultObj={}
+	    set resultObj.errorCode = "0"
+	    set resultObj.errorMessage = ""
+	    set resultObj.result = joRtn    
+	    set resultObj.params = params
+	    	
+	}
+    catch(e) 
+    {
+        set status = e.AsStatus()
+        set errorCode = $piece(##class(%SYSTEM.Status).GetErrorCodes(status), ",")
+        set errorMsg = $replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"), "^", " ")
+        set errorInfo = "DRG分组异常：类=" _ $ClassName() _ "，入参=" _ jsonObj.%ToJSON() _ "，错误：" _ errorMsg
+        
+        set errorLogID = ##class(src.Interface.Message).InsErrRecord("04000007", errorInfo, errorMsg)
+        set resultObj = ..SetErrorResult("-99", "DRG分组异常(日志ID："_errorLogID_")："_errorMsg)
+    }
+
+    quit resultObj
+}
+
 /// Creator:     CM
 /// CreatDate:   2026-01-01
-/// Description: 分组器
+/// Description: 分组器（改造版：增加特异化分组匹配步骤）
 /// code:		 
 /// Input:{"params":[{"":""}]}
 /// Debug
-ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
+ClassMethod DeviceNew(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 {
 	///病例实际费用 ÷ 该病组标准费用（次均费用 / 支付标准）」算出倍率，再按当地医保阈值划分为：高倍率、正常倍率、低倍率。
 	///DRG 权重RW与基准点数本质是同一个 “相对资源值”，只是单位与叫法不同：权重是小数（比值）基准点数 = DRG 权重 × 100（或 ×1000，各地不同）
@@ -1483,6 +1755,9 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
         set params.mdcDesc = MDCDesc
 		set joRtn=..GroupADRG(jsonObj)
 		
+		//set resultObj=joRtn
+		//quit
+		
 		if (joRtn.errorCode '= "0")
 		{
             set resultObj = ..SetErrorResult("-4", "4.1 ADRG分组失败："_joRtn.errorMessage)
@@ -1500,45 +1775,82 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 			}				
 		}
 
-		//第四步：并发症确认CC/MCC
-		set params.adrgInfo = jaADRG
-		set joRtn=..GroupComplication(jsonObj)	
-				
-		if (joRtn.errorCode '= "0")
+		//第四步B：特异化分组匹配（新增步骤，仅当hospinfo非空时执行）
+		// 命中特异化分组后跳过CC/MCC和标准DRG细分，直接进入算法配置查询
+		set skipToAlgorithm = 0
+		
+		if ($ISOBJECT(hospinfo)) && (hospinfo.%Size() > 0) 
 		{
-            set resultObj = ..SetErrorResult("-5", "5.1 并发症确认CC/MCC失败："_joRtn.errorMessage)
-            quit
-		}
-		else
-		{
-			//返回结果是数组对象,可能存在多个ADRG分组结果
-			set totalCount = joRtn.totalCount //返回记录数
-			set jaComplication= joRtn.result
-		}
-
-		//第五步：DRG分组
-        set params.complicationInfo= jaComplication                       
-		set joRtn=..GroupDRG(jsonObj)								
-		if (joRtn.errorCode '= "0")
-		{
-            set resultObj = ..SetErrorResult("-7", "7.1 DRG分组失败："_joRtn.errorMessage)
-            quit
-		}
-		else
-		{
-			//返回数组对象,可能存在多个DRG分组结果
-			set totalCount = joRtn.totalCount 
-			set jaDRG= joRtn.result	
-			if (totalCount =0)
+			set joSpecialRtn = ..GroupSpecialMatch(jsonObj, MDC, jaADRG, hospinfo, groupYear)
+			if (joSpecialRtn.errorCode = "0") 
 			{
-			    set resultObj=..SetErrorResult("-7","7.2 DRG分组失败："_joRtn.errorMessage)	
-			    quit
+				// 命中特异化分组，直接使用特异化DRG编码
+				// 防御性检查：确保result是DynamicObject且包含必要属性
+				if ($ISOBJECT(joSpecialRtn.result)) {
+					set DRG = $GET(joSpecialRtn.result.drgCode, "")
+					set DRGDesc = $GET(joSpecialRtn.result.drgDesc, "")
+				} else {
+					set DRG = ""
+					set DRGDesc = ""
+				}
+				
+				// 构造jaDRG数组（后续算法查询和返回值封装需要）
+				set jaDRG = ##class(%DynamicArray).%New()
+				set drgItem = {}
+				set drgItem.code = DRG
+				set drgItem.desc = DRGDesc
+				do jaDRG.%Push(drgItem)
+				
+				// 并发症信息设为空（特异化分组不考虑CC/MCC）
+				set jaComplication = ##class(%DynamicArray).%New()
+				
+				set skipToAlgorithm = 1
 			}
-			
-            set itemObj = jaDRG.%Get(0)
-            set DRG = itemObj.code
-            set DRGDesc = itemObj.desc									
 		}
+		
+		// hospinfo为空或未命中特异化分组，继续标准流程（Step 5 Complication → Step 6 GroupDRG）
+		if (skipToAlgorithm = 0) 
+		{
+	    	//第四步：并发症确认CC/MCC
+		    set params.adrgInfo = jaADRG
+		    set joRtn=..GroupComplication(jsonObj)	
+				
+		    if (joRtn.errorCode '= "0")
+		    {
+                set resultObj = ..SetErrorResult("-5", "5.1 并发症确认CC/MCC失败："_joRtn.errorMessage)
+                quit
+	    	}
+	    	else
+		    {
+			    //返回结果是数组对象,可能存在多个ADRG分组结果
+			    set totalCount = joRtn.totalCount //返回记录数
+		    	set jaComplication= joRtn.result
+    		}
+
+	    	//第五步：DRG分组
+            set params.complicationInfo= jaComplication                       
+		    set joRtn=..GroupDRG(jsonObj)								
+		    if (joRtn.errorCode '= "0")
+		    {
+                set resultObj = ..SetErrorResult("-7", "7.1 DRG分组失败："_joRtn.errorMessage)
+                quit
+		    }
+	    	else
+		    {
+			    //返回数组对象,可能存在多个DRG分组结果
+			    set totalCount = joRtn.totalCount 
+			    set jaDRG= joRtn.result	
+			    if (totalCount =0)
+		    	{
+			        set resultObj=..SetErrorResult("-7","7.2 DRG分组失败："_joRtn.errorMessage)	
+			        quit
+			    }
+			
+                set itemObj = jaDRG.%Get(0)
+                set DRG = itemObj.code
+                set DRGDesc = itemObj.desc									
+	    	}
+		}  // end of skipToAlgorithm check
 		
 		//第六步：查询DRG对应医疗机构算法配置信息		
         //循环医疗机构信息数组
@@ -1561,10 +1873,12 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
             //按年份查询算法配置：优先查询当前年份，无数据时回退到上一年
             set queryYear = groupYear
             &sql(SELECT Count(*) into :iCount FROM HB_DRGCoreAlgorithmData WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND (Year=:groupYear OR Year IS NULL OR Year=''))
-            if (iCount = 0)&&(groupYear '= "") {
+            if (iCount = 0)&&(groupYear '= "") 
+            {
                 set queryYear = groupYear - 1
                 &sql(SELECT Count(*) into :iCount FROM HB_DRGCoreAlgorithmData WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND (Year=:queryYear OR Year IS NULL OR Year=''))
-                if (iCount = 0) {
+                if (iCount = 0) 
+                {
                     //上一年也无数据，回退到原查询模式（不过滤年份）
                     set queryYear = ""
                     &sql(SELECT Count(*) into :iCount FROM HB_DRGCoreAlgorithmData WHERE FixmedinsCode=:hospCode AND DRG=:DRG)
@@ -1586,10 +1900,13 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 			        set mdtrtArea=$E(mdtrtareaAreaCode,1,2)_"0000"     
 			    }
 			    
-                if (queryYear '= "") {
+                if (queryYear '= "") 
+                {
                     &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
                          WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND MdtrtArea=:mdtrtArea AND (Year=:queryYear OR Year IS NULL OR Year=''))
-                } else {
+                } 
+                else 
+                {
                     &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
                          WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND MdtrtArea=:mdtrtArea)
                 }    			    
@@ -1597,10 +1914,13 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 		    elseif (iCount=1) //只存在一条记录，表示当前医院市本级、省直、异地算法配置都一样,直接取市本级数据
 		    {
 			    set insuAreaDesc="市本级"
-                if (queryYear '= "") {
+                if (queryYear '= "") 
+                {
                     &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
                          WHERE FixmedinsCode=:hospCode AND DRG=:DRG AND (Year=:queryYear OR Year IS NULL OR Year=''))
-                } else {
+                } 
+                else 
+                {
                     &sql(SELECT Points, PipValue, DGDOV, PayStandard into :points,:pipValue,:dgdov,:payStandard FROM HB_DRGCoreAlgorithmData 
                          WHERE FixmedinsCode=:hospCode AND DRG=:DRG)
                 }
@@ -1609,7 +1929,8 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 			{
 				set (points,pipValue,dgdov,payStandard)="0.00"
 				set insuAreaDesc=""
-				if (groupYear '= "") {
+				if (groupYear '= "") 
+				{
 					set insuAreaDesc="未维护【"_groupYear_"年】DRG分组数据"
 				}
 			}	        
@@ -1624,7 +1945,7 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
             set jo={}
             set jo.hisHospCode = hisHospCode
             set jo.hospCode = hospCode
-            set jo.hospName = hospName
+            set jo.hospName = hospName_"["_queryYear_"年"_insuAreaDesc_"DRG分组方案]"
             set jo.algorithm= insuAreaDesc
             set jo.policyType= policyType
             set jo.drg = DRG 
@@ -1650,8 +1971,8 @@ ClassMethod Device(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
             if (discrepancyAmt > 0)
             {
 	            set jo.preProfit = $FNUMBER(discrepancyAmt,"L",2) //盈利
-            set jo.preLoss = "0.00" //亏损
-            set jo.profitLoss = "盈利"  
+                set jo.preLoss = "0.00" //亏损
+                set jo.profitLoss = "盈利"  
 	        }
 	        elseif (discrepancyAmt < 0)
 	        {
@@ -1857,13 +2178,7 @@ ClassMethod DeviceFeeWarning(jsonObj As %Library.DynamicObject) As %Library.Dyna
 			{
 			    set joWarningFee= []
 			    set joWarningFee= joRtn.result
-			    set joDRGObj.result.feeWarningInfo=joWarningFee		
-			    
-            	//set resultObj={}
-	            //set resultObj.errorCode="0"
-	            //set resultObj.errorMessage=""
-	            //set resultObj.result=joDRGObj	
-	            
+			    set joDRGObj.result.feeWarningInfo=joWarningFee					   
 	            set resultObj = joDRGObj			    	    
 			}	    		    		    
 		}				
@@ -2683,6 +2998,373 @@ ClassMethod QueryDRGGroupRecord(postObj As %Library.DynamicObject) As %Library.D
     }
     
     quit resultObj
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-05-26
+/// Description: 解析GroupFactors结构化入组因素字符串
+///              格式: "主要诊断+主要手术"  → [["主要诊断"],["主要手术"]]
+///              格式: "主要诊断或次要诊断+主要手术" → [["主要诊断","次要诊断"],["主要手术"]]
+///              + 表示 AND 关系，或 表示 OR 关系
+/// Input:       groupFactors - 入组因素字符串
+/// Output:      $List格式的二维结构：外层是AND关系的组列表，内层是OR关系的字段名列表
+///              $LB($LB("1","2"), $LB("3")) 表示 (字段1或字段2)且(字段3)
+///              字段映射: "主要诊断"→1, "次要诊断"→2, "主要手术"→3, "次要手术"→4
+ClassMethod ParseGroupFactors(groupFactors As %String) As %List
+{
+	new (groupFactors)
+	if (groupFactors = "") quit ""
+	
+	set result = ""
+	; 按 + 号分割得到 AND 组
+	set andGroups = $LENGTH(groupFactors, "+")
+	for andIdx = 1:1:andGroups {
+		set andGroup = $ZSTRIP($PIECE(groupFactors, "+", andIdx), "<>W")
+		if (andGroup = "") continue
+		
+		; 在各 AND 组内按"或"分割得到 OR 项
+		set orList = ""
+		set orCount = $LENGTH(andGroup, "或")
+		for orIdx = 1:1:orCount {
+			set orItem = $ZSTRIP($PIECE(andGroup, "或", orIdx), "<>W")
+			if (orItem = "") continue
+			
+			; 将中文字段名映射为数字编码
+			if (orItem = "主要诊断") {
+				set orList = orList _ $LISTBUILD(1)
+			} elseif (orItem = "次要诊断") {
+				set orList = orList _ $LISTBUILD(2)
+			} elseif (orItem = "主要手术") {
+				set orList = orList _ $LISTBUILD(3)
+			} elseif (orItem = "次要手术") {
+				set orList = orList _ $LISTBUILD(4)
+			}
+		}
+		
+		if ($LISTLENGTH(orList) > 0) {
+			set result = result _ $LISTBUILD(orList)
+		}
+	}
+	
+	quit result
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-05-26
+/// Description: 特异化分组匹配算法
+///              根据ADRG编码列表、省市信息和年份，查询特异化分组规则表进行匹配
+/// Input:       jsonObj - 患者就诊信息JSON对象（含diseinfo, oprninfo数组）
+///              MDC - MDC编码
+///              jaADRG - ADRG分组结果数组（每个元素含code/drcode）
+///              hospinfo - 医疗机构信息数组（取第一个元素的省市信息）
+///              groupYear - 分组方案年份
+/// Output:      {errorCode:"0", result:{drgCode, drgDesc, matchRuleId, groupFactors}}
+///              匹配成功返回"0"，不匹配返回"-1"
+/// Debug:       w ##class(src.DRG.GroupDevice).GroupSpecialMatch({}, "", [], [], "").%ToJSON()
+ClassMethod GroupSpecialMatch(jsonObj As %Library.DynamicObject, MDC As %String, jaADRG As %Library.DynamicArray, hospinfo As %Library.DynamicArray, groupYear As %String) As %Library.DynamicObject
+{
+	new (jsonObj, MDC, jaADRG, hospinfo, groupYear)
+	
+	; 使用局部变量存储匹配结果，最后再赋值给resultObj.result（避免中途对象被覆盖）
+	set resultObj = ##class(%DynamicObject).%New()
+	set resultObj.errorCode = "-1"
+	set resultObj.errorMessage = "未命中特异化分组规则"
+	set resultObj.result = ##class(%DynamicObject).%New()
+	
+	; 局部变量：存储匹配成功的特异化分组信息
+	set matchDRGCode = ""
+	set matchDRGName = ""
+	set matchGroupFactors = ""
+	set matchRuleId = ""
+	set matchedSuccess = 0
+	
+	try {
+		; 调试：记录入参
+		set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "jsonObj: " _ jsonObj.%ToJSON()
+		set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "MDC: " _ MDC
+		set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "hospinfo size: " _ $SELECT($ISOBJECT(hospinfo): hospinfo.%Size(), 1: "null")
+		set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "groupYear: " _ groupYear
+		
+		; hospinfo为空时不执行匹配
+		if (hospinfo = "") || ('$ISOBJECT(hospinfo)) || (hospinfo.%Size() = 0) {
+			set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "hospinfo为空，退出"
+			quit
+		}
+		
+		; 获取患者主诊断编码
+		set mainDiagCode = jsonObj.params.%Get(0).mainDiagnosisCode
+		set diseinfo = jsonObj.params.%Get(0).diseInfo
+		if (diseinfo = "") || ('$ISOBJECT(diseinfo)) set diseinfo = []
+		
+		; 获取患者主手术编码
+		set mainOperationCode = jsonObj.params.%Get(0).mainOperationCode
+		set oprninfo = jsonObj.params.%Get(0).oprnInfo
+		if (oprninfo = "") || ('$ISOBJECT(oprninfo)) set oprninfo = []
+		
+		; 从hospinfo获取省市信息和行政区划代码
+		set provinceDr = ""
+		set cityDr = ""
+		set admvs = ""
+		
+		if ($ISOBJECT(hospinfo)) && (hospinfo.%Size() > 0) 
+		{
+			set hospItem = hospinfo.%Get(0)
+			set hisHospCode = $GET(hospItem.hisHospCode, "")
+			set hospCode = $GET(hospItem.code, "")
+			
+			set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "hospCode: " _ hospCode _ ", hisHospCode: " _ hisHospCode
+			
+			if (hospCode '= "") 
+				{
+					; 从医疗机构信息表获取省市和行政区划
+					&sql(SELECT ProvID_Dr, CityID_Dr, CityID_Dr->Code INTO :provinceDr, :cityDr, :admvs 
+					     FROM CB_Hospital WHERE OrganizationCode=:hospCode)
+					
+					set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "provinceDr: " _ provinceDr _ ", cityDr: " _ cityDr _ ", admvs: " _ admvs
+				}
+		}
+		
+		; 如果无法获取省市信息，退出
+		if (provinceDr = "") && (cityDr = "") {
+			set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "无法获取省市信息，退出"
+			quit
+		}
+		
+		; 年份默认当前年份
+		if (groupYear = "") set groupYear = $PIECE($ZDATE($HOROLOG, 3), "-", 1)
+		
+		set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "查询年份: " _ groupYear
+		
+		; 不再按ADRG前缀过滤——特异化DRG可以和标准结果不在同一个ADRG下
+		; 直接查询所有符合省市/年份条件的规则，在匹配阶段逐一判断
+		set sql = "SELECT ID, DRGCode, DRGName, PrincipalDiagnosis, SecondaryDiagnosis,"
+				_ " MajorProcedure, SecondaryProcedure, GroupFactors"
+				_ " FROM HB_DRGSpecialGroup"
+				_ " WHERE 1=1"
+		
+		if provinceDr '= "" {
+			set sql = sql _ " AND Province_Dr='" _ provinceDr _ "'"
+		}
+		if cityDr '= "" {
+			set sql = sql _ " AND City_Dr='" _ cityDr _ "'"
+		}
+		if (admvs '= "") {
+			; 行政区划代码匹配模式：完整匹配或前缀匹配（如340100可匹配3401开头的）
+			set admvsPrefix = $EXTRACT(admvs, 1, 4)
+			set sql = sql _ " AND (Admvs='" _ admvs _ "' OR LEFT(Admvs,4)='" _ admvsPrefix _ "' OR Admvs='')"
+		}
+		if groupYear '= "" {
+			set sql = sql _ " AND (Year='" _ groupYear _ "' OR Year IS NULL OR Year='')"
+		}
+		
+		; 按DRGCode排序
+		set sql = sql _ " ORDER BY DRGCode"
+		
+		set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "SQL: " _ sql
+		
+		set sqlObj = ##class(%SQL.Statement).%New(1)
+		set sc = sqlObj.%Prepare(sql)
+		if (sc '= 1) {
+			set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "SQL Prepare failed: " _ $SYSTEM.SQL.GetErrorText(sc)
+			quit
+		}
+		set rs = sqlObj.%Execute()
+		
+		; 统计查询结果
+		set rowCount = 0
+		set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "开始遍历查询结果..."
+		
+		; 遍历候选规则进行匹配
+		while rs.%Next() 
+		{
+			set rowCount = rowCount + 1
+			set ruleId = rs.ID
+			set drgCode = rs.DRGCode
+			set drgName = rs.DRGName
+			set principalDiag = rs.PrincipalDiagnosis
+			set secondaryDiag = rs.SecondaryDiagnosis
+			set majorProc = rs.MajorProcedure
+			set secondaryProc = rs.SecondaryProcedure
+			set groupFactors = rs.GroupFactors
+			
+			set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "Row " _ rowCount _ ": DRGCode=" _ drgCode _ ", PrincipalDiagnosis=" _ principalDiag _ ", MajorProcedure=" _ majorProc _ ", GroupFactors=" _ groupFactors
+			
+			; 解析GroupFactors获取匹配逻辑
+			set parsedFactors = ..ParseGroupFactors(groupFactors)
+			
+			; 如果没有GroupFactors，默认所有非空字段为AND关系
+			if (parsedFactors = "") {
+				; 构建默认AND逻辑
+				set parsedFactors = ""
+				if principalDiag '= "" {
+					set parsedFactors = parsedFactors _ $LISTBUILD($LISTBUILD(1))
+				}
+				if secondaryDiag '= "" {
+					set parsedFactors = parsedFactors _ $LISTBUILD($LISTBUILD(2))
+				}
+				if majorProc '= "" {
+					set parsedFactors = parsedFactors _ $LISTBUILD($LISTBUILD(3))
+				}
+				if secondaryProc '= "" {
+					set parsedFactors = parsedFactors _ $LISTBUILD($LISTBUILD(4))
+				}
+			}
+			
+			; 按GroupFactors解析结果执行匹配
+			set matched = 1
+			set andGroupCount = $LISTLENGTH(parsedFactors)
+			
+			for agIdx = 1:1:andGroupCount {
+				set orList = $LISTGET(parsedFactors, agIdx)
+				set orCount = $LISTLENGTH(orList)
+				set orMatched = 0
+				
+				for oi = 1:1:orCount {
+					set fieldCode = $LISTGET(orList, oi)
+					set fieldMatched = 0
+					
+					set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "Row " _ rowCount _ " AND组" _ agIdx _ " OR项" _ oi _ ": fieldCode=" _ fieldCode _ ", mainDiagCode=" _ mainDiagCode _ ", mainOperationCode=" _ mainOperationCode
+					
+					if fieldCode = 1 {
+						; 主要诊断匹配
+						set fieldMatched = ..IsCodeMatch(mainDiagCode, principalDiag)
+						set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "Row " _ rowCount _ " 主要诊断匹配: mainDiagCode=" _ mainDiagCode _ ", principalDiag=" _ principalDiag _ ", result=" _ fieldMatched
+						; 同时也检查逗号分隔的多编码匹配
+						if 'fieldMatched {
+							set diagList = ..SplitCodes(principalDiag)
+							for di = 1:1:$LISTLENGTH(diagList) {
+								if ..IsCodeMatch(mainDiagCode, $LISTGET(diagList, di)) {
+									set fieldMatched = 1
+									quit
+								}
+							}
+						}
+						
+					} elseif fieldCode = 2 {
+						; 次要诊断匹配 - 遍历患者的diseinfo数组（排除主诊断）
+						set secondaryDiagList = ..SplitCodes(secondaryDiag)
+						set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "Row " _ rowCount _ " 次要诊断匹配: secondaryDiag=" _ secondaryDiag _ ", diseinfo size=" _ diseinfo.%Size()
+						for sj = 1:1:$LISTLENGTH(secondaryDiagList) {
+							set oneRuleDiag = $LISTGET(secondaryDiagList, sj)
+							if oneRuleDiag = "" continue
+							
+							; 遍历患者的诊断信息
+							for di = 0:1:diseinfo.%Size() - 1 {
+								set diseItem = diseinfo.%Get(di)
+								if (diseItem.mainFlag = "1") && (diseItem.diagSn = "1") { continue }
+								set patientDiag = $GET(diseItem.diagCode, "")
+								if patientDiag = "" continue
+								
+								if ..IsCodeMatch(patientDiag, oneRuleDiag) {
+									set fieldMatched = 1
+									quit
+								}
+							}
+							if fieldMatched quit
+						}
+						
+					} elseif fieldCode = 3 {
+						; 主要手术匹配
+						set procList = ..SplitCodes(majorProc)
+						set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "Row " _ rowCount _ " 主要手术匹配: majorProc=" _ majorProc _ ", mainOperationCode=" _ mainOperationCode
+						for pi = 1:1:$LISTLENGTH(procList) {
+							if ..IsCodeMatch(mainOperationCode, $LISTGET(procList, pi)) {
+								set fieldMatched = 1
+								quit
+							}
+						}
+						
+					} elseif fieldCode = 4 {
+						; 次要手术匹配 - 遍历患者的oprninfo数组（排除主手术）
+						set secondaryProcList = ..SplitCodes(secondaryProc)
+						set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "Row " _ rowCount _ " 次要手术匹配: secondaryProc=" _ secondaryProc _ ", oprninfo size=" _ oprninfo.%Size()
+						for sp = 1:1:$LISTLENGTH(secondaryProcList) {
+							set oneRuleProc = $LISTGET(secondaryProcList, sp)
+							if oneRuleProc = "" continue
+							
+							; 遍历患者的手术信息
+							for oi2 = 0:1:oprninfo.%Size() - 1 {
+								set oprnItem = oprninfo.%Get(oi2)
+								if (oprnItem.mainFlag = "1") && (oprnItem.oprnSn = "1") { continue }
+								set patientProc = $GET(oprnItem.oprnCode, "")
+								if patientProc = "" continue
+								
+								if ..IsCodeMatch(patientProc, oneRuleProc) {
+									set fieldMatched = 1
+									quit
+								}
+							}
+							if fieldMatched quit
+						}
+					}
+					
+					; OR组内任一匹配成功即通过
+					if fieldMatched {
+						set orMatched = 1
+						quit
+					}
+				}
+				
+				; AND组内有一个未匹配则整条规则不命中
+				if 'orMatched {
+					set matched = 0
+					quit
+				}
+			}
+			
+		; 全部AND组匹配成功
+		if matched {
+			set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "匹配成功！DRGCode=" _ drgCode _ ", drgName=" _ drgName
+			
+			; 用局部变量存储匹配结果（避免中途resultObj.result被覆盖）
+			set matchedSuccess = 1
+			set matchDRGCode = drgCode
+			set matchDRGName = drgName
+			set matchGroupFactors = groupFactors
+			set matchRuleId = ruleId
+			
+			quit  ; 匹配到第一条规则即返回
+		} else {
+			set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "Row " _ rowCount _ " 未匹配"
+		}
+	}
+		
+	} catch(e) {
+		set status = e.AsStatus()
+		set errorMessage = $replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"), "^", " ")
+		set errorInfo = "特异化分组匹配异常:w ##class(" _ $ClassName() _ ").GroupSpecialMatch(" _ jsonObj.%ToJSON() _ ")"
+		set errorLogID = ##class(src.Interface.Message).InsErrRecord("04000007", errorInfo, errorMessage)
+		set resultObj.errorCode = "-99"
+		set resultObj.errorMessage = "特异化分组匹配异常（日志ID：" _ errorLogID _ "）：" _ errorMessage
+	}
+	
+	; 匹配成功：将局部变量赋值给resultObj.result
+	if (matchedSuccess = 1) {
+		set resultObj.errorCode = "0"
+		set resultObj.errorMessage = ""
+		
+		; 防御性检查：确保result是DynamicObject
+		if ('$ISOBJECT(resultObj.result)) || (resultObj.result = "") {
+			set resultObj.result = ##class(%DynamicObject).%New()
+		}
+		
+		set resultObj.result.drgCode = matchDRGCode
+		; DRGDesc格式: "DRG名称（特异化分组：入组因素描述）"
+		set specialDesc = matchDRGName
+		if matchGroupFactors '= "" {
+			set specialDesc = matchDRGName _ "（特异化分组：" _ matchGroupFactors _ "）"
+		} else {
+			set specialDesc = matchDRGName _ "（特异化分组）"
+		}
+		set resultObj.result.drgDesc = specialDesc
+		set resultObj.result.matchRuleId = matchRuleId
+		set resultObj.result.groupFactors = matchGroupFactors
+	}
+	
+	; 调试：输出最终结果
+	set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "最终结果: errorCode=" _ resultObj.errorCode _ ", drgCode=" _ $GET(resultObj.result.drgCode, "")
+	
+	quit resultObj
 }
 
 }

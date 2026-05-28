@@ -1,0 +1,484 @@
+ROUTINE src.DRG.BasicData.DRGSpecialGroup.1 [Type=INT,Generated]
+ ;src.DRG.BasicData.DRGSpecialGroup.1
+ ;Generated for class src.DRG.BasicData.DRGSpecialGroup.  Do NOT edit. 05/26/2026 03:21:11PM
+ ;;486F4132;src.DRG.BasicData.DRGSpecialGroup
+ ;
+zDeleteDRGSpecialGroup(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"删除成功","result":{}}
+	try
+	{
+		set params=jsonObj.params.%Get(0)
+		set ID=params.id
+		if ID="" {
+			set resultObj.errorCode="04000006"
+			set resultObj.errorMessage="删除ID不能为空"
+			quit
+		}
+		 ;---&sql(DELETE FROM HB_DRGSpecialGroup WHERE ID=:ID)
+ 		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, ID, SQLCODE
+		do %0Ao
+		if SQLCODE'=0 {
+			set resultObj.errorCode="04000009"
+			set resultObj.errorMessage="删除失败，SQL错误码："_SQLCODE
+			quit
+		}
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="删除DRG特异化分组方案出现问题:w ##class("_$ClassName()_").DeleteDRGSpecialGroup("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+ q
+%0Ao n sqldata3d,sqldata4d,sqldata5d,sqldata6d,sqldata7d,sqldata8d,sqldata11d,sqldata14d,sqldata2d,sqldata1d
+ s $zt="%0Aerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata3d=0,sqldata4d=$g(%0CacheRowLimit,9223372036854775807)
+ s sqldata5d=$zu(115,2)
+ s sqldata6d=""
+ s sqldata2d=$s($g(ID)="":"",$isvalidnum(ID):+ID,1:ID)
+ s SQLCODE=100
+ If $zu(115,1)=2,'$TLEVEL { s sqldata7d=1 TSTART } If $zu(115,1) { s sqldata8d=1 TSTART  }
+ ; asl MOD# 2
+ s sqldata1d=sqldata2d
+ i sqldata1d'="",$d(^HBDRGSpecialGroupD(sqldata1d))
+ e  g %0AmBdun
+ set sqldata11d=##class(User.HBDRGSpecialGroup).%SQLGetLock(sqldata1d) i 'sqldata11d s SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler40",,"DELETE","SQLUser"_"."_"HB_DRGSpecialGroup",sqldata1d) g %0Ac
+ ; asl MOD# 3
+ i sqldata1d'="",$d(^HBDRGSpecialGroupD(sqldata1d))
+ e  g %0AmCdun
+ do ##class(User.HBDRGSpecialGroup).%SQLDelete(sqldata1d,$c(0,2,0,0,0,0,0),'$g(sqldata8d))
+ i 'SQLCODE { i $i(sqldata3d)'<sqldata4d { d:sqldata11d=1 ##class(User.HBDRGSpecialGroup).%SQLReleaseLock(sqldata1d) g %0Ac }}
+%0AmCdun d:sqldata11d=1 ##class(User.HBDRGSpecialGroup).%SQLReleaseLock(sqldata1d) g:SQLCODE<0 %0Ac
+%0AmBdun 
+%0AmAdun 
+%0Ac set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(sqldata3d),1:0)
+ If $zu(115,1),$g(sqldata8d) { TCOMMIT:SQLCODE'<0  TROLLBACK:SQLCODE<0 1 } TCOMMIT:SQLCODE=100&&(%ROWCOUNT=0)&&($g(sqldata7d))&&($zu(115,1)=2) 
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata14d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"/NUqX1Seqo7uEcuoWL08BXapnhU="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"/NUqX1Seqo7uEcuoWL08BXapnhU=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Aerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ d:$g(sqldata11d)=1 ##class(User.HBDRGSpecialGroup).%SQLReleaseLock(sqldata1d)
+ g %0Ac
+zGetDRGSpecialGroupList(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try
+	{
+		if (jsonObj.%IsDefined("pagination")'=0) 
+		{
+			set pagationObj=jsonObj.pagination.%Get(0)
+			set pageSize=pagationObj.pageSize
+			set currentPage=pagationObj.currentPage
+		}
+		set params=jsonObj.params.%Get(0)
+		set drgCode=params.drgCode
+		set admvs=params.admvs
+		set provinceID=params.provinceID
+		set cityID=params.cityID
+		set year=params.year
+		set sql=" SELECT ID,DRGCode,DRGName,PrincipalDiagnosis,PrincipalDiagnosisName,"
+		       _" SecondaryDiagnosis,SecondaryDiagnosisName,MajorProcedure,MajorProcedureName,"
+		       _" SecondaryProcedure,SecondaryProcedureName,GroupFactors,Remark,Admvs,"
+		       _" Province_Dr as provinceID,Province_Dr->Descripts as provinceDesc,"
+		       _" City_Dr as cityID,City_Dr->Descripts as cityDesc,Year,"
+		       _" StartDate,StopDate,CreateDate,CreateTime "
+		       _" FROM HB_DRGSpecialGroup where 1=1"
+		if drgCode'=""
+		{
+			set sql=sql_" and DRGCode like '%"_drgCode_"%'" 
+		}
+		if admvs'=""
+		{
+			set sql=sql_" and Admvs like '%"_admvs_"%'" 
+		}
+		if provinceID'=""
+		{
+			set sql=sql_" and Province_Dr = '"_provinceID_"'" 
+		}
+		if cityID'=""
+		{
+			set sql=sql_" and City_Dr = '"_cityID_"'" 
+		}
+		if year'=""
+		{
+			set sql=sql_" and Year = '"_year_"'" 
+		}
+		set sql=sql_" Order by DRGCode"
+		set sqlObj=##class(%SQL.Statement).%New(1)
+		set sc=sqlObj.%Prepare(sql)
+		set result=sqlObj.%Execute()
+		while result.%Next(sc)	
+		{
+			set id=result.ID
+			set drgCodeVal=result.DRGCode
+			set drgName=result.DRGName	
+			set principalDiagnosis=result.PrincipalDiagnosis
+			set principalDiagnosisName=result.PrincipalDiagnosisName
+			set secondaryDiagnosis=result.SecondaryDiagnosis
+			set secondaryDiagnosisName=result.SecondaryDiagnosisName
+			set majorProcedure=result.MajorProcedure
+			set majorProcedureName=result.MajorProcedureName
+			set secondaryProcedure=result.SecondaryProcedure
+			set secondaryProcedureName=result.SecondaryProcedureName
+			set groupFactors=result.GroupFactors
+			set remark=result.Remark
+			set admvsVal=result.Admvs
+			set provinceIDVal=result.provinceID
+			set provinceDesc=result.provinceDesc
+			set cityIDVal=result.cityID
+			set cityDesc=result.cityDesc
+			set yearVal=result.Year
+			set startDate=result.StartDate
+			set stopDate=result.StopDate
+			set createDate=result.CreateDate
+			set createTime=result.CreateTime
+			set dataObj={}
+			set dataObj.id=id
+			set dataObj.drgCode=drgCodeVal
+			set dataObj.drgName=drgName
+			set dataObj.principalDiagnosis=principalDiagnosis
+			set dataObj.principalDiagnosisName=principalDiagnosisName
+			set dataObj.secondaryDiagnosis=secondaryDiagnosis
+			set dataObj.secondaryDiagnosisName=secondaryDiagnosisName
+			set dataObj.majorProcedure=majorProcedure
+			set dataObj.majorProcedureName=majorProcedureName
+			set dataObj.secondaryProcedure=secondaryProcedure
+			set dataObj.secondaryProcedureName=secondaryProcedureName
+			set dataObj.groupFactors=groupFactors
+			set dataObj.remark=remark
+			set dataObj.admvs=admvsVal
+			set dataObj.provinceID=provinceIDVal
+			set dataObj.provinceDesc=provinceDesc
+			set dataObj.cityID=cityIDVal
+			set dataObj.cityDesc=cityDesc
+			set dataObj.year=yearVal
+			set dataObj.startDate=startDate
+			set dataObj.stopDate=stopDate
+			set dataObj.createDate=createDate
+			set dataObj.createTime=createTime
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询DRG特异化分组方案出现问题:w ##class("_$ClassName()_").GetDRGSpecialGroupList("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+zSaveDRGSpecialGroup(jsonObj)
+	new (jsonObj)
+	set resultObj={}
+	set resultObj.errorCode="0"
+	set resultObj.errorMessage="保存成功"
+	set resultObj.result={}
+	try
+	{
+		set params=jsonObj.params.%Get(0)
+		set session=jsonObj.session.%Get(0)
+		set userID=session.userID
+		set ID=params.id
+		set drgCode=params.drgCode
+		set drgName=params.drgName
+		set principalDiagnosis=params.principalDiagnosis
+		set principalDiagnosisName=params.principalDiagnosisName
+		set secondaryDiagnosis=params.secondaryDiagnosis
+		set secondaryDiagnosisName=params.secondaryDiagnosisName
+		set majorProcedure=params.majorProcedure
+		set majorProcedureName=params.majorProcedureName
+		set secondaryProcedure=params.secondaryProcedure
+		set secondaryProcedureName=params.secondaryProcedureName
+		set groupFactors=params.groupFactors
+		set remark=params.remark
+		set admvs=params.admvs
+		set provinceDr=params.provinceDr
+		set cityDr=params.cityDr
+		set year=params.year
+		set startDate=params.startDate
+		set stopDate=params.stopDate
+		// 参数校验
+		if drgCode="" {
+			set resultObj.errorCode="02042004"
+			set resultObj.errorMessage="DRG编码不能为空"
+			quit
+		}
+		if drgName="" {
+			set resultObj.errorCode="02042005"
+			set resultObj.errorMessage="DRG名称不能为空"
+			quit
+		}
+		if admvs="" {
+			set resultObj.errorCode="02042006"
+			set resultObj.errorMessage="行政区划代码不能为空"
+			quit
+		}
+		if provinceDr="" {
+			set resultObj.errorCode="01000007"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000007")
+			quit
+		}
+		if cityDr="" {
+			set resultObj.errorCode="01000008"
+			set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("01000008")
+			quit
+		}
+		if year="" {
+			set resultObj.errorCode="02042007"
+			set resultObj.errorMessage="年份不能为空"
+			quit
+		}
+		// 使用operatetable工具类保存数据
+		set dataArr=[]
+		set dataObj={}
+		set dataObj.ID=ID
+		set dataObj.DRGCode=drgCode
+		set dataObj.DRGName=drgName
+		set dataObj.PrincipalDiagnosis=principalDiagnosis
+		set dataObj.PrincipalDiagnosisName=principalDiagnosisName
+		set dataObj.SecondaryDiagnosis=secondaryDiagnosis
+		set dataObj.SecondaryDiagnosisName=secondaryDiagnosisName
+		set dataObj.MajorProcedure=majorProcedure
+		set dataObj.MajorProcedureName=majorProcedureName
+		set dataObj.SecondaryProcedure=secondaryProcedure
+		set dataObj.SecondaryProcedureName=secondaryProcedureName
+		set dataObj.GroupFactors=groupFactors
+		set dataObj.Remark=remark
+		set dataObj.Admvs=admvs
+		set dataObj.ProvinceDr=provinceDr
+		set dataObj.CityDr=cityDr
+		set dataObj.Year=year
+		set dataObj.StartDate=startDate
+		set dataObj.StopDate=stopDate
+		// 新增时自动填充创建信息
+		if ID="" {
+			set dataObj.CreateDate=$zd($h,3)
+			set dataObj.CreateTime=$zt($p($h,",",2),1)
+			set dataObj.CreateUserDr=userID
+		}
+		do dataArr.%Push(dataObj)
+		set insObj={}
+		set insObj.className="User.HBDRGSpecialGroup"
+		set insObj.updateUserID=userID
+		set insObj.data=dataArr
+		set rtn=""
+		if ID="" {
+			set rtn=##class(src.util.operatetable).Insert(.insObj)
+		} else {
+			set rtn=##class(src.util.operatetable).Update(.insObj)
+		}
+		set errorCode=rtn.errorCode
+		set errorMessage=rtn.errorMessage
+		if errorCode'=0 {
+			set resultObj.errorCode=errorCode
+			set resultObj.errorMessage=errorMessage
+		}
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="保存DRG特异化分组方案出现问题:w ##class("_$ClassName()_").SaveDRGSpecialGroup("_jsonObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+	}
+	quit resultObj
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("src.DRG.BasicData.DRGSpecialGroup",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"src.DRG.BasicData.DRGSpecialGroup")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"src.DRG.BasicData.DRGSpecialGroup")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="src.DRG.BasicData.DRGSpecialGroup"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="DRGSpecialGroup"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"DRGSpecialGroup"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"DRGSpecialGroup"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If encoded Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ If indentFlag,encoded { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("src.DRG.BasicData.DRGSpecialGroup",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"src.DRG.BasicData.DRGSpecialGroup")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLNew(document,node,containerOref="")
+	Quit (##class(src.DRG.BasicData.DRGSpecialGroup).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("src.DRG.BasicData.DRGSpecialGroup",top,format,namespacePrefix,input,refOnly,.schema)

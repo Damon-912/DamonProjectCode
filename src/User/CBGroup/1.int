@@ -1,7 +1,7 @@
 ROUTINE User.CBGroup.1 [Type=INT,Generated]
  ;User.CBGroup.1
- ;Generated for class User.CBGroup.  Do NOT edit. 04/21/2026 04:19:00PM
- ;;6B707670;User.CBGroup
+ ;Generated for class User.CBGroup.  Do NOT edit. 05/20/2026 06:52:41PM
+ ;;51576C67;User.CBGroup
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
 ALPHAUP(v,r) { quit $zu(28,v,6) }
@@ -159,71 +159,71 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext03799d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext06086d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext03799d(1)=0,%ext03799d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext03799d(3)=$zu(115,2)
- s %ext03799d(4)=0,%ext03799d(5)=""
+ s %ext06086d(1)=0,%ext06086d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext06086d(3)=$zu(115,2)
+ s %ext06086d(4)=0,%ext06086d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext03799d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext03799d(6)=$g(%ext03799d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext03799d }
+ s %ext06086d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext06086d(6)=$g(%ext06086d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext06086d }
  q
 %0Cfirst 
  ; asl MOD# 2
- s %ext03799d(7)=""
-%0CmBk1 s %ext03799d(7)=$o(^CBGroupI("Code",%ext03799d(7)))
- i %ext03799d(7)="" g %0CmBdun
- s %ext03799d(8)=$s(%ext03799d(7)=-1E14:"",1:%ext03799d(7))
+ s %ext06086d(7)=""
+%0CmBk1 s %ext06086d(7)=$o(^CBGroupI("Code",%ext06086d(7)))
+ i %ext06086d(7)="" g %0CmBdun
+ s %ext06086d(8)=$s(%ext06086d(7)=-1E14:"",1:%ext06086d(7))
  s tID=""
-%0CmBk2 s tID=$o(^CBGroupI("Code",%ext03799d(7),tID))
+%0CmBk2 s tID=$o(^CBGroupI("Code",%ext06086d(7),tID))
  i tID="" g %0CmBk1
- goto:%ext03799d(3)'=1 %0CmBuncommitted
- if %ext03799d(3)=1 {
+ goto:%ext06086d(3)'=1 %0CmBuncommitted
+ if %ext06086d(3)=1 {
  	lock +^CBGroupD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext03799d(5)=$name(^CBGroupD($p(tID,"||",1)))_"#""SI""",%ext03799d(4)=1 }
+ 	if $t { set %ext06086d(5)=$name(^CBGroupD($p(tID,"||",1)))_"#""SI""",%ext06086d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_Group for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^CBGroupD(tID))
  e  g %0CmCdun
 %0CmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext03799d(1)),%ROWID=tID,%ext03799d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext06086d(1)),%ROWID=tID,%ext06086d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext03799d(6)=$g(%ext03799d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext06086d(6)=$g(%ext06086d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext03799d(0)) { s SQLCODE=-102 q  } i %ext03799d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext03799d(2),%ext03799d(1)'<%ext03799d(2) { s SQLCODE=100,%ROWCOUNT=%ext03799d(1),%ext03799d(0)=100 q }
+ i '$g(%ext06086d(0)) { s SQLCODE=-102 q  } i %ext06086d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext06086d(2),%ext06086d(1)'<%ext06086d(2) { s SQLCODE=100,%ROWCOUNT=%ext06086d(1),%ext06086d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Cfirst:%ext03799d(0)=1
-%0CmCdun if $g(%ext03799d(3))=1 { if $g(%ext03799d(4))=1 { l -@%ext03799d(5) s %ext03799d(4)=0 } elseif $g(%ext03799d(4))=2 { do $classmethod($li(%ext03799d(5)),"%UnlockId",$li(%ext03799d(5),2),1,1)  s %ext03799d(4)=0 }}
+ g %0Cfirst:%ext06086d(0)=1
+%0CmCdun if $g(%ext06086d(3))=1 { if $g(%ext06086d(4))=1 { l -@%ext06086d(5) s %ext06086d(4)=0 } elseif $g(%ext06086d(4))=2 { do $classmethod($li(%ext06086d(5)),"%UnlockId",$li(%ext06086d(5),2),1,1)  s %ext06086d(4)=0 }}
  g %0CmBk2
 %0CmBdun 
 %0CmAdun 
- s %ROWCOUNT=%ext03799d(1),SQLCODE=100,%ext03799d(0)=100
- s:$d(%sqltime) %ext03799d(6)=$g(%ext03799d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext06086d(1),SQLCODE=100,%ext06086d(0)=100
+ s:$d(%sqltime) %ext06086d(6)=$g(%ext06086d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext03799d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext06086d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext03799d(1)),1:0)
- if $g(%ext03799d(3))=1 {
- 	if $g(%ext03799d(4))=1 { l -@%ext03799d(5) s %ext03799d(4)=0 } elseif $g(%ext03799d(4))=2 { do $classmethod($li(%ext03799d(5)),"%UnlockId",$li(%ext03799d(5),2),1,1)  s %ext03799d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext06086d(1)),1:0)
+ if $g(%ext06086d(3))=1 {
+ 	if $g(%ext06086d(4))=1 { l -@%ext06086d(5) s %ext06086d(4)=0 } elseif $g(%ext06086d(4))=2 { do $classmethod($li(%ext06086d(5)),"%UnlockId",$li(%ext06086d(5),2),1,1)  s %ext06086d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext03799d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext06086d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"YjgmWH/MOV5/N2u0ua2g1Me3fWQ="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"YjgmWH/MOV5/N2u0ua2g1Me3fWQ=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext03799d
+ k %ext06086d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext03799d(9)
+ kill %ext06086d(9)
  quit  // close
 %0Cerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext03799d(0)=100
+ s %ext06086d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^CBGroupD(id)),1)
@@ -780,12 +780,12 @@ CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
   Set field="CreateUserDr" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
   If jsontype'="unassigned" {
     If jsontype="null" {
-      Goto %JSONImportRequired
+      Set ..CreateUserDr=""
     } Else {
       If jsontype'="string",jsontype'="number" Goto %JSONImportError
       Do ..CreateUserDrSetObjectId(%JSONObject.CreateUserDr)
     }
-  } Else { Goto %JSONImportRequired }
+  }
   Set proplist("StartDate")=""
   Set field="StartDate" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
   If jsontype'="unassigned" {
@@ -1121,7 +1121,7 @@ ERRORDelete	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 	if '$a(%check) {
 		do {
 			if $g(%vco)'="" { d @%vco quit:sqlcode<0  }
-			do:$g(%d(3))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,4)) do:$g(%d(11))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,12)) do:$g(%d(12))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,13)) do:$g(%d(13))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,14)) 
+			do:$g(%d(3))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,4)) do:$g(%d(11))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,12)) do:$g(%d(13))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,14)) 
 			quit:sqlcode<0		// A required field was missing
 			if $g(%d(2))'="" {	// Constraint Code
 				if '$a(%check,2) { lock +^CBGroupI("Code",%d(2)):$zu(115,4) if $t { set $e(%l,2)=$c(1) } else { do ..%SQLUnlockError("Code") quit  } }
@@ -1225,7 +1225,6 @@ ERRORInsert	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 			if $g(%vco)'="" { d @%vco quit:sqlcode<0  }
 			if $a(%e,3),$g(%d(3))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,4)) }
 			if $a(%e,11),$g(%d(11))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,12)) }
-			if $a(%e,12),$g(%d(12))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,13)) }
 			if $a(%e,13),$g(%d(13))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,14)) }
 			quit:sqlcode
 			if ($a(%e,2)),$g(%d(2))'="" {	// UNIQUE constraint Code
@@ -1469,7 +1468,6 @@ CatchError	Set $ZTrap=""
 		Set sc=..%NormalizeObject() Throw:('sc) ##class(%Exception.StatusException).ThrowIfInterrupt(sc)
 		If r%ChildCBGroupAuthorize'="" { Set:'$data(%objTX(0,+r%ChildCBGroupAuthorize)) %objTX(0,+r%ChildCBGroupAuthorize)=$i(%objTX(1)),%objTX(1,%objTX(0,+r%ChildCBGroupAuthorize))=r%ChildCBGroupAuthorize,%objTX(1,%objTX(0,+r%ChildCBGroupAuthorize),1)=..ChildCBGroupAuthorizeGetObject(1),%objTX(1,%objTX(0,+r%ChildCBGroupAuthorize),6)=2 Set M%ChildCBGroupAuthorize=1,i%ChildCBGroupAuthorize=$listget(%objTX(1,%objTX(0,+r%ChildCBGroupAuthorize),1)) }
 		If r%CreateUserDr'="" { Set:'$data(%objTX(0,+r%CreateUserDr)) %objTX(0,+r%CreateUserDr)=$i(%objTX(1)),%objTX(1,%objTX(0,+r%CreateUserDr))=r%CreateUserDr,%objTX(1,%objTX(0,+r%CreateUserDr),1)=..CreateUserDrGetObject(1),%objTX(1,%objTX(0,+r%CreateUserDr),6)=1 Set M%CreateUserDr=1,i%CreateUserDr=$listget(%objTX(1,%objTX(0,+r%CreateUserDr),1)) }
-		If i%CreateUserDr="" Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5659,$classname()_"::"_"CreateUserDr"))
 		If r%SafeClassificat'="" { Set:'$data(%objTX(0,+r%SafeClassificat)) %objTX(0,+r%SafeClassificat)=$i(%objTX(1)),%objTX(1,%objTX(0,+r%SafeClassificat))=r%SafeClassificat,%objTX(1,%objTX(0,+r%SafeClassificat),1)=..SafeClassificatGetObject(1),%objTX(1,%objTX(0,+r%SafeClassificat),6)=1 Set M%SafeClassificat=1,i%SafeClassificat=$listget(%objTX(1,%objTX(0,+r%SafeClassificat),1)) }
 		s:$g(%objtxSTATUS)=2 %objtxLIST(+$this)=$this
 		Set id=$listget(serial),sc=..%SaveData(.id) If ('sc) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt(sc) }
@@ -1539,7 +1537,6 @@ exit	Quit sc }
 	new mapList QUIT $$ValidateIndices^%SYS.SECURITY("User.CBGroup",idxList,autoCorrect,lockOption,multiProcess)
 %ValidateObject(force=0,checkserial=1) public {
 	set sc=1
-	If r%CreateUserDr="",i%CreateUserDr="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::CreateUserDr("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
 	If '$system.CLS.GetModified() Quit sc
 	If m%Code Set iv=..Code If iv'="" Set rc=(..CodeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"Code",iv)
 	If m%ColumnEdit Set iv=..ColumnEdit If iv'="" Set rc=(..ColumnEditIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"ColumnEdit",iv)
@@ -1602,6 +1599,15 @@ zFromDynamicObj(pDynamicObject) public {
 					set $ZERROR=""
 				}
 				set ..CreateDate=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("CreateUserDr")) {
+			try {
+				set newIdvalue=pDynamicObject."CreateUserDr"
+				set existingIdValue=..CreateUserDrGetObjectId()
+				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"CreateUserDr")=##class(User.HBUser).%OpenId(newIdvalue)
 			} catch(ex) {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
@@ -1765,7 +1771,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"ChildCBGroupAuthorize":(..GenerateManyRelationshipDynamicObjects(..ChildCBGroupAuthorize,.sc)),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"ColumnEdit":(..GetLogicalToXSDValue($This,"ColumnEdit",..ColumnEdit)),"CreateDate":(..GetLogicalToXSDValue($This,"CreateDate",..CreateDate)),"CreateUserDr":(..CreateUserDr),"DefaultMenuType":(..GetLogicalToXSDValue($This,"DefaultMenuType",..DefaultMenuType)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"ENDesc":(..GetLogicalToXSDValue($This,"ENDesc",..ENDesc)),"LayoutEdit":(..GetLogicalToXSDValue($This,"LayoutEdit",..LayoutEdit)),"MainInterface":(..GetLogicalToXSDValue($This,"MainInterface",..MainInterface)),"OperCodeTable":(..GetLogicalToXSDValue($This,"OperCodeTable",..OperCodeTable)),"OverTime":(..OverTime),"SafeClassificat":($CASE($ISOBJECT(..SafeClassificat),1:..SafeClassificat.%Id(),:"")),"SendMsgToAllUser":(..GetLogicalToXSDValue($This,"SendMsgToAllUser",..SendMsgToAllUser)),"StartDate":(..GetLogicalToXSDValue($This,"StartDate",..StartDate)),"StopDate":(..GetLogicalToXSDValue($This,"StopDate",..StopDate))}
+		set pDynamicObject={"ID":(..%Id()),"ChildCBGroupAuthorize":(..GenerateManyRelationshipDynamicObjects(..ChildCBGroupAuthorize,.sc)),"Code":(..GetLogicalToXSDValue($This,"Code",..Code)),"ColumnEdit":(..GetLogicalToXSDValue($This,"ColumnEdit",..ColumnEdit)),"CreateDate":(..GetLogicalToXSDValue($This,"CreateDate",..CreateDate)),"CreateUserDr":($CASE($ISOBJECT(..CreateUserDr),1:..CreateUserDr.%Id(),:"")),"DefaultMenuType":(..GetLogicalToXSDValue($This,"DefaultMenuType",..DefaultMenuType)),"Descripts":(..GetLogicalToXSDValue($This,"Descripts",..Descripts)),"ENDesc":(..GetLogicalToXSDValue($This,"ENDesc",..ENDesc)),"LayoutEdit":(..GetLogicalToXSDValue($This,"LayoutEdit",..LayoutEdit)),"MainInterface":(..GetLogicalToXSDValue($This,"MainInterface",..MainInterface)),"OperCodeTable":(..GetLogicalToXSDValue($This,"OperCodeTable",..OperCodeTable)),"OverTime":(..OverTime),"SafeClassificat":($CASE($ISOBJECT(..SafeClassificat),1:..SafeClassificat.%Id(),:"")),"SendMsgToAllUser":(..GetLogicalToXSDValue($This,"SendMsgToAllUser",..SendMsgToAllUser)),"StartDate":(..GetLogicalToXSDValue($This,"StartDate",..StartDate)),"StopDate":(..GetLogicalToXSDValue($This,"StopDate",..StopDate))}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}
@@ -2002,7 +2008,6 @@ zXMLImportInternal()
  Set sc=$$XMLImportElements()
  If $get(checkRequired),(''sc) { Set nodelist=""
    If '$data(exists("CreateDate")) Set nodelist=nodelist_"CreateDate, "
-   If '$data(exists("CreateUserDr")) Set nodelist=nodelist_"CreateUserDr, "
    If '$data(exists("Descripts")) Set nodelist=nodelist_"Descripts, "
    If '$data(exists("StartDate")) Set nodelist=nodelist_"StartDate, "
    If nodelist'="" Set sc=$$Error^%apiOBJ(6318,$extract(nodelist,1,*-2))
@@ -2271,7 +2276,6 @@ XMLLOOP2 If child="" Quit sc
    Goto XMLLOOP } }
  If tag="CreateUserDr" {
    If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
-   Set exists("CreateUserDr")=1
    If encoded Set savechild=child,savechildlist=childlist
    If encoded,$$XMLImportIdChild() {
      Set data=idlist(child)

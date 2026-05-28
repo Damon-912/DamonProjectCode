@@ -25,8 +25,19 @@ import {
   SyncOutlined
 } from '@ant-design/icons';
 import CustomPagination from '../../components/CustomPagination';
+import { useDict } from '../../hooks/useDict';
+import { getDictLabel } from '../../utils/dict';
 
 const { Option } = Select;
+
+// 同步状态颜色映射（UI展示用）
+const SYNC_STATUS_COLORS: Record<string, string> = {
+  running: 'processing',
+  success: 'success',
+  failed: 'error',
+  pending: 'default',
+  stopped: 'default',
+};
 
 interface SyncTask {
   key: string;
@@ -47,14 +58,6 @@ interface SyncTask {
   lastSyncTime?: string;
   nextSyncTime?: string;
 }
-
-const STATUS_MAP = {
-  running: { text: '运行中', color: 'processing' },
-  success: { text: '成功', color: 'success' },
-  failed: { text: '失败', color: 'error' },
-  pending: { text: '等待中', color: 'default' },
-  stopped: { text: '已停止', color: 'default' }
-};
 
 const SYNC_TASKS_DATA: SyncTask[] = [
   {
@@ -126,6 +129,10 @@ const SYNC_TASKS_DATA: SyncTask[] = [
 ];
 
 const DataSync: React.FC = () => {
+  // 字典数据
+  const { map: syncStatusMap, options: syncStatusOptions } = useDict('SYNC_STATUS');
+  const { map: syncTypeMap, options: syncTypeOptions } = useDict('SYNC_TYPE');
+
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<SyncTask[]>([]);
@@ -269,25 +276,24 @@ const DataSync: React.FC = () => {
       dataIndex: 'syncType',
       key: 'syncType',
       width: 100,
-      render: (type: string) => {
-        const typeMap: Record<string, { text: string; color: string }> = {
-          incremental: { text: '增量同步', color: 'blue' },
-          full: { text: '全量同步', color: 'green' },
-          realtime: { text: '实时同步', color: 'purple' }
-        };
-        const { text, color } = typeMap[type] || { text: type, color: 'default' };
-        return <Tag color={color}>{text}</Tag>;
-      }
+      render: (type: string) => (
+        <Tag color={
+          type === 'incremental' ? 'blue' : type === 'full' ? 'green' : type === 'realtime' ? 'purple' : 'default'
+        }>
+          {getDictLabel(syncTypeMap, type)}
+        </Tag>
+      )
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (status: keyof typeof STATUS_MAP) => {
-        const { text, color } = STATUS_MAP[status];
-        return <Tag color={color}>{text}</Tag>;
-      }
+      render: (status: string) => (
+        <Tag color={SYNC_STATUS_COLORS[status] || 'default'}>
+          {getDictLabel(syncStatusMap, status)}
+        </Tag>
+      )
     },
     {
       title: '进度',
@@ -489,10 +495,10 @@ const DataSync: React.FC = () => {
               <Descriptions.Item label="数据源">{currentRecord.source}</Descriptions.Item>
               <Descriptions.Item label="目标">{currentRecord.target}</Descriptions.Item>
               <Descriptions.Item label="同步类型">
-                <Tag>{currentRecord.syncType === 'incremental' ? '增量同步' : currentRecord.syncType === 'full' ? '全量同步' : '实时同步'}</Tag>
+                <Tag>{getDictLabel(syncTypeMap, currentRecord.syncType)}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="状态">
-                <Tag color={STATUS_MAP[currentRecord.status].color}>{STATUS_MAP[currentRecord.status].text}</Tag>
+                <Tag color={SYNC_STATUS_COLORS[currentRecord.status]}>{getDictLabel(syncStatusMap, currentRecord.status)}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="开始时间">{currentRecord.startTime}</Descriptions.Item>
               <Descriptions.Item label="结束时间">{currentRecord.endTime || '-'}</Descriptions.Item>

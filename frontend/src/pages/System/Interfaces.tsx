@@ -10,10 +10,16 @@ import {
   type InterfaceServiceItem, type SaveInterfaceServiceParams
 } from '../../api/system';
 import CustomPagination from '../../components/CustomPagination';
+import { useDict } from '../../hooks/useDict';
+import { getDictLabel } from '../../utils/dict';
 
 const { Option } = Select;
 
 const Interfaces: React.FC = () => {
+  // 字典数据
+  const { map: opTypeMap } = useDict('INTERFACE_OP_TYPE');
+  // 接口操作类型颜色映射
+  const opTypeColors: Record<string, string> = { 'S': 'green', 'A': 'blue', 'U': 'orange', 'D': 'red' };
   const [data, setData] = useState<InterfaceServiceItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -182,16 +188,11 @@ const Interfaces: React.FC = () => {
       title: '服务类型',
       dataIndex: 'serviceType',
       width: 90,
-      render: (v: string) => {
-        const typeMap: Record<string, { color: string; text: string }> = {
-          'S': { color: 'green', text: '查询' },
-          'A': { color: 'blue', text: '新增' },
-          'U': { color: 'orange', text: '修改' },
-          'D': { color: 'red', text: '删除' },
-        };
-        const type = typeMap[v] || { color: 'default', text: v };
-        return <Tag color={type.color}>{type.text}</Tag>;
-      },
+      render: (v: string) => (
+        <Tag color={opTypeColors[v] || 'default'}>
+          {getDictLabel(opTypeMap, v)}
+        </Tag>
+      ),
     },
     {
       title: '产品类别',

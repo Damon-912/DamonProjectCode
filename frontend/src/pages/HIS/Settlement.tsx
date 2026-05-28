@@ -27,10 +27,21 @@ import {
 import type { RangePickerProps } from 'antd/es/date-picker';
 import dayjs, { Dayjs } from 'dayjs';
 import CustomPagination from '../../components/CustomPagination';
+import { useDict } from '../../hooks/useDict';
+import { getDictLabel } from '../../utils/dict';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 const { TextArea } = Input;
+
+// 结算状态颜色映射（UI展示用）
+const SETTLEMENT_STATUS_COLORS: Record<string, string> = {
+  pending: 'default',
+  submitted: 'processing',
+  settled: 'success',
+  cancelled: 'default',
+  rejected: 'error',
+};
 
 interface SettlementItem {
   key: string;
@@ -53,14 +64,6 @@ interface SettlementItem {
   settleTime?: string;
   remark: string;
 }
-
-const STATUS_MAP = {
-  pending: { text: '待提交', color: 'default' },
-  submitted: { text: '已提交', color: 'processing' },
-  settled: { text: '已结算', color: 'success' },
-  cancelled: { text: '已取消', color: 'default' },
-  rejected: { text: '已驳回', color: 'error' }
-};
 
 const HIS_SETTLEMENT_DATA: SettlementItem[] = [
   {
@@ -126,6 +129,9 @@ const HIS_SETTLEMENT_DATA: SettlementItem[] = [
 ];
 
 const Settlement: React.FC = () => {
+  // 字典数据
+  const { map: settlementStatusMap, options: settlementStatusOptions } = useDict('SETTLEMENT_STATUS');
+
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<SettlementItem[]>([]);
@@ -354,10 +360,11 @@ const Settlement: React.FC = () => {
       key: 'status',
       width: 100,
       fixed: 'right' as const,
-      render: (status: keyof typeof STATUS_MAP) => {
-        const { text, color } = STATUS_MAP[status];
-        return <Tag color={color}>{text}</Tag>;
-      }
+      render: (status: string) => (
+        <Tag color={SETTLEMENT_STATUS_COLORS[status] || 'default'}>
+          {getDictLabel(settlementStatusMap, status)}
+        </Tag>
+      ),
     },
     {
       title: '操作',
@@ -426,13 +433,7 @@ const Settlement: React.FC = () => {
             <RangePicker style={{ width: 240 }} />
           </Form.Item>
           <Form.Item name="status" label="状态">
-            <Select placeholder="全部状态" style={{ width: 120 }} allowClear>
-              <Option value="pending">待提交</Option>
-              <Option value="submitted">已提交</Option>
-              <Option value="settled">已结算</Option>
-              <Option value="cancelled">已取消</Option>
-              <Option value="rejected">已驳回</Option>
-            </Select>
+            <Select placeholder="全部状态" style={{ width: 120 }} allowClear options={settlementStatusOptions} />
           </Form.Item>
           <Form.Item>
             <Space>
@@ -550,8 +551,8 @@ const Settlement: React.FC = () => {
                 <Descriptions.Item label="结算金额">¥{currentRecord.settlementAmount.toLocaleString()}</Descriptions.Item>
                 <Descriptions.Item label="实际支付">¥{currentRecord.actualPayment.toLocaleString()}</Descriptions.Item>
                 <Descriptions.Item label="状态">
-                  <Tag color={STATUS_MAP[currentRecord.status].color}>
-                    {STATUS_MAP[currentRecord.status].text}
+                  <Tag color={SETTLEMENT_STATUS_COLORS[currentRecord.status]}>
+                    {getDictLabel(settlementStatusMap, currentRecord.status)}
                   </Tag>
                 </Descriptions.Item>
                 <Descriptions.Item label="提交时间">{currentRecord.submitTime || '-'}</Descriptions.Item>

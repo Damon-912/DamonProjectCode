@@ -12,7 +12,8 @@ import {
 import { drgGroup, convertResultToLowerCamel, type DiagnosisInfoLowerCamel, type OperationInfoLowerCamel, type DRGGroupResultLowerCamel } from '@/api/drgGrouping';
 import { queryMedInsuIcdInfo, getProvinceData, getCityData, type MedInsuIcdItem, type ProvinceItem, type CityItem } from '@/api/basicData';
 import { queryHospitals, type HospitalItem } from '@/api/hospital';
-
+import { useDict } from '../../hooks/useDict';
+import { getDictLabel } from '../../utils/dict';
 
 
 const { Option } = Select;
@@ -25,6 +26,11 @@ const { useForm } = Form;
  * 功能：用户手动输入患者就诊信息，调用02010001接口获取分组结果
  */
 const DRGCustomQuery: React.FC = () => {
+  // 字典数据
+  const { options: yesNoOptions } = useDict('YES_NO_FLAG');
+  const { options: sexOptions } = useDict('SEX');
+  const { options: dischargeTypeOptions } = useDict('DISCHARGE_TYPE');
+
   const [form] = useForm();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DRGGroupResultLowerCamel | null>(null);
@@ -950,10 +956,7 @@ const DRGCustomQuery: React.FC = () => {
           value={operations[index]?.mainFlag}
           onChange={(value) => updateOperation(index, 'mainFlag', value)}
           style={{ width: '100%' }}
-          options={[
-            { value: '1', label: '是' },
-            { value: '0', label: '否' }
-          ]}
+          options={yesNoOptions}
         />
       )
     },
@@ -1169,10 +1172,7 @@ const DRGCustomQuery: React.FC = () => {
             <Row gutter={16}>
               <Col span={6}>
                 <Form.Item name="Sex" label="性别" rules={[{ required: true }]}>
-                  <Select>
-                    <Option value="1">男</Option>
-                    <Option value="2">女</Option>
-                  </Select>
+                  <Select options={sexOptions} />
                 </Form.Item>
               </Col>
               <Col span={6}>
@@ -1203,14 +1203,7 @@ const DRGCustomQuery: React.FC = () => {
                   label="离院方式" 
                   rules={[{ required: true, message: '请选择离院方式' }]}
                 >
-                  <Select style={{ width: '100%' }}>
-                    <Option value="1">1-医嘱离院</Option>
-                    <Option value="2">2-医嘱转院</Option>
-                    <Option value="3">3-医嘱转社区卫生服务机构/乡镇卫生院</Option>
-                    <Option value="4">4-非医嘱离院</Option>
-                    <Option value="5">5-死亡</Option>
-                    <Option value="9">9-其他</Option>
-                  </Select>
+                  <Select style={{ width: '100%' }} options={dischargeTypeOptions} />
                 </Form.Item>
               </Col>
             </Row>
@@ -1257,34 +1250,22 @@ const DRGCustomQuery: React.FC = () => {
             <Row gutter={16}>
               <Col span={6}>
                 <Form.Item name="ECMOFlag" label="ECMO标志">
-                  <Select>
-                    <Option value="0">否</Option>
-                    <Option value="1">是</Option>
-                  </Select>
+                  <Select options={yesNoOptions} />
                 </Form.Item>
               </Col>
               <Col span={6}>
                 <Form.Item name="TransplantFlag" label="器官移植标志">
-                  <Select>
-                    <Option value="0">否</Option>
-                    <Option value="1">是</Option>
-                  </Select>
+                  <Select options={yesNoOptions} />
                 </Form.Item>
               </Col>
               <Col span={6}>
                 <Form.Item name="MarrowTransplantFlag" label="骨髓移植标志">
-                  <Select>
-                    <Option value="0">否</Option>
-                    <Option value="1">是</Option>
-                  </Select>
+                  <Select options={yesNoOptions} />
                 </Form.Item>
               </Col>
               <Col span={6}>
                 <Form.Item name="HIVFlag" label="HIV感染标志">
-                  <Select>
-                    <Option value="0">否</Option>
-                    <Option value="1">是</Option>
-                  </Select>
+                  <Select options={yesNoOptions} />
                 </Form.Item>
               </Col>
             </Row>

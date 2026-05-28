@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, Table, Button, Input, Select, Space, Modal, Form, Row, Col,
-  Tag, message, Popconfirm, DatePicker
+  Tag, message, Popconfirm, DatePicker, Switch
 } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { 
@@ -36,8 +36,8 @@ const BasicDataMaintenance: React.FC = () => {
   const [subPageSize, setSubPageSize] = useState(15);
 
   // 查询条件
-  const [mainSearch, setMainSearch] = useState({ insuDesc: '', status: '' });
-  const [subSearch, setSubSearch] = useState({ desc: '', status: '' });
+  const [mainSearch, setMainSearch] = useState({ insuCode: '', insuDesc: '', status: '' });
+  const [subSearch, setSubSearch] = useState({ code: '', desc: '', status: '' });
 
   // 主表弹窗
   const [modalOpen, setModalOpen] = useState(false);
@@ -63,6 +63,7 @@ const BasicDataMaintenance: React.FC = () => {
     try {
       const res = await queryBasicData(
         { 
+          insuCode: mainSearch.insuCode || undefined,
           insuDesc: mainSearch.insuDesc || undefined,
           status: mainSearch.status || undefined
         },
@@ -103,6 +104,7 @@ const BasicDataMaintenance: React.FC = () => {
       const res = await queryBasicDataSub(
         { 
           dictID: selectedRow.dictID || selectedRow.id, 
+          code: subSearch.code || undefined,
           desc: subSearch.desc || undefined,
           status: subSearch.status || undefined
         },
@@ -136,7 +138,7 @@ const BasicDataMaintenance: React.FC = () => {
   };
 
   const handleMainReset = () => {
-    setMainSearch({ insuDesc: '', status: '' });
+    setMainSearch({ insuCode: '', insuDesc: '', status: '' });
   };
 
   const handleSubSearch = () => {
@@ -144,7 +146,7 @@ const BasicDataMaintenance: React.FC = () => {
   };
 
   const handleSubReset = () => {
-    setSubSearch({ desc: '', status: '' });
+    setSubSearch({ code: '', desc: '', status: '' });
   };
 
   // 主表操作
@@ -325,6 +327,7 @@ const BasicDataMaintenance: React.FC = () => {
       identification: record.identification,
       startDate: record.startDate ? dayjs(record.startDate.split(' ')[0]) as unknown as string : null,
       stopDate: record.stopDate ? dayjs(record.stopDate.split(' ')[0]) as unknown as string : null,
+      status: (record.status === 'Y') as any  // 将状态字符串转换为布尔值
     });
     setSubModalOpen(true);
   };
@@ -349,10 +352,15 @@ const BasicDataMaintenance: React.FC = () => {
       setSubSaving(true);
       // dictID 取自 02010011 查询主表返回的 dictID（selectedRow）
       const dictID = selectedRow?.dictID || selectedRow?.id || '';
+      
+      // 将 Switch 组件的布尔值转换回字符串格式
+      const statusValue = values.status ? 'Y' : 'N';
+      
       const params: SaveBasicDataSubParams = {
         ...values,
         id: subEditRecord?.id || '',
         dictID,
+        status: statusValue,
         startDate: (values.startDate as unknown as Dayjs)?.format('YYYY-MM-DD') || '',
         stopDate: (values.stopDate as unknown as Dayjs)?.format('YYYY-MM-DD') || '',
       };
@@ -402,11 +410,11 @@ const BasicDataMaintenance: React.FC = () => {
   };
 
   const columns: ColumnsType<BasicDataItem> = [
-    { title: '代码', dataIndex: 'insuCode', width: 180, ellipsis: true },
-    { title: '描述', dataIndex: 'insuDesc', width: 280, ellipsis: true },
+    { title: '代码', dataIndex: 'insuCode', width: 100, ellipsis: true },
+    { title: '描述', dataIndex: 'insuDesc', width: 220, ellipsis: true },
     { title: '省', dataIndex: 'provinceDesc', width: 120, ellipsis: true },
     { title: '市', dataIndex: 'cityDesc', width: 120, ellipsis: true },
-    { title: '标识码', dataIndex: 'identification', width: 120, ellipsis: true },
+    //{ title: '标识码', dataIndex: 'identification', width: 120, ellipsis: true },
     {
       title: '操作',
       key: 'action',
@@ -430,12 +438,12 @@ const BasicDataMaintenance: React.FC = () => {
   ];
 
   const subColumns: ColumnsType<BasicDataSubItem> = [
-    { title: '代码', dataIndex: 'code', width: 150, ellipsis: true },
-    { title: '描述', dataIndex: 'desc', width: 250, ellipsis: true },
-    { title: '标识码', dataIndex: 'identification', width: 100, ellipsis: true },
-    { title: '生效日期', dataIndex: 'startDate', width: 100 },
-    { title: '失效日期', dataIndex: 'stopDate', width: 100 },
-    { title: '状态', dataIndex: 'statusDesc', width: 80 },
+    { title: '代码', dataIndex: 'code', width: 100, ellipsis: true },
+    { title: '描述', dataIndex: 'desc', width: 220, ellipsis: true },
+    { title: '标识码', dataIndex: 'identification', width: 80, ellipsis: true },
+    //{ title: '状态', dataIndex: 'status', width: 100, ellipsis: true },
+    //{ title: '生效日期', dataIndex: 'startDate', width: 100 },
+    //{ title: '失效日期', dataIndex: 'stopDate', width: 100 },
     {
       title: '操作',
       key: 'action',
@@ -467,47 +475,42 @@ const BasicDataMaintenance: React.FC = () => {
         {/* 左侧：主表数据 */}
         <Card 
           size="small" 
-          title={
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>DRG基础数据</span>
-              <Space size={4}>
-                <Button type="primary" size="small" icon={<PlusOutlined />} onClick={handleAdd}>添加</Button>
-              </Space>
-            </div>
-          }
+          title="DRG基础数据"
           styles={{ body: { padding: 8, flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' } }}
-          style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}
+          style={{ flex: 3, display: 'flex', flexDirection: 'column', minWidth: 0 }}
         >
           <Row gutter={8} style={{ marginBottom: 8 }} align="middle">
             <Col>
-              <span>描述：</span>
-            </Col>
-            <Col>
-              <Input
-                placeholder="输入名称查询"
-                value={mainSearch.insuDesc}
-                onChange={e => setMainSearch(prev => ({ ...prev, insuDesc: e.target.value }))}
-                allowClear
-                style={{ width: 200 }}
-              />
-            </Col>
-            <Col>
-              <span>状态：</span>
-            </Col>
-            <Col>
-              <Select
-                placeholder="请选择"
-                value={mainSearch.status || undefined}
-                onChange={v => setMainSearch(prev => ({ ...prev, status: v || '' }))}
-                style={{ width: 100 }}
-                allowClear
-              >
-                <Option value="Y">有效</Option>
-                <Option value="N">无效</Option>
-              </Select>
+              <Space>
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>添加</Button>
+              </Space>
             </Col>
             <Col style={{ marginLeft: 'auto' }}>
               <Space>
+                <Input
+                  placeholder="输入代码查询"
+                  value={mainSearch.insuCode}
+                  onChange={e => setMainSearch(prev => ({ ...prev, insuCode: e.target.value }))}
+                  allowClear
+                  style={{ width: 150 }}
+                />
+                <Input
+                  placeholder="输入名称查询"
+                  value={mainSearch.insuDesc}
+                  onChange={e => setMainSearch(prev => ({ ...prev, insuDesc: e.target.value }))}
+                  allowClear
+                  style={{ width: 150 }}
+                />
+                <Select
+                  placeholder="请选择状态"
+                  value={mainSearch.status || undefined}
+                  onChange={v => setMainSearch(prev => ({ ...prev, status: v || '' }))}
+                  style={{ width: 150 }}
+                  allowClear
+                >
+                  <Option value="Y">有效</Option>
+                  <Option value="N">无效</Option>
+                </Select>
                 <Button type="primary" icon={<SearchOutlined />} onClick={handleMainSearch}>查询</Button>
                 <Button icon={<ReloadOutlined />} onClick={handleMainReset}>重置</Button>
               </Space>
@@ -604,51 +607,46 @@ const BasicDataMaintenance: React.FC = () => {
           </Card>
 
         {/* 右侧：明细数据 */}
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <div style={{ flex: 2, minHeight: 0, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           {selectedRow ? (
             <Card
               size="small"
-              title={
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>明细数据（{selectedRow.insuDesc}）</span>
-                  <Space size={4}>
-                    <Button type="primary" size="small" icon={<PlusOutlined />} onClick={handleSubAdd}>添加</Button>
-                  </Space>
-                </div>
-              }
+              title={`明细数据（${selectedRow.insuDesc}）`}
               styles={{ body: { padding: 8, flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' } }}
               style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
             >
               <Row gutter={8} align="middle">
                 <Col>
-                  <span>描述：</span>
-                </Col>
-                <Col>
-                  <Input
-                    placeholder="输入描述查询"
-                    value={subSearch.desc}
-                    onChange={e => setSubSearch(prev => ({ ...prev, desc: e.target.value }))}
-                    allowClear
-                    style={{ width: 200 }}
-                  />
-                </Col>
-                <Col>
-                  <span>状态：</span>
-                </Col>
-                <Col>
-                  <Select
-                    placeholder="请选择"
-                    value={subSearch.status || undefined}
-                    onChange={v => setSubSearch(prev => ({ ...prev, status: v || '' }))}
-                    style={{ width: 100 }}
-                    allowClear
-                  >
-                    <Option value="Y">有效</Option>
-                    <Option value="N">无效</Option>
-                  </Select>
+                  <Space>
+                    <Button type="primary" icon={<PlusOutlined />} onClick={handleSubAdd}>添加</Button>
+                  </Space>
                 </Col>
                 <Col style={{ marginLeft: 'auto' }}>
                   <Space>
+                    <Input
+                      placeholder="输入代码查询"
+                      value={subSearch.code}
+                      onChange={e => setSubSearch(prev => ({ ...prev, code: e.target.value }))}
+                      allowClear
+                      style={{ width: 150 }}
+                    />
+                    <Input
+                      placeholder="输入描述查询"
+                      value={subSearch.desc}
+                      onChange={e => setSubSearch(prev => ({ ...prev, desc: e.target.value }))}
+                      allowClear
+                      style={{ width: 150 }}
+                    />
+                    <Select
+                      placeholder="请选择状态"
+                      value={subSearch.status || undefined}
+                      onChange={v => setSubSearch(prev => ({ ...prev, status: v || '' }))}
+                      style={{ width: 150 }}
+                      allowClear
+                    >
+                      <Option value="Y">有效</Option>
+                      <Option value="N">无效</Option>
+                    </Select>
                     <Button type="primary" icon={<SearchOutlined />} onClick={handleSubSearch}>查询</Button>
                     <Button icon={<ReloadOutlined />} onClick={handleSubReset}>重置</Button>
                   </Space>
@@ -875,6 +873,11 @@ const BasicDataMaintenance: React.FC = () => {
             <Col span={12}>
               <Form.Item name="stopDate" label="失效日期">
                 <DatePicker style={{ width: '100%' }} format="YYYY-MM-DD" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="status" label="状态" valuePropName="checked" initialValue={true}>
+                <Switch checkedChildren="有效" unCheckedChildren="无效" />
               </Form.Item>
             </Col>
           </Row>

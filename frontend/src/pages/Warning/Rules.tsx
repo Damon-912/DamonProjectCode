@@ -33,29 +33,27 @@ import CustomPagination from '../../components/CustomPagination';
 import type { ColumnsType } from 'antd/es/table';
 import { queryWarningRules, saveWarningRule, deleteWarningRule } from '@/api/warning';
 import type { WarningRule } from '@/api/warning';
+import { useDict } from '../../hooks/useDict';
+import { getDictLabel } from '../../utils/dict';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
-// 规则类型
-const RULE_TYPES: Record<string, string> = {
-  '01': '费用超支',
-  '02': '低倍率',
-  '03': '高倍率',
-  '04': '编码异常',
-  '05': '分解住院',
-  '06': '费用过低',
-};
-
-// 预警级别
-const WARNING_LEVELS: Record<number, { text: string; color: string }> = {
-  1: { text: '提示', color: 'success' },
-  2: { text: '警告', color: 'warning' },
-  3: { text: '严重', color: 'error' },
+// 预警级别 Tag 颜色映射（UI展示用）
+const WARNING_LEVEL_COLORS: Record<string, string> = {
+  '1': 'success',
+  '2': 'warning',
+  '3': 'error',
 };
 
 const Rules: React.FC = () => {
+  // 字典数据（规则类型复用预警类型字典）
+  const { map: ruleTypeMap, options: ruleTypeOptions } = useDict('WARNING_TYPE');
+  const { map: warningLevelMap, options: warningLevelOptions } = useDict('WARNING_LEVEL');
+  const { options: commonStatusOptions, map: commonStatusMap } = useDict('COMMON_STATUS');
+  const { options: thresholdTypeOptions } = useDict('THRESHOLD_TYPE');
+
   const [data, setData] = useState<WarningRule[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -287,7 +285,7 @@ const Rules: React.FC = () => {
       dataIndex: 'ruleType',
       key: 'ruleType',
       width: 120,
-      render: (type: string) => RULE_TYPES[type] || type,
+      render: (type: string) => getDictLabel(ruleTypeMap, type),
     },
     {
       title: '适用DRG',
@@ -316,8 +314,8 @@ const Rules: React.FC = () => {
       key: 'warningLevel',
       width: 100,
       render: (level: number) => (
-        <Tag color={WARNING_LEVELS[level]?.color || 'default'}>
-          {WARNING_LEVELS[level]?.text || '未知'}
+        <Tag color={WARNING_LEVEL_COLORS[String(level)] || 'default'}>
+          {getDictLabel(warningLevelMap, String(level), '未知')}
         </Tag>
       ),
     },
@@ -403,20 +401,10 @@ const Rules: React.FC = () => {
             <Input placeholder="请输入规则名称" style={{ width: 150 }} />
           </Form.Item>
           <Form.Item name="ruleType" label="规则类型">
-            <Select placeholder="请选择" style={{ width: 120 }} allowClear>
-              <Option value="01">费用超支</Option>
-              <Option value="02">低倍率</Option>
-              <Option value="03">高倍率</Option>
-              <Option value="04">编码异常</Option>
-              <Option value="05">分解住院</Option>
-              <Option value="06">费用过低</Option>
-            </Select>
+            <Select placeholder="请选择" style={{ width: 120 }} allowClear options={ruleTypeOptions} />
           </Form.Item>
           <Form.Item name="isActive" label="状态">
-            <Select placeholder="请选择" style={{ width: 100 }} allowClear>
-              <Option value="Y">启用</Option>
-              <Option value="N">禁用</Option>
-            </Select>
+            <Select placeholder="请选择" style={{ width: 100 }} allowClear options={commonStatusOptions} />
           </Form.Item>
           <Form.Item>
             <Space>
@@ -514,14 +502,7 @@ const Rules: React.FC = () => {
                 name="ruleType"
                 rules={[{ required: true, message: '请选择规则类型' }]}
               >
-                <Select placeholder="请选择规则类型">
-                  <Option value="01">费用超支</Option>
-                  <Option value="02">低倍率</Option>
-                  <Option value="03">高倍率</Option>
-                  <Option value="04">编码异常</Option>
-                  <Option value="05">分解住院</Option>
-                  <Option value="06">费用过低</Option>
-                </Select>
+                <Select placeholder="请选择规则类型" options={ruleTypeOptions} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -530,11 +511,7 @@ const Rules: React.FC = () => {
                 name="warningLevel"
                 rules={[{ required: true, message: '请选择预警级别' }]}
               >
-                <Select placeholder="请选择预警级别">
-                  <Option value={1}>提示</Option>
-                  <Option value={2}>警告</Option>
-                  <Option value={3}>严重</Option>
-                </Select>
+                <Select placeholder="请选择预警级别" options={warningLevelOptions} />
               </Form.Item>
             </Col>
           </Row>
@@ -545,10 +522,7 @@ const Rules: React.FC = () => {
                 label="阈值类型"
                 name="thresholdType"
               >
-                <Select placeholder="请选择阈值类型">
-                  <Option value="01">百分比</Option>
-                  <Option value="02">固定值</Option>
-                </Select>
+                <Select placeholder="请选择阈值类型" options={thresholdTypeOptions} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -656,25 +630,26 @@ const Rules: React.FC = () => {
                 <ExclamationCircleOutlined
                   style={{
                     fontSize: 48,
-                    color: WARNING_LEVELS[previewRule.warningLevel]?.color === 'error' ? '#ff4d4f' :
-                           WARNING_LEVELS[previewRule.warningLevel]?.color === 'warning' ? '#faad14' : '#52c41a',
+                    color: ['error', 'warning'].includes(WARNING_LEVEL_COLORS[String(previewRule.warningLevel)]) 
+                           ? (WARNING_LEVEL_COLORS[String(previewRule.warningLevel)] === 'error' ? '#ff4d4f' : '#faad14')
+                           : '#52c41a',
                   }}
                 />
                 <Title level={4} style={{ marginTop: 16, marginBottom: 0 }}>
                   {previewRule.ruleName}
                 </Title>
                 <Tag
-                  color={WARNING_LEVELS[previewRule.warningLevel]?.color}
+                  color={WARNING_LEVEL_COLORS[String(previewRule.warningLevel)]}
                   style={{ marginTop: 8 }}
                 >
-                  {WARNING_LEVELS[previewRule.warningLevel]?.text}级别
+                  {getDictLabel(warningLevelMap, String(previewRule.warningLevel))}级别
                 </Tag>
               </Col>
               <Col span={24}>
                 <Divider style={{ margin: '12px 0' }} />
               </Col>
               <Col span={12}><Text strong>规则编码：</Text>{previewRule.ruleCode}</Col>
-              <Col span={12}><Text strong>规则类型：</Text>{RULE_TYPES[previewRule.ruleType]}</Col>
+              <Col span={12}><Text strong>规则类型：</Text>{getDictLabel(ruleTypeMap, previewRule.ruleType)}</Col>
               <Col span={12}>
                 <Text strong>适用DRG：</Text>
                 {previewRule.drgCode || <Text type="secondary">全部DRG组</Text>}
@@ -690,7 +665,7 @@ const Rules: React.FC = () => {
               <Col span={12}>
                 <Text strong>当前状态：</Text>
                 <Tag color={previewRule.isActive ? 'success' : 'default'}>
-                  {previewRule.isActive ? '已启用' : '已禁用'}
+                  {getDictLabel(commonStatusMap, previewRule.isActive ? 'Y' : 'N')}
                 </Tag>
               </Col>
               {previewRule.remark && (

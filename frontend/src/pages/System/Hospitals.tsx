@@ -41,7 +41,8 @@ import {
   type PolicyTypeItem
 } from '../../api/basicData';
 import CustomPagination from '../../components/CustomPagination';
-
+import { useDict } from '../../hooks/useDict';
+import { getDictLabel } from '../../utils/dict';
 
 
 // 分页参数
@@ -52,6 +53,12 @@ interface PaginationParams {
 }
 
 const Hospitals: React.FC = () => {
+  // 字典数据
+  const { options: hospitalLevelOptions } = useDict('HOSPITAL_LEVEL');
+  const { options: hospitalTypeOptions } = useDict('HOSPITAL_TYPE');
+  const { options: hospitalNatureOptions } = useDict('HOSPITAL_NATURE');
+  const { options: commonStatusOptions, map: commonStatusMap } = useDict('COMMON_STATUS');
+
   const [modalForm] = Form.useForm();
   const [data, setData] = useState<HospitalItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -149,8 +156,8 @@ const Hospitals: React.FC = () => {
       render: (active: string, record: HospitalItem) => (
         <Switch
           checked={active === 'Y'}
-          checkedChildren="启用"
-          unCheckedChildren="停用"
+          checkedChildren={commonStatusMap['Y']}
+          unCheckedChildren={commonStatusMap['N']}
           onChange={(checked) => {
             const newActive = checked ? 'Y' : 'N';
             handleToggleActive(record, newActive);
@@ -508,10 +515,7 @@ const Hospitals: React.FC = () => {
               onChange={v => setActive(v || '')}
               style={{ width: 100 }}
               allowClear
-              options={[
-                { value: 'Y', label: '启用' },
-                { value: 'N', label: '停用' }
-              ]}
+              options={commonStatusOptions}
             />
           </Col>
           <Col>
@@ -606,12 +610,7 @@ const Hospitals: React.FC = () => {
                 rules={[{ required: true, message: '请选择医院级别' }]}                
               >
                 <Select placeholder="请选择医院级别"
-                  options={[
-                    { value: 1, label: '一级' },
-                    { value: 2, label: '二级' },
-                    { value: 3, label: '三级' },
-                    { value: 4, label: '省级' },
-                  ]}
+                  options={hospitalLevelOptions}
                 />
               </Form.Item>
             </Col>
@@ -622,13 +621,7 @@ const Hospitals: React.FC = () => {
                 rules={[{ required: true, message: '请选择医院类型' }]}
               >
                 <Select placeholder="请选择医院类型"
-                  options={[
-                    { value: 1, label: '综合医院' },
-                    { value: 2, label: '中医医院' },
-                    { value: 3, label: '专科医院' },
-                    { value: 4, label: '社区卫生服务中心' },
-                    { value: 5, label: '卫生院' }
-                  ]}
+                  options={hospitalTypeOptions}
                 />
               </Form.Item>
             </Col>
@@ -642,11 +635,7 @@ const Hospitals: React.FC = () => {
                 rules={[{ required: true, message: '请选择医院性质' }]}
               >
                 <Select placeholder="请选择医院性质"
-                  options={[
-                    { value: 1, label: '公立医院' },
-                    { value: 2, label: '民营医院' },
-                    { value: 3, label: '合资医院' }
-                  ]}
+                  options={hospitalNatureOptions}
                 />
               </Form.Item>
             </Col>
@@ -657,10 +646,7 @@ const Hospitals: React.FC = () => {
                 rules={[{ required: true, message: '请选择使用状态' }]}
               >
                 <Select placeholder="请选择使用状态"
-                  options={[
-                    { value: 'Y', label: '启用' },
-                    { value: 'N', label: '停用' }
-                  ]}
+                  options={commonStatusOptions}
                 />
               </Form.Item>
             </Col>
@@ -818,7 +804,7 @@ const Hospitals: React.FC = () => {
               <Col span={12}>
                 <p><strong>使用状态：</strong>
                   <Tag color={detailRecord.active === 'Y' ? 'green' : 'red'}>
-                    {detailRecord.active === 'Y' ? '启用' : '停用'}
+                    {getDictLabel(commonStatusMap, detailRecord.active)}
                   </Tag>
                 </p>
               </Col>

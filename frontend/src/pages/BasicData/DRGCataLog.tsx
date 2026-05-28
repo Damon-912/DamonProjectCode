@@ -532,8 +532,6 @@ const DRGCataLog: React.FC = () => {
       render:(Text:string)=>Text||'-',
     },
     {
-
-
       title: '操作',
       width: 100,
       fixed: 'right',

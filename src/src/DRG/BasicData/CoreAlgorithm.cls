@@ -565,10 +565,10 @@ ClassMethod PreviewImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
                 continue
             }
             
-            // 检查是否已存在（DRG代码+行政区划+机构代码+年份）
+            // 检查是否已存在（根据表主键索引：DRG+省+市+机构代码+年份）
             set existingID=""
             &sql(SELECT ID INTO :existingID FROM SQLUser.HB_DRGCoreAlgorithmData 
-                 WHERE DRG=:drgCode AND MdtrtArea=:mdtrtArea AND FixmedinsCode=:fixmedinsCode AND Year=:year)
+                 WHERE DRG=:drgCode AND Province_Dr=:provinceID AND City_Dr=:cityID AND FixmedinsCode=:fixmedinsCode AND Year=:year)
             
             if existingID'="" 
             {
@@ -721,10 +721,10 @@ ClassMethod ConfirmImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
                 continue
             }
             
-            // 检查是否已存在（含年份）
+            // 检查是否已存在（根据表主键索引：DRG+省+市+机构代码+年份）
             set existingID=""
             &sql(SELECT ID INTO :existingID FROM HB_DRGCoreAlgorithmData 
-                 WHERE DRG=:drgCode AND MdtrtArea=:mdtrtArea AND FixmedinsCode=:fixmedinsCode AND Year=:year)
+                 WHERE DRG=:drgCode AND Province_Dr=:provinceID AND City_Dr=:cityID AND FixmedinsCode=:fixmedinsCode AND Year=:year)
             
             // 构建数据对象
             set dataObj={}

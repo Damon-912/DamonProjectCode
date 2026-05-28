@@ -34,6 +34,8 @@ import CustomPagination from '../../components/CustomPagination';
 import type { ColumnsType } from 'antd/es/table';
 import type { WarningRecord } from '@/api/warning';
 import { queryWarningRecords, processWarning } from '@/api/warning';
+import { useDict } from '../../hooks/useDict';
+import { getDictLabel } from '../../utils/dict';
 import dayjs from 'dayjs';
 import zhCN from 'antd/es/date-picker/locale/zh_CN';
 
@@ -43,29 +45,20 @@ const { Option } = Select;
 const { TabPane } = Tabs;
 const { TextArea } = Input;
 
-// 预警级别映射
-const WARNING_LEVELS: Record<number, { text: string; tagColor: string }> = {
-  1: { text: '低', tagColor: 'success' },
-  2: { text: '中', tagColor: 'warning' },
-  3: { text: '高', tagColor: 'error' },
+// 预警级别 Tag 颜色映射（UI展示用）
+const WARNING_LEVEL_COLORS: Record<string, string> = {
+  '1': 'success',
+  '2': 'warning',
+  '3': 'error',
 };
 
-// 预警类型映射（对应 BS_DRGWarningRecord.WarningType）
-const WARNING_TYPES: Record<string, string> = {
-  '01': '费用超支',
-  '02': '低倍率',
-  '03': '高倍率',
-  '04': '编码异常',
-  '05': '分解住院',
-};
-
-// 预警状态映射（对应 BS_DRGWarningRecord.WarningStatus）
-const WARNING_STATUS: Record<string, { text: string; color: string }> = {
-  '01': { text: '待处理', color: 'default' },
-  '02': { text: '已确认', color: 'processing' },
-  '03': { text: '已忽略', color: 'warning' },
-  '04': { text: '已申诉', color: 'purple' },
-  '05': { text: '已解决', color: 'success' },
+// 预警状态 Tag 颜色映射（UI展示用）
+const WARNING_STATUS_COLORS: Record<string, string> = {
+  '01': 'default',
+  '02': 'processing',
+  '03': 'warning',
+  '04': 'purple',
+  '05': 'success',
 };
 
 interface StatsData {
@@ -86,6 +79,11 @@ const fmtDate = (val: any): string => {
 };
 
 const Center: React.FC = () => {
+  // 字典数据
+  const { map: warningTypeMap, options: warningTypeOptions } = useDict('WARNING_TYPE');
+  const { map: warningStatusMap } = useDict('WARNING_STATUS');
+  const { map: warningLevelMap, options: warningLevelOptions } = useDict('WARNING_LEVEL');
+
   const [data, setData] = useState<WarningRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
@@ -239,20 +237,20 @@ const Center: React.FC = () => {
             <Col span={12}><Text strong>患者姓名:</Text> {record.patientName}</Col>
             <Col span={12}>
               <Text strong>预警级别:</Text>
-              <Tag color={WARNING_LEVELS[record.warningLevel]?.tagColor}>
-                {WARNING_LEVELS[record.warningLevel]?.text || record.warningLevel}
+              <Tag color={WARNING_LEVEL_COLORS[String(record.warningLevel)]}>
+                {getDictLabel(warningLevelMap, String(record.warningLevel))}
               </Tag>
             </Col>
             <Col span={12}><Text strong>科室:</Text> {record.deptName || '-'}</Col>
             <Col span={12}><Text strong>医生:</Text> {record.doctorName || '-'}</Col>
             <Col span={12}>
               <Text strong>预警类型:</Text>
-              <Tag>{WARNING_TYPES[record.warningType] || record.warningType}</Tag>
+              <Tag>{getDictLabel(warningTypeMap, record.warningType)}</Tag>
             </Col>
             <Col span={12}>
               <Text strong>预警状态:</Text>
-              <Tag color={WARNING_STATUS[record.warningStatus]?.color}>
-                {WARNING_STATUS[record.warningStatus]?.text || record.warningStatus}
+              <Tag color={WARNING_STATUS_COLORS[record.warningStatus]}>
+                {getDictLabel(warningStatusMap, record.warningStatus)}
               </Tag>
             </Col>
             <Col span={24}><Text strong>预警规则:</Text> {record.ruleName}</Col>
@@ -319,8 +317,8 @@ const Center: React.FC = () => {
       key: 'warningLevel',
       width: 65,
       render: (level: number) => (
-        <Tag color={WARNING_LEVELS[level]?.tagColor || 'default'}>
-          {WARNING_LEVELS[level]?.text || level}
+        <Tag color={WARNING_LEVEL_COLORS[String(level)] || 'default'}>
+          {getDictLabel(warningLevelMap, String(level), String(level))}
         </Tag>
       ),
     },
@@ -349,7 +347,7 @@ const Center: React.FC = () => {
       key: 'warningType',
       width: 100,
       render: (type: string) => (
-        <Tag>{WARNING_TYPES[type] || type}</Tag>
+        <Tag>{getDictLabel(warningTypeMap, type)}</Tag>
       ),
     },
     {
@@ -415,8 +413,8 @@ const Center: React.FC = () => {
       key: 'warningStatus',
       width: 90,
       render: (status: string) => (
-        <Tag color={WARNING_STATUS[status]?.color || 'default'}>
-          {WARNING_STATUS[status]?.text || status}
+        <Tag color={WARNING_STATUS_COLORS[status] || 'default'}>
+          {getDictLabel(warningStatusMap, status)}
         </Tag>
       ),
     },
@@ -564,24 +562,16 @@ const Center: React.FC = () => {
             allowClear
             value={filterType || undefined}
             onChange={(val) => { setFilterType(val || ''); setCurrentPage(1); }}
-          >
-            <Option value="01">费用超支</Option>
-            <Option value="02">低倍率</Option>
-            <Option value="03">高倍率</Option>
-            <Option value="04">编码异常</Option>
-            <Option value="05">分解住院</Option>
-          </Select>
+            options={warningTypeOptions}
+          />
           <Select
             placeholder="预警级别"
             style={{ width: 120 }}
             allowClear
             value={filterLevel || undefined}
             onChange={(val) => { setFilterLevel(val || ''); setCurrentPage(1); }}
-          >
-            <Option value="1">低</Option>
-            <Option value="2">中</Option>
-            <Option value="3">高</Option>
-          </Select>
+            options={warningLevelOptions}
+          />
           <Button type="primary" icon={<ReloadOutlined />} onClick={loadData}>
             查询
           </Button>

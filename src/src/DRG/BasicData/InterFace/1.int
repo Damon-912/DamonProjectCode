@@ -1,7 +1,7 @@
 ROUTINE src.DRG.BasicData.InterFace.1 [Type=INT,Generated]
  ;src.DRG.BasicData.InterFace.1
- ;Generated for class src.DRG.BasicData.InterFace.  Do NOT edit. 04/22/2026 12:50:52AM
- ;;2F645A41;src.DRG.BasicData.InterFace
+ ;Generated for class src.DRG.BasicData.InterFace.  Do NOT edit. 05/26/2026 03:21:23PM
+ ;;35513536;src.DRG.BasicData.InterFace
  ;
 zConfirmImportDIPCoreAlgorithm(jsonObj)
 	Quit ##class(src.DRG.BasicData.CoreAlgorithm).ConfirmImportDIPCoreAlgorithm(jsonObj)
@@ -36,6 +36,9 @@ zDeleteDRGCoreGroupsList(jsonObj)
 zDeleteDRGSegmentationRules(jsonObj)
 	new (jsonObj)
 	quit ##class(src.DRG.BasicData.DRGRSegmentationRules).DeleteDRGSegmentationRules(jsonObj)
+zDeleteDRGSpecialGroup(jsonObj)
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGSpecialGroup).DeleteDRGSpecialGroup(jsonObj)
 zDeleteICDMappingInfo(jsonObj)
 	Quit ##class(src.DRG.BasicData.ICDInfo).DeleteMappingInfo(jsonObj)
 zDownloadDIPCoreAlgorithmTempla(jsonObj)
@@ -66,9 +69,86 @@ zGetDRGCoreAlgorithm(jsonObj)
 zGetDRGCoreGroupsList(jsonObj)
 	new (jsonObj)
 	quit ##class(src.DRG.BasicData.DictionaryData).GetDRGCoreGroupsList(jsonObj)
+zGetDRGDictItemByTypeCode(jsonObj)
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DictManage).GetDRGDictItemByTypeCode(jsonObj)
+zGetDRGDictItemList(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try{
+		if jsonObj.%IsDefined("pagination")'=0{
+			set pg=jsonObj.pagination.%Get(0)
+			set pageSize=pg.pageSize,currentPage=pg.currentPage
+		}
+		set params=jsonObj.params.%Get(0)
+		set parentDr=params.parentDr,code=params.code,name=params.name,status=params.status
+		if parentDr="" { set resultObj.errorCode="01000010",resultObj.errorMessage="请选择字典类型" quit }
+		set sql="SELECT ID,Code,Name,Status,SortNo,Remark,CreateDate FROM CB_DRGDictTable WHERE Parent_Dr="_parentDr
+		if code'="" set sql=sql_" AND Code LIKE '%"_code_"%'"
+		if name'="" set sql=sql_" AND Name LIKE '%"_name_"%'"
+		set sql=sql_" ORDER BY SortNo ASC, ID ASC"
+		set sqlObj=##class(%SQL.Statement).%New(1)
+		do sqlObj.%Prepare(sql)
+		set rs=sqlObj.%Execute()
+		while rs.%Next()
+		{
+			set st=rs.%Get("Status")
+			if status="Y",st'="Y" continue
+			if status="N",st'="N" continue
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>(currentPage*pageSize))
+			set row={}
+			set row.id=rs.%Get("ID"),row.code=rs.%Get("Code"),row.name=rs.%Get("Name")
+			set row.status=st,row.sortNo=rs.%Get("SortNo"),row.remark=rs.%Get("Remark")
+			set row.createDate=rs.%Get("CreateDate"),row.parentDr=parentDr
+			set row.statusDesc=$select(st="Y":"启用",1:"停用"),row.statusFlag=st
+			do dataArr.%Push(row)
+		}
+		set resultObj.result.rows=dataArr,resultObj.result.total=count
+	}
+	catch(e){ set resultObj.errorCode="04000007",resultObj.errorMessage="查询字典项失败:"_e.Name }
+	quit resultObj
+zGetDRGDictTypeList(jsonObj)
+	new (jsonObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set dataArr=[]
+	try{
+		set params=jsonObj.params.%Get(0)
+		set code=params.code
+		set name=params.name
+		set sql="SELECT ID,Code,Name,Status,SortNo,Remark,CreateDate FROM CB_DRGDictTable WHERE Parent_Dr IS NULL"
+		if code'="" set sql=sql_" AND Code LIKE '%"_code_"%'"
+		if name'="" set sql=sql_" AND Name LIKE '%"_name_"%'"
+		set sql=sql_" ORDER BY SortNo ASC, ID ASC"
+		set sqlObj=##class(%SQL.Statement).%New(1)
+		do sqlObj.%Prepare(sql)
+		set rs=sqlObj.%Execute()
+		while rs.%Next()
+		{
+			set row={}
+			set row.id=rs.%Get("ID")
+			set row.code=rs.%Get("Code")
+			set row.name=rs.%Get("Name")
+			set row.status=rs.%Get("Status")
+			set row.sortNo=rs.%Get("SortNo")
+			set row.remark=rs.%Get("Remark")
+			set row.createDate=rs.%Get("CreateDate")
+			set row.statusDesc=$select(row.status="Y":"启用",1:"停用")
+			set row.statusFlag=row.status
+			do dataArr.%Push(row)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=dataArr.%Size()
+	}
+	catch(e){ set resultObj.errorCode="04000007",resultObj.errorMessage="查询字典类型失败:"_e.Name }
+	quit resultObj
 zGetDRGSegmentationRulesList(jsonObj)
 	new (jsonObj)
 	quit ##class(src.DRG.BasicData.DRGRSegmentationRules).GetDRGSegmentationRulesList(jsonObj)
+zGetDRGSpecialGroupList(jsonObj)
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGSpecialGroup).GetDRGSpecialGroupList(jsonObj)
 zGetICDInfo(jsonObj)
 	new (jsonObj)
 	quit ##class(src.DRG.BasicData.ICDInfo).GetICDInfo(jsonObj)
@@ -108,9 +188,76 @@ zSaveDRGCataLog(jsonObj)
 zSaveDRGCoreGroupsList(jsonObj)
 	new (jsonObj)
 	quit ##class(src.DRG.BasicData.DictionaryData).SaveDRGCoreGroupsList(jsonObj)
+zSaveDRGDictItem(postObj)
+	new (postObj)
+	set resultObj={"errorCode":"0","errorMessage":"保存成功","result":{}}
+	try{
+		set params=postObj.params.%Get(0),session=postObj.session.%Get(0),userID=session.userID
+		set id=params.id,parentDr=params.parentDr,code=params.code,name=params.name
+		set status=$select(params.status="":"Y",1:params.status)
+		set sortNo=params.sortNo,remark=params.remark
+		if parentDr="" { set resultObj.errorCode="01000010",resultObj.errorMessage="请选择字典类型" quit }
+		if code="" { set resultObj.errorCode="01000011",resultObj.errorMessage="编码不能为空" quit }
+		if name="" { set resultObj.errorCode="01000012",resultObj.errorMessage="名称不能为空" quit }
+		; 新增时自动取最大SortNo+1
+		if (id="")&&(sortNo="") {
+			set tmpSql="SELECT MAX(SortNo) as maxNo FROM CB_DRGDictTable WHERE Parent_Dr="_parentDr
+			set tmpStmt=##class(%SQL.Statement).%New(1)
+			do tmpStmt.%Prepare(tmpSql)
+			set tmpRs=tmpStmt.%Execute()
+			if tmpRs.%Next() { set sortNo=tmpRs.%Get("maxNo") }
+			if sortNo="" set sortNo=0
+			set sortNo=sortNo+1
+		}
+		set data=[],row={}
+		set row.ID=id,row.ParentDr=parentDr,row.Code=code,row.Name=name
+		set row.Status=status,row.SortNo=sortNo,row.Remark=remark
+		set row.CreateUserDr=userID
+		set row.CreateDate=$zd($h,3),row.CreateTime=$zt($p($h,",",2),1)
+		do data.%Push(row)
+		set insObj={}
+		set insObj.className="User.CBDRGDictTable"
+		set insObj.updateUserID=userID
+		set insObj.data=data
+		set rtn=""
+		if id="" { set rtn=##class(src.util.operatetable).Insert(.insObj) }
+		else { set rtn=##class(src.util.operatetable).Update(.insObj) }
+		if rtn.errorCode'=0 { set resultObj.errorCode=rtn.errorCode,resultObj.errorMessage=rtn.errorMessage }
+	}
+	catch(e){ set resultObj.errorCode="04000007",resultObj.errorMessage="保存字典项失败:"_e.Name }
+	quit resultObj
+zSaveDRGDictType(postObj)
+	new (postObj)
+	set resultObj={"errorCode":"0","errorMessage":"保存成功","result":{}}
+	try{
+		set params=postObj.params.%Get(0),session=postObj.session.%Get(0),userID=session.userID
+		set id=params.id,code=params.code,name=params.name
+		set status=$select(params.status="":"Y",1:params.status),remark=params.remark
+		if code="" { set resultObj.errorCode="01000011",resultObj.errorMessage="编码不能为空" quit }
+		if name="" { set resultObj.errorCode="01000012",resultObj.errorMessage="名称不能为空" quit }
+		set data=[],row={}
+		set row.ID=id,row.ParentDr="",row.Code=code,row.Name=name
+		set row.Status=status,row.Remark=remark
+		set row.CreateUserDr=userID
+		set row.CreateDate=$zd($h,3),row.CreateTime=$zt($p($h,",",2),1)
+		do data.%Push(row)
+		set insObj={}
+		set insObj.className="User.CBDRGDictTable"
+		set insObj.updateUserID=userID
+		set insObj.data=data
+		set rtn=""
+		if id="" { set rtn=##class(src.util.operatetable).Insert(.insObj) }
+		else { set rtn=##class(src.util.operatetable).Update(.insObj) }
+		if rtn.errorCode'=0 { set resultObj.errorCode=rtn.errorCode,resultObj.errorMessage=rtn.errorMessage }
+	}
+	catch(e){ set resultObj.errorCode="04000007",resultObj.errorMessage="保存字典类型失败:"_e.Name }
+	quit resultObj
 zSaveDRGSegmentationRules(jsonObj)
 	new (jsonObj)
 	quit ##class(src.DRG.BasicData.DRGRSegmentationRules).SaveDRGSegmentationRules(jsonObj)
+zSaveDRGSpecialGroup(jsonObj)
+	new (jsonObj)
+	quit ##class(src.DRG.BasicData.DRGSpecialGroup).SaveDRGSpecialGroup(jsonObj)
 zUpdateDRGCoreAlgorithm(jsonObj)
 	new (jsonObj)
 	quit ##class(src.DRG.BasicData.CoreAlgorithm).UpdateDRGCoreAlgorithm(jsonObj)

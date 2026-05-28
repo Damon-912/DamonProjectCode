@@ -21,20 +21,18 @@ import {
   CityItem,
 } from '@/api/basicData';
 import CustomPagination from '../../components/CustomPagination';
+import { useDict } from '../../hooks/useDict';
 
 const { Option } = Select;
-
-/** 联合标志/细分标志选项 */
-const flagOptions = [
-  { value: '0', label: '否' },
-  { value: '1', label: '是' },
-];
 
 /**
  * ADRG细分规则表页面
  * 管理各地方ADRG细分规则配置
  */
 const DRGSegmentationRules: React.FC = () => {
+  // 字典数据
+  const { options: flagOptions } = useDict('YES_NO_FLAG');
+
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [dataSource, setDataSource] = useState<HBDRGSegmentationRulesItem[]>([]);

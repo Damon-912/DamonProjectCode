@@ -313,6 +313,7 @@ export interface SaveCoreAlgorithmParams {
   stopDate: any;
   identification: string;
   remark: string;
+  year?: string | number;
 }
 
 /** 查询DRG核心算法配置参数 */
@@ -324,6 +325,7 @@ export interface QueryCoreAlgorithmParams {
   cityID?: string;
   insuType?: string;
   status?: string;
+  year?: string | number;
 }
 
 /** 查询DRG核心算法配置 (02010033) */
@@ -453,6 +455,7 @@ export interface BasicDataSubItem {
   identification: string;
   startDate: string;
   stopDate: string;
+  status: string;
   statusDesc: string;
   createDate?: string;
   createTime?: string;
@@ -493,6 +496,7 @@ export interface SaveBasicDataSubParams {
   identification?: string;
   startDate: string;
   stopDate?: string;
+  status?: string;
   remark?: string;
 }
 
@@ -925,6 +929,89 @@ export const deleteHBDRGSegmentationRules = (
   return invoke('02010046', [{ id }]);
 };
 
+// ========== DRG特异化分组 (02010064, 02010065, 02010066) ==========
+
+/** DRG特异化分组记录 */
+export interface DRGSpecialGroupItem {
+  id: string;
+  drgCode: string;
+  drgName: string;
+  principalDiagnosis: string;
+  principalDiagnosisName: string;
+  secondaryDiagnosis: string;
+  secondaryDiagnosisName: string;
+  majorProcedure: string;
+  majorProcedureName: string;
+  secondaryProcedure: string;
+  secondaryProcedureName: string;
+  groupFactors: string;
+  remark: string;
+  admvs: string;
+  provinceID: string;
+  provinceDesc: string;
+  cityID: string;
+  cityDesc: string;
+  year: string;
+  startDate: string;
+  stopDate: string;
+  createDate: string;
+  createTime: string;
+}
+
+/** 查询DRG特异化分组参数 */
+export interface QueryDRGSpecialGroupParams {
+  drgCode?: string;
+  admvs?: string;
+  provinceID?: string;
+  cityID?: string;
+  year?: string;
+}
+
+/** 保存DRG特异化分组参数 */
+export interface SaveDRGSpecialGroupParams {
+  id?: string;
+  drgCode: string;
+  drgName: string;
+  principalDiagnosis: string;
+  principalDiagnosisName: string;
+  secondaryDiagnosis: string;
+  secondaryDiagnosisName: string;
+  majorProcedure: string;
+  majorProcedureName: string;
+  secondaryProcedure: string;
+  secondaryProcedureName: string;
+  groupFactors: string;
+  remark: string;
+  admvs: string;
+  provinceDr: string;
+  cityDr: string;
+  year: string;
+  startDate: string;
+  stopDate: string;
+}
+
+/** 查询DRG特异化分组方案 (02010064) */
+export const queryDRGSpecialGroup = (
+  params: QueryDRGSpecialGroupParams,
+  pagination: Pagination
+): Promise<ApiResponse<PageResult<DRGSpecialGroupItem>>> => {
+  return invoke('02010064', [params], undefined, pagination);
+};
+
+/** 保存DRG特异化分组方案 (02010065) */
+export const saveDRGSpecialGroup = (
+  params: SaveDRGSpecialGroupParams
+): Promise<ApiResponse> => {
+  return invoke('02010065', [params]);
+};
+
+/** 删除DRG特异化分组方案 (02010066) */
+export const deleteDRGSpecialGroup = (
+  id: string
+): Promise<ApiResponse> => {
+  return invoke('02010066', [{ id }]);
+};
+
 // ========== DRG核心算法配置导入 (02010050, 02010051, 02010052) ==========
 
 /** DRG核心算法导入预览数据项 */
@@ -1150,4 +1237,113 @@ export const confirmDipCoreAlgorithmImport = (
   params: DipCoreAlgorithmImportParams
 ): Promise<ApiResponse<DipCoreAlgorithmImportResult>> => {
   return invoke('02010058', [params]);
+};
+
+// ========== DRG字典管理 (02010059, 02010060, 02010061, 02010062) ==========
+
+/** DRG字典类型记录 */
+export interface DictTypeItem {
+  id: string;
+  code: string;
+  name: string;
+  status: string;
+  statusDesc: string;
+  statusFlag: string;
+  sortNo: number;
+  remark: string;
+  createDate: string;
+}
+
+/** DRG字典项记录 */
+export interface DictItemItem {
+  id: string;
+  parentDr: string;
+  code: string;
+  name: string;
+  status: string;
+  statusDesc: string;
+  statusFlag: string;
+  sortNo: number;
+  remark: string;
+  createDate: string;
+}
+
+/** 查询字典项参数 */
+export interface QueryDictItemParams {
+  parentDr: string;
+  code?: string;
+  name?: string;
+  status?: string;
+}
+
+/** 保存字典项参数 */
+export interface SaveDictItemParams {
+  id?: string;
+  parentDr: string;
+  code: string;
+  name: string;
+  status?: string;
+  sortNo?: number;
+  remark?: string;
+}
+
+/** 保存字典类型参数 */
+export interface SaveDictTypeParams {
+  id?: string;
+  code: string;
+  name: string;
+  status?: string;
+  remark?: string;
+}
+
+/** 查询字典类型列表 (02010059) */
+export const getDictTypeList = (): Promise<ApiResponse<{ rows: DictTypeItem[]; total: number }>> => {
+  return invoke('02010059', [{}]);
+};
+
+/** 保存字典类型 (02010062) */
+export const saveDictType = (
+  params: SaveDictTypeParams
+): Promise<ApiResponse> => {
+  return invoke('02010062', [params]);
+};
+
+/** 查询字典项列表 (02010060) */
+export const queryDictItemList = (
+  params: QueryDictItemParams,
+  pagination: Pagination
+): Promise<ApiResponse<PageResult<DictItemItem>>> => {
+  return invoke('02010060', [params], undefined, pagination);
+};
+
+/** 保存字典项 (02010061) */
+export const saveDictItem = (
+  params: SaveDictItemParams
+): Promise<ApiResponse> => {
+  return invoke('02010061', [params]);
+};
+
+// ========== 字典项按类型编码查询 (02010063) ==========
+
+/** 按类型编码查询字典项参数 */
+export interface QueryDictItemByTypeCodeParams {
+  typeCode: string;
+  status?: string;  // Y=仅查启用, 默认Y
+}
+
+/** 按类型编码查询字典项记录（精简版，用于下拉选择） */
+export interface DictItemOption {
+  id: string;
+  code: string;
+  name: string;
+  status: string;
+  sortNo: number;
+  remark: string;
+}
+
+/** 根据字典类型编码查询字典项列表 (02010063) */
+export const getDictItemByTypeCode = (
+  params: QueryDictItemByTypeCodeParams
+): Promise<ApiResponse<{ rows: DictItemOption[]; total: number }>> => {
+  return invoke('02010063', [params]);
 };
