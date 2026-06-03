@@ -168,19 +168,45 @@
 > 接口Code: `02010035`
 > 接口名称: 保存DRG分组记录
 > 方法名: SaveDRGGroupRecord
+> 数据表: BS_DRGGroupRecord
 
 ### 入参
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| medicalRecordId | String | 是 | 病案ID |
-| drgCode | String | 是 | DRG编码 |
-| drgName | String | 否 | DRG名称 |
-| mdcCode | String | 否 | MDC编码 |
-| adrgCode | String | 否 | ADRG编码 |
-| weight | Number | 否 | 权重 |
-| benchmarkCost | Number | 否 | 基准费用 |
-| groupTime | String | 否 | 分组时间 |
+| 字段 | 类型 | 必填 | 说明 | 示例 |
+|------|------|------|------|------|
+| hisAdmId | String | **是** | HIS唯一就诊ID | "A20260301001" |
+| patientName | String | 否 | 患者姓名 | "张三" |
+| psnNo | String | 否 | 医保个人编号 | "" |
+| insuranceAreaCode | String | 否 | 参保地 | "" |
+| mdtrtareaAreaCode | String | 否 | 就医地 | "" |
+| insuType | String | 否 | 医保险种 | "" |
+| sex | String | 否 | 性别：1=男, 2=女 | "1" |
+| age | Number | 否 | 年龄 | 58 |
+| mainDiagnosisCode | String | 否 | 主诊断代码 | "I21.0" |
+| mainDiagnosisName | String | 否 | 主诊断名称 | "急性前壁心肌梗死" |
+| diaTypeCode | String | 否 | 诊断类型编码 | "DIS" |
+| diagnosisCode | String | 否 | 病种编码 | "" |
+| diagnosisName | String | 否 | 病种名称 | "" |
+| mainOperationCode | String | 否 | 主手术代码 | "51.23" |
+| mainOperationName | String | 否 | 主手术名称 | "腹腔镜胆囊切除术" |
+| deptCode | String | 否 | HIS科室编码 | "01" |
+| deptName | String | 否 | HIS科室名称 | "心内科" |
+| drg | String | **是** | DRG编码 | "FB13" |
+| drgDesc | String | 否 | DRG描述 | "急性心肌梗死，伴一般合并症与伴随病" |
+| weight | Number | 否 | 权重 | 1.562 |
+| benchmarkCost | Number | 否 | 基准费用 | 31240.00 |
+| ccFlag | String | 否 | CC标志 | "1" |
+| mccFlag | String | 否 | MCC标志 | "0" |
+| riskLevel | String | 否 | 风险等级（高/中/低） | "中" |
+| groupTime | String | 否 | 分组时间（ISO 8601） | "2026-03-19T14:30:25" |
+| fixmedinsCode | String | 否 | 医疗机构代码 | "" |
+| fixmedinsName | String | 否 | 医疗机构名称 | "" |
+| groupStage | String | 否 | 分组阶段（1=事前,2=事中,3=事后） | "1" |
+| medcasNo | String | 否 | 病案号 | "" |
+| admDateTime | String | 否 | 入院时间 | "" |
+| discgDateTime | String | 否 | 出院时间 | "" |
+| settleDateTime | String | 否 | 结算时间 | "" |
+| remark | String | 否 | 备注 | "" |
 
 ### 出参
 
@@ -196,14 +222,25 @@
 {
   "code": "02010035",
   "params": [{
-    "medicalRecordId": "12345",
-    "drgCode": "FB13",
-    "drgName": "急性心肌梗死，伴一般合并症与伴随病",
-    "mdcCode": "F",
-    "adrgCode": "FB1",
+    "hisAdmId": "A20260301001",
+    "patientName": "张三",
+    "sex": "1",
+    "age": 58,
+    "mainDiagnosisCode": "I21.0",
+    "mainDiagnosisName": "急性前壁心肌梗死",
+    "drg": "FB13",
+    "drgDesc": "急性心肌梗死，伴一般合并症与伴随病",
     "weight": 1.562,
     "benchmarkCost": 31240.00,
-    "groupTime": "2026-03-19T14:30:25"
+    "ccFlag": "1",
+    "mccFlag": "0",
+    "riskLevel": "中",
+    "groupTime": "2026-03-19T14:30:25",
+    "deptCode": "01",
+    "deptName": "心内科",
+    "fixmedinsCode": "10001",
+    "fixmedinsName": "某市人民医院",
+    "groupStage": "2"
   }]
 }
 ```
@@ -217,6 +254,10 @@
   "result": { "id": 1001 }
 }
 ```
+
+### 查重逻辑
+
+根据 `DRG + AdmID(hisAdmId)` 判断：同一患者同一次就诊的同一DRG分组只保留一条记录。若存在则更新，否则新增。
 
 ---
 

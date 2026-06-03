@@ -642,6 +642,9 @@ const CoreAlgorithmConfig: React.FC = () => {
         identification: record.identification,
         remark: record.remark,
         year: record.year || '',
+        highMultiplier: record.highMultiplier || '',
+        lowMultiplier: record.lowMultiplier || '',
+        weight: record.weight || '',
       } as any);
     }, 100);
   };
@@ -763,7 +766,25 @@ const CoreAlgorithmConfig: React.FC = () => {
       dataIndex: 'payStandard',
       width: 75,
       align: 'right',
-    },    
+    },
+    {
+      title: '高倍率',
+      dataIndex: 'highMultiplier',
+      width: 55,
+      align: 'right',
+    },
+    {
+      title: '低倍率',
+      dataIndex: 'lowMultiplier',
+      width: 55,
+      align: 'right',
+    },
+    {
+      title: '权重',
+      dataIndex: 'weight',
+      width: 55,
+      align: 'right',
+    },
     {
       title: '险种',
       dataIndex: 'insuType',
@@ -835,6 +856,9 @@ const CoreAlgorithmConfig: React.FC = () => {
     { title: '预估点值', dataIndex: 'pipValue', width: 90, align: 'right' },
     { title: '差异系数', dataIndex: 'dgdov', width: 80, align: 'right' },
     { title: '支付标准', dataIndex: 'payStandard', width: 90, align: 'right' },
+    { title: '高倍率', dataIndex: 'highMultiplier', width: 75, align: 'right' },
+    { title: '低倍率', dataIndex: 'lowMultiplier', width: 75, align: 'right' },
+    { title: '权重', dataIndex: 'weight', width: 70, align: 'right' },
     {
       title: '状态',
       dataIndex: 'status',
@@ -1056,6 +1080,21 @@ const CoreAlgorithmConfig: React.FC = () => {
               <Col span={12}>
                 <Form.Item name="payStandard" label="预估支付标准(PayStandard)">
                   <Input placeholder="如 26880" />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item name="highMultiplier" label="高倍率(HighMultiplier)">
+                  <Input placeholder="如 2.5" />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item name="lowMultiplier" label="低倍率(LowMultiplier)">
+                  <Input placeholder="如 0.5" />
+                </Form.Item>
+              </Col>
+              <Col span={8}>
+                <Form.Item name="weight" label="权重(Weight)">
+                  <Input placeholder="如 1.2" />
                 </Form.Item>
               </Col>
             </Row>
@@ -1359,7 +1398,7 @@ const CoreAlgorithmConfig: React.FC = () => {
                 description={
                   <ul style={{ margin: 0, paddingLeft: 16 }}>
                     <li>必填列：DRG代码(DRGCode)、DRG描述(DRGDesc)、基准点数(Points)、预估点值(PipValue)、病组差异系数(DGDOV)、支付标准(PayStandard)</li>
-                    <li>字段说明：DRGCode=DRG代码、DRGDesc=DRG描述、Points=基准点数、PipValue=预估点值、DGDOV=病组差异系数、PayStandard=支付标准</li>
+                    <li>字段说明：DRGCode=DRG代码、DRGDesc=DRG描述、Points=基准点数、PipValue=预估点值、DGDOV=病组差异系数、PayStandard=支付标准、HighMultiplier=高倍率、LowMultiplier=低倍率、Weight=权重</li>
                     <li>重复处理：DRG代码+行政区划+机构代码相同则更新，否则新增</li>
                     <li>模板规范：模板列名不可变更</li>
                   </ul>

@@ -558,8 +558,7 @@ ClassMethod QueryWarningStats(jsonObj As %Library.DynamicObject) As %Library.Dyn
         }
         
         set params = jsonObj.params.%Get(0)
-        set startDate = $GET(params.startDate,"")
-        set endDate = $GET(params.endDate,"")
+        set startDate = params.startDate
         
         // 构建日期条件
         set dateWhere = ""

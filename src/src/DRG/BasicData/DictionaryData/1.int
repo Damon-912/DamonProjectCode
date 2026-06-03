@@ -1042,19 +1042,19 @@ zXMLExportInternal()
  Set id=createId
  Set temp=""
  If id'="" {
-   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   If $piece(idlist(+$this),",",2)'="" Quit 1
    Set idlist(+$this)=id_",1"
  }
- If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If encoded Set initlist=$lb(oreflist,inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
  If 'nocycle,('encoded||inlineFlag) {
    If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"src.DRG.BasicData.DictionaryData")
    Set oreflist($this)=""
  }
- Set tag=$get(topArg)
- Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="src.DRG.BasicData.DictionaryData"))
+ Set tag=topArg
+ Set tmpi=((typeAttr'="")&&(typeAttr'="src.DRG.BasicData.DictionaryData"))
  If $IsObject(namespaces) {
      Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
-     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     Set sc=namespaces.PushNodeForExport("",local,0,(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
      If 'sc Quit sc
    Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
    If topAttrs'="" Set temp=temp_" "_topAttrs
@@ -1068,10 +1068,10 @@ zXMLExportInternal()
    If tag="" Set tag=typesPrefix_"DictionaryData"
    Set xsitype=0
  }
- Set local=+$get(local),savelocal=local
+ Set local=+local,savelocal=local
  Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
  If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"DictionaryData"""_xsiAttrs,xsiAttrs=""
-   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+   If id'="" Set temp=" "_$select(soap12:soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
  If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
  If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If encoded Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
  If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
@@ -1103,19 +1103,19 @@ zXMLGetSchemaImports(imports,classes)
 zXMLImportAttributes()
  ;
  Quit 1
-XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
-XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,@(tree)@("d",$zlascii(attributeList(ref),13)),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,@(tree)@("d",$zlascii(attributeList(ref),13)),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
 XMLImportAttrLocation(nodelist) new msg,loc
  Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
  If loc="" Quit ""
- Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Set msg=^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)"
  Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
 zXMLImportInternal()
  New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
  Set $ztrap="XMLImportInternalTrap"
  Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
  If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
- Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set nsIndex=$select(namespace="":"",1:@(tree)@("N",namespace))
  Set node=nodeArg,nodelist=nodeArgChildlist
  If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
  If bareProjection Quit $$Error^%apiOBJ(6386,"src.DRG.BasicData.DictionaryData")
@@ -1159,7 +1159,7 @@ XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii
 XMLImportLocation(node) new msg,loc
  Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
  If loc="" Quit ""
- Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Set msg=^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)"
  Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
 XMLImportInternalTrap Set $ztrap=""
  Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
@@ -1170,13 +1170,13 @@ XMLImportId() ;
  If $data(attributeList("href")) {
    Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
    If $extract(id)="#" {
-     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set tmp=$select(@(tree)@("i",$extract(id,2,*))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
      Set inner=tmp
      Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
    }
- } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+ } ElseIf $data(attributeList("ref")),(@(tree)@("n",$zwascii(attributeList("ref"),9))="http://www.w3.org/2003/05/soap-encoding") {
    Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
-   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set tmp=$select(@(tree)@("i",id)="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
    Set inner=tmp
    Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
  } ElseIf '$data(attributeList("id")) {
@@ -1184,7 +1184,7 @@ XMLImportId() ;
  }
  Quit $data(idlist(inner))
 XMLImportAttrnode()
- If $get(attributeList)=node Quit
+ If attributeList=node Quit
  Kill attributeList
  Set attributeList=node
  Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
@@ -1193,7 +1193,7 @@ XMLImportAttrnode()
  Set offset=offset+16 }
  Quit
 XMLImportAttrchild()
- If $get(attributeList)=child Quit
+ If attributeList=child Quit
  Kill attributeList
  Set attributeList=child
  Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
@@ -1202,7 +1202,7 @@ XMLImportAttrchild()
  Set offset=offset+16 }
  Quit
 XMLImportAttrinner()
- If $get(attributeList)=inner Quit
+ If attributeList=inner Quit
  Kill attributeList
  Set attributeList=inner
  Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)

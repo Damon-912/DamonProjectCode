@@ -1317,53 +1317,6 @@ ClassMethod GroupDRG(jsonObj As %Library.DynamicObject) As %Library.DynamicObjec
 }
 
 /// Creator:     系统
-/// CreatDate:   2026-05-29
-/// Description: 独立特异化分组匹配引擎（循环匹配 hospInfo 数组各家医院所在地区）
-///              不依赖完整分组流程，可用于事前预分组评估/批量校验
-/// code: 		 
-/// Input:{"params":[{"mainDiagnosisCode":"","mainOperationCode":"","diseInfo":[],"oprnInfo":[],"hospInfo":[]}]}
-/// Debug: w ##class(src.DRG.Interface).SpecialGroupMatch({}).%ToJSON()
-ClassMethod SpecialGroupMatch(jsonObj) As %Library.DynamicObject
-{
-	new (jsonObj)
-	try {
-		if (jsonObj = "") || (jsonObj.params = "") {
-			set resultObj = ##class(%DynamicObject).%New()
-			set resultObj.errorCode = "-1"
-			set resultObj.errorMessage = "入参异常：缺少params参数"
-			quit
-		}
-		
-		set params = jsonObj.params.%Get(0)
-		
-		; 构建 patientInfo
-		set patientInfo = ##class(%DynamicObject).%New()
-		set patientInfo.mainDiagnosisCode = params.mainDiagnosisCode
-		set patientInfo.diseInfo = params.diseInfo
-		set patientInfo.oprnInfo = params.oprnInfo
-		if ('$ISOBJECT(patientInfo.diseInfo)) set patientInfo.diseInfo = ##class(%DynamicArray).%New()
-		if ('$ISOBJECT(patientInfo.oprnInfo)) set patientInfo.oprnInfo = ##class(%DynamicArray).%New()
-		
-		; 获取 hospInfo 数组
-		set hospInfo = params.hospInfo
-		if ('$ISOBJECT(hospInfo)) set hospInfo = ##class(%DynamicArray).%New()
-		
-		set groupYear = params.groupYear
-		
-		; 调用引擎的循环匹配方法（自动遍历每家医院查询地区并匹配）
-		set resultObj = ##class(src.DRG.SpecialGroupEngine).MatchByHospInfo(patientInfo, hospInfo, groupYear)
-		
-	} catch(e) {
-		set status = e.AsStatus()
-		set errorMsg = $replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"), "^", " ")
-		set resultObj = ##class(%DynamicObject).%New()
-		set resultObj.errorCode = "-99"
-		set resultObj.errorMessage = "特异化分组匹配异常：" _ errorMsg
-	}
-	quit resultObj
-}
-
-/// Creator:     系统
 /// CreatDate:   2026-05-26
 /// Description: 分组器（改动前原始版本备案）
 ///              此方法为Device方法改动前的完整备份，用于紧急回退
@@ -1819,41 +1772,24 @@ ClassMethod DeviceNew(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
 			{
 			    set resultObj=..SetErrorResult("-4","4.2 ADRG分组失败,请检查主诊断大类【"_MDC_"："_MDCDesc_"】的分组规则是否维护！0000组入组条件：主要诊断大类(MDC),或者未入任何ADRG分组！")	
 			    quit
-			}	
-			
-			set ADRG=jaADRG.%Get(0).code		
+			}				
 		}
 
-		//第四步B：特异化分组匹配（直接调用独立引擎 SpecialGroupEngine，引擎内部循环匹配各家医院所在地区）
+		//第四步B：特异化分组匹配（新增步骤，仅当hospinfo非空时执行）
 		// 命中特异化分组后跳过CC/MCC和标准DRG细分，直接进入算法配置查询
 		set skipToAlgorithm = 0
 		
 		if ($ISOBJECT(hospinfo)) && (hospinfo.%Size() > 0) 
 		{
-			; 构建 patientInfo
-			set patientInfo = ##class(%DynamicObject).%New()
-			set patientInfo.mainDiagnosisCode = jsonObj.params.%Get(0).mainDiagnosisCode
-			set patientInfo.mainOperationCode = jsonObj.params.%Get(0).mainOperationCode
-			set patientInfo.diseInfo = jsonObj.params.%Get(0).diseInfo
-			set patientInfo.oprnInfo = jsonObj.params.%Get(0).oprnInfo
-			set patientInfo.adrg = ADRG
-			
-			if ('$ISOBJECT(patientInfo.diseInfo)) set patientInfo.diseInfo = ##class(%DynamicArray).%New()
-			if ('$ISOBJECT(patientInfo.oprnInfo)) set patientInfo.oprnInfo = ##class(%DynamicArray).%New()
-			
-			; 直接调用引擎的 hospInfo 循环匹配方法（自动遍历每家医院查询地区并匹配）
-			set joSpecialRtn = ##class(src.DRG.SpecialGroupEngine).MatchByHospInfo(patientInfo, hospinfo, "")
-			
+			set joSpecialRtn = ..GroupSpecialMatch(jsonObj, MDC, jaADRG, hospinfo, groupYear)
 			if (joSpecialRtn.errorCode = "0") 
 			{
 				// 命中特异化分组，直接使用特异化DRG编码
-				if ($ISOBJECT(joSpecialRtn.result)) 
-				{
-					set DRG = joSpecialRtn.result.drgCode
-					set DRGDesc = joSpecialRtn.result.drgDesc
-				} 
-				else 
-				{
+				// 防御性检查：确保result是DynamicObject且包含必要属性
+				if ($ISOBJECT(joSpecialRtn.result)) {
+					set DRG = $GET(joSpecialRtn.result.drgCode, "")
+					set DRGDesc = $GET(joSpecialRtn.result.drgDesc, "")
+				} else {
 					set DRG = ""
 					set DRGDesc = ""
 				}
@@ -2076,11 +2012,86 @@ ClassMethod DeviceNew(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
 	    set resultObj.result = joRtn    
 	    set resultObj.params = params
 	    
-	    //第八步：分组成功插入分组记录表（已迁移至DeviceFeeWarning方法中处理）
-	    //
-	    // 注：原DeviceNew方法中直接插入分组记录的代码已废弃，
-	    // 现在统一在DeviceFeeWarning(02010002)费用预警成功后调用SaveDRGGroupRecord(02010035)插入记录。
-	    //
+	    //第八步：分组成功插入分组记录表
+	    /*
+	    if (medicalRecordID '= "")
+	    {
+		    // 构造保存分组记录的入参
+		    set saveParams = {}
+		    set saveParams.admID = $GET(hisAdmID, "")
+		    set saveParams.medcasNo = $GET(medicalRecordID, "")
+		    set saveParams.patientName = patientName
+		    set saveParams.psnNo = $GET(psnNo, "")
+		    set saveParams.insuranceAreaCode = $GET(insuranceAreaCode, "")
+		    set saveParams.mdtrtareaAreaCode = $GET(mdtrtareaAreaCode, "")
+		    
+		    set saveParams.insuType = $GET(insuType, "")
+		    set saveParams.sex = $GET(sex, "")
+		    set saveParams.age = $GET(age, "")
+		    set saveParams.mainDiagnosisCode = $GET(mainDiagCode, "")
+		    set saveParams.mainDiagnosisName = ""
+		    set saveParams.diaTypeCode = $GET(diaTypeCode, "")
+		    set saveParams.diagnosisCode = $GET(diagnosisCode, "")
+		    set saveParams.diagnosisName = $GET(diagnosisName, "")
+		    set saveParams.mainOperationCode = $GET(mainOperationCode, "")
+		    set saveParams.mainOperationName = ""
+		    set saveParams.department = $GET(deptCode, "")
+		    set saveParams.departmentDesc = $GET(deptName, "")
+		    set saveParams.drg = DRG
+		    set saveParams.drgDesc = DRGDesc
+		    set saveParams.weight = ""
+		    set saveParams.benchmarkCost = ""
+		    set saveParams.ccFlag = ""
+		    set saveParams.mccFlag = ""
+		 
+		    set saveParams.groupTime = $ZDATETIME($HOROLOG, 3)
+		    set saveParams.fixmedinsCode = ""
+		    set saveParams.fixmedinsName = ""
+		    set saveParams.groupStage = $GET(groupStage, "1")
+		    set saveParams.admDateTime = $GET(admDateTime, "")
+		    set saveParams.discgDateTime = $GET(discgDateTime, "")
+		    set saveParams.settleDateTime = $GET(settleDateTime, "")
+		    set saveParams.unionOprnFlag = unionOprnFlag
+		    set saveParams.remark = params.%FromJson()
+		    
+		    // 从diseInfo中获取主诊断名称（mainFlag=1 且 diagSn=1）
+		    if (mainDiagCode '= "") && ($ISOBJECT(diseinfo)) && (diseinfo.%Size() > 0)
+		    {
+			    for i=0:1:diseinfo.%Size()-1
+			    {
+				    set diagItem = diseinfo.%Get(i)
+				    if ($GET(diagItem.mainFlag) = "1") && ($GET(diagItem.diagSn) = "1")
+				    {
+					    set saveParams.mainDiagnosisName = $GET(diagItem.diagName, "")
+					    quit
+				    }
+			    }
+		    }
+		    
+		    // 从oprnInfo中获取主手术名称（mainFlag=1 且 oprnSn=1）
+		    if (mainOperationCode '= "") && ($ISOBJECT(oprninfo)) && (oprninfo.%Size() > 0)
+		    {
+			    for j=0:1:oprninfo.%Size()-1
+			    {
+				    set oprnItem = oprninfo.%Get(j)
+				    if ($GET(oprnItem.mainFlag) = "1") && ($GET(oprnItem.oprnSn) = "1")
+				    {
+					    set saveParams.mainOperationName = $GET(oprnItem.oprnName, "")
+					    quit
+				    }
+			    }
+		    }
+		    
+		    // 构造SaveDRGGroupRecord接口入参
+		    set paramsArr = ##class(%DynamicArray).%New()
+		    do paramsArr.%Push(saveParams)
+		    set saveJsonObj = ##class(%DynamicObject).%New()
+		    set saveJsonObj.params = paramsArr
+		    
+		    // 调用保存方法（不阻塞主流程）
+		    do ##class(src.DRG.GroupDevice).SaveDRGGroupRecord(saveJsonObj)
+	    }
+	    */
 	    	
 	}
     catch(e) 
@@ -2099,6 +2110,12 @@ ClassMethod DeviceNew(jsonObj As %Library.DynamicObject) As %Library.DynamicObje
     quit resultObj
 }
 
+/// Creator:     CM
+/// CreatDate:   2026-01-01
+/// Description: DRG分组器+费用预警
+/// code:		 
+/// Input:{"params":[{"":""}]}
+/// Debug
 ClassMethod DeviceFeeWarning(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 {
 	new (jsonObj)
@@ -2161,120 +2178,7 @@ ClassMethod DeviceFeeWarning(jsonObj As %Library.DynamicObject) As %Library.Dyna
 			{
 			    set joWarningFee= []
 			    set joWarningFee= joRtn.result
-			    set joDRGObj.result.feeWarningInfo=joWarningFee
-			    
-			    // 费用预警成功，插入DRG分组记录
-			    set saveParams = {}
-			    set saveParams.hisAdmId = params.hisAdmId
-			    set saveParams.medcasNo = params.medicalRecordDr
-			    set saveParams.patientName = params.patientName
-			    set saveParams.psnNo = params.psnNo
-			    set saveParams.insuranceAreaCode = params.insuranceAreaCode
-			    set saveParams.mdtrtareaAreaCode = params.mdtrtareaAreaCode
-			    set saveParams.insuType = params.insuType
-			    set saveParams.sex = params.sex
-			    set saveParams.age = params.age
-			    set saveParams.mainDiagnosisCode = params.mainDiagnosisCode
-			    set saveParams.mainDiagnosisName = params.diagnosisName
-			    set saveParams.diaTypeCode = params.diaTypeCode
-			    set saveParams.diagnosisCode = params.diagnosisCode
-			    set saveParams.diagnosisName = params.diagnosisName
-			    set saveParams.mainOperationCode = params.mainOperationCode
-			    set saveParams.mainOperationName = ""
-			    set saveParams.deptCode = params.deptCode
-			    set saveParams.deptName = params.deptName
-			    set saveParams.drg = drgCode
-			    set saveParams.drgDesc = drgDesc
-			    set saveParams.benchmarkCost = drgPayStandard
-			    set saveParams.groupTime = ""
-			    set saveParams.fixmedinsCode = params.fixmedinsCode
-			    set saveParams.fixmedinsName = params.fixmedinsName
-			    set saveParams.groupStage = params.groupStage
-			    set saveParams.admDateTime = params.admDateTime
-			    set saveParams.discgDateTime = params.discgDateTime
-			    set saveParams.settleDateTime = params.settleDateTime
-			    set saveParams.unionOprnFlag = params.unionOprnFlag
-			    set saveParams.remark = params.%ToJSON()
-			    
-			    // 从diseInfo中获取主诊断名称（mainFlag=1 且 diagSn=1）
-			    if (params.mainDiagnosisCode '= "") && ($ISOBJECT(params.diseInfo)) && (params.diseInfo.%Size() > 0)
-			    {
-			        for i=0:1:params.diseInfo.%Size()-1
-			        {
-			            set diagItem = params.diseInfo.%Get(i)
-			            if (diagItem.mainFlag = "1") && (diagItem.diagSn = "1")
-			            {
-			                set saveParams.mainDiagnosisName = diagItem.diagName
-			                quit
-			            }
-			        }
-			    }
-			    
-			    // 从oprnInfo中获取主手术名称（mainFlag=1 且 oprnSn=1）
-			    if (params.mainOperationCode '= "") && ($ISOBJECT(params.oprnInfo)) && (params.oprnInfo.%Size() > 0)
-			    {
-			        for j=0:1:params.oprnInfo.%Size()-1
-			        {
-			            set oprnItem = params.oprnInfo.%Get(j)
-			            if (oprnItem.mainFlag = "1") && (oprnItem.oprnSn = "1")
-			            {
-			                set saveParams.mainOperationName = oprnItem.oprnName
-			                quit
-			            }
-			        }
-			    }
-			    
-			    // 从complicationInfo提取ccFlag/mccFlag/riskLevel
-			    set saveParams.ccFlag = "0"
-			    set saveParams.mccFlag = "0"
-			    set saveParams.riskLevel = "低"
-			    if ($ISOBJECT(joDRGObj.result.complicationInfo)) && (joDRGObj.result.complicationInfo.%Size() > 0)
-			    {
-			        set hasMCC = 0
-			        set hasCC = 0
-			        for k=0:1:joDRGObj.result.complicationInfo.%Size()-1
-			        {
-			            set compItem = joDRGObj.result.complicationInfo.%Get(k)
-			            if (compItem.complication = "MCC") { set hasMCC = 1 }
-			            elseif (compItem.complication = "CC") { set hasCC = 1 }
-			        }
-			        if (hasMCC = 1)
-			        {
-			            set saveParams.mccFlag = "1"
-			            set saveParams.riskLevel = "高"
-			        }
-			        elseif (hasCC = 1)
-			        {
-			            set saveParams.ccFlag = "1"
-			            set saveParams.riskLevel = "中"
-			        }
-			    }
-			    
-			    // 从hospAlgorithmInfo提取weight（points/100）
-			    if ($ISOBJECT(joDRGObj.result.hospAlgorithmInfo)) && (joDRGObj.result.hospAlgorithmInfo.%Size() > 0)
-			    {
-			        set algoItem = joDRGObj.result.hospAlgorithmInfo.%Get(0)
-			        set pointsVal = algoItem.points
-		        if (pointsVal '= "") && (pointsVal '= "0.00") && (+pointsVal > 0) { set saveParams.weight = +pointsVal / 100 }
-			    }
-			    
-			    // 构造SaveDRGGroupRecord接口入参
-			    set paramsArr = ##class(%DynamicArray).%New()
-			    do paramsArr.%Push(saveParams)
-			    set saveJsonObj = ##class(%DynamicObject).%New()
-			    set saveJsonObj.params = paramsArr
-			    
-			    // 传递session信息（保持原调用链session）
-			    if (jsonObj.%IsDefined("session")) { set saveJsonObj.session = jsonObj.session }
-			    
-			    // 调用保存方法
-			    set saveRtn = ##class(src.DRG.GroupDevice).SaveDRGGroupRecord(saveJsonObj)
-			    if (saveRtn.errorCode '= "0")
-			    {
-				    set resultObj = ..SetErrorResult("-1", "DRG分组结果费用预警成功，但保存分组记录失败："_saveRtn.errorMessage)
-				    quit
-			    }
-			    
+			    set joDRGObj.result.feeWarningInfo=joWarningFee					   
 	            set resultObj = joDRGObj			    	    
 			}	    		    		    
 		}				
@@ -2596,7 +2500,7 @@ ClassMethod GetDIPGroupScore(jsonObj As %Library.DynamicObject) As %Library.Dyna
 /// Description: 保存DRG分组记录（优化版 - 使用独立字段存储）
 /// Table:       BS_DRGGroupRecord (User.BSDRGGroupRecord)
 /// Code:        02010035
-/// Input:       {"params":[{"hisAdmId":"","medcasNo":"","patientName":"","psnNo":"","insuranceAreaCode":"","insuType":"","sex":"","age":"","mainDiagnosisCode":"","mainDiagnosisName":"","diaTypeCode":"","diagnosisCode":"","diagnosisName":"","mainOperationCode":"","mainOperationName":"","deptCode":"","deptName":"","drg":"","drgDesc":"","weight":"","benchmarkCost":"","ccFlag":"","mccFlag":"","riskLevel":"","groupTime":"","fixmedinsCode":"","fixmedinsName":"","groupStage":"","admDateTime":"","discgDateTime":"","settleDateTime":"","remark":""}]}
+/// Input:       {"params":[{"admID":"","medcasNo":"","patientName":"","psnNo":"","insuranceAreaCode":"","insuType":"","sex":"","age":"","mainDiagnosisCode":"","mainDiagnosisName":"","diaTypeCode":"","diagnosisCode":"","diagnosisName":"","mainOperationCode":"","mainOperationName":"","department":"","departmentDesc":"","drg":"","drgDesc":"","weight":"","benchmarkCost":"","ccFlag":"","mccFlag":"","riskLevel":"","groupTime":"","fixmedinsCode":"","fixmedinsName":"","groupStage":"","admDateTime":"","discgDateTime":"","settleDateTime":"","remark":""}]}
 /// Output:      {"errorCode":"0","errorMessage":"","result":{"id":123}}
 ClassMethod SaveDRGGroupRecord(jsonObj As %Library.DynamicObject) As %Library.DynamicObject
 {
@@ -2616,45 +2520,45 @@ ClassMethod SaveDRGGroupRecord(jsonObj As %Library.DynamicObject) As %Library.Dy
         
         // 3. 获取入参
         set params = jsonObj.params.%Get(0)
-        set hisAdmId = params.hisAdmId
-        set medcasNo = params.medcasNo
-        set patientName = params.patientName
-        set psnNo = params.psnNo
-        set insuranceAreaCode = params.insuranceAreaCode
-        set mdtrtareaAreaCode = params.mdtrtareaAreaCode
-        set insuType = params.insuType
-        set sex = params.sex
-        set age = params.age
-        set mainDiagnosisCode = params.mainDiagnosisCode
-        set mainDiagnosisName = params.mainDiagnosisName
-        set diaTypeCode = params.diaTypeCode
-        set diagnosisCode = params.diagnosisCode
-        set diagnosisName = params.diagnosisName
-        set mainOperationCode = params.mainOperationCode
-        set mainOperationName = params.mainOperationName
-        set deptCode = params.deptCode
-        set deptName = params.deptName
-        set drg = params.drg
-        set drgDesc = params.drgDesc
-        set weight = params.weight
-        set benchmarkCost = params.benchmarkCost
-        set ccFlag = params.ccFlag
-        set mccFlag = params.mccFlag
-        set riskLevel = params.riskLevel
-        set groupTime = params.groupTime
-        set fixmedinsCode = params.fixmedinsCode
-        set fixmedinsName = params.fixmedinsName
-        set groupStage = params.groupStage
-        set admDateTime = params.admDateTime
-        set discgDateTime = params.discgDateTime
-        set settleDateTime = params.settleDateTime
-        set unionOprnFlag = params.unionOprnFlag
-        set remark = params.remark
+        set admID = $GET(params.admID, "")
+        set medcasNo = $GET(params.medcasNo, "")           // 病案号
+        set patientName = $GET(params.patientName, "")
+        set psnNo = $GET(params.psnNo, "")                 // 医保个人编号
+        set insuranceAreaCode = $GET(params.insuranceAreaCode, "")  // 参保地
+        set mdtrtareaAreaCode = $GET(params.mdtrtareaAreaCode, "")  // 就医地
+        
+        set insuType = $GET(params.insuType, "")            // 医保险种
+        set sex = $GET(params.sex, "")
+        set age = $GET(params.age, "")
+        set mainDiagnosisCode = $GET(params.mainDiagnosisCode, "")
+        set mainDiagnosisName = $GET(params.mainDiagnosisName, "")
+        set diaTypeCode = $GET(params.diaTypeCode, "")      // 主诊断类型编码
+        set diagnosisCode = $GET(params.diagnosisCode, "")  // 病种编码
+        set diagnosisName = $GET(params.diagnosisName, "")  // 病种名称
+        set mainOperationCode = $GET(params.mainOperationCode, "")
+        set mainOperationName = $GET(params.mainOperationName, "")
+        set department = $GET(params.department, "")
+        set departmentDesc = $GET(params.departmentDesc, "")  // 科室名称
+        set drg = $GET(params.drg, "")
+        set drgDesc = $GET(params.drgDesc, "")
+        set weight = $GET(params.weight, "")
+        set benchmarkCost = $GET(params.benchmarkCost, "")
+        set ccFlag = $GET(params.ccFlag, "0")
+        set mccFlag = $GET(params.mccFlag, "0")
+        set riskLevel = $GET(params.riskLevel, "低")
+        set groupTime = $GET(params.groupTime, "")
+        set fixmedinsCode = $GET(params.fixmedinsCode, "")
+        set fixmedinsName = $GET(params.fixmedinsName, "")
+        set groupStage = $GET(params.groupStage, "1")      // 分组阶段 默认事前
+        set admDateTime = $GET(params.admDateTime, "")        // 入院时间
+        set discgDateTime = $GET(params.discgDateTime, "")    // 出院时间
+        set settleDateTime = $GET(params.settleDateTime, "")  // 结算时间
+        set remark = $GET(params.remark, "")                // 备注
         
         // 4. 必填项校验
-        if (hisAdmId = "")
+        if (admID = "")
         {
-            set resultObj = ..SetErrorResult("-1", "hisAdmId：HIS唯一就诊ID不能为空")
+            set resultObj = ..SetErrorResult("-1", "AdmID：HIS唯一就诊ID不能为空")
             quit 
         }
         if (drg = "")
@@ -2663,128 +2567,152 @@ ClassMethod SaveDRGGroupRecord(jsonObj As %Library.DynamicObject) As %Library.Dy
             quit 
         }
         
-        // 5. 构建数据对象（属性名需严格匹配 User.BSDRGGroupRecord 类定义，大小写敏感）
-        set dynObj = {}
+        // 5. 使用类方法查找或创建记录
+        set id=""
+        set record={}       
+        &sql(select ID into :id from BS_DRGGroupRecord where DRG=:drg and AdmID=:admID)	
+	    set record = ##class(User.BSDRGGroupRecord).%OpenId(id)            
         
-        // 患者基本信息
-        set dynObj.AdmID = hisAdmId
-        set dynObj.MedcasNo = medcasNo
-        set dynObj.PatientName = patientName
-        set dynObj.PsnNo = psnNo
-        set dynObj.InsuranceAreaCode = insuranceAreaCode
-        set dynObj.mdtrtareaAreaCode = mdtrtareaAreaCode
-        set dynObj.InsuType = insuType
-        set dynObj.Sex = sex
-        set dynObj.Age = age
+        set isNew = 0        
+        if (record = "")
+        {
+            // 创建新记录
+            set record = ##class(User.BSDRGGroupRecord).%New()
+            set isNew = 1
+            set record.AdmID = admID
+            set record.CreateDate = +$Horolog
+            set record.CreateTime = $Piece($Horolog, ",", 2)
+            set record.ActiveFlag = "1"
+        }
+        else
+        {
+            // 更新现有记录 - 记录更新时间
+            set record.UpdateDate = +$Horolog
+            set record.UpdateTime = $Piece($Horolog, ",", 2)
+        }
         
-        // 诊断信息
-        set dynObj.MainDiagnosisCode = mainDiagnosisCode
-        set dynObj.MainDiagnosisName = mainDiagnosisName
-        set dynObj.DiaTypeCode = diaTypeCode
-        set dynObj.DiagnosisCode = diagnosisCode
-        set dynObj.DiagnosisName = diagnosisName
-        set dynObj.MainOperationCode = mainOperationCode
-        set dynObj.MainOperationName = mainOperationName
-        set dynObj.Department = deptCode
-        set dynObj.DepartmentDesc = deptName
+        // 6. 设置患者基本信息
+        if (medcasNo '= "") set record.MedcasNo = medcasNo
+        if (patientName '= "") set record.PatientName = patientName
+        if (psnNo '= "") set record.PsnNo = psnNo
+        if (insuranceAreaCode '= "") set record.InsuranceAreaCode = insuranceAreaCode
+        if (mdtrtareaAreaCode '= "") set record.MdtrtareaAreaCode = mdtrtareaAreaCode
+        if (insuType '= "") set record.InsuType = insuType
+        if (sex '= "") set record.Sex = sex
+        if (age '= "") set record.Age = age
         
-        // DRG分组结果
-        set dynObj.DRG = drg
-        set dynObj.DRGDesc = drgDesc
-        set dynObj.CCFlag = ccFlag
-        set dynObj.MCCFlag = mccFlag
-        set dynObj.RiskLevel = riskLevel
-        set dynObj.UnionOprnFlag = unionOprnFlag
+        // 7. 设置诊断信息
+        if (mainDiagnosisCode '= "") set record.MainDiagnosisCode = mainDiagnosisCode
+        if (mainDiagnosisName '= "") set record.MainDiagnosisName = mainDiagnosisName
+        if (diaTypeCode '= "") set record.DiaTypeCode = diaTypeCode
+        if (diagnosisCode '= "") set record.DiagnosisCode = diagnosisCode
+        if (diagnosisName '= "") set record.DiagnosisName = diagnosisName
+        if (mainOperationCode '= "") set record.MainOperationCode = mainOperationCode
+        if (mainOperationName '= "") set record.MainOperationName = mainOperationName
+        if (department '= "") set record.Department = department
+        if (departmentDesc '= "") set record.DepartmentDesc = departmentDesc
         
-        // 数值型字段
-        if (weight '= "") set dynObj.Weight = +weight
-        if (benchmarkCost '= "") set dynObj.BenchmarkCost = +benchmarkCost
+        // 8. 设置DRG分组结果（核心字段）
+        set record.DRG = drg
+        set record.DRGDesc = drgDesc
+        set record.CCFlag = ccFlag
+        set record.MCCFlag = mccFlag        
+        
+        // 数值型字段转换
+        if (weight '= "") set record.Weight = +weight
+        if (benchmarkCost '= "") set record.BenchmarkCost = +benchmarkCost
         
         // 分组时间解析
-        set dynObj.GroupTime = $zd($h,3)_" "_$zt($p($h,",",2),1)
+        if (groupTime '= "")
+        {
+            try {
+                set record.GroupTime = $ZDATETIMEH(groupTime, 3)
+            } catch {
+                // 如果时间格式不正确，使用当前时间
+                set record.GroupTime = $ZDATETIME($HOROLOG, 3)
+            }
+        }
+        else
+        {
+            set record.GroupTime = $ZDATETIME($HOROLOG, 3)
+        }
         
-        // 机构信息
-        set dynObj.FixmedinsCode = fixmedinsCode
-        set dynObj.FixmedinsName = fixmedinsName
+        // 9. 设置机构信息
+        if (fixmedinsCode '= "") set record.FixmedinsCode = fixmedinsCode
+        if (fixmedinsName '= "") set record.FixmedinsName = fixmedinsName
         
-        // 分组阶段和备注
-        set dynObj.GroupStage = groupStage
-        set dynObj.Remark = remark
+        // 10. 设置分组阶段和备注
+        if (groupStage '= "") set record.GroupStage = groupStage
+        if (remark '= "") set record.Remark = remark
         
-        // 就诊时间信息
+        // 11. 设置就诊时间信息（入院时间、出院时间、结算时间）
         if (admDateTime '= "")
         {
-            try { set dynObj.AdmDateTime = $ZDATETIMEH(admDateTime, 3) } catch { set dynObj.AdmDateTime = admDateTime }
+            try {
+                set record.AdmDateTime = $ZDATETIMEH(admDateTime, 3)
+            } catch {
+                set record.AdmDateTime = admDateTime
+            }
         }
         if (discgDateTime '= "")
         {
-            try { set dynObj.DiscgDateTime = $ZDATETIMEH(discgDateTime, 3) } catch { set dynObj.DiscgDateTime = discgDateTime }
+            try {
+                set record.DiscgDateTime = $ZDATETIMEH(discgDateTime, 3)
+            } catch {
+                set record.DiscgDateTime = discgDateTime
+            }
         }
         if (settleDateTime '= "")
         {
-            try { set dynObj.SettleDateTime = $ZDATETIMEH(settleDateTime, 3) } catch { set dynObj.SettleDateTime = settleDateTime }
+            try {
+                set record.SettleDateTime = $ZDATETIMEH(settleDateTime, 3)
+            } catch {
+                set record.SettleDateTime = settleDateTime
+            }
         }
         
-        // 6. 查询DRG指向（HB_DRGCoreAlgorithmData表）
+        // 11. 查询DRG指向（HB_DRGCoreAlgorithmData表），按年份优先匹配
         if (drg '= "")&&(mdtrtareaAreaCode '="")&&(fixmedinsCode '="")
         {
             set drgDr = ""
-            &sql(SELECT ID INTO :drgDr FROM HB_DRGCoreAlgorithmData WHERE DRG = :drg and FixmedinsCode=:fixmedinsCode and MdtrtArea=:mdtrtareaAreaCode)
-            if (drgDr '= "") set dynObj.DRGDr = drgDr
+            //先查当前年份
+            &sql(SELECT ID INTO :drgDr FROM HB_DRGCoreAlgorithmData WHERE DRG = :drg and FixmedinsCode=:fixmedinsCode and MdtrtArea=:mdtrtareaAreaCode AND (Year=:groupYear OR Year IS NULL OR Year=''))
+            if (drgDr = "") {
+                //回退查上一年
+                set prevYear = groupYear - 1
+                &sql(SELECT ID INTO :drgDr FROM HB_DRGCoreAlgorithmData WHERE DRG = :drg and FixmedinsCode=:fixmedinsCode and MdtrtArea=:mdtrtareaAreaCode AND (Year=:prevYear OR Year IS NULL OR Year=''))
+            }
+            if (drgDr = "") {
+                //最后不过滤年份
+                &sql(SELECT ID INTO :drgDr FROM HB_DRGCoreAlgorithmData WHERE DRG = :drg and FixmedinsCode=:fixmedinsCode and MdtrtArea=:mdtrtareaAreaCode)
+            }
+            if (drgDr '= "") set record.DRGDr = drgDr
         }
         
-        // 7. 获取当前用户信息（从session）
-        set userId = ""
-        if (jsonObj.%IsDefined("session") && (jsonObj.session.%Size() > 0))
+        // 10. 获取当前用户信息（从session）
+        if ($DATA(jsonObj.session) && (jsonObj.session.%Size() > 0))
         {
             set session = jsonObj.session.%Get(0)
-            if (session.%IsDefined("userID") && (session.userID '= "")) set userId = session.userID
+            if (isNew && (session.userId '= ""))
+            {
+                set record.CreateUserDr = session.userId
+            }
+            elseif (session.userId '= "")
+            {
+                set record.UpdateUserDr = session.userId
+            }                       
         }
         
-        // 8. 查询是否已存在记录
-        set id = ""
-        &sql(select ID into :id from BS_DRGGroupRecord where DRG=:drg and AdmID=:hisAdmId)
-        
-        // 9. 设置新增/更新标识
-        if (id '= "")
-        {
-            set dynObj.ID = id
-            set dynObj.UpdateDate = $zd($h,3)
-            set dynObj.UpdateTime = $zt($p($h,",",2),1)
-            if (userId '= "") set dynObj.UpdateUserDr = userId
-        }
-        else
-        {
-            set dynObj.CreateDate = $zd($h,3)
-            set dynObj.CreateTime = $zt($p($h,",",2),1)
-            set dynObj.ActiveFlag = "1"
-            if (userId '= "") set dynObj.CreateUserDr = userId
-        }
-        
-        // 10. 通过 operatetable 通用方法保存
-        set data = []
-        do data.%Push(dynObj)
-        set insObj = {}
-        set insObj.className = "User.BSDRGGroupRecord"
-        set insObj.data = data
-        
-        if (id '= "")
-        {
-            set rtn = ##class(src.util.operatetable).Update(.insObj)
-        }
-        else
-        {
-            set rtn = ##class(src.util.operatetable).Insert(.insObj)
-        }
-        
-        // 11. 处理保存结果
-        if (rtn.errorCode '= "0")
-        {
-            set resultObj = ..SetErrorResult("-1", "保存记录失败："_rtn.errorMessage)
+        // 12. 保存记录
+        set sc = record.%Save()
+        if ($$$ISERR(sc))
+        {            
+            set resultObj = ..SetErrorResult("-1", "保存记录失败："_StatusDisplayString(sc))
             quit 
         }
         
-        set resultObj = ..SetSuccessResult("","保存成功")
+        // 12. 设置返回结果
+        set resultObj=..SetSuccessResult("","保存成功")
         
     }
     catch(e)
@@ -2805,230 +2733,637 @@ ClassMethod SaveDRGGroupRecord(jsonObj As %Library.DynamicObject) As %Library.Dy
 
 /// Creator:     System
 /// CreatDate:   2026-03-22
-/// Description: 查询DRG分组记录表（优化版 - 参考DRGCataLog模式，纯SQL查询，单次遍历）
+/// Description: 查询DRG分组记录表（优化版 - 使用对象查询）
 /// Table:       BS_DRGGroupRecord (User.BSDRGGroupRecord)
 /// Code:        02010036
 /// Input:       {"params":[{"admID":"","medcasNo":"","patientName":"","psnNo":"","drg":"","mainDiagnosisCode":"","startDate":"","endDate":"","department":"","groupStage":"","admStartDate":"","admEndDate":"","discgStartDate":"","discgEndDate":"","settleStartDate":"","settleEndDate":""}],"pagination":{"pageSize":20,"currentPage":1}}
 /// Output:      {"errorCode":"0","errorMessage":"","result":{"total":100,"rows":[{}]}}
-/// Debug:       w ##class(src.DRG.GroupDevice).QueryDRGGroupRecord({}).%ToJSON()
-ClassMethod QueryDRGGroupRecord(postObj) As %Library.DynamicObject
+ClassMethod QueryDRGGroupRecord(postObj As %Library.DynamicObject) As %Library.DynamicObject
 {
-	new (postObj)
-	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
-	set pageSize="",currentPage=1,count=0,dataArr=[]
-	try
-	{
+    try
+    {
+    	new (postObj)
+	    set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	    set pageSize="",currentPage=1,count=0,dataArr=[]
+
 		if (postObj.%IsDefined("pagination")'=0) 
 		{
-			set pagationObj=postObj.pagination.%Get(0)
+	        set pagationObj=postObj.pagination.%Get(0)
 			set pageSize=pagationObj.pageSize
-			set currentPage=pagationObj.currentPage
+		    set currentPage=pagationObj.currentPage
 		}
-		set params=postObj.params.%Get(0)
-		set admID=params.admID
-		set medcasNo=params.medcasNo
-		set patientName=params.patientName
-		set psnNo=params.psnNo
-		set drg=params.drg
-		set mainDiagnosisCode=params.mainDiagnosisCode
-		set startDate=params.startDate
-		set endDate=params.endDate
-		set department=params.department
-		set groupStage=params.groupStage
-		set admStartDate=params.admStartDate
-		set admEndDate=params.admEndDate
-		set discgStartDate=params.discgStartDate
-		set discgEndDate=params.discgEndDate
-		set settleStartDate=params.settleStartDate
-		set settleEndDate=params.settleEndDate
+        
+        // 3. 获取查询条件
+        set admID = $GET(params.admID, "")
+        set medcasNo = $GET(params.medcasNo, "")
+        set patientName = $GET(params.patientName, "")
+        set psnNo = $GET(params.psnNo, "")
+        set drg = $GET(params.drg, "")
+        set mainDiagnosisCode = $GET(params.mainDiagnosisCode, "")
+        set startDate = $GET(params.startDate, "")
+        set endDate = $GET(params.endDate, "")
+        set department = $GET(params.department, "")
+        set groupStage = $GET(params.groupStage, "")
+        // 就诊时间范围查询条件
+        set admStartDate = $GET(params.admStartDate, "")
+        set admEndDate = $GET(params.admEndDate, "")
+        set discgStartDate = $GET(params.discgStartDate, "")
+        set discgEndDate = $GET(params.discgEndDate, "")
+        set settleStartDate = $GET(params.settleStartDate, "")
+        set settleEndDate = $GET(params.settleEndDate, "")
+        
+        // 4. 构建SQL条件（使用参数化查询防止SQL注入）
+        set sqlWhere = " WHERE ActiveFlag = '1'"
+        set sqlParams = []
+        
+        if (admID '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND AdmID = ?"
+            do sqlParams.%Push(admID)
+        }
+        if (medcasNo '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND MedcasNo = ?"
+            do sqlParams.%Push(medcasNo)
+        }
+        if (patientName '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND PatientName LIKE ?"
+            do sqlParams.%Push("%"_patientName_"%")
+        }
+        if (psnNo '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND PsnNo LIKE ?"
+            do sqlParams.%Push("%"_psnNo_"%")
+        }
+        if (drg '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND DRG = ?"
+            do sqlParams.%Push(drg)
+        }
+        if (mainDiagnosisCode '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND MainDiagnosisCode = ?"
+            do sqlParams.%Push(mainDiagnosisCode)
+        }
+        if (department '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND Department = ?"
+            do sqlParams.%Push(department)
+        }
+        if (groupStage '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND GroupStage = ?"
+            do sqlParams.%Push(groupStage)
+        }
+        if (startDate '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND CreateDate >= ?"
+            do sqlParams.%Push($ZDATEH(startDate, 3))
+        }
+        if (endDate '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND CreateDate <= ?"
+            do sqlParams.%Push($ZDATEH(endDate, 3))
+        }
+        // 入院时间范围查询
+        if (admStartDate '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND AdmDateTime >= ?"
+            do sqlParams.%Push($ZDATEH(admStartDate, 3))
+        }
+        if (admEndDate '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND AdmDateTime <= ?"
+            do sqlParams.%Push($ZDATEH(admEndDate, 3))
+        }
+        // 出院时间范围查询
+        if (discgStartDate '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND DiscgDateTime >= ?"
+            do sqlParams.%Push($ZDATEH(discgStartDate, 3))
+        }
+        if (discgEndDate '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND DiscgDateTime <= ?"
+            do sqlParams.%Push($ZDATEH(discgEndDate, 3))
+        }
+        // 结算时间范围查询
+        if (settleStartDate '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND SettleDateTime >= ?"
+            do sqlParams.%Push($ZDATEH(settleStartDate, 3))
+        }
+        if (settleEndDate '= "")
+        {
+            set sqlWhere = sqlWhere _ " AND SettleDateTime <= ?"
+            do sqlParams.%Push($ZDATEH(settleEndDate, 3))
+        }
+        
+        // 5. 查询总记录数
+        set totalSql = "SELECT COUNT(*) AS total FROM BS_DRGGroupRecord" _ sqlWhere
+        set stmt = ##class(%SQL.Statement).%New()
+        set sc = stmt.%Prepare(totalSql)
+        
+        set total = 0
+        if ($$$ISOK(sc))
+        {
+            set rs = stmt.%Execute(sqlParams...)
+            if (rs.%Next())
+            {
+                set total = rs.total
+            }
+        }
+        set resultObj.result.total = total
+        
+        // 6. 如果没有记录，直接返回
+        if (total = 0)
+        {
+            return resultObj
+        }
+        
+        // 7. 计算分页参数
+        set page = $GET(currentPage, 1)
+        set limit = $GET(pageSize, 20)
+        set startRow = (page - 1) * limit
+        
+        // 8. 查询数据列表（使用对象方式构建返回结构）
+        set dataSql = "SELECT ID FROM User.BSDRGGroupRecord " _ sqlWhere _ " ORDER BY CreateDate DESC, CreateTime DESC"
+        set stmt = ##class(%SQL.Statement).%New()
+        set sc = stmt.%Prepare(dataSql)
+        
+        set rows = []
+        set rowIndex = 0
+        set skipCount = 0
+        
+        if ($$$ISOK(sc))
+        {
+            set rs = stmt.%Execute(sqlParams...)
+            
+            while (rs.%Next())
+            {
+                set rowIndex = rowIndex + 1
+                
+                // 分页处理：跳过前面的记录
+                if (rowIndex <= startRow)
+                {
+                    continue
+                }
+                
+                // 限制返回数量
+                if (rows.%Size() >= limit)
+                {
+                    quit
+                }
+                
+                // 使用对象方式获取完整数据
+                set record = ##class(User.BSDRGGroupRecord).%OpenId(rs.ID)
+                if (record '= "")
+                {
+                    set row = {}
+                    set row.id = record.%Id()
+                    set row.admID = record.AdmID
+                    set row.medcasNo = record.MedcasNo
+                    set row.patientName = record.PatientName
+                    set row.psnNo = record.PsnNo
+                    set row.insuranceAreaCode = record.InsuranceAreaCode
+                    set row.insuType = record.InsuType
+                    set row.sex = record.Sex
+                    set row.age = record.Age
+                    
+                    // 诊断信息
+                    set row.mainDiagnosisCode = record.MainDiagnosisCode
+                    set row.mainDiagnosisName = record.MainDiagnosisName
+                    set row.diaTypeCode = record.DiaTypeCode
+                    set row.diagnosisCode = record.DiagnosisCode
+                    set row.diagnosisName = record.DiagnosisName
+                    set row.mainOperationCode = record.MainOperationCode
+                    set row.mainOperationName = record.MainOperationName
+                    
+                    // DRG分组结果
+                    set row.drg = record.DRG
+                    set row.drgDesc = record.DRGDesc
+                    set row.weight = record.Weight
+                    set row.benchmarkCost = record.BenchmarkCost
+                    set row.ccFlag = record.CCFlag
+                    set row.mccFlag = record.MCCFlag                    
+                    set row.groupTime = $ZDATETIME(record.GroupTime, 3)
+                    set row.groupStage = record.GroupStage
+                    set row.remark = record.Remark
+                    
+                    // 科室信息
+                    set row.department = record.Department
+                    set row.departmentDesc = record.DepartmentDesc
+                    
+                    // 机构信息
+                    set row.fixmedinsCode = record.FixmedinsCode
+                    set row.fixmedinsName = record.FixmedinsName
+                    
+                    // 时间信息
+                    set row.createDate = $ZD(record.CreateDate, 3)
+                    set row.createTime = $ZT(record.CreateTime, 1)
+                    set row.updateDate = $ZD(record.UpdateDate, 3)
+                    set row.updateTime = $ZT(record.UpdateTime, 1)
+                    
+                    // 就诊时间信息
+                    set row.admDateTime = ""
+                    set row.discgDateTime = ""
+                    set row.settleDateTime = ""
+                    if (record.AdmDateTime '= "") set row.admDateTime = $ZDATETIME(record.AdmDateTime, 3)
+                    if (record.DiscgDateTime '= "") set row.discgDateTime = $ZDATETIME(record.DiscgDateTime, 3)
+                    if (record.SettleDateTime '= "") set row.settleDateTime = $ZDATETIME(record.SettleDateTime, 3)
+                    
+                    set count=count+1
+                    if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+                    do rows.%Push(row)
+                }
+            }
+        }
+
+		set resultObj.result.rows=rows
+		set resultObj.result.total=total
+                
+    }
+    catch(e)
+    {
+        set status = e.AsStatus()
+        set errorCode = $piece(##class(%SYSTEM.Status).GetErrorCodes(status), ",")
+        set errorMsg = $replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"), "^", " ")
+        set errorInfo = "查询DRG分组记录异常：类=" _ $ClassName() _ "，错误：" _ errorMsg
+        
+        // 记录错误日志
+        set errorLogID = ##class(src.Interface.Message).InsErrRecord("02010036", errorInfo, errorMsg)
+        set resultObj.errorCode = "-99"
+        set resultObj.errorMessage = "查询DRG分组记录异常（日志ID："_errorLogID_"）："_errorMsg
+    }
+    
+    quit resultObj
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-05-26
+/// Description: 解析GroupFactors结构化入组因素字符串
+///              格式: "主要诊断+主要手术"  → [["主要诊断"],["主要手术"]]
+///              格式: "主要诊断或次要诊断+主要手术" → [["主要诊断","次要诊断"],["主要手术"]]
+///              + 表示 AND 关系，或 表示 OR 关系
+/// Input:       groupFactors - 入组因素字符串
+/// Output:      $List格式的二维结构：外层是AND关系的组列表，内层是OR关系的字段名列表
+///              $LB($LB("1","2"), $LB("3")) 表示 (字段1或字段2)且(字段3)
+///              字段映射: "主要诊断"→1, "次要诊断"→2, "主要手术"→3, "次要手术"→4
+ClassMethod ParseGroupFactors(groupFactors As %String) As %List
+{
+	new (groupFactors)
+	if (groupFactors = "") quit ""
+	
+	set result = ""
+	; 按 + 号分割得到 AND 组
+	set andGroups = $LENGTH(groupFactors, "+")
+	for andIdx = 1:1:andGroups {
+		set andGroup = $ZSTRIP($PIECE(groupFactors, "+", andIdx), "<>W")
+		if (andGroup = "") continue
 		
-		set sql=" SELECT ID,AdmID,MedcasNo,PatientName,PsnNo,InsuranceAreaCode,InsuType,Sex,Age,"
-		       _" MainDiagnosisCode,MainDiagnosisName,DiaTypeCode,DiagnosisCode,DiagnosisName,MainOperationCode,MainOperationName,"
-		       _" DRG,DRGDesc,Weight,BenchmarkCost,CCFlag,MCCFlag,GroupTime,GroupStage,Remark,"
-		       _" Department,DepartmentDesc,FixmedinsCode,FixmedinsName,"
-		       _" CreateDate,CreateTime,UpdateDate,UpdateTime,"
-		       _" AdmDateTime,DiscgDateTime,SettleDateTime "
-		       _" FROM BS_DRGGroupRecord WHERE ActiveFlag = '1'"
-		
-		if admID'=""
-		{
-			set sql=sql_" AND AdmID = '"_admID_"'" 
-		}
-		if medcasNo'=""
-		{
-			set sql=sql_" AND MedcasNo = '"_medcasNo_"'" 
-		}
-		if patientName'=""
-		{
-			set sql=sql_" AND PatientName LIKE '%"_patientName_"%'" 
-		}
-		if psnNo'=""
-		{
-			set sql=sql_" AND PsnNo LIKE '%"_psnNo_"%'" 
-		}
-		if drg'=""
-		{
-			set sql=sql_" AND DRG = '"_drg_"'" 
-		}
-		if mainDiagnosisCode'=""
-		{
-			set sql=sql_" AND MainDiagnosisCode = '"_mainDiagnosisCode_"'" 
-		}
-		if department'=""
-		{
-			set sql=sql_" AND Department = '"_department_"'" 
-		}
-		if groupStage'=""
-		{
-			set sql=sql_" AND GroupStage = '"_groupStage_"'" 
-		}
-		if startDate'=""
-		{
-			set sql=sql_" AND CreateDate >= "_$ZDATEH(startDate,3)
-		}
-		if endDate'=""
-		{
-			set sql=sql_" AND CreateDate <= "_$ZDATEH(endDate,3)
-		}
-		if admStartDate'=""
-		{
-			set sql=sql_" AND AdmDateTime >= "_$ZDATEH(admStartDate,3)
-		}
-		if admEndDate'=""
-		{
-			set sql=sql_" AND AdmDateTime <= "_$ZDATEH(admEndDate,3)
-		}
-		if discgStartDate'=""
-		{
-			set sql=sql_" AND DiscgDateTime >= "_$ZDATEH(discgStartDate,3)
-		}
-		if discgEndDate'=""
-		{
-			set sql=sql_" AND DiscgDateTime <= "_$ZDATEH(discgEndDate,3)
-		}
-		if settleStartDate'=""
-		{
-			set sql=sql_" AND SettleDateTime >= "_$ZDATEH(settleStartDate,3)
-		}
-		if settleEndDate'=""
-		{
-			set sql=sql_" AND SettleDateTime <= "_$ZDATEH(settleEndDate,3)
-		}
-		
-		set sql=sql_" ORDER BY CreateDate DESC, CreateTime DESC"
-		
-		set sqlObj=##class(%SQL.Statement).%New(1)
-		set sc=sqlObj.%Prepare(sql)
-		set result=sqlObj.%Execute()
-		while result.%Next(sc)	
-		{
-			set id=result.ID
-			set admID=result.AdmID
-			set medcasNo=result.MedcasNo
-			set patientName=result.PatientName
-			set psnNo=result.PsnNo
-			set insuranceAreaCode=result.InsuranceAreaCode
-			set insuType=result.InsuType
-			set sex=result.Sex
-			set age=result.Age
-			set mainDiagnosisCode=result.MainDiagnosisCode
-			set mainDiagnosisName=result.MainDiagnosisName
-			set diaTypeCode=result.DiaTypeCode
-			set diagnosisCode=result.DiagnosisCode
-			set diagnosisName=result.DiagnosisName
-			set mainOperationCode=result.MainOperationCode
-			set mainOperationName=result.MainOperationName
-			set drg=result.DRG
-			set drgDesc=result.DRGDesc
-			set weight=result.Weight
-			set benchmarkCost=result.BenchmarkCost
-			set ccFlag=result.CCFlag
-			set mccFlag=result.MCCFlag
-			set groupTime=result.GroupTime
-			set groupTimeDisplay=""
-			if groupTime'="" set groupTimeDisplay=$ZDATETIME(groupTime,3)
-			set groupStage=result.GroupStage
-			set remark=result.Remark
-			set department=result.Department
-			set departmentDesc=result.DepartmentDesc
-			set fixmedinsCode=result.FixmedinsCode
-			set fixmedinsName=result.FixmedinsName
-			set createDate=result.CreateDate
-			set createDateDisplay=""
-			if createDate'="" set createDateDisplay=$ZD(createDate,3)
-			set createTime=result.CreateTime
-			set createTimeDisplay=""
-			if createTime'="" set createTimeDisplay=$ZT(createTime,1)
-			set updateDate=result.UpdateDate
-			set updateDateDisplay=""
-			if updateDate'="" set updateDateDisplay=$ZD(updateDate,3)
-			set updateTime=result.UpdateTime
-			set updateTimeDisplay=""
-			if updateTime'="" set updateTimeDisplay=$ZT(updateTime,1)
-			set admDateTime=result.AdmDateTime
-			set admDateTimeDisplay=""
-			if admDateTime'="" set admDateTimeDisplay=$ZDATETIME(admDateTime,3)
-			set discgDateTime=result.DiscgDateTime
-			set discgDateTimeDisplay=""
-			if discgDateTime'="" set discgDateTimeDisplay=$ZDATETIME(discgDateTime,3)
-			set settleDateTime=result.SettleDateTime
-			set settleDateTimeDisplay=""
-			if settleDateTime'="" set settleDateTimeDisplay=$ZDATETIME(settleDateTime,3)
+		; 在各 AND 组内按"或"分割得到 OR 项
+		set orList = ""
+		set orCount = $LENGTH(andGroup, "或")
+		for orIdx = 1:1:orCount {
+			set orItem = $ZSTRIP($PIECE(andGroup, "或", orIdx), "<>W")
+			if (orItem = "") continue
 			
-			set dataObj={}
-			set dataObj.id=id
-			set dataObj.admID=admID
-			set dataObj.medcasNo=medcasNo
-			set dataObj.patientName=patientName
-			set dataObj.psnNo=psnNo
-			set dataObj.insuranceAreaCode=insuranceAreaCode
-			set dataObj.insuType=insuType
-			set dataObj.sex=sex
-			set dataObj.age=age
-			set dataObj.mainDiagnosisCode=mainDiagnosisCode
-			set dataObj.mainDiagnosisName=mainDiagnosisName
-			set dataObj.diaTypeCode=diaTypeCode
-			set dataObj.diagnosisCode=diagnosisCode
-			set dataObj.diagnosisName=diagnosisName
-			set dataObj.mainOperationCode=mainOperationCode
-			set dataObj.mainOperationName=mainOperationName
-			set dataObj.drg=drg
-			set dataObj.drgDesc=drgDesc
-			set dataObj.weight=weight
-			set dataObj.benchmarkCost=benchmarkCost
-			set dataObj.ccFlag=ccFlag
-			set dataObj.mccFlag=mccFlag
-			set dataObj.groupTime=groupTimeDisplay
-			set dataObj.groupStage=groupStage
-			set dataObj.remark=remark
-			set dataObj.department=department
-			set dataObj.departmentDesc=departmentDesc
-			set dataObj.fixmedinsCode=fixmedinsCode
-			set dataObj.fixmedinsName=fixmedinsName
-			set dataObj.createDate=createDateDisplay
-			set dataObj.createTime=createTimeDisplay
-			set dataObj.updateDate=updateDateDisplay
-			set dataObj.updateTime=updateTimeDisplay
-			set dataObj.admDateTime=admDateTimeDisplay
-			set dataObj.discgDateTime=discgDateTimeDisplay
-			set dataObj.settleDateTime=settleDateTimeDisplay
-			
-			set count=count+1
-			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
-			do dataArr.%Push(dataObj)
+			; 将中文字段名映射为数字编码
+			if (orItem = "主要诊断") {
+				set orList = orList _ $LISTBUILD(1)
+			} elseif (orItem = "次要诊断") {
+				set orList = orList _ $LISTBUILD(2)
+			} elseif (orItem = "主要手术") {
+				set orList = orList _ $LISTBUILD(3)
+			} elseif (orItem = "次要手术") {
+				set orList = orList _ $LISTBUILD(4)
+			}
 		}
-		set resultObj.result.rows=dataArr
-		set resultObj.result.total=count
-				
-	}catch(e){
-		set status=e.AsStatus()
-		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
-		set errorInfo="查询DRG分组记录出现问题:w ##class("_$ClassName()_").QueryDRGGroupRecord("_postObj.%ToJSON()_")"
-		set errorLogID=##class(src.Interface.Message).InsErrRecord("02010036",errorInfo,errorMessage)
-		set resultObj={}
-		set resultObj.errorCode="-99"
-		set resultObj.errorMessage="查询DRG分组记录异常（日志ID："_errorLogID_"）："_errorMessage
+		
+		if ($LISTLENGTH(orList) > 0) {
+			set result = result _ $LISTBUILD(orList)
+		}
 	}
+	
+	quit result
+}
+
+/// Creator:     系统
+/// CreatDate:   2026-05-26
+/// Description: 特异化分组匹配算法
+///              根据ADRG编码列表、省市信息和年份，查询特异化分组规则表进行匹配
+/// Input:       jsonObj - 患者就诊信息JSON对象（含diseinfo, oprninfo数组）
+///              MDC - MDC编码
+///              jaADRG - ADRG分组结果数组（每个元素含code/drcode）
+///              hospinfo - 医疗机构信息数组（取第一个元素的省市信息）
+///              groupYear - 分组方案年份
+/// Output:      {errorCode:"0", result:{drgCode, drgDesc, matchRuleId, groupFactors}}
+///              匹配成功返回"0"，不匹配返回"-1"
+/// Debug:       w ##class(src.DRG.GroupDevice).GroupSpecialMatch({}, "", [], [], "").%ToJSON()
+ClassMethod GroupSpecialMatch(jsonObj As %Library.DynamicObject, MDC As %String, jaADRG As %Library.DynamicArray, hospinfo As %Library.DynamicArray, groupYear As %String) As %Library.DynamicObject
+{
+	new (jsonObj, MDC, jaADRG, hospinfo, groupYear)
+	
+	; 使用局部变量存储匹配结果，最后再赋值给resultObj.result（避免中途对象被覆盖）
+	set resultObj = ##class(%DynamicObject).%New()
+	set resultObj.errorCode = "-1"
+	set resultObj.errorMessage = "未命中特异化分组规则"
+	set resultObj.result = ##class(%DynamicObject).%New()
+	
+	; 局部变量：存储匹配成功的特异化分组信息
+	set matchDRGCode = ""
+	set matchDRGName = ""
+	set matchGroupFactors = ""
+	set matchRuleId = ""
+	set matchedSuccess = 0
+	
+	try {
+		; 调试：记录入参
+		set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "jsonObj: " _ jsonObj.%ToJSON()
+		set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "MDC: " _ MDC
+		set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "hospinfo size: " _ $SELECT($ISOBJECT(hospinfo): hospinfo.%Size(), 1: "null")
+		set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "groupYear: " _ groupYear
+		
+		; hospinfo为空时不执行匹配
+		if (hospinfo = "") || ('$ISOBJECT(hospinfo)) || (hospinfo.%Size() = 0) {
+			set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "hospinfo为空，退出"
+			quit
+		}
+		
+		; 获取患者主诊断编码
+		set mainDiagCode = jsonObj.params.%Get(0).mainDiagnosisCode
+		set diseinfo = jsonObj.params.%Get(0).diseInfo
+		if (diseinfo = "") || ('$ISOBJECT(diseinfo)) set diseinfo = []
+		
+		; 获取患者主手术编码
+		set mainOperationCode = jsonObj.params.%Get(0).mainOperationCode
+		set oprninfo = jsonObj.params.%Get(0).oprnInfo
+		if (oprninfo = "") || ('$ISOBJECT(oprninfo)) set oprninfo = []
+		
+		; 从hospinfo获取省市信息和行政区划代码
+		set provinceDr = ""
+		set cityDr = ""
+		set admvs = ""
+		
+		if ($ISOBJECT(hospinfo)) && (hospinfo.%Size() > 0) 
+		{
+			set hospItem = hospinfo.%Get(0)
+			set hisHospCode = $GET(hospItem.hisHospCode, "")
+			set hospCode = $GET(hospItem.code, "")
+			
+			set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "hospCode: " _ hospCode _ ", hisHospCode: " _ hisHospCode
+			
+			if (hospCode '= "") 
+				{
+					; 从医疗机构信息表获取省市和行政区划
+					&sql(SELECT ProvID_Dr, CityID_Dr, CityID_Dr->Code INTO :provinceDr, :cityDr, :admvs 
+					     FROM CB_Hospital WHERE OrganizationCode=:hospCode)
+					
+					set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "provinceDr: " _ provinceDr _ ", cityDr: " _ cityDr _ ", admvs: " _ admvs
+				}
+		}
+		
+		; 如果无法获取省市信息，退出
+		if (provinceDr = "") && (cityDr = "") {
+			set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "无法获取省市信息，退出"
+			quit
+		}
+		
+		; 年份默认当前年份
+		if (groupYear = "") set groupYear = $PIECE($ZDATE($HOROLOG, 3), "-", 1)
+		
+		set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "查询年份: " _ groupYear
+		
+		; 不再按ADRG前缀过滤——特异化DRG可以和标准结果不在同一个ADRG下
+		; 直接查询所有符合省市/年份条件的规则，在匹配阶段逐一判断
+		set sql = "SELECT ID, DRGCode, DRGName, PrincipalDiagnosis, SecondaryDiagnosis,"
+				_ " MajorProcedure, SecondaryProcedure, GroupFactors"
+				_ " FROM HB_DRGSpecialGroup"
+				_ " WHERE 1=1"
+		
+		if provinceDr '= "" {
+			set sql = sql _ " AND Province_Dr='" _ provinceDr _ "'"
+		}
+		if cityDr '= "" {
+			set sql = sql _ " AND City_Dr='" _ cityDr _ "'"
+		}
+		if (admvs '= "") {
+			; 行政区划代码匹配模式：完整匹配或前缀匹配（如340100可匹配3401开头的）
+			set admvsPrefix = $EXTRACT(admvs, 1, 4)
+			set sql = sql _ " AND (Admvs='" _ admvs _ "' OR LEFT(Admvs,4)='" _ admvsPrefix _ "' OR Admvs='')"
+		}
+		if groupYear '= "" {
+			set sql = sql _ " AND (Year='" _ groupYear _ "' OR Year IS NULL OR Year='')"
+		}
+		
+		; 按DRGCode排序
+		set sql = sql _ " ORDER BY DRGCode"
+		
+		set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "SQL: " _ sql
+		
+		set sqlObj = ##class(%SQL.Statement).%New(1)
+		set sc = sqlObj.%Prepare(sql)
+		if (sc '= 1) {
+			set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "SQL Prepare failed: " _ $SYSTEM.SQL.GetErrorText(sc)
+			quit
+		}
+		set rs = sqlObj.%Execute()
+		
+		; 统计查询结果
+		set rowCount = 0
+		set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "开始遍历查询结果..."
+		
+		; 遍历候选规则进行匹配
+		while rs.%Next() 
+		{
+			set rowCount = rowCount + 1
+			set ruleId = rs.ID
+			set drgCode = rs.DRGCode
+			set drgName = rs.DRGName
+			set principalDiag = rs.PrincipalDiagnosis
+			set secondaryDiag = rs.SecondaryDiagnosis
+			set majorProc = rs.MajorProcedure
+			set secondaryProc = rs.SecondaryProcedure
+			set groupFactors = rs.GroupFactors
+			
+			set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "Row " _ rowCount _ ": DRGCode=" _ drgCode _ ", PrincipalDiagnosis=" _ principalDiag _ ", MajorProcedure=" _ majorProc _ ", GroupFactors=" _ groupFactors
+			
+			; 解析GroupFactors获取匹配逻辑
+			set parsedFactors = ..ParseGroupFactors(groupFactors)
+			
+			; 如果没有GroupFactors，默认所有非空字段为AND关系
+			if (parsedFactors = "") {
+				; 构建默认AND逻辑
+				set parsedFactors = ""
+				if principalDiag '= "" {
+					set parsedFactors = parsedFactors _ $LISTBUILD($LISTBUILD(1))
+				}
+				if secondaryDiag '= "" {
+					set parsedFactors = parsedFactors _ $LISTBUILD($LISTBUILD(2))
+				}
+				if majorProc '= "" {
+					set parsedFactors = parsedFactors _ $LISTBUILD($LISTBUILD(3))
+				}
+				if secondaryProc '= "" {
+					set parsedFactors = parsedFactors _ $LISTBUILD($LISTBUILD(4))
+				}
+			}
+			
+			; 按GroupFactors解析结果执行匹配
+			set matched = 1
+			set andGroupCount = $LISTLENGTH(parsedFactors)
+			
+			for agIdx = 1:1:andGroupCount {
+				set orList = $LISTGET(parsedFactors, agIdx)
+				set orCount = $LISTLENGTH(orList)
+				set orMatched = 0
+				
+				for oi = 1:1:orCount {
+					set fieldCode = $LISTGET(orList, oi)
+					set fieldMatched = 0
+					
+					set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "Row " _ rowCount _ " AND组" _ agIdx _ " OR项" _ oi _ ": fieldCode=" _ fieldCode _ ", mainDiagCode=" _ mainDiagCode _ ", mainOperationCode=" _ mainOperationCode
+					
+					if fieldCode = 1 {
+						; 主要诊断匹配
+						set fieldMatched = ..IsCodeMatch(mainDiagCode, principalDiag)
+						set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "Row " _ rowCount _ " 主要诊断匹配: mainDiagCode=" _ mainDiagCode _ ", principalDiag=" _ principalDiag _ ", result=" _ fieldMatched
+						; 同时也检查逗号分隔的多编码匹配
+						if 'fieldMatched {
+							set diagList = ..SplitCodes(principalDiag)
+							for di = 1:1:$LISTLENGTH(diagList) {
+								if ..IsCodeMatch(mainDiagCode, $LISTGET(diagList, di)) {
+									set fieldMatched = 1
+									quit
+								}
+							}
+						}
+						
+					} elseif fieldCode = 2 {
+						; 次要诊断匹配 - 遍历患者的diseinfo数组（排除主诊断）
+						set secondaryDiagList = ..SplitCodes(secondaryDiag)
+						set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "Row " _ rowCount _ " 次要诊断匹配: secondaryDiag=" _ secondaryDiag _ ", diseinfo size=" _ diseinfo.%Size()
+						for sj = 1:1:$LISTLENGTH(secondaryDiagList) {
+							set oneRuleDiag = $LISTGET(secondaryDiagList, sj)
+							if oneRuleDiag = "" continue
+							
+							; 遍历患者的诊断信息
+							for di = 0:1:diseinfo.%Size() - 1 {
+								set diseItem = diseinfo.%Get(di)
+								if (diseItem.mainFlag = "1") && (diseItem.diagSn = "1") { continue }
+								set patientDiag = $GET(diseItem.diagCode, "")
+								if patientDiag = "" continue
+								
+								if ..IsCodeMatch(patientDiag, oneRuleDiag) {
+									set fieldMatched = 1
+									quit
+								}
+							}
+							if fieldMatched quit
+						}
+						
+					} elseif fieldCode = 3 {
+						; 主要手术匹配
+						set procList = ..SplitCodes(majorProc)
+						set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "Row " _ rowCount _ " 主要手术匹配: majorProc=" _ majorProc _ ", mainOperationCode=" _ mainOperationCode
+						for pi = 1:1:$LISTLENGTH(procList) {
+							if ..IsCodeMatch(mainOperationCode, $LISTGET(procList, pi)) {
+								set fieldMatched = 1
+								quit
+							}
+						}
+						
+					} elseif fieldCode = 4 {
+						; 次要手术匹配 - 遍历患者的oprninfo数组（排除主手术）
+						set secondaryProcList = ..SplitCodes(secondaryProc)
+						set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "Row " _ rowCount _ " 次要手术匹配: secondaryProc=" _ secondaryProc _ ", oprninfo size=" _ oprninfo.%Size()
+						for sp = 1:1:$LISTLENGTH(secondaryProcList) {
+							set oneRuleProc = $LISTGET(secondaryProcList, sp)
+							if oneRuleProc = "" continue
+							
+							; 遍历患者的手术信息
+							for oi2 = 0:1:oprninfo.%Size() - 1 {
+								set oprnItem = oprninfo.%Get(oi2)
+								if (oprnItem.mainFlag = "1") && (oprnItem.oprnSn = "1") { continue }
+								set patientProc = $GET(oprnItem.oprnCode, "")
+								if patientProc = "" continue
+								
+								if ..IsCodeMatch(patientProc, oneRuleProc) {
+									set fieldMatched = 1
+									quit
+								}
+							}
+							if fieldMatched quit
+						}
+					}
+					
+					; OR组内任一匹配成功即通过
+					if fieldMatched {
+						set orMatched = 1
+						quit
+					}
+				}
+				
+				; AND组内有一个未匹配则整条规则不命中
+				if 'orMatched {
+					set matched = 0
+					quit
+				}
+			}
+			
+		; 全部AND组匹配成功
+		if matched {
+			set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "匹配成功！DRGCode=" _ drgCode _ ", drgName=" _ drgName
+			
+			; 用局部变量存储匹配结果（避免中途resultObj.result被覆盖）
+			set matchedSuccess = 1
+			set matchDRGCode = drgCode
+			set matchDRGName = drgName
+			set matchGroupFactors = groupFactors
+			set matchRuleId = ruleId
+			
+			quit  ; 匹配到第一条规则即返回
+		} else {
+			set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "Row " _ rowCount _ " 未匹配"
+		}
+	}
+		
+	} catch(e) {
+		set status = e.AsStatus()
+		set errorMessage = $replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"), "^", " ")
+		set errorInfo = "特异化分组匹配异常:w ##class(" _ $ClassName() _ ").GroupSpecialMatch(" _ jsonObj.%ToJSON() _ ")"
+		set errorLogID = ##class(src.Interface.Message).InsErrRecord("04000007", errorInfo, errorMessage)
+		set resultObj.errorCode = "-99"
+		set resultObj.errorMessage = "特异化分组匹配异常（日志ID：" _ errorLogID _ "）：" _ errorMessage
+	}
+	
+	; 匹配成功：将局部变量赋值给resultObj.result
+	if (matchedSuccess = 1) {
+		set resultObj.errorCode = "0"
+		set resultObj.errorMessage = ""
+		
+		; 防御性检查：确保result是DynamicObject
+		if ('$ISOBJECT(resultObj.result)) || (resultObj.result = "") {
+			set resultObj.result = ##class(%DynamicObject).%New()
+		}
+		
+		set resultObj.result.drgCode = matchDRGCode
+		; DRGDesc格式: "DRG名称（特异化分组：入组因素描述）"
+		set specialDesc = matchDRGName
+		if matchGroupFactors '= "" {
+			set specialDesc = matchDRGName _ "（特异化分组：" _ matchGroupFactors _ "）"
+		} else {
+			set specialDesc = matchDRGName _ "（特异化分组）"
+		}
+		set resultObj.result.drgDesc = specialDesc
+		set resultObj.result.matchRuleId = matchRuleId
+		set resultObj.result.groupFactors = matchGroupFactors
+	}
+	
+	; 调试：输出最终结果
+	set ^Debug("GroupSpecialMatch", $I(^Debug("GroupSpecialMatch", "Seq"))) = "最终结果: errorCode=" _ resultObj.errorCode _ ", drgCode=" _ $GET(resultObj.result.drgCode, "")
+	
 	quit resultObj
 }
 

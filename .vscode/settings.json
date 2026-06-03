@@ -15,5 +15,6 @@
         "active": true,
         "server": "drg-clound-service",
         "ns": "DRG"
-    }
+    },
+    "git.ignoreLimitWarning": true
 }

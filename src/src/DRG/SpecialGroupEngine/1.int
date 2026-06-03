@@ -1,0 +1,443 @@
+ROUTINE src.DRG.SpecialGroupEngine.1 [Type=INT,Generated]
+ ;src.DRG.SpecialGroupEngine.1
+ ;Generated for class src.DRG.SpecialGroupEngine.  Do NOT edit. 05/29/2026 04:28:33PM
+ ;;4D786767;src.DRG.SpecialGroupEngine
+ ;
+zIsCodeMatch(code1,code2) public {
+	if (code1 = "") || (code2 = "")
+	{
+		quit 0
+	}
+	; 精确相等直接匹配
+	if (code1 = code2)
+	{
+		quit 1
+	}
+	; 双向包含判断：一方是另一方的子串
+	; code1包含code2 → code2是code1的前缀（如code1=H25.900, code2=H25）
+	if ($FIND(code1, code2) = ($LENGTH(code2) + 1))
+	{
+		quit 1
+	}
+	; code2包含code1 → code1是code2的前缀（如code1=H25, code2=H25.9）
+	if ($FIND(code2, code1) = ($LENGTH(code1) + 1))
+	{
+		quit 1
+	}
+	quit 0 }
+zMatch(patientInfo,regionInfo,groupYear) public {
+	set resultObj = ##class(%Library.DynamicObject).%New()
+	set resultObj.errorCode = "-1"
+	set resultObj.errorMessage = "未命中特异化分组规则"
+	set resultObj.result = ##class(%Library.DynamicObject).%New()
+	try 
+	{
+		; 地区校验
+		set provinceDr = regionInfo.provinceDr
+		set cityDr = regionInfo.cityDr
+		set admvs = regionInfo.admvs
+		if (provinceDr = "") && (cityDr = "") {
+			set resultObj.errorMessage = "缺少地区信息，无法执行特异化分组匹配"
+			quit
+		}
+		; 年份默认当前年份
+		if (groupYear = "") set groupYear = $PIECE($ZDATE($HOROLOG, 3), "-", 1)
+		; 调用核心匹配逻辑
+		set matchResult = ..MatchSingle(patientInfo, provinceDr, cityDr, admvs, groupYear)
+		if (matchResult '= "") {
+			set resultObj.errorCode = "0"
+			set resultObj.errorMessage = ""
+			set matchDRGCode = $LISTGET(matchResult, 1)
+			set matchDRGName = $LISTGET(matchResult, 2)
+			set matchGroupFactors = $LISTGET(matchResult, 3)
+			set matchRuleId = $LISTGET(matchResult, 4)
+			set matchRemark = $LISTGET(matchResult, 5)
+			if ('$ISOBJECT(resultObj.result)) || (resultObj.result = "") {
+				set resultObj.result = ##class(%Library.DynamicObject).%New()
+			}
+			set resultObj.result.drgCode = matchDRGCode
+			if matchGroupFactors '= "" {
+				set resultObj.result.drgDesc = matchDRGName _ "（特异化分组：" _ matchGroupFactors _ "）"
+			} else {
+				set resultObj.result.drgDesc = matchDRGName _ "（特异化分组）"
+			}
+			set resultObj.result.matchRuleId = matchRuleId
+			set resultObj.result.groupFactors = matchGroupFactors
+			set resultObj.result.remark = matchRemark
+		}
+	} catch(e) {
+		set status = e.AsStatus()
+		set errorMessage = $replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"), "^", " ")
+		set resultObj.errorCode = "-99"
+		set resultObj.errorMessage = "特异化分组匹配异常：" _ errorMessage
+	}
+	quit resultObj }
+zMatchByHospInfo(patientInfo,hospInfo,groupYear) [ SQLCODE,admvs,cityDr,hospCode,provinceDr ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE,admvs,cityDr,hospCode,provinceDr 
+	set resultObj = ##class(%Library.DynamicObject).%New()
+	set resultObj.errorCode = "-1"
+	set resultObj.errorMessage = "未命中特异化分组规则"
+	set resultObj.result = ##class(%Library.DynamicObject).%New()
+	try 
+	{
+		; 校验 hospInfo
+		if ('$ISOBJECT(hospInfo)) || (hospInfo.%Size() = 0) 
+		{
+			set resultObj.errorMessage = "缺少医疗机构信息，无法执行特异化分组匹配"
+			quit
+		}
+		; 年份默认当前年份
+		if (groupYear = "") set groupYear = $PIECE($ZDATE($HOROLOG, 3), "-", 1)
+		; 循环每家医院
+		set hospCount = hospInfo.%Size()
+		for hi = 0:1:hospCount - 1 
+		{
+			set hospItem = hospInfo.%Get(hi)
+			set hospCode = hospItem.code
+			if hospCode = "" continue
+			; 查询 CB_Hospital 获取该医院的省市和行政区划信息
+			set (provinceDr, cityDr, admvs) = ""
+			 ;---&sql(SELECT ProvID_Dr, CityID_Dr, CityID_Dr->Code INTO :provinceDr, :cityDr, :admvs 
+ 			 ;---			     FROM CB_Hospital WHERE OrganizationCode = :hospCode)
+ 			 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, admvs, cityDr, hospCode, provinceDr
+			do %0Ao
+			if (SQLCODE '= 0) continue
+			if (provinceDr = "") && (cityDr = "") continue
+			; 调用核心匹配逻辑
+			set matchResult = ..MatchSingle(patientInfo, provinceDr, cityDr, admvs, groupYear)
+			if (matchResult '= "") {
+				set resultObj.errorCode = "0"
+				set resultObj.errorMessage = ""
+				set matchDRGCode = $LISTGET(matchResult, 1)
+				set matchDRGName = $LISTGET(matchResult, 2)
+				set matchGroupFactors = $LISTGET(matchResult, 3)
+				set matchRuleId = $LISTGET(matchResult, 4)
+				set matchRemark = $LISTGET(matchResult, 5)
+				if ('$ISOBJECT(resultObj.result)) || (resultObj.result = "") 
+				{
+					set resultObj.result = ##class(%Library.DynamicObject).%New()
+				}
+				set resultObj.result.drgCode = matchDRGCode
+				if matchGroupFactors '= "" 
+				{
+					set resultObj.result.drgDesc = matchDRGName _patientInfo.adrg_"（特异化分组：" _ matchGroupFactors _ "）"
+				} 
+				else 
+				{
+					set resultObj.result.drgDesc = matchDRGName _patientInfo.adrg_"（特异化分组）"
+				}
+				set resultObj.result.matchRuleId = matchRuleId
+				set resultObj.result.groupFactors = matchGroupFactors
+				set resultObj.result.remark = matchRemark
+				set resultObj.result.hospCode = hospCode
+				set resultObj.result.hospName = hospItem.name
+				set resultObj.result.admvs = admvs
+				quit  ; 命中第一家即返回
+			}
+		}
+	} catch(e) {
+		set status = e.AsStatus()
+		set errorMessage = $replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"), "^", " ")
+		set resultObj.errorCode = "-99"
+		set resultObj.errorMessage = "特异化分组匹配异常：" _ errorMessage
+	}
+	quit resultObj }
+ q
+%0Ao n sqldata16d,sqldata17d,sqldata18d,sqldata19d,sqldata20d,sqldata22d,sqldata26d,sqldata27d,sqldata30d,sqldata33d,sqldata34d,sqldata9d,sqldata13d,sqldata8d,sqldata11d,sqldata12d,sqldata14d,sqldata15d,sqldata3d
+ s $zt="%0Aerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata16d=$zu(115,2)
+ s sqldata17d=0,sqldata18d="",sqldata19d=0,sqldata20d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata9d=$g(hospCode)
+ s SQLCODE=100
+ s sqldata12d=$zu(28,sqldata9d,5)
+ ; asl MOD# 2
+ s sqldata13d=""
+%0AmBk1 s sqldata22d="" s sqldata13d=$o(^CBHospitalD(sqldata13d),1,sqldata22d)
+ i sqldata13d="" g %0AmBdun
+ S sqldata8d=$lg(sqldata22d,11)
+ s sqldata11d=$zu(28,sqldata8d,5)
+ g:'(sqldata11d=sqldata12d) %0AmBk1
+ S provinceDr=$lg(sqldata22d,7),cityDr=$lg(sqldata22d,8)
+ goto:sqldata16d'=1 %0AmBuncommitted
+ if sqldata16d=1 {
+ 	lock +^CBHospitalD($p(sqldata13d,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata18d=$name(^CBHospitalD($p(sqldata13d,"||",1)))_"#""SI""",sqldata17d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_Hospital for RowID value: "_sqldata13d ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata14d=$zlist(sqldata11d)
+ i sqldata13d'="" s sqldata26d="" i $d(^CBHospitalD(sqldata13d),sqldata26d)
+ e  g %0AmCdun
+ S $lg(,,,,,,provinceDr,cityDr,,,sqldata8d)=sqldata26d
+ s sqldata11d=$zu(28,sqldata8d,5)
+ s sqldata15d=$zlist(sqldata11d)
+ g:sqldata14d'=sqldata15d %0AmCdun
+%0AmBuncommitted ;
+ ; asl MOD# 4
+ s sqldata27d=1
+ s sqldata3d=cityDr
+ i sqldata3d'="" s sqldata30d="" i $d(^CBCityD(sqldata3d),sqldata30d)
+ e  g %0AmDdun
+ S admvs=$lg(sqldata30d,3)
+ i '(sqldata3d'="") g %0AmDdun
+ goto:sqldata16d'=1 %0AmDuncommitted
+ if sqldata16d=1 {
+ 	lock +^CBCityD($p(sqldata3d,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata20d=$name(^CBCityD($p(sqldata3d,"||",1)))_"#""SI""",sqldata19d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.CB_City for RowID value: "_sqldata3d ztrap "LOCK"  }
+ }
+ ; asl MOD# 5
+ i sqldata3d'="" s sqldata33d="" i $d(^CBCityD(sqldata3d),sqldata33d)
+ e  g %0AmEdun
+ S admvs=$lg(sqldata33d,3)
+%0AmDuncommitted ;
+ s sqldata27d=0
+%0AmEpdm ; asl MOD# 6
+ s SQLCODE=0 g %0Ac
+%0AmFdun g:sqldata27d %0AmDpadun
+%0AmEdun if $g(sqldata16d)=1 { if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }}
+%0AmDdun i sqldata27d {
+ s admvs="",sqldata3d=""
+ g %0AmEpdm }
+%0AmDpadun 
+%0AmCdun if $g(sqldata16d)=1 { if $g(sqldata17d)=1 { l -@sqldata18d s sqldata17d=0 } elseif $g(sqldata17d)=2 { do $classmethod($li(sqldata18d),"%UnlockId",$li(sqldata18d,2),1,1)  s sqldata17d=0 }}
+ g %0AmBk1
+%0AmBdun 
+%0AmAdun 
+%0Ac set %ROWCOUNT='SQLCODE
+ if $g(sqldata16d)=1 {
+ 	if $g(sqldata17d)=1 { l -@sqldata18d s sqldata17d=0 } elseif $g(sqldata17d)=2 { do $classmethod($li(sqldata18d),"%UnlockId",$li(sqldata18d,2),1,1)  s sqldata17d=0 }
+ 	if $g(sqldata19d)=1 { l -@sqldata20d s sqldata19d=0 } elseif $g(sqldata19d)=2 { do $classmethod($li(sqldata20d),"%UnlockId",$li(sqldata20d,2),1,1)  s sqldata19d=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata34d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"zLSG4GE1Po++VbSrslUBeJGvCgk="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"zLSG4GE1Po++VbSrslUBeJGvCgk=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Aerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Ac
+zMatchSingle(patientInfo,provinceDr,cityDr,admvs,groupYear) public {
+	; 内部匹配状态变量
+	set matchDRGCode = ""
+	set matchDRGName = ""
+	set matchGroupFactors = ""
+	set matchRuleId = ""
+	set matchRemark = ""
+	; 获取患者数据
+	set mainDiagCode = patientInfo.mainDiagnosisCode
+	set mainOperationCode = patientInfo.mainOperationCode
+	set diseinfo = patientInfo.diseInfo
+	if (diseinfo = "") || ('$ISOBJECT(diseinfo)) set diseinfo = ##class(%Library.DynamicArray).%New()
+	set oprninfo = patientInfo.oprnInfo
+	if (oprninfo = "") || ('$ISOBJECT(oprninfo)) set oprninfo = ##class(%Library.DynamicArray).%New()
+	set adrgCode = patientInfo.adrg
+	; 构建SQL查询（含Remark字段）
+	set sql = " SELECT ID, DRGCode, DRGName, PrincipalDiagnosis, SecondaryDiagnosis,"
+			_ " MajorProcedure, SecondaryProcedure, GroupFactors, Remark"
+			_ " FROM HB_DRGSpecialGroup"
+			_ " WHERE 1=1"
+	if adrgCode '= "" {
+		set sql = sql _ " AND LEFT(DRGCode,3)='"_adrgCode_"'"
+	}
+	if provinceDr '= "" {
+		set sql = sql _ " AND Province_Dr='" _ provinceDr _ "'"
+	}
+	if cityDr '= "" {
+		set sql = sql _ " AND City_Dr='" _ cityDr _ "'"
+	}
+	if (admvs '= "") {
+		set admvsPrefix = $EXTRACT(admvs, 1, 4)
+		set sql = sql _ " AND (Admvs='" _ admvs _ "' OR LEFT(Admvs,4)='" _ admvsPrefix _ "' OR Admvs='')"
+	}
+	if groupYear '= "" {
+		set sql = sql _ " AND (Year='" _ groupYear _ "' OR Year IS NULL OR Year='')"
+	}
+	; 按DRGCode排序
+	set sql = sql _ " ORDER BY DRGCode"
+	set sqlObj = ##class(%SQL.Statement).%New(1)
+	set sc = sqlObj.%Prepare(sql)
+	if (sc '= 1) {
+		quit ""
+	}
+	set rs = sqlObj.%Execute()
+	; 逐条遍历匹配
+	while rs.%Next() 
+	{
+		set ruleId = rs.ID
+		set drgCode = rs.DRGCode
+		set drgName = rs.DRGName
+		set principalDiag = rs.PrincipalDiagnosis
+		set secondaryDiag = rs.SecondaryDiagnosis
+		set majorProc = rs.MajorProcedure
+		set secondaryProc = rs.SecondaryProcedure
+		set groupFactors = rs.GroupFactors
+		set remark = rs.Remark
+		; 解析GroupFactors获取匹配逻辑
+		set parsedFactors = ..ParseGroupFactors(groupFactors)
+		; 如果没有GroupFactors，默认所有非空字段为AND关系
+		if (parsedFactors = "") {
+			set parsedFactors = ""
+			if principalDiag '= "" {
+				set parsedFactors = parsedFactors _ $LISTBUILD($LISTBUILD(1))
+			}
+			if secondaryDiag '= "" {
+				set parsedFactors = parsedFactors _ $LISTBUILD($LISTBUILD(2))
+			}
+			if majorProc '= "" {
+				set parsedFactors = parsedFactors _ $LISTBUILD($LISTBUILD(3))
+			}
+			if secondaryProc '= "" {
+				set parsedFactors = parsedFactors _ $LISTBUILD($LISTBUILD(4))
+			}
+		}
+		; 按GroupFactors解析结果执行AND/OR匹配
+		set matched = 1
+		set andGroupCount = $LISTLENGTH(parsedFactors)
+		for agIdx = 1:1:andGroupCount {
+			set orList = $LISTGET(parsedFactors, agIdx)
+			set orCount = $LISTLENGTH(orList)
+			set orMatched = 0
+			for oi = 1:1:orCount {
+				set fieldCode = $LISTGET(orList, oi)
+				set fieldMatched = 0
+				if fieldCode = 1 {
+					; 主要诊断匹配
+					set fieldMatched = ..IsCodeMatch(mainDiagCode, principalDiag)
+					if 'fieldMatched {
+						set diagList = ..SplitCodes(principalDiag)
+						set dlCount = $LISTLENGTH(diagList)
+						for di = 1:1:dlCount {
+							if ..IsCodeMatch(mainDiagCode, $LISTGET(diagList, di)) {
+								set fieldMatched = 1
+								quit
+							}
+						}
+					}
+				} elseif fieldCode = 2 {
+					; 次要诊断匹配
+					set secondaryDiagList = ..SplitCodes(secondaryDiag)
+					set sdlCount = $LISTLENGTH(secondaryDiagList)
+					for sj = 1:1:sdlCount {
+						set oneRuleDiag = $LISTGET(secondaryDiagList, sj)
+						if oneRuleDiag = "" continue
+						set diSize = diseinfo.%Size()
+						for di = 0:1:diSize - 1 {
+							set diseItem = diseinfo.%Get(di)
+							if (diseItem.mainFlag = "1") && (diseItem.diagSn = "1") { continue }
+							set patientDiag = diseItem.diagCode
+							if patientDiag = "" continue
+							if ..IsCodeMatch(patientDiag, oneRuleDiag) {
+								set fieldMatched = 1
+								quit
+							}
+						}
+						if fieldMatched quit
+					}
+				} elseif fieldCode = 3 {
+					; 主要手术匹配
+					set procList = ..SplitCodes(majorProc)
+					set plCount = $LISTLENGTH(procList)
+					for pi = 1:1:plCount {
+						if ..IsCodeMatch(mainOperationCode, $LISTGET(procList, pi)) {
+							set fieldMatched = 1
+							quit
+						}
+					}
+				} elseif fieldCode = 4 {
+					; 次要手术匹配
+					set secondaryProcList = ..SplitCodes(secondaryProc)
+					set splCount = $LISTLENGTH(secondaryProcList)
+					for sp = 1:1:splCount {
+						set oneRuleProc = $LISTGET(secondaryProcList, sp)
+						if oneRuleProc = "" continue
+						set opSize = oprninfo.%Size()
+						for oi2 = 0:1:opSize - 1 {
+							set oprnItem = oprninfo.%Get(oi2)
+							if (oprnItem.mainFlag = "1") && (oprnItem.oprnSn = "1") { continue }
+							set patientProc = oprnItem.oprnCode
+							if patientProc = "" continue
+							if ..IsCodeMatch(patientProc, oneRuleProc) {
+								set fieldMatched = 1
+								quit
+							}
+						}
+						if fieldMatched quit
+					}
+				}
+				; OR组内任一匹配成功即通过
+				if fieldMatched {
+					set orMatched = 1
+					quit
+				}
+			}
+			; AND组内有一个未匹配则整条规则不命中
+			if 'orMatched {
+				set matched = 0
+				quit
+			}
+		}
+		; 全部AND组匹配成功 → 返回匹配结果（$LIST格式）
+		if matched {
+			set matchDRGCode = drgCode
+			set matchDRGName = drgName
+			set matchGroupFactors = groupFactors
+			set matchRuleId = ruleId
+			set matchRemark = remark
+			quit  ; 匹配到第一条规则即返回
+		}
+	}
+	; 未命中返回空
+	if matchDRGCode = "" quit ""
+	quit $LISTBUILD(matchDRGCode, matchDRGName, matchGroupFactors, matchRuleId, matchRemark) }
+zParseGroupFactors(groupFactors) public {
+	if (groupFactors = "") quit ""
+	set result = ""
+	; 按 + 号分割得到 AND 组
+	set andGroups = $LENGTH(groupFactors, "+")
+	for andIdx = 1:1:andGroups {
+		set andGroup = $ZSTRIP($PIECE(groupFactors, "+", andIdx), "<>W")
+		if (andGroup = "") continue
+		; 在各 AND 组内按"或"分割得到 OR 项
+		set orList = ""
+		set orCount = $LENGTH(andGroup, "或")
+		for orIdx = 1:1:orCount {
+			set orItem = $ZSTRIP($PIECE(andGroup, "或", orIdx), "<>W")
+			if (orItem = "") continue
+			; 将中文字段名映射为数字编码
+			if (orItem = "主要诊断") {
+				set orList = orList _ $LISTBUILD(1)
+			} elseif (orItem = "次要诊断") {
+				set orList = orList _ $LISTBUILD(2)
+			} elseif (orItem = "主要手术") {
+				set orList = orList _ $LISTBUILD(3)
+			} elseif (orItem = "次要手术") {
+				set orList = orList _ $LISTBUILD(4)
+			}
+		}
+		if ($LISTLENGTH(orList) > 0) {
+			set result = result _ $LISTBUILD(orList)
+		}
+	}
+	quit result }
+zSplitCodes(codeStr) public {
+	if (codeStr = "")
+	{
+		quit ""
+	}
+	; 将所有分隔符统一替换为英文逗号（不含 +）
+	set normalized = $TRANSLATE(codeStr, "，;/ ", ",,,,")
+	set list = ""
+	set count = $LENGTH(normalized, ",")
+	for i = 1:1:count
+	{
+		set oneCode = $ZSTRIP($PIECE(normalized, ",", i), "<>W")
+		if (oneCode '= "")
+		{
+			set list = list _ $LISTBUILD(oneCode)
+		}
+	}
+	quit list }

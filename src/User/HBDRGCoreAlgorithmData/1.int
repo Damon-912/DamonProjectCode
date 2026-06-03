@@ -1,7 +1,7 @@
 ROUTINE User.HBDRGCoreAlgorithmData.1 [Type=INT,Generated]
  ;User.HBDRGCoreAlgorithmData.1
- ;Generated for class User.HBDRGCoreAlgorithmData.  Do NOT edit. 05/25/2026 06:33:48PM
- ;;4B784254;User.HBDRGCoreAlgorithmData
+ ;Generated for class User.HBDRGCoreAlgorithmData.  Do NOT edit. 05/29/2026 06:14:49PM
+ ;;6E2F7869;User.HBDRGCoreAlgorithmData
  ;
 SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
 ALPHAUP(v,r) { quit $zu(28,v,6) }
@@ -118,70 +118,70 @@ TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
 	quit tStatusAll }
  q
 %ext0o 
- try { s SQLCODE=$s($g(%ext06425d(0)):-101,1:0) q:SQLCODE'=0 
+ try { s SQLCODE=$s($g(%ext06946d(0)):-101,1:0) q:SQLCODE'=0 
  n %sqltime s %sqltime=$zh
- s %ext06425d(1)=0,%ext06425d(2)=$g(%0CacheRowLimit,9223372036854775807)
- s %ext06425d(3)=$zu(115,2)
- s %ext06425d(4)=0,%ext06425d(5)=""
+ s %ext06946d(1)=0,%ext06946d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext06946d(3)=$zu(115,2)
+ s %ext06946d(4)=0,%ext06946d(5)=""
  d:$zu(115,15) $system.ECP.Sync()
- s %ext06425d(0)=1,SQLCODE=0
- s:$d(%sqltime) %ext06425d(6)=$g(%ext06425d(6))+$zh-%sqltime
- } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext06425d }
+ s %ext06946d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext06946d(6)=$g(%ext06946d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext06946d }
  q
 %0Afirst 
  ; asl MOD# 2
- s %ext06425d(7)=""
-%0AmBk1 s %ext06425d(7)=$o(^HBDRGCoreAlgorithmDataI("City",%ext06425d(7)))
- i %ext06425d(7)="" g %0AmBdun
+ s %ext06946d(7)=""
+%0AmBk1 s %ext06946d(7)=$o(^HBDRGCoreAlgorithmDataI("City",%ext06946d(7)))
+ i %ext06946d(7)="" g %0AmBdun
  s tID=""
-%0AmBk2 s tID=$o(^HBDRGCoreAlgorithmDataI("City",%ext06425d(7),tID))
+%0AmBk2 s tID=$o(^HBDRGCoreAlgorithmDataI("City",%ext06946d(7),tID))
  i tID="" g %0AmBk1
- goto:%ext06425d(3)'=1 %0AmBuncommitted
- if %ext06425d(3)=1 {
+ goto:%ext06946d(3)'=1 %0AmBuncommitted
+ if %ext06946d(3)=1 {
  	lock +^HBDRGCoreAlgorithmDataD($p(tID,"||",1))#"S":$zu(115,4)
- 	if $t { set %ext06425d(5)=$name(^HBDRGCoreAlgorithmDataD($p(tID,"||",1)))_"#""SI""",%ext06425d(4)=1 }
+ 	if $t { set %ext06946d(5)=$name(^HBDRGCoreAlgorithmDataD($p(tID,"||",1)))_"#""SI""",%ext06946d(4)=1 }
  	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.HB_DRGCoreAlgorithmData for RowID value: "_tID ztrap "LOCK"  }
  }
  ; asl MOD# 3
  i tID'="",$d(^HBDRGCoreAlgorithmDataD(tID))
  e  g %0AmCdun
 %0AmBuncommitted ;
- s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext06425d(1)),%ROWID=tID,%ext06425d(0)=10
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext06946d(1)),%ROWID=tID,%ext06946d(0)=10
  //-- FETCH Output
- s:$d(%sqltime) %ext06425d(6)=$g(%ext06425d(6))+$zh-%sqltime
+ s:$d(%sqltime) %ext06946d(6)=$g(%ext06946d(6))+$zh-%sqltime
  quit
 %ext0f //-- FETCH tag
- i '$g(%ext06425d(0)) { s SQLCODE=-102 q  } i %ext06425d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
- i %ext06425d(2),%ext06425d(1)'<%ext06425d(2) { s SQLCODE=100,%ROWCOUNT=%ext06425d(1),%ext06425d(0)=100 q }
+ i '$g(%ext06946d(0)) { s SQLCODE=-102 q  } i %ext06946d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext06946d(2),%ext06946d(1)'<%ext06946d(2) { s SQLCODE=100,%ROWCOUNT=%ext06946d(1),%ext06946d(0)=100 q }
  n %sqltime s %sqltime=$zh
- g %0Afirst:%ext06425d(0)=1
-%0AmCdun if $g(%ext06425d(3))=1 { if $g(%ext06425d(4))=1 { l -@%ext06425d(5) s %ext06425d(4)=0 } elseif $g(%ext06425d(4))=2 { do $classmethod($li(%ext06425d(5)),"%UnlockId",$li(%ext06425d(5),2),1,1)  s %ext06425d(4)=0 }}
+ g %0Afirst:%ext06946d(0)=1
+%0AmCdun if $g(%ext06946d(3))=1 { if $g(%ext06946d(4))=1 { l -@%ext06946d(5) s %ext06946d(4)=0 } elseif $g(%ext06946d(4))=2 { do $classmethod($li(%ext06946d(5)),"%UnlockId",$li(%ext06946d(5),2),1,1)  s %ext06946d(4)=0 }}
  g %0AmBk2
 %0AmBdun 
 %0AmAdun 
- s %ROWCOUNT=%ext06425d(1),SQLCODE=100,%ext06425d(0)=100
- s:$d(%sqltime) %ext06425d(6)=$g(%ext06425d(6))+$zh-%sqltime
+ s %ROWCOUNT=%ext06946d(1),SQLCODE=100,%ext06946d(0)=100
+ s:$d(%sqltime) %ext06946d(6)=$g(%ext06946d(6))+$zh-%sqltime
  //-- no [more] data
  quit
-%ext0c i '$g(%ext06425d(0)) { s SQLCODE=-102 q  }
+%ext0c i '$g(%ext06946d(0)) { s SQLCODE=-102 q  }
  n %sqltime s %sqltime=$zh
- set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext06425d(1)),1:0)
- if $g(%ext06425d(3))=1 {
- 	if $g(%ext06425d(4))=1 { l -@%ext06425d(5) s %ext06425d(4)=0 } elseif $g(%ext06425d(4))=2 { do $classmethod($li(%ext06425d(5)),"%UnlockId",$li(%ext06425d(5),2),1,1)  s %ext06425d(4)=0 }
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext06946d(1)),1:0)
+ if $g(%ext06946d(3))=1 {
+ 	if $g(%ext06946d(4))=1 { l -@%ext06946d(5) s %ext06946d(4)=0 } elseif $g(%ext06946d(4))=2 { do $classmethod($li(%ext06946d(5)),"%UnlockId",$li(%ext06946d(5),2),1,1)  s %ext06946d(4)=0 }
  }
  n context,tmp,count,total,mean s context=$system.Context.SQL()
- if $d(%sqltime) { s %sqltime=$g(%ext06425d(6))+$zh-%sqltime
+ if $d(%sqltime) { s %sqltime=$g(%ext06946d(6))+$zh-%sqltime
  if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
  s tmp=$g(context.Stats($namespace,"xXtKp6jXU01FV6V1PAL4N/1/3O8="))
  s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
  s context.Stats($namespace,"xXtKp6jXU01FV6V1PAL4N/1/3O8=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
- k %ext06425d
+ k %ext06946d
  s SQLCODE=0
  s:$g(SQLCODE)'<0 SQLCODE=0
- kill %ext06425d(8)
+ kill %ext06946d(8)
  quit  // close
 %0Aerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
- s %ext06425d(0)=100
+ s %ext06946d(0)=100
  quit  // error
 %ComposeOid(id) public {
 	set tCLASSNAME = $listget($g(^HBDRGCoreAlgorithmDataD(id)),1)
@@ -359,6 +359,26 @@ CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
     Write sep_"""PayStandard"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
     Set $extract(sep,1)=","
   }
+  Set value=..HighMultiplier
+  If value'="" {
+    Write sep_"""HighMultiplier"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..LowMultiplier
+  If value'="" {
+    Write sep_"""LowMultiplier"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..Weight
+  If value'="" {
+    Write sep_"""Weight"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..Year
+  If value'="" {
+    Write sep_"""Year"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
   Set value=..ProvinceDr
   If value'="" {
     Write sep_"""ProvinceDr"":"""_$zcvt(value.%Id(),"O","JSON")_""""
@@ -429,11 +449,6 @@ CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
     Write sep_"""Remark"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
     Set $extract(sep,1)=","
   }
-  Set value=..Year
-  If value'="" {
-    Write sep_"""Year"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
-    Set $extract(sep,1)=","
-  }
   Write "}"
 %JSONExportExit Quit sc }
 %JSONExportToStringInternal() public {
@@ -467,6 +482,26 @@ CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
   Set value=..PayStandard
   If value'="" {
     Set %export=%export_sep_"""PayStandard"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..HighMultiplier
+  If value'="" {
+    Set %export=%export_sep_"""HighMultiplier"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..LowMultiplier
+  If value'="" {
+    Set %export=%export_sep_"""LowMultiplier"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..Weight
+  If value'="" {
+    Set %export=%export_sep_"""Weight"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..Year
+  If value'="" {
+    Set %export=%export_sep_"""Year"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
     Set $extract(sep,1)=","
   }
   Set value=..ProvinceDr
@@ -537,11 +572,6 @@ CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
   Set value=..Remark
   If value'="" {
     Set %export=%export_sep_"""Remark"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
-    Set $extract(sep,1)=","
-  }
-  Set value=..Year
-  If value'="" {
-    Set %export=%export_sep_"""Year"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
     Set $extract(sep,1)=","
   }
   Set %export=%export_"}"
@@ -627,6 +657,58 @@ CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
       Set ..PayStandard=data
     }
   }
+  Set proplist("HighMultiplier")=""
+  Set field="HighMultiplier" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..HighMultiplier=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.HighMultiplier
+      If ('$s(($l(data)'>50):1,1:$$Error^%apiOBJ(7201,data,50))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..HighMultiplier=data
+    }
+  }
+  Set proplist("LowMultiplier")=""
+  Set field="LowMultiplier" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..LowMultiplier=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.LowMultiplier
+      If ('$s(($l(data)'>50):1,1:$$Error^%apiOBJ(7201,data,50))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..LowMultiplier=data
+    }
+  }
+  Set proplist("Weight")=""
+  Set field="Weight" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..Weight=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.Weight
+      If ('$s(($l(data)'>50):1,1:$$Error^%apiOBJ(7201,data,50))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..Weight=data
+    }
+  }
+  Set proplist("Year")=""
+  Set field="Year" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Goto %JSONImportRequired
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.Year
+      If ('$s(($l(data)'>4):1,1:$$Error^%apiOBJ(7201,data,4))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..Year=data
+    }
+  } Else { Goto %JSONImportRequired }
   Set proplist("ProvinceDr")=""
   Set field="ProvinceDr" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
   If jsontype'="unassigned" {
@@ -796,19 +878,6 @@ CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
       Set ..Remark=data
     }
   }
-  Set proplist("Year")=""
-  Set field="Year" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
-  If jsontype'="unassigned" {
-    If jsontype="null" {
-      Goto %JSONImportRequired
-    } Else {
-      If jsontype'="string" Goto %JSONImportError
-      Set data=%JSONObject.Year
-      If ('$s(($l(data)'>4):1,1:$$Error^%apiOBJ(7201,data,4))) Goto %JSONImportError
-      If data="" Set data=$c(0)
-      Set ..Year=data
-    }
-  } Else { Goto %JSONImportRequired }
   If $get(testInvalidField) {
     Set invalid=0,iterator=%JSONObject.%GetIterator()
     While iterator.%GetNext(.key,.value) { If $data(proplist(key))=0 Set invalid=1 Quit  }
@@ -837,8 +906,9 @@ CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
 	}
 	If $d(^HBDRGCoreAlgorithmDataD(id),%s1)#2 {
 		If i%%Concurrency=2 { Lock -(^HBDRGCoreAlgorithmDataD(id)#"SIE") }
-		S i%DRG=$lg(%s1,2),i%DRGDESC=$lg(%s1,3),i%Points=$lg(%s1,4),i%PipValue=$lg(%s1,5),i%DGDOV=$lg(%s1,6),i%PayStandard=$lg(%s1,7),i%ProvinceDr=$lg(%s1,8),i%CityDr=$lg(%s1,9),i%StartDate=$lg(%s1,10),i%StopDate=$lg(%s1,11)
-		S isctmp=$e(%s1,$l($li(%s1,1,11))+1,*),i%InsuType=$lg(isctmp),i%MdtrtArea=$lg(isctmp,2),i%MedinsLv=$lg(isctmp,3),i%FixmedinsName=$lg(isctmp,4),i%FixmedinsCode=$lg(isctmp,5),i%CreateDate=$lg(isctmp,6),i%CreateTime=$lg(isctmp,7),i%CreateUserDr=$lg(isctmp,8),i%Identification=$lg(isctmp,9),i%Remark=$lg(isctmp,10),i%Year=$lg(isctmp,11)
+		S i%DRG=$lg(%s1,2),i%DRGDESC=$lg(%s1,3),i%Points=$lg(%s1,4),i%PipValue=$lg(%s1,5),i%DGDOV=$lg(%s1,6),i%PayStandard=$lg(%s1,7),i%ProvinceDr=$lg(%s1,8),i%CityDr=$lg(%s1,9)
+		Set iscpos=$l($li(%s1,1,9))+1,isctmp=$li($e(%s1,iscpos,*),1,9),i%StartDate=$lg(isctmp),i%StopDate=$lg(isctmp,2),i%InsuType=$lg(isctmp,3),i%MdtrtArea=$lg(isctmp,4),i%MedinsLv=$lg(isctmp,5),i%FixmedinsName=$lg(isctmp,6),i%FixmedinsCode=$lg(isctmp,7),i%CreateDate=$lg(isctmp,8),i%CreateTime=$lg(isctmp,9)
+		S isctmp=$e(%s1,iscpos+$l(isctmp),*),i%CreateUserDr=$lg(isctmp),i%Identification=$lg(isctmp,2),i%Remark=$lg(isctmp,3),i%Year=$lg(isctmp,4),i%HighMultiplier=$lg(isctmp,5),i%LowMultiplier=$lg(isctmp,6),i%Weight=$lg(isctmp,7)
 		s:$ze="" $ze=userze
 		Quit 1
 	} Else {
@@ -851,17 +921,18 @@ CatchError	set $ZTrap = "" if $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) }
 	if '('sc) { set sc=$$Error^%apiOBJ(5809,$classname(),id) }
 	s:$ze="" $ze=userze
 	return sc
-init	Set i%CityDr="",i%CreateDate="",i%CreateTime="",i%CreateUserDr="",i%DGDOV="",i%DRG="",i%DRGDESC="",i%FixmedinsCode="",i%FixmedinsName="",i%Identification="",i%InsuType="",i%MdtrtArea="",i%MedinsLv="",i%PayStandard="",i%PipValue="",i%Points="",i%ProvinceDr="",i%Remark="",i%StartDate="",i%StopDate="",i%Year=""
+init	Set i%CityDr="",i%CreateDate="",i%CreateTime="",i%CreateUserDr="",i%DGDOV="",i%DRG="",i%DRGDESC="",i%FixmedinsCode="",i%FixmedinsName="",i%HighMultiplier="",i%Identification="",i%InsuType="",i%LowMultiplier="",i%MdtrtArea="",i%MedinsLv="",i%PayStandard="",i%PipValue="",i%Points="",i%ProvinceDr="",i%Remark="",i%StartDate="",i%StopDate="",i%Weight="",i%Year=""
 	quit }
 %LoadDataFromMemory(id,objstate,obj) public {
 	New %s1
 	If $d(objstate(id)) {
 		Set %s1=$g(objstate(id))
-		S i%DRG=$lg(%s1,2),i%DRGDESC=$lg(%s1,3),i%Points=$lg(%s1,4),i%PipValue=$lg(%s1,5),i%DGDOV=$lg(%s1,6),i%PayStandard=$lg(%s1,7),i%ProvinceDr=$lg(%s1,8),i%CityDr=$lg(%s1,9),i%StartDate=$lg(%s1,10),i%StopDate=$lg(%s1,11)
-		S isctmp=$e(%s1,$l($li(%s1,1,11))+1,*),i%InsuType=$lg(isctmp),i%MdtrtArea=$lg(isctmp,2),i%MedinsLv=$lg(isctmp,3),i%FixmedinsName=$lg(isctmp,4),i%FixmedinsCode=$lg(isctmp,5),i%CreateDate=$lg(isctmp,6),i%CreateTime=$lg(isctmp,7),i%CreateUserDr=$lg(isctmp,8),i%Identification=$lg(isctmp,9),i%Remark=$lg(isctmp,10),i%Year=$lg(isctmp,11)
+		S i%DRG=$lg(%s1,2),i%DRGDESC=$lg(%s1,3),i%Points=$lg(%s1,4),i%PipValue=$lg(%s1,5),i%DGDOV=$lg(%s1,6),i%PayStandard=$lg(%s1,7),i%ProvinceDr=$lg(%s1,8),i%CityDr=$lg(%s1,9)
+		Set iscpos=$l($li(%s1,1,9))+1,isctmp=$li($e(%s1,iscpos,*),1,9),i%StartDate=$lg(isctmp),i%StopDate=$lg(isctmp,2),i%InsuType=$lg(isctmp,3),i%MdtrtArea=$lg(isctmp,4),i%MedinsLv=$lg(isctmp,5),i%FixmedinsName=$lg(isctmp,6),i%FixmedinsCode=$lg(isctmp,7),i%CreateDate=$lg(isctmp,8),i%CreateTime=$lg(isctmp,9)
+		S isctmp=$e(%s1,iscpos+$l(isctmp),*),i%CreateUserDr=$lg(isctmp),i%Identification=$lg(isctmp,2),i%Remark=$lg(isctmp,3),i%Year=$lg(isctmp,4),i%HighMultiplier=$lg(isctmp,5),i%LowMultiplier=$lg(isctmp,6),i%Weight=$lg(isctmp,7)
 		Quit 1
 	} Else {
-		Set i%CityDr="",i%CreateDate="",i%CreateTime="",i%CreateUserDr="",i%DGDOV="",i%DRG="",i%DRGDESC="",i%FixmedinsCode="",i%FixmedinsName="",i%Identification="",i%InsuType="",i%MdtrtArea="",i%MedinsLv="",i%PayStandard="",i%PipValue="",i%Points="",i%ProvinceDr="",i%Remark="",i%StartDate="",i%StopDate="",i%Year=""
+		Set i%CityDr="",i%CreateDate="",i%CreateTime="",i%CreateUserDr="",i%DGDOV="",i%DRG="",i%DRGDESC="",i%FixmedinsCode="",i%FixmedinsName="",i%HighMultiplier="",i%Identification="",i%InsuType="",i%LowMultiplier="",i%MdtrtArea="",i%MedinsLv="",i%PayStandard="",i%PipValue="",i%Points="",i%ProvinceDr="",i%Remark="",i%StartDate="",i%StopDate="",i%Weight="",i%Year=""
 		Quit $$Error^%apiOBJ(5809,$classname(),id)
 	} }
 %LoadInit(oid="",concurrency="",reset=0) public {
@@ -897,8 +968,10 @@ init	Set i%CityDr="",i%CreateDate="",i%CreateTime="",i%CreateUserDr="",i%DGDOV="
 	If m%DRGDESC Set:i%DRGDESC'="" i%DRGDESC=(..DRGDESCNormalize(i%DRGDESC))
 	If m%FixmedinsCode Set:i%FixmedinsCode'="" i%FixmedinsCode=(..FixmedinsCodeNormalize(i%FixmedinsCode))
 	If m%FixmedinsName Set:i%FixmedinsName'="" i%FixmedinsName=(..FixmedinsNameNormalize(i%FixmedinsName))
+	If m%HighMultiplier Set:i%HighMultiplier'="" i%HighMultiplier=(..HighMultiplierNormalize(i%HighMultiplier))
 	If m%Identification Set:i%Identification'="" i%Identification=(..IdentificationNormalize(i%Identification))
 	If m%InsuType Set:i%InsuType'="" i%InsuType=(..InsuTypeNormalize(i%InsuType))
+	If m%LowMultiplier Set:i%LowMultiplier'="" i%LowMultiplier=(..LowMultiplierNormalize(i%LowMultiplier))
 	If m%MdtrtArea Set:i%MdtrtArea'="" i%MdtrtArea=(..MdtrtAreaNormalize(i%MdtrtArea))
 	If m%MedinsLv Set:i%MedinsLv'="" i%MedinsLv=(..MedinsLvNormalize(i%MedinsLv))
 	If m%PayStandard Set:i%PayStandard'="" i%PayStandard=(..PayStandardNormalize(i%PayStandard))
@@ -907,6 +980,7 @@ init	Set i%CityDr="",i%CreateDate="",i%CreateTime="",i%CreateUserDr="",i%DGDOV="
 	If m%Remark Set:i%Remark'="" i%Remark=(..RemarkNormalize(i%Remark))
 	If m%StartDate Set:i%StartDate'="" i%StartDate=(..StartDateNormalize(i%StartDate))
 	If m%StopDate Set:i%StopDate'="" i%StopDate=(..StopDateNormalize(i%StopDate))
+	If m%Weight Set:i%Weight'="" i%Weight=(..WeightNormalize(i%Weight))
 	If m%Year Set:i%Year'="" i%Year=(..YearNormalize(i%Year))
 	Quit 1 }
 %OnDetermineClass(oid,class) public {
@@ -988,34 +1062,34 @@ init	Set i%CityDr="",i%CreateDate="",i%CreateTime="",i%CreateUserDr="",i%DGDOV="
 		if pLockRow { if '..%SQLAcquireLock(%d(1)) { set tSC=$select(+tSC:$$Error^%apiOBJ(5521,-114,"Unable to lock row in table 'SQLUser.HB_DRGCoreAlgorithmData' with %ID = '"_%d(1)_"'"),1:$$AppendStatus^%occSystem(tSC,$$Error^%apiOBJ(5521,-114,"Unable to lock row in table 'SQLUser.HB_DRGCoreAlgorithmData' with %ID = '"_%d(1)_"'"))) RETURN tSC  } else { set tLock=1 }}
 		if ((pIndices="")||($lf(pIndices,"City"))),'$listfind(pIgnoreIndexList,"City") {
 			if pActions["P" {
-				set sn(1)=%e(9) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("City",sn(1),sn(2))
+				set sn(1)=%e(13) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("City",sn(1),sn(2))
 			}
 			if pActions["B" {
-				set sn(1)=%d(9) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("City",sn(1),sn(2))=%d(23)
+				set sn(1)=%d(13) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("City",sn(1),sn(2))=%d(26)
 			}
 		}
 		if ((pIndices="")||($lf(pIndices,"FixmedinsCode"))),'$listfind(pIgnoreIndexList,"FixmedinsCode") {
 			if pActions["P" {
-				set sn(1)=$zu(28,%e(16),7) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("FixmedinsCode",sn(1),sn(2))
+				set sn(1)=$zu(28,%e(20),7) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("FixmedinsCode",sn(1),sn(2))
 			}
 			if pActions["B" {
-				set sn(1)=$zu(28,%d(16),7) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("FixmedinsCode",sn(1),sn(2))=%d(23)
+				set sn(1)=$zu(28,%d(20),7) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("FixmedinsCode",sn(1),sn(2))=%d(26)
 			}
 		}
 		if ((pIndices="")||($lf(pIndices,"Index"))),'$listfind(pIgnoreIndexList,"Index") {
 			if pActions["P" {
-				set sn(1)=$zu(28,%e(2),7) set sn(2)=%e(8) set sn(3)=%e(9) set sn(4)=$zu(28,%e(16),7) set sn(5)=$zu(28,%e(22),7) set sn(6)=%d(1) k ^HBDRGCoreAlgorithmDataI("Index",sn(1),sn(2),sn(3),sn(4),sn(5),sn(6))
+				set sn(1)=$zu(28,%e(2),7) set sn(2)=%e(12) set sn(3)=%e(13) set sn(4)=$zu(28,%e(20),7) set sn(5)=$zu(28,%e(11),7) set sn(6)=%d(1) k ^HBDRGCoreAlgorithmDataI("Index",sn(1),sn(2),sn(3),sn(4),sn(5),sn(6))
 			}
 			if pActions["B" {
-				set sn(1)=$zu(28,%d(2),7) set sn(2)=%d(8) set sn(3)=%d(9) set sn(4)=$zu(28,%d(16),7) set sn(5)=$zu(28,%d(22),7) set sn(6)=%d(1) set ^HBDRGCoreAlgorithmDataI("Index",sn(1),sn(2),sn(3),sn(4),sn(5),sn(6))=%d(23)
+				set sn(1)=$zu(28,%d(2),7) set sn(2)=%d(12) set sn(3)=%d(13) set sn(4)=$zu(28,%d(20),7) set sn(5)=$zu(28,%d(11),7) set sn(6)=%d(1) set ^HBDRGCoreAlgorithmDataI("Index",sn(1),sn(2),sn(3),sn(4),sn(5),sn(6))=%d(26)
 			}
 		}
 		if ((pIndices="")||($lf(pIndices,"Province"))),'$listfind(pIgnoreIndexList,"Province") {
 			if pActions["P" {
-				set sn(1)=%e(8) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("Province",sn(1),sn(2))
+				set sn(1)=%e(12) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("Province",sn(1),sn(2))
 			}
 			if pActions["B" {
-				set sn(1)=%d(8) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("Province",sn(1),sn(2))=%d(23)
+				set sn(1)=%d(12) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("Province",sn(1),sn(2))=%d(26)
 			}
 		}
 		if pLockRow { do ..%SQLReleaseLock(%d(1),0,0) set tLock=0 }
@@ -1030,7 +1104,7 @@ init	Set i%CityDr="",i%CreateDate="",i%CreateTime="",i%CreateUserDr="",i%DGDOV="
 		set:$d(%d(1)) %f("ID")=%d(1)
 		QUIT
 	}
-	set:$d(%d(1)) %f("ID")=%d(1) set:$a(%e,2)&&$d(%d(2)) %f("DRG")=%d(2) set:$a(%e,3)&&$d(%d(3)) %f("DRGDESC")=%d(3) set:$a(%e,4)&&$d(%d(4)) %f("Points")=%d(4) set:$a(%e,5)&&$d(%d(5)) %f("PipValue")=%d(5) set:$a(%e,6)&&$d(%d(6)) %f("DGDOV")=%d(6) set:$a(%e,7)&&$d(%d(7)) %f("PayStandard")=%d(7) set:$a(%e,8)&&$d(%d(8)) %f("Province_Dr")=%d(8) set:$a(%e,9)&&$d(%d(9)) %f("City_Dr")=%d(9) set:$a(%e,10)&&$d(%d(10)) %f("StartDate")=%d(10) set:$a(%e,11)&&$d(%d(11)) %f("StopDate")=%d(11) set:$a(%e,12)&&$d(%d(12)) %f("InsuType")=%d(12) set:$a(%e,13)&&$d(%d(13)) %f("MdtrtArea")=%d(13) set:$a(%e,14)&&$d(%d(14)) %f("MedinsLv")=%d(14) set:$a(%e,15)&&$d(%d(15)) %f("FixmedinsName")=%d(15) set:$a(%e,16)&&$d(%d(16)) %f("FixmedinsCode")=%d(16) set:$a(%e,17)&&$d(%d(17)) %f("CreateDate")=%d(17) set:$a(%e,18)&&$d(%d(18)) %f("CreateTime")=%d(18) set:$a(%e,19)&&$d(%d(19)) %f("CreateUser_Dr")=%d(19) set:$a(%e,20)&&$d(%d(20)) %f("Identification")=%d(20) set:$a(%e,21)&&$d(%d(21)) %f("Remark")=%d(21) set:$a(%e,22)&&$d(%d(22)) %f("Year")=%d(22) set:$a(%e,23)&&$d(%d(23)) %f("x__classname")=%d(23)
+	set:$d(%d(1)) %f("ID")=%d(1) set:$a(%e,2)&&$d(%d(2)) %f("DRG")=%d(2) set:$a(%e,3)&&$d(%d(3)) %f("DRGDESC")=%d(3) set:$a(%e,4)&&$d(%d(4)) %f("Points")=%d(4) set:$a(%e,5)&&$d(%d(5)) %f("PipValue")=%d(5) set:$a(%e,6)&&$d(%d(6)) %f("DGDOV")=%d(6) set:$a(%e,7)&&$d(%d(7)) %f("PayStandard")=%d(7) set:$a(%e,8)&&$d(%d(8)) %f("HighMultiplier")=%d(8) set:$a(%e,9)&&$d(%d(9)) %f("LowMultiplier")=%d(9) set:$a(%e,10)&&$d(%d(10)) %f("Weight")=%d(10) set:$a(%e,11)&&$d(%d(11)) %f("Year")=%d(11) set:$a(%e,12)&&$d(%d(12)) %f("Province_Dr")=%d(12) set:$a(%e,13)&&$d(%d(13)) %f("City_Dr")=%d(13) set:$a(%e,14)&&$d(%d(14)) %f("StartDate")=%d(14) set:$a(%e,15)&&$d(%d(15)) %f("StopDate")=%d(15) set:$a(%e,16)&&$d(%d(16)) %f("InsuType")=%d(16) set:$a(%e,17)&&$d(%d(17)) %f("MdtrtArea")=%d(17) set:$a(%e,18)&&$d(%d(18)) %f("MedinsLv")=%d(18) set:$a(%e,19)&&$d(%d(19)) %f("FixmedinsName")=%d(19) set:$a(%e,20)&&$d(%d(20)) %f("FixmedinsCode")=%d(20) set:$a(%e,21)&&$d(%d(21)) %f("CreateDate")=%d(21) set:$a(%e,22)&&$d(%d(22)) %f("CreateTime")=%d(22) set:$a(%e,23)&&$d(%d(23)) %f("CreateUser_Dr")=%d(23) set:$a(%e,24)&&$d(%d(24)) %f("Identification")=%d(24) set:$a(%e,25)&&$d(%d(25)) %f("Remark")=%d(25) set:$a(%e,26)&&$d(%d(26)) %f("x__classname")=%d(26)
 	QUIT
 %SQLDefineiDjVars(%d,subs,master)
 	QUIT
@@ -1046,16 +1120,16 @@ init	Set i%CityDr="",i%CreateDate="",i%CreateTime="",i%CreateUserDr="",i%DGDOV="
 	if %tstart { TSTART:($zu(115,1)=1)||('$TLEVEL&&($zu(115,1)=2))  }
 	set $zt="ERRORDelete"
 	do ..%SQLGetOld(%rowid,.%d,.%e,.sqlcode) if sqlcode { set SQLCODE=-106 do ..%SQLEExit() QUIT  }
-	if %e(23)'="" { set sn=$p(%e(23),$e(%e(23)),$l(%e(23),$e(%e(23)))-1) if "HBDRGCoreAlgorithmData"'=sn { new %f do ..%SQLCopyIcolIntoName() do $classmethod(sn,"%SQLDelete",%rowid,%check,%tstart,%mv,1) QUIT  }}
+	if %e(26)'="" { set sn=$p(%e(26),$e(%e(26)),$l(%e(26),$e(%e(26)))-1) if "HBDRGCoreAlgorithmData"'=sn { new %f do ..%SQLCopyIcolIntoName() do $classmethod(sn,"%SQLDelete",%rowid,%check,%tstart,%mv,1) QUIT  }}
 	if '$a(%check),'$zu(115,7) do  if sqlcode set SQLCODE=sqlcode do ..%SQLEExit() QUIT  
 	. new %fk,%k,%p,%st,%t,%z set %k="",%p("%1")="%d(1),",%p("IDKEY")="%d(1),"
 	. for  quit:sqlcode<0  set %k=$o(^rINDEXEXT("F","User.HBDRGCoreAlgorithmData",%k)) quit:%k=""  set %t="" for  set %t=$o(^rINDEXEXT("F","User.HBDRGCoreAlgorithmData",%k,"f",%t)) quit:%t=""  set %st=(%t="User.HBDRGCoreAlgorithmData") set %fk="" for  set %fk=$o(^rINDEXEXT("F","User.HBDRGCoreAlgorithmData",%k,"f",%t,%fk)) quit:%fk=""  x "set %z=$classmethod(%t,%fk_""SQLFKeyRefAction"",%st,%k,$a(%check,2),"_%p(%k)_")" if %z set sqlcode=-124 quit  
 	set ce="" for  { set ce=$order(^oddSQL("SQLUser","HB_DRGCoreAlgorithmData","DC",ce)) quit:ce=""   do $classmethod(ce,"%SQLDeleteChildren",%d(1),%check,.sqlcode) quit:sqlcode<0  } if sqlcode<0 { set SQLCODE=sqlcode do ..%SQLEExit() QUIT } // Delete any children
 	if '$a(%check,3) {
-		set sn(1)=%e(9) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("City",sn(1),sn(2))
-		set sn(1)=$zu(28,%e(16),7) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("FixmedinsCode",sn(1),sn(2))
-		set sn(1)=$zu(28,%e(2),7) set sn(2)=%e(8) set sn(3)=%e(9) set sn(4)=$zu(28,%e(16),7) set sn(5)=$zu(28,%e(22),7) set sn(6)=%d(1) k ^HBDRGCoreAlgorithmDataI("Index",sn(1),sn(2),sn(3),sn(4),sn(5),sn(6))
-		set sn(1)=%e(8) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("Province",sn(1),sn(2))
+		set sn(1)=%e(13) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("City",sn(1),sn(2))
+		set sn(1)=$zu(28,%e(20),7) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("FixmedinsCode",sn(1),sn(2))
+		set sn(1)=$zu(28,%e(2),7) set sn(2)=%e(12) set sn(3)=%e(13) set sn(4)=$zu(28,%e(20),7) set sn(5)=$zu(28,%e(11),7) set sn(6)=%d(1) k ^HBDRGCoreAlgorithmDataI("Index",sn(1),sn(2),sn(3),sn(4),sn(5),sn(6))
+		set sn(1)=%e(12) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("Province",sn(1),sn(2))
 	}
 	k ^HBDRGCoreAlgorithmDataD(%d(1))
 	do ..%SQLUnlock() TCOMMIT:%tstart&&($zu(115,1)=1)
@@ -1084,11 +1158,11 @@ ERRORDelete	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 	QUIT ..%SQLAcquireLock(pRowId,pShared,.pUnlockRef)
 %SQLGetOld(%rowid,%d,%e,sqlcode)
 	new s set %d(1)=%rowid,s="" if '$d(^HBDRGCoreAlgorithmDataD(%d(1)),s) { set sqlcode=100 quit  }
-	 S $lg(%e(23),%e(2),,,,,,%e(8),%e(9),,,,,,,%e(16),,,,,,%e(22))=s
+	 S $lg(%e(26),%e(2),,,,,,%e(12),%e(13),,,,,,,%e(20),,,,,,%e(11))=s
 	QUIT
 %SQLGetOldAll()
 	new s set %d(1)=%rowid,s="" if '$d(^HBDRGCoreAlgorithmDataD(%d(1)),s) { set sqlcode=100 quit  }
-	 S $lg(%e(23),%e(2),%e(3),%e(4),%e(5),%e(6),%e(7),%e(8),%e(9),%e(10),%e(11),%e(12),%e(13),%e(14),%e(15),%e(16),%e(17),%e(18),%e(19),%e(20),%e(21),%e(22))=s
+	 S $lg(%e(26),%e(2),%e(3),%e(4),%e(5),%e(6),%e(7),%e(12),%e(13),%e(14),%e(15),%e(16),%e(17),%e(18),%e(19),%e(20),%e(21),%e(22),%e(23),%e(24),%e(25),%e(11),%e(8),%e(9),%e(10))=s
 	QUIT
 %SQLGetOldIndex(%rowid,%d,pF=0,sqlcode)
 	try {
@@ -1096,14 +1170,14 @@ ERRORDelete	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 		set tOid=..%ComposeOid(%rowid)
 		if ''..%OnDetermineClass(tOid,.tClass),tClass'=$classname() {
 			set tF=1 do $classmethod(tClass,"%SQLGetOldIndex",%rowid,,.tF,.sqlcode)
-			set:$d(tF("City_Dr")) %d(9)=tF("City_Dr") set:$d(tF("x__classname")) %d(23)=tF("x__classname") set:$d(tF("FixmedinsCode")) %d(16)=tF("FixmedinsCode") set:$d(tF("DRG")) %d(2)=tF("DRG") set:$d(tF("Province_Dr")) %d(8)=tF("Province_Dr") set:$d(tF("Year")) %d(22)=tF("Year") 
+			set:$d(tF("City_Dr")) %d(13)=tF("City_Dr") set:$d(tF("x__classname")) %d(26)=tF("x__classname") set:$d(tF("FixmedinsCode")) %d(20)=tF("FixmedinsCode") set:$d(tF("DRG")) %d(2)=tF("DRG") set:$d(tF("Province_Dr")) %d(12)=tF("Province_Dr") set:$d(tF("Year")) %d(11)=tF("Year") 
 			RETURN
 		}
 	}
 	catch { }
 	new s set %d(1)=%rowid,s="" if '$d(^HBDRGCoreAlgorithmDataD(%d(1)),s) { set sqlcode=100 quit  }
-	 S $lg(%e(23),%e(2),,,,,,%e(8),%e(9),,,,,,,%e(16),,,,,,%e(22))=s
-	if pF { set:$d(%d(9)) pF("City_Dr")=%d(9) set:$d(%d(23)) pF("x__classname")=%d(23) set:$d(%d(16)) pF("FixmedinsCode")=%d(16) set:$d(%d(2)) pF("DRG")=%d(2) set:$d(%d(8)) pF("Province_Dr")=%d(8) set:$d(%d(22)) pF("Year")=%d(22)  }
+	 S $lg(%e(26),%e(2),,,,,,%e(12),%e(13),,,,,,,%e(20),,,,,,%e(11))=s
+	if pF { set:$d(%d(13)) pF("City_Dr")=%d(13) set:$d(%d(26)) pF("x__classname")=%d(26) set:$d(%d(20)) pF("FixmedinsCode")=%d(20) set:$d(%d(2)) pF("DRG")=%d(2) set:$d(%d(12)) pF("Province_Dr")=%d(12) set:$d(%d(11)) pF("Year")=%d(11)  }
 	set sqlcode=0
 	QUIT
 %SQLInsert(%d,%check,%inssel,%vco,%tstart=1,%mv=0)
@@ -1117,24 +1191,24 @@ ERRORDelete	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 	if '$a(%check) {
 		do {
 			if $g(%vco)'="" { d @%vco quit:sqlcode<0  }
-			do:$g(%d(2))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,3)) do:$g(%d(3))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,4)) do:$g(%d(8))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,9)) do:$g(%d(9))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,10)) do:$g(%d(15))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,16)) do:$g(%d(16))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,17)) do:$g(%d(17))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,18)) do:$g(%d(18))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,19)) do:$g(%d(19))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,20)) do:$g(%d(22))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,23)) 
+			do:$g(%d(2))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,3)) do:$g(%d(3))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,4)) do:$g(%d(11))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,12)) do:$g(%d(12))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,13)) do:$g(%d(13))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,14)) do:$g(%d(19))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,20)) do:$g(%d(20))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,21)) do:$g(%d(21))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,22)) do:$g(%d(22))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,23)) do:$g(%d(23))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,24)) 
 			quit:sqlcode<0		// A required field was missing
 		} while 0
 		if sqlcode<0 { set SQLCODE=sqlcode do ..%SQLEExit() RETURN "" }		// A constraint failed
 	}
 	if '$d(%d(1)) { set %d(1)=$i(^HBDRGCoreAlgorithmDataD) } elseif %d(1)>$g(^HBDRGCoreAlgorithmDataD) { if $i(^HBDRGCoreAlgorithmDataD,$zabs(%d(1)-$g(^HBDRGCoreAlgorithmDataD))) {}} elseif $d(^HBDRGCoreAlgorithmDataD(%d(1))) { set SQLCODE=-119,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler33",,"ID",%d(1),"SQLUser"_"."_"HB_DRGCoreAlgorithmData"_"."_"ID") do ..%SQLEExit() RETURN "" }
-	for icol=23,9,16,2,8,22 { set:'($d(%d(icol))#2) %d(icol)="" }
+	for icol=26,13,20,2,12,11 { set:'($d(%d(icol))#2) %d(icol)="" }
 	if '$a(%check,2) {
 		new %ls lock +^HBDRGCoreAlgorithmDataD(%d(1))#"E":$zu(115,4) set %ls=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,4:2,2:2,1:3,:""))
 		set:%ls=2 $e(%check,2)=$c(1) set:%ls=2&&($tlevel) %0CacheLock("User.HBDRGCoreAlgorithmData","E")=1 set:$case(%ls,1:1,2:1,:0) $e(%l)=$c(1)
 		if '%ls||(%ls=3) { set SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer",$s('%ls:"SQLFiler40",1:"SQLFiler55"),,%oper,"SQLUser"_"."_"HB_DRGCoreAlgorithmData",$g(%d(1))) do ..%SQLEExit() RETURN ""  }
 	}
-	set ^HBDRGCoreAlgorithmDataD(%d(1))=$lb(%d(23),%d(2),%d(3),%d(4),%d(5),%d(6),%d(7),%d(8),%d(9),%d(10),%d(11),%d(12),%d(13),%d(14),%d(15),%d(16),%d(17),%d(18),%d(19),%d(20),%d(21),%d(22))
+	set ^HBDRGCoreAlgorithmDataD(%d(1))=$lb(%d(26),%d(2),%d(3),%d(4),%d(5),%d(6),%d(7),%d(12),%d(13),%d(14),%d(15),%d(16),%d(17),%d(18),%d(19),%d(20),%d(21),%d(22),%d(23),%d(24),%d(25),%d(11),%d(8),%d(9),%d(10))
 	if '$a(%check,3) {
-		set sn(1)=%d(9) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("City",sn(1),sn(2))=%d(23)
-		set sn(1)=$zu(28,%d(16),7) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("FixmedinsCode",sn(1),sn(2))=%d(23)
-		set sn(1)=$zu(28,%d(2),7) set sn(2)=%d(8) set sn(3)=%d(9) set sn(4)=$zu(28,%d(16),7) set sn(5)=$zu(28,%d(22),7) set sn(6)=%d(1) set ^HBDRGCoreAlgorithmDataI("Index",sn(1),sn(2),sn(3),sn(4),sn(5),sn(6))=%d(23)
-		set sn(1)=%d(8) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("Province",sn(1),sn(2))=%d(23)
+		set sn(1)=%d(13) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("City",sn(1),sn(2))=%d(26)
+		set sn(1)=$zu(28,%d(20),7) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("FixmedinsCode",sn(1),sn(2))=%d(26)
+		set sn(1)=$zu(28,%d(2),7) set sn(2)=%d(12) set sn(3)=%d(13) set sn(4)=$zu(28,%d(20),7) set sn(5)=$zu(28,%d(11),7) set sn(6)=%d(1) set ^HBDRGCoreAlgorithmDataI("Index",sn(1),sn(2),sn(3),sn(4),sn(5),sn(6))=%d(26)
+		set sn(1)=%d(12) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("Province",sn(1),sn(2))=%d(26)
 	}
 	lock:$a(%l) -^HBDRGCoreAlgorithmDataD(%d(1))#"E"
 	TCOMMIT:%tstart&&($zu(115,1)=1)
@@ -1151,9 +1225,9 @@ ERRORInsert	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 %SQLMissing(fname)
 	set sqlcode=-108,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler47",,fname,"SQLUser"_"."_"HB_DRGCoreAlgorithmData") quit
 %SQLNormalizeFields()
-	new %f for %f=10,11,17 { set:$g(%d(%f))'="" %d(%f)=$s($zu(115,13)&&(%d(%f)=$c(0)):"",1:%d(%f)\1) }
-	set:$g(%d(18))'="" %d(18)=$select($zu(115,13)&&(%d(18)=$c(0)):"",1:%d(18))
-	for %f=8,9,19 { set:$g(%d(%f))'="" %d(%f)=$select(%d(%f)=$c(0)&&$zu(115,13):"",1:%d(%f)\1) }
+	new %f for %f=14,15,21 { set:$g(%d(%f))'="" %d(%f)=$s($zu(115,13)&&(%d(%f)=$c(0)):"",1:%d(%f)\1) }
+	set:$g(%d(22))'="" %d(22)=$select($zu(115,13)&&(%d(22)=$c(0)):"",1:%d(22))
+	for %f=12,13,23 { set:$g(%d(%f))'="" %d(%f)=$select(%d(%f)=$c(0)&&$zu(115,13):"",1:%d(%f)\1) }
 	QUIT
 %SQLPurgeIndices(pIndices="",pLockExtent=0,pIgnoreIndexList="")
 	QUIT ..%PurgeIndices(pIndices,pLockExtent,pIgnoreIndexList)
@@ -1163,11 +1237,11 @@ ERRORInsert	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 	if %nolock=0 { if '..%SQLAcquireLock(%rowid) { set %qrc=114,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler45",,"SQLUser"_"."_"HB_DRGCoreAlgorithmData",%rowid),%ROWCOUNT=0 QUIT  } set:$zu(115,2) il=$zu(115,2,0) }
 	new s,ul set ul=0,d(1)=%rowid if $zu(115,2)=1 { lock +^HBDRGCoreAlgorithmDataD(d(1))#"S":$zu(115,4) if $t { set ul=1 } else { set %qrc=114,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler46",,"SQLUser"_"."_"HB_DRGCoreAlgorithmData",%rowid),%ROWCOUNT=0 quit  } }
 	if '$d(^HBDRGCoreAlgorithmDataD(d(1)),s) { set SQLCODE=100,%qrc=100 if %nolock=0 { do:$g(il) $zu(115,2,il) }} else { set SQLCODE=0
-	if qq { set d(23)=$lg(s) if d(23)'="" { new sn set sn=$p(d(23),$e(d(23)),$l(d(23),$e(d(23)))-1) if "HBDRGCoreAlgorithmData"'=sn { if %nolock=0 { do ..%SQLReleaseLock(%rowid,0,1) do:$g(il) $zu(115,2,il) } kill d set:sn'["." sn="User."_sn do $classmethod(sn,"%SQLQuickLoad",%rowid,%nolock,0,1) QUIT  }}}
-	set d(2)=$lg(s,2) set d(3)=$lg(s,3) set d(4)=$lg(s,4) set d(5)=$lg(s,5) set d(6)=$lg(s,6) set d(7)=$lg(s,7) set d(8)=$lg(s,8) set d(9)=$lg(s,9) set d(10)=$lg(s,10) set d(11)=$lg(s,11) set d(12)=$lg(s,12) set d(13)=$lg(s,13) set d(14)=$lg(s,14) set d(15)=$lg(s,15) set d(16)=$lg(s,16) set d(17)=$lg(s,17) set d(18)=$lg(s,18) set d(19)=$lg(s,19) set d(20)=$lg(s,20) set d(21)=$lg(s,21) set d(22)=$lg(s,22) set d(23)=$lg(s)  }
+	if qq { set d(26)=$lg(s) if d(26)'="" { new sn set sn=$p(d(26),$e(d(26)),$l(d(26),$e(d(26)))-1) if "HBDRGCoreAlgorithmData"'=sn { if %nolock=0 { do ..%SQLReleaseLock(%rowid,0,1) do:$g(il) $zu(115,2,il) } kill d set:sn'["." sn="User."_sn do $classmethod(sn,"%SQLQuickLoad",%rowid,%nolock,0,1) QUIT  }}}
+	set d(2)=$lg(s,2) set d(3)=$lg(s,3) set d(4)=$lg(s,4) set d(5)=$lg(s,5) set d(6)=$lg(s,6) set d(7)=$lg(s,7) set d(8)=$lg(s,23) set d(9)=$lg(s,24) set d(10)=$lg(s,25) set d(11)=$lg(s,22) set d(12)=$lg(s,8) set d(13)=$lg(s,9) set d(14)=$lg(s,10) set d(15)=$lg(s,11) set d(16)=$lg(s,12) set d(17)=$lg(s,13) set d(18)=$lg(s,14) set d(19)=$lg(s,15) set d(20)=$lg(s,16) set d(21)=$lg(s,17) set d(22)=$lg(s,18) set d(23)=$lg(s,19) set d(24)=$lg(s,20) set d(25)=$lg(s,21) set d(26)=$lg(s)  }
 	do ..%SQLQuickLogicalToOdbc(.d)
 	if SQLCODE set %ROWCOUNT=0 set:SQLCODE<0 SQLCODE=-SQLCODE lock:ul -^HBDRGCoreAlgorithmDataD(d(1))#"SI" set %qrc=SQLCODE QUIT
-	set:qq d=$zobjexport("User.HBDRGCoreAlgorithmData",18),d=$zobjexport(23,18) set i=-1 for  { set i=$o(d(i)) quit:i=""  set d=$zobjexport(d(i),18) } set %qrc=0,%ROWCOUNT=1 lock:ul -^HBDRGCoreAlgorithmDataD(d(1))#"SI" if %nolock=0 { do ..%SQLReleaseLock(%rowid,0,0) do:$g(il) $zu(115,2,il) } QUIT
+	set:qq d=$zobjexport("User.HBDRGCoreAlgorithmData",18),d=$zobjexport(26,18) set i=-1 for  { set i=$o(d(i)) quit:i=""  set d=$zobjexport(d(i),18) } set %qrc=0,%ROWCOUNT=1 lock:ul -^HBDRGCoreAlgorithmDataD(d(1))#"SI" if %nolock=0 { do ..%SQLReleaseLock(%rowid,0,0) do:$g(il) $zu(115,2,il) } QUIT
 	Quit
 %SQLReleaseLock(%rowid,s=0,i=0,e="")
 	new %d
@@ -1192,7 +1266,7 @@ ERRORInsert	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 		do ..%SQLNormalizeFields()
 	}
 	if $d(%d(1)),%d(1)'=%rowid { set SQLCODE=-107,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler16",,"ID","SQLUser"_"."_"HB_DRGCoreAlgorithmData") QUIT  }
-	for icol=2:1:23 { set $e(%e,icol)=$c($d(%d(icol))) }
+	for icol=2:1:26 { set $e(%e,icol)=$c($d(%d(icol))) }
 	set %d(1)=%rowid,%e(1)=%rowid
 	if '$a(%check,2) {
 		new %ls lock +^HBDRGCoreAlgorithmDataD(%d(1))#"E":$zu(115,4) set %ls=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,4:2,2:2,1:3,:""))
@@ -1201,44 +1275,44 @@ ERRORInsert	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 	}
 	if %tstart { TSTART:($zu(115,1)=1)||('$TLEVEL&&($zu(115,1)=2))  }
 	set $zt="ERRORUpdate"
-	if $g(%vco)="" { do ..%SQLGetOld(%rowid,.%d,.%e,.sqlcode) i sqlcode { s SQLCODE=-109 do ..%SQLEExit() QUIT  } for icol=23,9,16,2,8,22 { set:'$d(%d(icol)) %d(icol)=%e(icol) set:%d(icol)=%e(icol) $e(%e,icol)=$c(0) }} else { do ..%SQLGetOldAll() if sqlcode { set SQLCODE=-109 do ..%SQLEExit() QUIT  } for icol=2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 { set:'$d(%d(icol)) %d(icol)=%e(icol) set:%d(icol)=%e(icol) $e(%e,icol)=$c(0) }}
-	if %e(23)'="" set sn=$p(%e(23),$e(%e(23)),$l(%e(23),$e(%e(23)))-1) if "HBDRGCoreAlgorithmData"'=sn new %f do ..%SQLCopyIcolIntoName() do $classmethod(sn,"%SQLUpdate",%rowid,%check,.%d,$g(%vco),%tstart,%mv,1) QUIT
+	if $g(%vco)="" { do ..%SQLGetOld(%rowid,.%d,.%e,.sqlcode) i sqlcode { s SQLCODE=-109 do ..%SQLEExit() QUIT  } for icol=26,13,20,2,12,11 { set:'$d(%d(icol)) %d(icol)=%e(icol) set:%d(icol)=%e(icol) $e(%e,icol)=$c(0) }} else { do ..%SQLGetOldAll() if sqlcode { set SQLCODE=-109 do ..%SQLEExit() QUIT  } for icol=2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26 { set:'$d(%d(icol)) %d(icol)=%e(icol) set:%d(icol)=%e(icol) $e(%e,icol)=$c(0) }}
+	if %e(26)'="" set sn=$p(%e(26),$e(%e(26)),$l(%e(26),$e(%e(26)))-1) if "HBDRGCoreAlgorithmData"'=sn new %f do ..%SQLCopyIcolIntoName() do $classmethod(sn,"%SQLUpdate",%rowid,%check,.%d,$g(%vco),%tstart,%mv,1) QUIT
 	if '$a(%check) {
 		do {
 			if $g(%vco)'="" { d @%vco quit:sqlcode<0  }
 			if $a(%e,2),$g(%d(2))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,3)) }
 			if $a(%e,3),$g(%d(3))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,4)) }
-			if $a(%e,8),$g(%d(8))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,9)) }
-			if $a(%e,9),$g(%d(9))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,10)) }
-			if $a(%e,15),$g(%d(15))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,16)) }
-			if $a(%e,16),$g(%d(16))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,17)) }
-			if $a(%e,17),$g(%d(17))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,18)) }
-			if $a(%e,18),$g(%d(18))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,19)) }
+			if $a(%e,11),$g(%d(11))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,12)) }
+			if $a(%e,12),$g(%d(12))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,13)) }
+			if $a(%e,13),$g(%d(13))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,14)) }
 			if $a(%e,19),$g(%d(19))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,20)) }
+			if $a(%e,20),$g(%d(20))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,21)) }
+			if $a(%e,21),$g(%d(21))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,22)) }
 			if $a(%e,22),$g(%d(22))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,23)) }
+			if $a(%e,23),$g(%d(23))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,24)) }
 			quit:sqlcode
 		} while 0
 		if sqlcode { set SQLCODE=sqlcode do ..%SQLEExit() QUIT  }
 	}
-	if ($zboolean(%e,$c(0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1),1)[$c(1)) {
-		set ^HBDRGCoreAlgorithmDataD(%d(1))=$listupdate($g(^HBDRGCoreAlgorithmDataD(%d(1))),1,$a(%e,23):%d(23),$a(%e,2):%d(2),$a(%e,3):%d(3),$a(%e,4):%d(4),$a(%e,5):%d(5),$a(%e,6):%d(6),$a(%e,7):%d(7),$a(%e,8):%d(8),$a(%e,9):%d(9),$a(%e,10):%d(10),$a(%e,11):%d(11),$a(%e,12):%d(12),$a(%e,13):%d(13),$a(%e,14):%d(14),$a(%e,15):%d(15),$a(%e,16):%d(16),$a(%e,17):%d(17),$a(%e,18):%d(18),$a(%e,19):%d(19),$a(%e,20):%d(20),$a(%e,21):%d(21),$a(%e,22):%d(22))
+	if ($zboolean(%e,$c(0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1),1)[$c(1)) {
+		set ^HBDRGCoreAlgorithmDataD(%d(1))=$listupdate($g(^HBDRGCoreAlgorithmDataD(%d(1))),1,$a(%e,26):%d(26),$a(%e,2):%d(2),$a(%e,3):%d(3),$a(%e,4):%d(4),$a(%e,5):%d(5),$a(%e,6):%d(6),$a(%e,7):%d(7),$a(%e,12):%d(12),$a(%e,13):%d(13),$a(%e,14):%d(14),$a(%e,15):%d(15),$a(%e,16):%d(16),$a(%e,17):%d(17),$a(%e,18):%d(18),$a(%e,19):%d(19),$a(%e,20):%d(20),$a(%e,21):%d(21),$a(%e,22):%d(22),$a(%e,23):%d(23),$a(%e,24):%d(24),$a(%e,25):%d(25),$a(%e,11):%d(11),$a(%e,8):%d(8),$a(%e,9):%d(9),$a(%e,10):%d(10))
 	}
 	if '$a(%check,3) { 
-		if $a(%e,9)||$a(%e,23) {	// City index map
-			if $a(%e,9) { set sn(1)=%e(9) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("City",sn(1),sn(2)) }
-			set sn(1)=%d(9) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("City",sn(1),sn(2))=%d(23)
+		if $a(%e,13)||$a(%e,26) {	// City index map
+			if $a(%e,13) { set sn(1)=%e(13) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("City",sn(1),sn(2)) }
+			set sn(1)=%d(13) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("City",sn(1),sn(2))=%d(26)
 		}
-		if $a(%e,16)||$a(%e,23) {	// FixmedinsCode index map
-			if $a(%e,16) { set sn(1)=$zu(28,%e(16),7) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("FixmedinsCode",sn(1),sn(2)) }
-			set sn(1)=$zu(28,%d(16),7) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("FixmedinsCode",sn(1),sn(2))=%d(23)
+		if $a(%e,20)||$a(%e,26) {	// FixmedinsCode index map
+			if $a(%e,20) { set sn(1)=$zu(28,%e(20),7) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("FixmedinsCode",sn(1),sn(2)) }
+			set sn(1)=$zu(28,%d(20),7) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("FixmedinsCode",sn(1),sn(2))=%d(26)
 		}
-		if $s($a(%e,2):1,$a(%e,8):1,$a(%e,9):1,$a(%e,16):1,$a(%e,22):1,1:$a(%e,23)) {	// Index index map
-			if $s($a(%e,2):1,$a(%e,8):1,$a(%e,9):1,$a(%e,16):1,1:$a(%e,22)) { set sn(1)=$zu(28,%e(2),7) set sn(2)=%e(8) set sn(3)=%e(9) set sn(4)=$zu(28,%e(16),7) set sn(5)=$zu(28,%e(22),7) set sn(6)=%d(1) k ^HBDRGCoreAlgorithmDataI("Index",sn(1),sn(2),sn(3),sn(4),sn(5),sn(6)) }
-			set sn(1)=$zu(28,%d(2),7) set sn(2)=%d(8) set sn(3)=%d(9) set sn(4)=$zu(28,%d(16),7) set sn(5)=$zu(28,%d(22),7) set sn(6)=%d(1) set ^HBDRGCoreAlgorithmDataI("Index",sn(1),sn(2),sn(3),sn(4),sn(5),sn(6))=%d(23)
+		if $s($a(%e,2):1,$a(%e,11):1,$a(%e,12):1,$a(%e,13):1,$a(%e,20):1,1:$a(%e,26)) {	// Index index map
+			if $s($a(%e,2):1,$a(%e,11):1,$a(%e,12):1,$a(%e,13):1,1:$a(%e,20)) { set sn(1)=$zu(28,%e(2),7) set sn(2)=%e(12) set sn(3)=%e(13) set sn(4)=$zu(28,%e(20),7) set sn(5)=$zu(28,%e(11),7) set sn(6)=%d(1) k ^HBDRGCoreAlgorithmDataI("Index",sn(1),sn(2),sn(3),sn(4),sn(5),sn(6)) }
+			set sn(1)=$zu(28,%d(2),7) set sn(2)=%d(12) set sn(3)=%d(13) set sn(4)=$zu(28,%d(20),7) set sn(5)=$zu(28,%d(11),7) set sn(6)=%d(1) set ^HBDRGCoreAlgorithmDataI("Index",sn(1),sn(2),sn(3),sn(4),sn(5),sn(6))=%d(26)
 		}
-		if $a(%e,8)||$a(%e,23) {	// Province index map
-			if $a(%e,8) { set sn(1)=%e(8) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("Province",sn(1),sn(2)) }
-			set sn(1)=%d(8) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("Province",sn(1),sn(2))=%d(23)
+		if $a(%e,12)||$a(%e,26) {	// Province index map
+			if $a(%e,12) { set sn(1)=%e(12) set sn(2)=%d(1) k ^HBDRGCoreAlgorithmDataI("Province",sn(1),sn(2)) }
+			set sn(1)=%d(12) set sn(2)=%d(1) set ^HBDRGCoreAlgorithmDataI("Province",sn(1),sn(2))=%d(26)
 		}
 	}
 	do ..%SQLUnlock() TCOMMIT:%tstart&&($zu(115,1)=1)
@@ -1247,14 +1321,14 @@ ERRORInsert	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler51",,%oper,"SQLUser"_"."_"HB_DRGCoreAlgorithmData",$ze) if $ze["<FRAMESTACK>" { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler52",,$ze,%oper,"SQLUser"_"."_"HB_DRGCoreAlgorithmData") do ##Class(%SYS.System).WriteToConsoleLog(%msg) if ($zu(67,10,$j)=1)||($zu(67,10,$j)=3) { write !,%msg h 3 } HALT  } do ..%SQLEExit() QUIT  
 	Quit
 %SQLValidateFields(sqlcode)
-	if $g(%d(18))'="",'($select($zu(115,13)&&(%d(18)=$c(0)):1,$isvalidnum(%d(18),,0,86400)&&(%d(18)'=86400):1,'$isvalidnum(%d(18)):$$Error^%apiOBJ(7207,%d(18)),%d(18)<0:$$Error^%apiOBJ(7204,%d(18),0),1:$$Error^%apiOBJ(7203,%d(18),86400))) { set sqlcode=..%SQLInvalid(18+1,%d(18)) } 
-	new %f for %f=10,11,17 { if $g(%d(%f))'="",'($s($zu(115,13)&&(%d(%f)=$c(0)):1,$isvalidnum(%d(%f),0,0,2980013):1,'$isvalidnum(%d(%f)):$$Error^%apiOBJ(7207,%d(%f)),%d(%f)<0:$$Error^%apiOBJ(7204,%d(%f),0),1:$$Error^%apiOBJ(7203,%d(%f),2980013))) set sqlcode=..%SQLInvalid(%f+1,$g(%d(%f))) quit  } 
-	if $g(%d(22))'="",'(($l(%d(22))'>4)) { set sqlcode=..%SQLInvalid(22+1,%d(22)) } 
-	for %f=2,3,4,5,6,7,12,13,14,15,16,20 { if $g(%d(%f))'="",'(($l(%d(%f))'>50)) set sqlcode=..%SQLInvalid(%f+1,$g(%d(%f))) quit  } 
-	if $g(%d(21))'="",'(($l(%d(21))'>99999)) { set sqlcode=..%SQLInvalid(21+1,%d(21)) } 
+	if $g(%d(22))'="",'($select($zu(115,13)&&(%d(22)=$c(0)):1,$isvalidnum(%d(22),,0,86400)&&(%d(22)'=86400):1,'$isvalidnum(%d(22)):$$Error^%apiOBJ(7207,%d(22)),%d(22)<0:$$Error^%apiOBJ(7204,%d(22),0),1:$$Error^%apiOBJ(7203,%d(22),86400))) { set sqlcode=..%SQLInvalid(22+1,%d(22)) } 
+	new %f for %f=14,15,21 { if $g(%d(%f))'="",'($s($zu(115,13)&&(%d(%f)=$c(0)):1,$isvalidnum(%d(%f),0,0,2980013):1,'$isvalidnum(%d(%f)):$$Error^%apiOBJ(7207,%d(%f)),%d(%f)<0:$$Error^%apiOBJ(7204,%d(%f),0),1:$$Error^%apiOBJ(7203,%d(%f),2980013))) set sqlcode=..%SQLInvalid(%f+1,$g(%d(%f))) quit  } 
+	if $g(%d(11))'="",'(($l(%d(11))'>4)) { set sqlcode=..%SQLInvalid(11+1,%d(11)) } 
+	for %f=2,3,4,5,6,7,8,9,10,16,17,18,19,20,24 { if $g(%d(%f))'="",'(($l(%d(%f))'>50)) set sqlcode=..%SQLInvalid(%f+1,$g(%d(%f))) quit  } 
+	if $g(%d(25))'="",'(($l(%d(25))'>99999)) { set sqlcode=..%SQLInvalid(25+1,%d(25)) } 
 	QUIT 'sqlcode
 %SQLnBuild() public {
-	set %n=$lb(,"ID","DRG","DRGDESC","Points","PipValue","DGDOV","PayStandard","Province_Dr","City_Dr","StartDate","StopDate","InsuType","MdtrtArea","MedinsLv","FixmedinsName","FixmedinsCode","CreateDate","CreateTime","CreateUser_Dr","Identification","Remark","Year","x__classname")
+	set %n=$lb(,"ID","DRG","DRGDESC","Points","PipValue","DGDOV","PayStandard","HighMultiplier","LowMultiplier","Weight","Year","Province_Dr","City_Dr","StartDate","StopDate","InsuType","MdtrtArea","MedinsLv","FixmedinsName","FixmedinsCode","CreateDate","CreateTime","CreateUser_Dr","Identification","Remark","x__classname")
 	QUIT }
 %Save(related=1) public {
 	Set $ZTrap="%SaveERR"
@@ -1309,7 +1383,7 @@ ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 			if insert {
 				if ('lockok&&..%Concurrency&&$tlevel)||(i%%Concurrency=4) {  lock +(^HBDRGCoreAlgorithmDataD(id)#"E"):$zu(115,4) set lockok=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,2:2,4:2,:0)) set:(lockok=2&&(i%%Concurrency'=4)) %0CacheLock($classname(),"E")=1 set:lockok lock=1 if 'lockok { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
 				if i%%Concurrency=3 { lock +(^HBDRGCoreAlgorithmDataD(id)#"ES") set tSharedLock=1 }
-				set ^HBDRGCoreAlgorithmDataD(id)=$lb("",i%DRG,i%DRGDESC,i%Points,i%PipValue,i%DGDOV,i%PayStandard,i%ProvinceDr,i%CityDr,i%StartDate,i%StopDate,i%InsuType,i%MdtrtArea,i%MedinsLv,i%FixmedinsName,i%FixmedinsCode,i%CreateDate,i%CreateTime,i%CreateUserDr,i%Identification,i%Remark,i%Year)
+				set ^HBDRGCoreAlgorithmDataD(id)=$lb("",i%DRG,i%DRGDESC,i%Points,i%PipValue,i%DGDOV,i%PayStandard,i%ProvinceDr,i%CityDr,i%StartDate,i%StopDate,i%InsuType,i%MdtrtArea,i%MedinsLv,i%FixmedinsName,i%FixmedinsCode,i%CreateDate,i%CreateTime,i%CreateUserDr,i%Identification,i%Remark,i%Year,i%HighMultiplier,i%LowMultiplier,i%Weight)
 				set ^HBDRGCoreAlgorithmDataI("City",i%CityDr,id)=""
 				set ^HBDRGCoreAlgorithmDataI("FixmedinsCode",zzc10v4,id)=""
 				set ^HBDRGCoreAlgorithmDataI("Index",zzc10v3,i%ProvinceDr,i%CityDr,zzc10v2,zzc10v1,id)=""
@@ -1338,7 +1412,7 @@ ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$For
 					kill ^HBDRGCoreAlgorithmDataI("Province",zzc31v3,id)
 					set ^HBDRGCoreAlgorithmDataI("Province",i%ProvinceDr,id)=""
 				}
-				set ^HBDRGCoreAlgorithmDataD(id)=$lb("",i%DRG,i%DRGDESC,i%Points,i%PipValue,i%DGDOV,i%PayStandard,i%ProvinceDr,i%CityDr,i%StartDate,i%StopDate,i%InsuType,i%MdtrtArea,i%MedinsLv,i%FixmedinsName,i%FixmedinsCode,i%CreateDate,i%CreateTime,i%CreateUserDr,i%Identification,i%Remark,i%Year)
+				set ^HBDRGCoreAlgorithmDataD(id)=$lb("",i%DRG,i%DRGDESC,i%Points,i%PipValue,i%DGDOV,i%PayStandard,i%ProvinceDr,i%CityDr,i%StartDate,i%StopDate,i%InsuType,i%MdtrtArea,i%MedinsLv,i%FixmedinsName,i%FixmedinsCode,i%CreateDate,i%CreateTime,i%CreateUserDr,i%Identification,i%Remark,i%Year,i%HighMultiplier,i%LowMultiplier,i%Weight)
 			}
 			set tStatus = 1
 		}
@@ -1554,8 +1628,10 @@ exit	Quit sc }
 	If m%FixmedinsCode Set rc=(..FixmedinsCodeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"FixmedinsCode",iv)
 	Set iv=..FixmedinsName If iv="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::FixmedinsName("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
 	If m%FixmedinsName Set rc=(..FixmedinsNameIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"FixmedinsName",iv)
+	If m%HighMultiplier Set iv=..HighMultiplier If iv'="" Set rc=(..HighMultiplierIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"HighMultiplier",iv)
 	If m%Identification Set iv=..Identification If iv'="" Set rc=(..IdentificationIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"Identification",iv)
 	If m%InsuType Set iv=..InsuType If iv'="" Set rc=(..InsuTypeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"InsuType",iv)
+	If m%LowMultiplier Set iv=..LowMultiplier If iv'="" Set rc=(..LowMultiplierIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"LowMultiplier",iv)
 	If m%MdtrtArea Set iv=..MdtrtArea If iv'="" Set rc=(..MdtrtAreaIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"MdtrtArea",iv)
 	If m%MedinsLv Set iv=..MedinsLv If iv'="" Set rc=(..MedinsLvIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"MedinsLv",iv)
 	If m%PayStandard Set iv=..PayStandard If iv'="" Set rc=(..PayStandardIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"PayStandard",iv)
@@ -1564,6 +1640,7 @@ exit	Quit sc }
 	If m%Remark Set iv=..Remark If iv'="" Set rc=(..RemarkIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"Remark",iv)
 	If m%StartDate Set iv=..StartDate If iv'="" Set rc=(..StartDateIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"StartDate",iv)
 	If m%StopDate Set iv=..StopDate If iv'="" Set rc=(..StopDateIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"StopDate",iv)
+	If m%Weight Set iv=..Weight If iv'="" Set rc=(..WeightIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"Weight",iv)
 	Set iv=..Year If iv="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::Year("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
 	If m%Year Set rc=(..YearIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"Year",iv)
 	Quit sc }
@@ -1693,6 +1770,21 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
+		if (pDynamicObject.%IsDefined("HighMultiplier")) && (..HighMultiplier'=pDynamicObject."HighMultiplier") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."HighMultiplier"
+					set value=$METHOD($THIS,"HighMultiplierXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."HighMultiplier"
+					set $ZERROR=""
+				}
+				set ..HighMultiplier=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
 		if (pDynamicObject.%IsDefined("Identification")) && (..Identification'=pDynamicObject."Identification") {
 			try {
 				try {
@@ -1719,6 +1811,21 @@ zFromDynamicObj(pDynamicObject) public {
 					set $ZERROR=""
 				}
 				set ..InsuType=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("LowMultiplier")) && (..LowMultiplier'=pDynamicObject."LowMultiplier") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."LowMultiplier"
+					set value=$METHOD($THIS,"LowMultiplierXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."LowMultiplier"
+					set $ZERROR=""
+				}
+				set ..LowMultiplier=value
 			} catch(ex) {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
@@ -1852,6 +1959,21 @@ zFromDynamicObj(pDynamicObject) public {
 				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 			}
 		}
+		if (pDynamicObject.%IsDefined("Weight")) && (..Weight'=pDynamicObject."Weight") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."Weight"
+					set value=$METHOD($THIS,"WeightXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."Weight"
+					set $ZERROR=""
+				}
+				set ..Weight=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
 		if (pDynamicObject.%IsDefined("Year")) && (..Year'=pDynamicObject."Year") {
 			try {
 				try {
@@ -1874,7 +1996,7 @@ zFromDynamicObj(pDynamicObject) public {
 zToDynamicObj(pDynamicObject) public {
 	set sc=1
 	try {
-		set pDynamicObject={"ID":(..%Id()),"CityDr":($CASE($ISOBJECT(..CityDr),1:..CityDr.%Id(),:"")),"CreateDate":(..GetLogicalToXSDValue($This,"CreateDate",..CreateDate)),"CreateTime":(..GetLogicalToXSDValue($This,"CreateTime",..CreateTime)),"CreateUserDr":($CASE($ISOBJECT(..CreateUserDr),1:..CreateUserDr.%Id(),:"")),"DGDOV":(..GetLogicalToXSDValue($This,"DGDOV",..DGDOV)),"DRG":(..GetLogicalToXSDValue($This,"DRG",..DRG)),"DRGDESC":(..GetLogicalToXSDValue($This,"DRGDESC",..DRGDESC)),"FixmedinsCode":(..GetLogicalToXSDValue($This,"FixmedinsCode",..FixmedinsCode)),"FixmedinsName":(..GetLogicalToXSDValue($This,"FixmedinsName",..FixmedinsName)),"Identification":(..GetLogicalToXSDValue($This,"Identification",..Identification)),"InsuType":(..GetLogicalToXSDValue($This,"InsuType",..InsuType)),"MdtrtArea":(..GetLogicalToXSDValue($This,"MdtrtArea",..MdtrtArea)),"MedinsLv":(..GetLogicalToXSDValue($This,"MedinsLv",..MedinsLv)),"PayStandard":(..GetLogicalToXSDValue($This,"PayStandard",..PayStandard)),"PipValue":(..GetLogicalToXSDValue($This,"PipValue",..PipValue)),"Points":(..GetLogicalToXSDValue($This,"Points",..Points)),"ProvinceDr":($CASE($ISOBJECT(..ProvinceDr),1:..ProvinceDr.%Id(),:"")),"Remark":(..GetLogicalToXSDValue($This,"Remark",..Remark)),"StartDate":(..GetLogicalToXSDValue($This,"StartDate",..StartDate)),"StopDate":(..GetLogicalToXSDValue($This,"StopDate",..StopDate)),"Year":(..GetLogicalToXSDValue($This,"Year",..Year))}
+		set pDynamicObject={"ID":(..%Id()),"CityDr":($CASE($ISOBJECT(..CityDr),1:..CityDr.%Id(),:"")),"CreateDate":(..GetLogicalToXSDValue($This,"CreateDate",..CreateDate)),"CreateTime":(..GetLogicalToXSDValue($This,"CreateTime",..CreateTime)),"CreateUserDr":($CASE($ISOBJECT(..CreateUserDr),1:..CreateUserDr.%Id(),:"")),"DGDOV":(..GetLogicalToXSDValue($This,"DGDOV",..DGDOV)),"DRG":(..GetLogicalToXSDValue($This,"DRG",..DRG)),"DRGDESC":(..GetLogicalToXSDValue($This,"DRGDESC",..DRGDESC)),"FixmedinsCode":(..GetLogicalToXSDValue($This,"FixmedinsCode",..FixmedinsCode)),"FixmedinsName":(..GetLogicalToXSDValue($This,"FixmedinsName",..FixmedinsName)),"HighMultiplier":(..GetLogicalToXSDValue($This,"HighMultiplier",..HighMultiplier)),"Identification":(..GetLogicalToXSDValue($This,"Identification",..Identification)),"InsuType":(..GetLogicalToXSDValue($This,"InsuType",..InsuType)),"LowMultiplier":(..GetLogicalToXSDValue($This,"LowMultiplier",..LowMultiplier)),"MdtrtArea":(..GetLogicalToXSDValue($This,"MdtrtArea",..MdtrtArea)),"MedinsLv":(..GetLogicalToXSDValue($This,"MedinsLv",..MedinsLv)),"PayStandard":(..GetLogicalToXSDValue($This,"PayStandard",..PayStandard)),"PipValue":(..GetLogicalToXSDValue($This,"PipValue",..PipValue)),"Points":(..GetLogicalToXSDValue($This,"Points",..Points)),"ProvinceDr":($CASE($ISOBJECT(..ProvinceDr),1:..ProvinceDr.%Id(),:"")),"Remark":(..GetLogicalToXSDValue($This,"Remark",..Remark)),"StartDate":(..GetLogicalToXSDValue($This,"StartDate",..StartDate)),"StopDate":(..GetLogicalToXSDValue($This,"StopDate",..StopDate)),"Weight":(..GetLogicalToXSDValue($This,"Weight",..Weight)),"Year":(..GetLogicalToXSDValue($This,"Year",..Year))}
 	} catch(ex) {
 		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
 	}
@@ -1949,6 +2071,22 @@ zXMLExportInternal()
  Set val=..PayStandard
  If val'="" {
    Set %xmlmsg=currentIndent_beginprefix_"PayStandard"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"PayStandard>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..HighMultiplier
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"HighMultiplier"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"HighMultiplier>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..LowMultiplier
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"LowMultiplier"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"LowMultiplier>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..Weight
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"Weight"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"Weight>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..Year
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"Year"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"Year>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
  }
  Set val=..ProvinceDr
  If $IsObject(val) , deepFlag {
@@ -2038,10 +2176,6 @@ zXMLExportInternal()
  Set val=..Remark
  If val'="" {
    Set %xmlmsg=currentIndent_beginprefix_"Remark"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"Remark>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
- }
- Set val=..Year
- If val'="" {
-   Set %xmlmsg=currentIndent_beginprefix_"Year"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"Year>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
  }
  If indentFlag { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
  Set %xmlmsg="</"_topPrefix_tag_">"
@@ -2250,6 +2384,87 @@ XMLLOOP2 If child="" Quit sc
    }
    If encoded Set child=savechild,childlist=savechildlist
    Set ..PayStandard=data
+   Goto XMLLOOP } }
+ If tag="HighMultiplier" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(($l(data)'>50):1,1:$$Error^%apiOBJ(7201,data,50))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..HighMultiplier=data
+   Goto XMLLOOP } }
+ If tag="LowMultiplier" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(($l(data)'>50):1,1:$$Error^%apiOBJ(7201,data,50))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..LowMultiplier=data
+   Goto XMLLOOP } }
+ If tag="Weight" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(($l(data)'>50):1,1:$$Error^%apiOBJ(7201,data,50))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..Weight=data
+   Goto XMLLOOP } }
+ If tag="Year" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   Set exists("Year")=1
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(($l(data)'>4):1,1:$$Error^%apiOBJ(7201,data,4))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..Year=data
    Goto XMLLOOP } }
  If tag="ProvinceDr" {
    If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
@@ -2561,27 +2776,6 @@ XMLLOOP2 If child="" Quit sc
    If encoded Set child=savechild,childlist=savechildlist
    Set ..Remark=data
    Goto XMLLOOP } }
- If tag="Year" {
-   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
-   Set exists("Year")=1
-   If encoded Set savechild=child,savechildlist=childlist
-   If encoded,$$XMLImportIdChild() {
-     Set data=idlist(child)
-   } Else { Goto:'sc XMLImportExit
-     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
-     } Else {
-             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
-               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
-             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
-               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
-             If data="" Set data=$c(0)
-             If data'="" Goto:('$s(($l(data)'>4):1,1:$$Error^%apiOBJ(7201,data,4))) XMLImportErrchild
-     }
-     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
-   }
-   If encoded Set child=savechild,childlist=savechildlist
-   Set ..Year=data
-   Goto XMLLOOP } }
  Goto XMLImportBadTagchild
 XMLImportBadTagchild Set inner=child
 XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
@@ -2667,6 +2861,10 @@ zXMLIsObjectEmpty(ignoreNull)
  If ..PipValue'="" Quit 0
  If ..DGDOV'="" Quit 0
  If ..PayStandard'="" Quit 0
+ If ..HighMultiplier'="" Quit 0
+ If ..LowMultiplier'="" Quit 0
+ If ..Weight'="" Quit 0
+ If ..Year'="" Quit 0
  If $IsObject(..ProvinceDr) Quit 0
  If $IsObject(..CityDr) Quit 0
  If ..StartDate'="" Quit 0
@@ -2681,7 +2879,6 @@ zXMLIsObjectEmpty(ignoreNull)
  If $IsObject(..CreateUserDr) Quit 0
  If ..Identification'="" Quit 0
  If ..Remark'="" Quit 0
- If ..Year'="" Quit 0
  Quit 1
 zXMLNew(document,node,containerOref="")
 	Quit (##class(User.HBDRGCoreAlgorithmData).%New())
@@ -2822,10 +3019,14 @@ zFixmedinsCodeGetStored(id) public {
 	Quit $Select(id'="":$listget($g(^HBDRGCoreAlgorithmDataD(id)),16),1:"") }
 zFixmedinsNameGetStored(id) public {
 	Quit $Select(id'="":$listget($g(^HBDRGCoreAlgorithmDataD(id)),15),1:"") }
+zHighMultiplierGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^HBDRGCoreAlgorithmDataD(id)),23),1:"") }
 zIdentificationGetStored(id) public {
 	Quit $Select(id'="":$listget($g(^HBDRGCoreAlgorithmDataD(id)),20),1:"") }
 zInsuTypeGetStored(id) public {
 	Quit $Select(id'="":$listget($g(^HBDRGCoreAlgorithmDataD(id)),12),1:"") }
+zLowMultiplierGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^HBDRGCoreAlgorithmDataD(id)),24),1:"") }
 zMdtrtAreaGetStored(id) public {
 	Quit $Select(id'="":$listget($g(^HBDRGCoreAlgorithmDataD(id)),13),1:"") }
 zMedinsLvGetStored(id) public {
@@ -2872,6 +3073,8 @@ zStartDateGetStored(id) public {
 	Quit $Select(id'="":$listget($g(^HBDRGCoreAlgorithmDataD(id)),10),1:"") }
 zStopDateGetStored(id) public {
 	Quit $Select(id'="":$listget($g(^HBDRGCoreAlgorithmDataD(id)),11),1:"") }
+zWeightGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^HBDRGCoreAlgorithmDataD(id)),25),1:"") }
 zYearGetStored(id) public {
 	Quit $Select(id'="":$listget($g(^HBDRGCoreAlgorithmDataD(id)),22),1:"") }
 zExtentExecute(%qHandle) [ SQLCODE ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 

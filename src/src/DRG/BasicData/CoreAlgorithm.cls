@@ -58,6 +58,10 @@ ClassMethod UpdateDRGCoreAlgorithm(postObj) As %Library.DynamicObject
 		set remark=params.remark
 		set year=params.year //分组方案年份
 		
+		set highMultiplier=params.highMultiplier //高倍率
+		set lowMultiplier=params.lowMultiplier   //低倍率
+		set weight=params.weight                 //权重
+		
 		if (startDate'="")&&(stopDate'="")
 		{
 			set startDate=$zdh(startDate,3)
@@ -126,6 +130,9 @@ ClassMethod UpdateDRGCoreAlgorithm(postObj) As %Library.DynamicObject
 		set dataObj.Identification=identification
 		set dataObj.Remark=remark
 		set dataObj.Year=year		
+		set dataObj.HighMultiplier=highMultiplier
+		set dataObj.LowMultiplier=lowMultiplier
+		set dataObj.Weight=weight
 				
 		set insObj={}
 		set insObj.className="User.HBDRGCoreAlgorithmData"
@@ -192,6 +199,7 @@ ClassMethod GetDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
 		set year=params.year  //分组方案年份
 
 		set sql =" SELECT ID,DRG,DRGDESC,Points,PipValue,DGDOV,PayStandard,InsuType,MdtrtArea,MedinsLv,"
+		        _" HighMultiplier,LowMultiplier,Weight,"
 		        _" Province_Dr as ProvinceID,Province_Dr->Descripts as ProvinceDesc,"
 		        _" City_Dr as CityID,City_Dr->Descripts as CityDesc,StartDate,StopDate," 
 			    _" FixmedinsCode,FixmedinsName,Identification,Remark,CreateDate,CreateTime,Year "
@@ -242,6 +250,10 @@ ClassMethod GetDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
 		    set dataObj.pipValue=result.%Get("PipValue")		
 		    set dataObj.dgdov=result.%Get("DGDOV")
 		    set dataObj.payStandard=result.%Get("PayStandard")	
+		    
+		    set dataObj.highMultiplier=result.%Get("HighMultiplier")
+		    set dataObj.lowMultiplier=result.%Get("LowMultiplier")
+		    set dataObj.weight=result.%Get("Weight")
 		    
 		    set dataObj.insuType=result.%Get("InsuType")
 		    set dataObj.mdtrtArea=result.%Get("MdtrtArea")
@@ -368,9 +380,9 @@ ClassMethod DownloadDRGCoreAlgorithmTemplate(jsonObj As %Library.DynamicObject) 
     
     try {
         // 生成CSV内容
-        set csvContent = "DRGCode,DRGDesc,Points,PipValue,DGDOV,PayStandard"_$c(13,10)
-        set csvContent = csvContent_"AA01,NULL,120.50,1.2,0.95,15000.00"_$c(13,10)
-        set csvContent = csvContent_"BB02,NULL,85.30,1.0,1.05,9800.00"_$c(13,10)
+        set csvContent = "DRGCode,DRGDesc,Points,PipValue,DGDOV,PayStandard,HighMultiplier,LowMultiplier,Weight"_$c(13,10)
+        set csvContent = csvContent_"AA01,NULL,120.50,1.2,0.95,15000.00,NULL,NULL,NULL"_$c(13,10)
+        set csvContent = csvContent_"BB02,NULL,85.30,1.0,1.05,9800.00,NULL,NULL,NULL"_$c(13,10)
         
         // Base64编码
         set base64Data = ##class(%SYSTEM.Encryption).Base64Encode(csvContent)
@@ -492,6 +504,9 @@ ClassMethod PreviewImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
             try { set pipValue=$piece(line,",",4) } catch { set pipValue="" }
             try { set dgdov=$piece(line,",",5) } catch { set dgdov="" }
             try { set payStandard=$piece(line,",",6) } catch { set payStandard="" }
+            try { set highMultiplier=$piece(line,",",7) } catch { set highMultiplier="" }
+            try { set lowMultiplier=$piece(line,",",8) } catch { set lowMultiplier="" }
+            try { set weight=$piece(line,",",9) } catch { set weight="" }
             
             set previewObj={}
             set previewObj.rowNum=rowNum
@@ -501,6 +516,9 @@ ClassMethod PreviewImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
             set previewObj.pipValue=pipValue
             set previewObj.dgdov=dgdov
             set previewObj.payStandard=payStandard
+            set previewObj.highMultiplier=highMultiplier
+            set previewObj.lowMultiplier=lowMultiplier
+            set previewObj.weight=weight
             set previewObj.errorMsg=errorMsg
             
             // 数据校验
@@ -708,6 +726,9 @@ ClassMethod ConfirmImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
             try { set pipValue=$piece(line,",",4) } catch { set pipValue="" }
             try { set dgdov=$piece(line,",",5) } catch { set dgdov="" }
             try { set payStandard=$piece(line,",",6) } catch { set payStandard="" }
+            try { set highMultiplier=$piece(line,",",7) } catch { set highMultiplier="" }
+            try { set lowMultiplier=$piece(line,",",8) } catch { set lowMultiplier="" }
+            try { set weight=$piece(line,",",9) } catch { set weight="" }
             
             // 跳过校验失败的行
             if (drgCode="")||(drgDesc="")||(points="")||(pipValue="")||(dgdov="")||(payStandard="")
@@ -734,6 +755,9 @@ ClassMethod ConfirmImportDRGCoreAlgorithm(jsonObj) As %Library.DynamicObject
             set dataObj.PipValue=pipValue
             set dataObj.DGDOV=dgdov
             set dataObj.PayStandard=payStandard
+            set dataObj.HighMultiplier=highMultiplier
+            set dataObj.LowMultiplier=lowMultiplier
+            set dataObj.Weight=weight
             set dataObj.ProvinceDr=provinceID
             set dataObj.CityDr=cityID
             set dataObj.MdtrtArea=mdtrtArea

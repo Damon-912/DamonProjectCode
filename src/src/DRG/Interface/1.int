@@ -1,14 +1,14 @@
 ROUTINE src.DRG.Interface.1 [Type=INT,Generated]
  ;src.DRG.Interface.1
- ;Generated for class src.DRG.Interface.  Do NOT edit. 05/22/2026 03:31:42PM
- ;;31457771;src.DRG.Interface
+ ;Generated for class src.DRG.Interface.  Do NOT edit. 06/04/2026 02:14:10AM
+ ;;56484E5A;src.DRG.Interface
  ;
 zDRGGroup(postObj)
 	new (postObj)
 	quit ##class(src.DRG.GroupDevice).GetDRGGroup(postObj)
 zDevice(jsonObj)
 	new (jsonObj)
-	quit ##class(src.DRG.GroupDevice).Device(jsonObj)
+	quit ##class(src.DRG.GroupDevice).DeviceNew(jsonObj)
 zDeviceFeeWarning(jsonObj)
 	new (jsonObj)
 	quit ##class(src.DRG.GroupDevice).DeviceFeeWarning(jsonObj)

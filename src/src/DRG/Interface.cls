@@ -10,7 +10,7 @@ Class src.DRG.Interface Extends (%RegisteredObject, %XML.Adaptor) [ Not Procedur
 ClassMethod Device(jsonObj) As %Library.DynamicObject
 {
 	new (jsonObj)
-	quit ##class(src.DRG.GroupDevice).Device(jsonObj)
+	quit ##class(src.DRG.GroupDevice).DeviceNew(jsonObj)
 }
 
 /// Creator:     CM

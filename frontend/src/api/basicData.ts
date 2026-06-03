@@ -273,6 +273,9 @@ export interface CoreAlgorithmItem {
   dgdov: string;
   payStandard: string;
   PayStandard?: string;
+  highMultiplier?: string;
+  lowMultiplier?: string;
+  weight?: string;
   year?: string;
   pay_standard?: string;
   insuType: string;
@@ -302,6 +305,9 @@ export interface SaveCoreAlgorithmParams {
   pipValue: string;
   dgdov: string;
   payStandard: string;
+  highMultiplier?: string;
+  lowMultiplier?: string;
+  weight?: string;
   insuType: string;
   mdtrtArea: string;
   medinsLv: string;
@@ -1023,6 +1029,9 @@ export interface DrgCoreAlgorithmImportPreviewItem {
   pipValue: string;
   dgdov: string;
   payStandard: string;
+  highMultiplier?: string;
+  lowMultiplier?: string;
+  weight?: string;
   status: 'valid' | 'duplicate' | 'invalid';
   statusDesc: string;
   errorMsg?: string;
