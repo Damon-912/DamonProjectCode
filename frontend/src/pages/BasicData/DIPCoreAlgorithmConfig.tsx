@@ -901,12 +901,14 @@ const DIPCoreAlgorithmConfig: React.FC = () => {
         />
 
         {/* 分页 */}
-        <CustomPagination
-          total={total}
-          current={currentPage}
-          pageSize={pageSize}
-          onChange={handlePageChange}
-        />
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+          <CustomPagination
+            total={total}
+            current={currentPage}
+            pageSize={pageSize}
+            onChange={handlePageChange}
+          />
+        </div>
       </Card>
 
       {/* 新增/编辑弹窗 */}

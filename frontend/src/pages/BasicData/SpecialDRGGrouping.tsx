@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import {
   Card, Form, Input, Select, Button, Space, Table, Row, Col,
-  Tag, message, Modal, Popconfirm
+  Tag, message, Modal, Popconfirm, Descriptions, Divider
 } from 'antd';
 import {
   SearchOutlined, ReloadOutlined,
-  PlusOutlined
+  PlusOutlined, EyeOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -51,6 +51,10 @@ const SpecialDRGGrouping: React.FC = () => {
   const [editForm] = Form.useForm();
   const [editRecord, setEditRecord] = useState<DRGSpecialGroupItem | null>(null);
   const [editAdmvs, setEditAdmvs] = useState<string>('');
+
+  // 详情弹窗状态
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [detailRecord, setDetailRecord] = useState<DRGSpecialGroupItem | null>(null);
 
   const loadData = async (page = currentPage, size = pageSize) => {
     try {
@@ -249,6 +253,12 @@ const SpecialDRGGrouping: React.FC = () => {
     }
   };
 
+  // 打开详情弹窗
+  const handleOpenDetail = (record: DRGSpecialGroupItem) => {
+    setDetailRecord(record);
+    setDetailModalVisible(true);
+  };
+
   // 删除记录
   const handleDelete = async (record: DRGSpecialGroupItem) => {
     try {
@@ -267,7 +277,7 @@ const SpecialDRGGrouping: React.FC = () => {
   const columns: ColumnsType<DRGSpecialGroupItem> = [
     {
       title: '序号',
-      width: 60,
+      width: 65,
       align: 'center',
       render: (_, __, index) => (currentPage - 1) * pageSize + index + 1,
     },
@@ -348,7 +358,7 @@ const SpecialDRGGrouping: React.FC = () => {
     {
       title: '年份',
       dataIndex: 'year',
-      width: 60,
+      width: 65,
       align: 'center',
       render: (text: string) => <Tag color="green">{text}</Tag>,
     },
@@ -362,10 +372,18 @@ const SpecialDRGGrouping: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 120,
+      width: 180,
       fixed: 'right' as const,
       render: (_text: any, record: DRGSpecialGroupItem) => (
         <Space size="small">
+          <Button
+            type="link"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => handleOpenDetail(record)}
+          >
+            详情
+          </Button>
           <Button type="link" size="small" onClick={() => handleOpenEdit(record)}>
             编辑
           </Button>
@@ -654,6 +672,65 @@ const SpecialDRGGrouping: React.FC = () => {
             </Col>
           </Row>
         </Form>
+      </Modal>
+
+      {/* 详情弹窗 */}
+      <Modal
+        title="DRG特异化分组详情"
+        open={detailModalVisible}
+        onCancel={() => setDetailModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setDetailModalVisible(false)}>
+            关闭
+          </Button>,
+        ]}
+        width={800}
+        destroyOnClose
+      >
+        {detailRecord && (
+          <div>
+            <Descriptions bordered size="small" column={3}>
+              <Descriptions.Item label="DRG编码" span={1}>
+                <Tag color="blue">{detailRecord.drgCode}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="DRG名称" span={2}>
+                {detailRecord.drgName}
+              </Descriptions.Item>
+              <Descriptions.Item label="省份">{detailRecord.provinceDesc || '-'}</Descriptions.Item>
+              <Descriptions.Item label="城市">{detailRecord.cityDesc || '-'}</Descriptions.Item>
+              <Descriptions.Item label="行政区划代码">{detailRecord.admvs || '-'}</Descriptions.Item>
+              <Descriptions.Item label="年份">
+                <Tag color="green">{detailRecord.year}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="生效日期">{detailRecord.startDate || '-'}</Descriptions.Item>
+              <Descriptions.Item label="失效日期">{detailRecord.stopDate || '-'}</Descriptions.Item>
+            </Descriptions>
+
+            <Divider style={{ fontSize: 13 }}>诊断信息</Divider>
+            <Descriptions bordered size="small" column={2}>
+              <Descriptions.Item label="主要诊断编码">{detailRecord.principalDiagnosis || '-'}</Descriptions.Item>
+              <Descriptions.Item label="主要诊断名称">{detailRecord.principalDiagnosisName || '-'}</Descriptions.Item>
+              <Descriptions.Item label="次要诊断编码">{detailRecord.secondaryDiagnosis || '-'}</Descriptions.Item>
+              <Descriptions.Item label="次要诊断名称">{detailRecord.secondaryDiagnosisName || '-'}</Descriptions.Item>
+            </Descriptions>
+
+            <Divider style={{ fontSize: 13, marginTop: 16 }}>手术信息</Divider>
+            <Descriptions bordered size="small" column={2}>
+              <Descriptions.Item label="主要手术编码">{detailRecord.majorProcedure || '-'}</Descriptions.Item>
+              <Descriptions.Item label="主要手术名称">{detailRecord.majorProcedureName || '-'}</Descriptions.Item>
+              <Descriptions.Item label="次要手术编码">{detailRecord.secondaryProcedure || '-'}</Descriptions.Item>
+              <Descriptions.Item label="次要手术名称">{detailRecord.secondaryProcedureName || '-'}</Descriptions.Item>
+            </Descriptions>
+
+            <Divider style={{ fontSize: 13, marginTop: 16 }}>其他信息</Divider>
+            <Descriptions bordered size="small" column={2}>
+              <Descriptions.Item label="入组规则">{detailRecord.groupFactors || '-'}</Descriptions.Item>
+              <Descriptions.Item label="备注">{detailRecord.remark || '-'}</Descriptions.Item>
+              <Descriptions.Item label="创建日期">{detailRecord.createDate || '-'}</Descriptions.Item>
+              <Descriptions.Item label="创建时间">{detailRecord.createTime || '-'}</Descriptions.Item>
+            </Descriptions>
+          </div>
+        )}
       </Modal>
     </div>
   );
