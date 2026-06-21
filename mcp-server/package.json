@@ -2,10 +2,10 @@
   "name": "drg-mcp-server",
   "version": "1.0.0",
   "description": "DRG医保控费预警系统MCP服务器 - 连接到腾讯云IRIS数据库",
-  "main": "mcp-drg-server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node mcp-drg-server.js",
-    "dev": "node mcp-drg-server.js",
+    "start": "node server.js",
+    "dev": "node server.js",
     "test": "node test-connection.js",
     "install-deps": "npm install @modelcontextprotocol/sdk axios"
   },

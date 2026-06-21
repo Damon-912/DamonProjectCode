@@ -39,13 +39,14 @@ set TABLES[6]=BSDRGSystemRole
 set TABLES[7]=BSDRGUserRole
 set TABLES[8]=BSDRGSystemMenu
 set TABLES[9]=BSDRGRoleMenu
+set TABLES[10]=CBHISConnectionConfig
 
 set TABLE_DIR=%SCRIPT_DIR%..\DRG后端表结构
 
 echo 开始编译表结构...
 echo.
 
-for /L %%i in (0,1,9) do (
+for /L %%i in (0,1,10) do (
     setlocal
     set "TABLE_NAME=!TABLES[%%i]!"
     if exist "%TABLE_DIR%\!TABLE_NAME!.txt" (

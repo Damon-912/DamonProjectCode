@@ -1,0 +1,3001 @@
+ROUTINE User.BSHISSyncConfig.1 [Type=INT,Generated]
+ ;User.BSHISSyncConfig.1
+ ;Generated for class User.BSHISSyncConfig.  Do NOT edit. 06/16/2026 01:45:24PM
+ ;;712F7847;User.BSHISSyncConfig
+ ;
+SQLUPPER(v,l) { quit $zu(28,v,7,$g(l,32767)) }
+ALPHAUP(v,r) { quit $zu(28,v,6) }
+STRING(v,l) { quit $zu(28,v,9,$g(l,32767)) }
+SQLSTRING(v,l) { quit $zu(28,v,8,$g(l,32767)) }
+UPPER(v) { quit $zu(28,v,5) }
+MVR(v) { quit $zu(28,v,2) }
+TRUNCATE(v,l) { quit $e(v,1,$g(l,3641144)) }
+%BindExport(dev,Seen,RegisterOref,AllowedDepth,AllowedCapacity) public {
+   i $d(Seen(+$this)) q 1
+   Set Seen(+$this)=$this
+   s sc = 1
+ s proporef=..CreateUserDr
+ s proporef=..UpdateUserDr
+   d:RegisterOref InitObjVar^%SYS.BINDSRV($this)
+   i dev'="" s t=$io u dev i $zobjexport($this_"",3)+$zobjexport($this."%%OID",3)+$zobjexport($this,3)!1 u t
+ If AllowedDepth>0 Set AllowedDepth = AllowedDepth - 1
+ If AllowedCapacity>0 Set AllowedCapacity = AllowedCapacity - 1/2
+ s proporef=..CreateUserDr
+       i proporef'="" s sc=1 i AllowedDepth'=0,AllowedCapacity'=0 s sc=proporef.%BindExport(dev,.Seen,RegisterOref,AllowedDepth,AllowedCapacity) q:('sc) sc
+ s proporef=..UpdateUserDr
+       i proporef'="" s sc=1 i AllowedDepth'=0,AllowedCapacity'=0 s sc=proporef.%BindExport(dev,.Seen,RegisterOref,AllowedDepth,AllowedCapacity) q:('sc) sc
+   Quit sc }
+%BuildIndices(pIndexList="",pAutoPurge=1,pLockFlag=0,pJournalFlag=1,pStartID="",pEndID="",pIgnoreIndexList="") public {
+	if ($listlength(pIndexList)=1)&&($listget(pIndexList,1)="") { return 1 }
+	Set class=$classname(),tBuildFlags=1,tBuildFlags(class)=$c(0,0,0)
+	Set tPtr=0,tStatus=1,pJournalFlag=''pJournalFlag
+	While $listnext(pIndexList,tPtr,tIndex) {
+		continue:tIndex=""
+		If '$d(^oddCOM(class,"i",tIndex)) {
+			Set tStatus=$select(+tStatus:$$Error^%apiOBJ(5066,class_"::"_tIndex),1:$$AppendStatus^%occSystem(tStatus,$$Error^%apiOBJ(5066,class_"::"_tIndex)))
+		}
+	}
+	If ('tStatus) RETURN tStatus
+	if ((pIndexList="")||($listfind(pIndexList,"EnabledIndex"))),'$listfind(pIgnoreIndexList,"EnabledIndex") { set $Extract(tBuildFlags(class),1)=$c(1) }
+	if ((pIndexList="")||($listfind(pIndexList,"HospCodeIndex"))),'$listfind(pIgnoreIndexList,"HospCodeIndex") { set $Extract(tBuildFlags(class),2)=$c(1) }
+	if ((pIndexList="")||($listfind(pIndexList,"StatusIndex"))),'$listfind(pIgnoreIndexList,"StatusIndex") { set $Extract(tBuildFlags(class),3)=$c(1) }
+	Quit ..%BuildIndexInternal(.pLockFlag,.pAutoPurge,.pStartID,.pEndID,.pIndexList,.tBuildFlags,"^BSHISSyncConfigD",0,.pJournalFlag,0) }
+%BuildIndicesSegment(pStartID,pEndID,pIndexHandle=0,pLockFlag=1,pFirstRange=0,pJob="") public {
+	New %tIndexBuffer
+	Try {
+		set tStatus=1,tLocked=0
+		If pLockFlag'=2,$Ascii(pIndexHandle($classname()),1),$SortBegin(^BSHISSyncConfigI("EnabledIndex")),$increment(^IRIS.TempIndexBuild(pJob,1)) { Do $system.Event.Create($name(^IRIS.TempIndexBuild(pJob,1))) }
+		If pLockFlag'=2,$Ascii(pIndexHandle($classname()),2),$SortBegin(^BSHISSyncConfigI("HospCodeIndex")),$increment(^IRIS.TempIndexBuild(pJob,2)) { Do $system.Event.Create($name(^IRIS.TempIndexBuild(pJob,2))) }
+		If pLockFlag'=2,$Ascii(pIndexHandle($classname()),3),$SortBegin(^BSHISSyncConfigI("StatusIndex")),$increment(^IRIS.TempIndexBuild(pJob,3)) { Do $system.Event.Create($name(^IRIS.TempIndexBuild(pJob,3))) }
+		Set tPrefetch=$prefetchon(^BSHISSyncConfigD)
+		If 'pFirstRange||('$data(^BSHISSyncConfigD(pStartID))) { Set tID=$order(^BSHISSyncConfigD(pStartID)) } Else { Set tID=pStartID }
+		While tID'="",(pEndID="")||(tID']]pEndID) {
+			If pLockFlag=2 {
+				Set tSC = ..%LockId(tID,1)
+				If ('tSC) {
+					Set tStatus=$select(+tStatus:tSC,1:$$AppendStatus^%occSystem(tStatus,tSC))
+					Set tID=$order(^BSHISSyncConfigD(tID))
+					Continue
+				}
+			}
+			If pLockFlag'=2||($data(^BSHISSyncConfigD(tID))) {
+				Set tSC=..%FileIndices(tID,.pIndexHandle)
+				If ('tSC) { Set tStatus=$select(+tStatus:tSC,1:$$AppendStatus^%occSystem(tStatus,tSC)) }
+			}
+			Do:pLockFlag=2 ..%UnlockId(tID,1,1)
+			set tID=$order(^BSHISSyncConfigD(tID))
+		}
+	}
+	Catch tException {
+		Set tSC=tException.AsStatus(),tStatus=$select(+tStatus:tSC,1:$$AppendStatus^%occSystem(tStatus,tSC))
+	}
+	If pLockFlag'=2,$Ascii(pIndexHandle($classname()),1) {
+		If $increment(^IRIS.TempIndexBuild(pJob,1),-1)=0 { Do $system.Event.Delete($name(^IRIS.TempIndexBuild(pJob,1))) } Else { Try { Do $system.Event.Wait($name(^IRIS.TempIndexBuild(pJob,1))) } Catch {} }
+		If $SortEnd(^BSHISSyncConfigI("EnabledIndex")) {}
+	}
+	If pLockFlag'=2,$Ascii(pIndexHandle($classname()),2) {
+		If $increment(^IRIS.TempIndexBuild(pJob,2),-1)=0 { Do $system.Event.Delete($name(^IRIS.TempIndexBuild(pJob,2))) } Else { Try { Do $system.Event.Wait($name(^IRIS.TempIndexBuild(pJob,2))) } Catch {} }
+		If $SortEnd(^BSHISSyncConfigI("HospCodeIndex")) {}
+	}
+	If pLockFlag'=2,$Ascii(pIndexHandle($classname()),3) {
+		If $increment(^IRIS.TempIndexBuild(pJob,3),-1)=0 { Do $system.Event.Delete($name(^IRIS.TempIndexBuild(pJob,3))) } Else { Try { Do $system.Event.Wait($name(^IRIS.TempIndexBuild(pJob,3))) } Catch {} }
+		If $SortEnd(^BSHISSyncConfigI("StatusIndex")) {}
+	}
+	Set:$Get(tPrefetch) tPrefetch=$prefetchoff(^BSHISSyncConfigD)
+	Quit tStatus }
+%CheckConstraints(pID,pConstraintList="",pCheckDisabled=0,pErrorInfo) public {
+	if (''..%OnDetermineClass($select(pID="":"",1:$listbuild(pID_"")),.tMSTC)) && (tMSTC '= $classname()) { quit $classmethod(tMSTC,"%CheckConstraints",pID,pConstraintList) } else { quit 1 } }
+%CheckConstraintsForExtent(pConstraintList="",pCheckDisabled=0,pErrorLog) [ SQLCODE,tID ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE,tID 
+	kill pErrorLog set tStatusAll = 1, pErrorLog = 0 if '$listvalid(pConstraintList) { set pConstraintList = $listfromstring(pConstraintList) }
+	 ;---&sql(declare ext cursor for select %ID into :tID FROM SQLUser.BS_HISSyncConfig)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, tID
+	
+	 ;---&sql(open ext)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	do %ext0o
+	if SQLCODE '< 0 {
+		for {
+			 ;---&sql(fetch ext)
+ 			 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+			try { do %ext0f if SQLCODE'=0 { quit } } catch { do %0Aerr }
+			if SQLCODE { if SQLCODE=100 { quit } elseif SQLCODE<0 { set tStatusAll = $select(+tStatusAll:$$Error^%apiOBJ(5521,SQLCODE,$Get(%msg)),1:$$AppendStatus^%occSystem(tStatusAll,$$Error^%apiOBJ(5521,SQLCODE,$Get(%msg)))) quit } }
+			set tStatus = ..%CheckConstraints(tID,pConstraintList,pCheckDisabled,.tErrorInfo)
+			if ('tStatus) { set tStatusAll = $select(+tStatusAll:tStatus,1:$$AppendStatus^%occSystem(tStatusAll,tStatus)) set:pErrorLog<1000 pErrorLog = pErrorLog + 1, pErrorLog(pErrorLog) = tErrorInfo _ $Listbuild(tStatus) }
+		}
+		 ;---&sql(close ext)
+ 		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+		do %ext0c
+	}
+	quit tStatusAll }
+ q
+%ext0o 
+ try { s SQLCODE=$s($g(%ext08260d(0)):-101,1:0) q:SQLCODE'=0 
+ n %sqltime s %sqltime=$zh
+ s %ext08260d(1)=0,%ext08260d(2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %ext08260d(3)=$zu(115,2)
+ s %ext08260d(4)=0,%ext08260d(5)=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s %ext08260d(0)=1,SQLCODE=0
+ s:$d(%sqltime) %ext08260d(6)=$g(%ext08260d(6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %ext08260d }
+ q
+%0Afirst 
+ ; asl MOD# 2
+ s %ext08260d(7)=""
+%0AmBk1 s %ext08260d(7)=$o(^BSHISSyncConfigI("EnabledIndex",%ext08260d(7)))
+ i %ext08260d(7)="" g %0AmBdun
+ s %ext08260d(8)=$s(%ext08260d(7)=-1E14:"",1:%ext08260d(7))
+ s tID=""
+%0AmBk2 s tID=$o(^BSHISSyncConfigI("EnabledIndex",%ext08260d(7),tID))
+ i tID="" g %0AmBk1
+ goto:%ext08260d(3)'=1 %0AmBuncommitted
+ if %ext08260d(3)=1 {
+ 	lock +^BSHISSyncConfigD($p(tID,"||",1))#"S":$zu(115,4)
+ 	if $t { set %ext08260d(5)=$name(^BSHISSyncConfigD($p(tID,"||",1)))_"#""SI""",%ext08260d(4)=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_HISSyncConfig for RowID value: "_tID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ i tID'="",$d(^BSHISSyncConfigD(tID))
+ e  g %0AmCdun
+%0AmBuncommitted ;
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%ext08260d(1)),%ROWID=tID,%ext08260d(0)=10
+ //-- FETCH Output
+ s:$d(%sqltime) %ext08260d(6)=$g(%ext08260d(6))+$zh-%sqltime
+ quit
+%ext0f //-- FETCH tag
+ i '$g(%ext08260d(0)) { s SQLCODE=-102 q  } i %ext08260d(0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %ext08260d(2),%ext08260d(1)'<%ext08260d(2) { s SQLCODE=100,%ROWCOUNT=%ext08260d(1),%ext08260d(0)=100 q }
+ n %sqltime s %sqltime=$zh
+ g %0Afirst:%ext08260d(0)=1
+%0AmCdun if $g(%ext08260d(3))=1 { if $g(%ext08260d(4))=1 { l -@%ext08260d(5) s %ext08260d(4)=0 } elseif $g(%ext08260d(4))=2 { do $classmethod($li(%ext08260d(5)),"%UnlockId",$li(%ext08260d(5),2),1,1)  s %ext08260d(4)=0 }}
+ g %0AmBk2
+%0AmBdun 
+%0AmAdun 
+ s %ROWCOUNT=%ext08260d(1),SQLCODE=100,%ext08260d(0)=100
+ s:$d(%sqltime) %ext08260d(6)=$g(%ext08260d(6))+$zh-%sqltime
+ //-- no [more] data
+ quit
+%ext0c i '$g(%ext08260d(0)) { s SQLCODE=-102 q  }
+ n %sqltime s %sqltime=$zh
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%ext08260d(1)),1:0)
+ if $g(%ext08260d(3))=1 {
+ 	if $g(%ext08260d(4))=1 { l -@%ext08260d(5) s %ext08260d(4)=0 } elseif $g(%ext08260d(4))=2 { do $classmethod($li(%ext08260d(5)),"%UnlockId",$li(%ext08260d(5),2),1,1)  s %ext08260d(4)=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(%ext08260d(6))+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"Lr5Q/2/US7h0mKhbV6QaWKEdQqw="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"Lr5Q/2/US7h0mKhbV6QaWKEdQqw=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ k %ext08260d
+ s SQLCODE=0
+ s:$g(SQLCODE)'<0 SQLCODE=0
+ kill %ext08260d(9)
+ quit  // close
+%0Aerr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ s %ext08260d(0)=100
+ quit  // error
+%ComposeOid(id) public {
+	set tCLASSNAME = $listget($g(^BSHISSyncConfigD(id)),1)
+	if tCLASSNAME="" { quit $select(id="":"",1:$listbuild(id_"","User.BSHISSyncConfig")) }
+	set tClass=$piece(tCLASSNAME,$extract(tCLASSNAME),*-1)
+	set:tClass'["." tClass="User."_tClass
+	quit $select(id="":"",1:$listbuild(id_"",tClass)) }
+%Construct(initvalue) public {
+	Set i%%Concurrency=$zu(115,10),i%Deleted=0,i%Enabled=0,i%LookbackDays=3,i%Status="idle"
+	Quit 1 }
+%ConstructCloneInit(object,deep=0,cloned,location) public {
+	Set i%"%%OID"=""
+	If deep>0 {
+		If $isobject(..CreateUserDr)=1 Set r%CreateUserDr=r%CreateUserDr.%ConstructClone(1,.cloned),i%CreateUserDr=""
+		If $isobject(..UpdateUserDr)=1 Set r%UpdateUserDr=r%UpdateUserDr.%ConstructClone(1,.cloned),i%UpdateUserDr=""
+	}
+	Quit 1 }
+%DeleteData(id,concurrency) public {
+	Quit:id="" $$Error^%apiOBJ(5812)
+	set $Ztrap="DeleteDataERR" set lockok=0,sc=""
+	If concurrency {
+		Lock +(^BSHISSyncConfigD(id)#"E"):$zu(115,4)
+		Set lockok=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,2:2,4:2,:0))
+		Set:lockok=2&&($tlevel) %0CacheLock($classname(),"E")=1
+		If 'lockok {
+			Quit $$Error^%apiOBJ(5803,$classname())
+		}
+	}
+	If ($Data(^BSHISSyncConfigD(id))) {
+		Set bsv0N1=^BSHISSyncConfigD(id)
+		If $data(^oddEXTR($classname())) {
+			Set fc=""
+			For {
+				Set fc=$order(^rINDEXEXT("F",$classname(),"%1","f",fc))
+				Quit:fc=""
+				Set fk=""
+				For {
+					Set fk=$order(^rINDEXEXT("F",$classname(),"%1","f",fc,fk))
+					Quit:fk=""
+					Set sc=$classmethod(fc,fk_"Delete",id)
+					If ('sc) { Goto DeleteDataEXIT }
+				}
+			}
+			Set fc=""
+			For {
+				Set fc=$order(^rINDEXEXT("F",$classname(),"IDKEY","f",fc))
+				Quit:fc=""
+				Set fk=""
+				For {
+					Set fk=$order(^rINDEXEXT("F",$classname(),"IDKEY","f",fc,fk))
+					Quit:fk=""
+					Set sc=$classmethod(fc,fk_"Delete",id)
+					If ('sc) { Goto DeleteDataEXIT }
+				}
+			}
+		}
+		Set bsv0N2=$listget(bsv0N1,12)
+		Set bsv0N3=$listget(bsv0N1,10)
+		Kill ^BSHISSyncConfigI("EnabledIndex",$s(bsv0N3'="":bsv0N3,1:-1E14),id)
+		Kill ^BSHISSyncConfigI("HospCodeIndex",$listget(bsv0N1,5),id)
+		Kill ^BSHISSyncConfigI("StatusIndex",$s(bsv0N2'="":bsv0N2,1:-1E14),id)
+		Kill ^BSHISSyncConfigD(id)
+		Set sc=1
+	}
+	Else { Set sc=$$Error^%apiOBJ(5810,$classname(),id) }
+DeleteDataEXIT
+	If concurrency,lockok {
+		Lock -(^BSHISSyncConfigD(id)#"E")
+	}
+DeleteDataRET	Set $Ztrap = ""
+	QUIT sc
+DeleteDataERR	Set $Ztrap = "DeleteDataRET"
+	Set sc = $$Error^%apiOBJ(5002,$ZE)
+	Goto DeleteDataEXIT }
+%Exists(oid="") public {
+	Quit ..%ExistsId($listget(oid)) }
+%ExistsId(id) public {
+	Try { set tExists = $s(id="":0,$d(^BSHISSyncConfigD(id)):1,1:0) } catch tException { set tExists = 0 if '(tException.%IsA("%Exception.SystemException")) { throw tException } elseif tException.Name'="<SUBSCRIPT>" { ZT $ZE } } quit tExists }
+%FileIndices(id,pIndexHandle=0) public {
+	Set $ZTrap="CatchError",sc=1
+	Set bsv0N2=$Get(^BSHISSyncConfigD(id))
+	Set bsv0N3=$listget(bsv0N2,1)
+	If bsv0N3'="" {
+		Set bsv0N1=$piece(bsv0N3,$extract(bsv0N3),*-1)
+		Set:bsv0N1'["." bsv0N1="User."_bsv0N1
+		If bsv0N1'="" {
+			Quit $classmethod(bsv0N1,"%FileIndices",id,.pIndexHandle)
+		}
+	}
+	If ('pIndexHandle)||($Ascii($Get(pIndexHandle("User.BSHISSyncConfig")),1)=1) {
+		Set bsv0N4=$listget(bsv0N2,10)
+		Set bsv0N5=$s(bsv0N4'="":bsv0N4,1:-1E14)
+		Set ^BSHISSyncConfigI("EnabledIndex",bsv0N5,id)=$listget(bsv0N2,1)
+	}
+	If ('pIndexHandle)||($Ascii($Get(pIndexHandle("User.BSHISSyncConfig")),2)=1) {
+		Set bsv0N6=$listget(bsv0N2,5)
+		Set ^BSHISSyncConfigI("HospCodeIndex",bsv0N6,id)=$listget(bsv0N2,1)
+	}
+	If ('pIndexHandle)||($Ascii($Get(pIndexHandle("User.BSHISSyncConfig")),3)=1) {
+		Set bsv0N7=$listget(bsv0N2,12)
+		Set bsv0N8=$s(bsv0N7'="":bsv0N7,1:-1E14)
+		Set ^BSHISSyncConfigI("StatusIndex",bsv0N8,id)=$listget(bsv0N2,1)
+	}
+	QUIT 1
+CatchError	s $ZTrap="" i $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) } q sc }
+%InsertBatch(objects,concurrency=0,useTransactions=0) public {
+	try {
+		set numerrs=0,errs="",cnt=0,ptr=0
+		while $listnext(objects,ptr,data) {
+			set cnt=cnt+1
+			set zzc9v1=$listget(data,1)
+			set lock=0
+			if (useTransactions) tstart
+			set id=$i(^BSHISSyncConfigD)
+			set zzc14v1=$listget(data,12)
+			set zzc14v2=$listget(data,10)
+			try {
+				set tInnerException = ""
+				;
+				if concurrency { lock +(^BSHISSyncConfigD(id)#"E"):$zu(115,4) set lock=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,2:2,4:2,:0)) set:lock=2&&($tlevel) %0CacheLock($classname(),"E")=1 if 'lock { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
+				set ^BSHISSyncConfigD(id)=data
+				set ^BSHISSyncConfigI("EnabledIndex",$s(zzc14v2'="":zzc14v2,1:-1E14),id)=zzc9v1
+				set ^BSHISSyncConfigI("HospCodeIndex",$listget(data,5),id)=zzc9v1
+				set ^BSHISSyncConfigI("StatusIndex",$s(zzc14v1'="":zzc14v1,1:-1E14),id)=zzc9v1
+				if (useTransactions) { tcommit }
+			}
+			catch tInnerException {
+				set newerr=$lb(cnt,tInnerException.AsStatus())
+				if '($length(errs)+$length(newerr)>32767) { set numerrs=numerrs+1, errs=errs_newerr }
+				if (useTransactions) && ($Tlevel) trollback
+			}
+			if lock lock -(^BSHISSyncConfigD(id)#"E")
+		}
+	}
+	catch tException {
+		set newerr=$lb($g(cnt),tException.AsStatus())
+		if '($length(errs)+$length(newerr)>32767) { set numerrs=numerrs+1, errs=errs_newerr }
+	}
+	QUIT ($lb(numerrs))_errs }
+%JSONExportInternal() public {
+  Set sc=1
+  Write "{" Set sep=""
+  Set value=..Deleted
+  If value'="" {
+    Write sep_"""Deleted"":"_value
+    Set $extract(sep,1)=","
+  }
+  Set value=..DeleteDate
+  If value'="" {
+    Write sep_"""DeleteDate"":"""_$select(value="":"",1:$zdate(value,3,,,,,-672045))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..DeleteTime
+  If value'="" {
+    Write sep_"""DeleteTime"":"""_$select(value="":"",1:$ztime(value,1,$l($p(value,".",2)),,1)_"Z")_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..HospCode
+  If value'="" {
+    Write sep_"""HospCode"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..SyncType
+  If value'="" {
+    Write sep_"""SyncType"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..Frequency
+  If value'="" {
+    Write sep_"""Frequency"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..ScheduledTime
+  If value'="" {
+    Write sep_"""ScheduledTime"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..LookbackDays
+  If value'="" {
+    Write sep_"""LookbackDays"":"_value
+    Set $extract(sep,1)=","
+  }
+  Set value=..Enabled
+  If value'="" {
+    Write sep_"""Enabled"":"_$select(value:"true",1:"false")
+    Set $extract(sep,1)=","
+  }
+  Set value=..LastSyncTime
+  If value'="" {
+    Write sep_"""LastSyncTime"":"""_$select(value="":"",1:$translate(value," ","T")_"Z")_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..Status
+  If value'="" {
+    Write sep_"""Status"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..ErrorMessage
+  If value'="" {
+    Write sep_"""ErrorMessage"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..CreateDate
+  If value'="" {
+    Write sep_"""CreateDate"":"""_$select(value="":"",1:$zdate(value,3,,,,,-672045))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..CreateTime
+  If value'="" {
+    Write sep_"""CreateTime"":"""_$select(value="":"",1:$ztime(value,1,$l($p(value,".",2)),,1)_"Z")_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..CreateUserDr
+  If value'="" {
+    Write sep_"""CreateUserDr"":"""_$zcvt(value.%Id(),"O","JSON")_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..UpdateDate
+  If value'="" {
+    Write sep_"""UpdateDate"":"""_$select(value="":"",1:$zdate(value,3,,,,,-672045))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..UpdateTime
+  If value'="" {
+    Write sep_"""UpdateTime"":"""_$select(value="":"",1:$ztime(value,1,$l($p(value,".",2)),,1)_"Z")_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..UpdateUserDr
+  If value'="" {
+    Write sep_"""UpdateUserDr"":"""_$zcvt(value.%Id(),"O","JSON")_""""
+    Set $extract(sep,1)=","
+  }
+  Write "}"
+%JSONExportExit Quit sc }
+%JSONExportToStringInternal() public {
+  Set sc=1
+  Set %export=%export_"{" Set sep=""
+  Set value=..Deleted
+  If value'="" {
+    Set %export=%export_sep_"""Deleted"":"_value
+    Set $extract(sep,1)=","
+  }
+  Set value=..DeleteDate
+  If value'="" {
+    Set %export=%export_sep_"""DeleteDate"":"""_$select(value="":"",1:$zdate(value,3,,,,,-672045))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..DeleteTime
+  If value'="" {
+    Set %export=%export_sep_"""DeleteTime"":"""_$select(value="":"",1:$ztime(value,1,$l($p(value,".",2)),,1)_"Z")_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..HospCode
+  If value'="" {
+    Set %export=%export_sep_"""HospCode"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..SyncType
+  If value'="" {
+    Set %export=%export_sep_"""SyncType"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..Frequency
+  If value'="" {
+    Set %export=%export_sep_"""Frequency"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..ScheduledTime
+  If value'="" {
+    Set %export=%export_sep_"""ScheduledTime"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..LookbackDays
+  If value'="" {
+    Set %export=%export_sep_"""LookbackDays"":"_value
+    Set $extract(sep,1)=","
+  }
+  Set value=..Enabled
+  If value'="" {
+    Set %export=%export_sep_"""Enabled"":"_$select(value:"true",1:"false")
+    Set $extract(sep,1)=","
+  }
+  Set value=..LastSyncTime
+  If value'="" {
+    Set %export=%export_sep_"""LastSyncTime"":"""_$select(value="":"",1:$translate(value," ","T")_"Z")_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..Status
+  If value'="" {
+    Set %export=%export_sep_"""Status"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..ErrorMessage
+  If value'="" {
+    Set %export=%export_sep_"""ErrorMessage"":"""_$select((value=$c(0)):"",1:$zcvt(value,"O","JSON"))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..CreateDate
+  If value'="" {
+    Set %export=%export_sep_"""CreateDate"":"""_$select(value="":"",1:$zdate(value,3,,,,,-672045))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..CreateTime
+  If value'="" {
+    Set %export=%export_sep_"""CreateTime"":"""_$select(value="":"",1:$ztime(value,1,$l($p(value,".",2)),,1)_"Z")_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..CreateUserDr
+  If value'="" {
+    Set %export=%export_sep_"""CreateUserDr"":"""_$zcvt(value.%Id(),"O","JSON")_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..UpdateDate
+  If value'="" {
+    Set %export=%export_sep_"""UpdateDate"":"""_$select(value="":"",1:$zdate(value,3,,,,,-672045))_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..UpdateTime
+  If value'="" {
+    Set %export=%export_sep_"""UpdateTime"":"""_$select(value="":"",1:$ztime(value,1,$l($p(value,".",2)),,1)_"Z")_""""
+    Set $extract(sep,1)=","
+  }
+  Set value=..UpdateUserDr
+  If value'="" {
+    Set %export=%export_sep_"""UpdateUserDr"":"""_$zcvt(value.%Id(),"O","JSON")_""""
+    Set $extract(sep,1)=","
+  }
+  Set %export=%export_"}"
+%JSONExportExitToString Quit sc }
+%JSONImportInternal() public {
+  Set sc=1
+  Set testInvalidField=1
+  Set proplist("Deleted")=""
+  Set field="Deleted" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Goto %JSONImportRequired
+    } Else {
+      If jsontype'="number" Goto %JSONImportError
+      Set data=%JSONObject.Deleted
+      Set data=$s($tr(data,"Ee(),.")'=data:"",1:$number(data,"I")) Goto:data="" %JSONImportError If ('$select(data=$c(0)&&$zu(115,13):1,$isvalidnum(data,0):1,1:$$Error^%apiOBJ(7207,data))) Goto %JSONImportError
+      Set ..Deleted=data
+    }
+  } Else { Goto %JSONImportRequired }
+  Set proplist("DeleteDate")=""
+  Set field="DeleteDate" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..DeleteDate=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.DeleteDate
+      Set data=$select(data="":"",1:$zdateh(data,3,,,,,-672045,,"")) Goto:data="" %JSONImportError If ('$s($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,0,0,2980013):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,2980013))) Goto %JSONImportError
+      Set ..DeleteDate=data
+    }
+  }
+  Set proplist("DeleteTime")=""
+  Set field="DeleteTime" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..DeleteTime=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.DeleteTime
+      Set data=..DeleteTimeXSDToLogical(data) Goto:data="" %JSONImportError If ('$select($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,,0,86400)&&(data'=86400):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,86400))) Goto %JSONImportError
+      Set ..DeleteTime=data
+    }
+  }
+  Set proplist("HospCode")=""
+  Set field="HospCode" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Goto %JSONImportRequired
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.HospCode
+      If ('$s(($l(data)'>50):1,1:$$Error^%apiOBJ(7201,data,50))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..HospCode=data
+    }
+  } Else { Goto %JSONImportRequired }
+  Set proplist("SyncType")=""
+  Set field="SyncType" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Goto %JSONImportRequired
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.SyncType
+      If ('$s(($l(data)'>20):1,1:$$Error^%apiOBJ(7201,data,20))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..SyncType=data
+    }
+  } Else { Goto %JSONImportRequired }
+  Set proplist("Frequency")=""
+  Set field="Frequency" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Goto %JSONImportRequired
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.Frequency
+      If ('$s(($l(data)'>20):1,1:$$Error^%apiOBJ(7201,data,20))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..Frequency=data
+    }
+  } Else { Goto %JSONImportRequired }
+  Set proplist("ScheduledTime")=""
+  Set field="ScheduledTime" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..ScheduledTime=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.ScheduledTime
+      If ('$s(($l(data)'>50):1,1:$$Error^%apiOBJ(7201,data,50))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..ScheduledTime=data
+    }
+  }
+  Set proplist("LookbackDays")=""
+  Set field="LookbackDays" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..LookbackDays=""
+    } Else {
+      If jsontype'="number" Goto %JSONImportError
+      Set data=%JSONObject.LookbackDays
+      Set data=$s($tr(data,"Ee(),.")'=data:"",1:$number(data,"I")) Goto:data="" %JSONImportError If ('$select(data=$c(0)&&$zu(115,13):1,$isvalidnum(data,0):1,1:$$Error^%apiOBJ(7207,data))) Goto %JSONImportError
+      Set ..LookbackDays=data
+    }
+  }
+  Set proplist("Enabled")=""
+  Set field="Enabled" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..Enabled=""
+    } Else {
+      If jsontype'="boolean" Goto %JSONImportError
+      Set ..Enabled=%JSONObject.Enabled
+    }
+  }
+  Set proplist("LastSyncTime")=""
+  Set field="LastSyncTime" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..LastSyncTime=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.LastSyncTime
+      Set data=..LastSyncTimeXSDToLogical(data) Goto:data="" %JSONImportError If ('..LastSyncTimeIsValid(data)) Goto %JSONImportError
+      Set ..LastSyncTime=data
+    }
+  }
+  Set proplist("Status")=""
+  Set field="Status" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..Status=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.Status
+      If ('$s(($l(data)'>20):1,1:$$Error^%apiOBJ(7201,data,20))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..Status=data
+    }
+  }
+  Set proplist("ErrorMessage")=""
+  Set field="ErrorMessage" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..ErrorMessage=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.ErrorMessage
+      If ('$s(($l(data)'>2000):1,1:$$Error^%apiOBJ(7201,data,2000))) Goto %JSONImportError
+      If data="" Set data=$c(0)
+      Set ..ErrorMessage=data
+    }
+  }
+  Set proplist("CreateDate")=""
+  Set field="CreateDate" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Goto %JSONImportRequired
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.CreateDate
+      Set data=$select(data="":"",1:$zdateh(data,3,,,,,-672045,,"")) Goto:data="" %JSONImportError If ('$s($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,0,0,2980013):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,2980013))) Goto %JSONImportError
+      Set ..CreateDate=data
+    }
+  } Else { Goto %JSONImportRequired }
+  Set proplist("CreateTime")=""
+  Set field="CreateTime" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Goto %JSONImportRequired
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.CreateTime
+      Set data=..CreateTimeXSDToLogical(data) Goto:data="" %JSONImportError If ('$select($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,,0,86400)&&(data'=86400):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,86400))) Goto %JSONImportError
+      Set ..CreateTime=data
+    }
+  } Else { Goto %JSONImportRequired }
+  Set proplist("CreateUserDr")=""
+  Set field="CreateUserDr" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Goto %JSONImportRequired
+    } Else {
+      If jsontype'="string",jsontype'="number" Goto %JSONImportError
+      Do ..CreateUserDrSetObjectId(%JSONObject.CreateUserDr)
+    }
+  } Else { Goto %JSONImportRequired }
+  Set proplist("UpdateDate")=""
+  Set field="UpdateDate" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..UpdateDate=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.UpdateDate
+      Set data=$select(data="":"",1:$zdateh(data,3,,,,,-672045,,"")) Goto:data="" %JSONImportError If ('$s($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,0,0,2980013):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,2980013))) Goto %JSONImportError
+      Set ..UpdateDate=data
+    }
+  }
+  Set proplist("UpdateTime")=""
+  Set field="UpdateTime" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..UpdateTime=""
+    } Else {
+      If jsontype'="string" Goto %JSONImportError
+      Set data=%JSONObject.UpdateTime
+      Set data=..UpdateTimeXSDToLogical(data) Goto:data="" %JSONImportError If ('$select($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,,0,86400)&&(data'=86400):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,86400))) Goto %JSONImportError
+      Set ..UpdateTime=data
+    }
+  }
+  Set proplist("UpdateUserDr")=""
+  Set field="UpdateUserDr" Set jsontype=$CASE(%JSONObject.%GetTypeCodeOf(field),0:"null",1:"boolean",2:"boolean",3:"number",4:"number",6:"array",7:"object",8:"string",9:"number",10:"illegalvalue",11:"number",12:"oref",13:"unassigned",14:"number",15:"number",16:"string",18:"number",19:"number",20:"string",31:"unassigned",:"UNKNOWN")
+  If jsontype'="unassigned" {
+    If jsontype="null" {
+      Set ..UpdateUserDr=""
+    } Else {
+      If jsontype'="string",jsontype'="number" Goto %JSONImportError
+      Do ..UpdateUserDrSetObjectId(%JSONObject.UpdateUserDr)
+    }
+  }
+  If $get(testInvalidField) {
+    Set invalid=0,iterator=%JSONObject.%GetIterator()
+    While iterator.%GetNext(.key,.value) { If $data(proplist(key))=0 Set invalid=1 Quit  }
+    If invalid Quit $$Error^%apiOBJ(9404,key,$select(%mappingName="":"class base",1:%mappingName))
+  }
+%JSONImportExit Quit sc
+%JSONImportError Quit $$Error^%apiOBJ(9406,field,$select(%mappingName="":"class base",1:%mappingName))
+%JSONImportRequired Quit $$Error^%apiOBJ(9405,field,$select(%mappingName="":"class base",1:%mappingName)) }
+%JSONNew(dynamicObject,containerOref="") public {
+  Quit ##class(User.BSHISSyncConfig).%New()
+}
+%KillExtentData(killstreams=0)
+	If killstreams Kill ^BSHISSyncConfigS
+	Kill ^BSHISSyncConfigD
+	Quit 1
+%LoadData(id) public {
+	New %s1
+	set $ZTrap="CatchError",locked=0,userze=$ze,$ze=""
+	If i%%Concurrency=4 {
+		Lock +(^BSHISSyncConfigD(id)#"E"):$zu(115,4)
+		if '$t do init s i%%Concurrency=0 s:$ze="" $ze=userze return $$Error^%apiOBJ(5803,$classname())
+	} ElseIf i%%Concurrency>1 {
+		Lock +(^BSHISSyncConfigD(id)#"SE"):$zu(115,4)
+		if '$t do init s i%%Concurrency=0 s:$ze="" $ze=userze return $$Error^%apiOBJ(5803,$classname())
+		set locked = 1
+	}
+	If $d(^BSHISSyncConfigD(id),%s1)#2 {
+		If i%%Concurrency=2 { Lock -(^BSHISSyncConfigD(id)#"SIE") }
+		S i%Deleted=$lg(%s1,2),i%DeleteDate=$lg(%s1,3),i%DeleteTime=$lg(%s1,4),i%HospCode=$lg(%s1,5),i%SyncType=$lg(%s1,6),i%Frequency=$lg(%s1,7),i%ScheduledTime=$lg(%s1,8),i%LookbackDays=$lg(%s1,9),i%Enabled=$lg(%s1,10)
+		S isctmp=$e(%s1,$l($li(%s1,1,10))+1,*),i%LastSyncTime=$lg(isctmp),i%Status=$lg(isctmp,2),i%ErrorMessage=$lg(isctmp,3),i%CreateDate=$lg(isctmp,4),i%CreateTime=$lg(isctmp,5),i%CreateUserDr=$lg(isctmp,6),i%UpdateDate=$lg(isctmp,7),i%UpdateTime=$lg(isctmp,8),i%UpdateUserDr=$lg(isctmp,9)
+		s:$ze="" $ze=userze
+		Quit 1
+	} Else {
+		If i%%Concurrency=2 { Lock -(^BSHISSyncConfigD(id)#"SIE") }
+		do init
+		set sc = $$Error^%apiOBJ(5809,$classname(),id) goto CatchError
+	}
+CatchError	set $ZTrap = "" if $ZE'="" { s sc = $$Error^%apiOBJ(5002,$ZE) }
+	If ($get(locked))&&(i%%Concurrency<3) { Lock -(^BSHISSyncConfigD(id)#"SIE") }
+	if '('sc) { set sc=$$Error^%apiOBJ(5809,$classname(),id) }
+	s:$ze="" $ze=userze
+	return sc
+init	Set i%CreateDate="",i%CreateTime="",i%CreateUserDr="",i%DeleteDate="",i%DeleteTime="",i%Deleted="",i%Enabled="",i%ErrorMessage="",i%Frequency="",i%HospCode="",i%LastSyncTime="",i%LookbackDays="",i%ScheduledTime="",i%Status="",i%SyncType="",i%UpdateDate="",i%UpdateTime="",i%UpdateUserDr=""
+	quit }
+%LoadDataFromMemory(id,objstate,obj) public {
+	New %s1
+	If $d(objstate(id)) {
+		Set %s1=$g(objstate(id))
+		S i%Deleted=$lg(%s1,2),i%DeleteDate=$lg(%s1,3),i%DeleteTime=$lg(%s1,4),i%HospCode=$lg(%s1,5),i%SyncType=$lg(%s1,6),i%Frequency=$lg(%s1,7),i%ScheduledTime=$lg(%s1,8),i%LookbackDays=$lg(%s1,9),i%Enabled=$lg(%s1,10)
+		S isctmp=$e(%s1,$l($li(%s1,1,10))+1,*),i%LastSyncTime=$lg(isctmp),i%Status=$lg(isctmp,2),i%ErrorMessage=$lg(isctmp,3),i%CreateDate=$lg(isctmp,4),i%CreateTime=$lg(isctmp,5),i%CreateUserDr=$lg(isctmp,6),i%UpdateDate=$lg(isctmp,7),i%UpdateTime=$lg(isctmp,8),i%UpdateUserDr=$lg(isctmp,9)
+		Quit 1
+	} Else {
+		Set i%CreateDate="",i%CreateTime="",i%CreateUserDr="",i%DeleteDate="",i%DeleteTime="",i%Deleted="",i%Enabled="",i%ErrorMessage="",i%Frequency="",i%HospCode="",i%LastSyncTime="",i%LookbackDays="",i%ScheduledTime="",i%Status="",i%SyncType="",i%UpdateDate="",i%UpdateTime="",i%UpdateUserDr=""
+		Quit $$Error^%apiOBJ(5809,$classname(),id)
+	} }
+%LoadInit(oid="",concurrency="",reset=0) public {
+	If concurrency'="" Set i%%Concurrency=concurrency
+	If reset {
+		Kill i%CreateUserDr,i%UpdateUserDr
+	}
+	Set r%CreateUserDr="",r%UpdateUserDr=""
+	If 'reset { Set gbl=..#DATALOCATIONGLOBAL If gbl="" { Set oref=$zobjoid("",$listget(oid)),sfn=$zu(40,0,41) } Else { Set oref=$zobjoid("",$listget(oid),@gbl,.sfn) } Set $zobjoid("",$listget(oid),,sfn)=$this,i%"%%OID"=oid }
+	Quit 1 }
+%LockExtent(shared=0) public {
+	If shared {
+		Lock +(^BSHISSyncConfigD#"S"):$zu(115,4) Quit:$t 1
+		Quit $$Error^%apiOBJ(5799,$classname())
+	}
+	Lock +(^BSHISSyncConfigD):$zu(115,4) Quit:$t 1
+	Quit $$Error^%apiOBJ(5798,$classname()) }
+%LockId(id,shared=0,timeout) public { s:'($d(timeout)#2) timeout=$zu(115,4)
+	If id="" { Quit $$Error^%apiOBJ(5812) }
+	Set sc=1
+	If 'shared {
+		Lock +(^BSHISSyncConfigD(id)#"E"):timeout Quit:$t 1
+		Quit $$Error^%apiOBJ(5803,id_":"_$classname())
+	}
+	Lock +(^BSHISSyncConfigD(id)#"SE"):timeout Quit:$t 1
+	Quit $$Error^%apiOBJ(5804,id_":"_$classname()) }
+%NormalizeObject() public {
+	If '$system.CLS.GetModified() Quit 1
+	If m%CreateDate Set:i%CreateDate'="" i%CreateDate=(..CreateDateNormalize(i%CreateDate))
+	If m%CreateTime Set:i%CreateTime'="" i%CreateTime=(..CreateTimeNormalize(i%CreateTime))
+	If m%DeleteDate Set:i%DeleteDate'="" i%DeleteDate=(..DeleteDateNormalize(i%DeleteDate))
+	If m%DeleteTime Set:i%DeleteTime'="" i%DeleteTime=(..DeleteTimeNormalize(i%DeleteTime))
+	If m%Deleted Set:i%Deleted'="" i%Deleted=(..DeletedNormalize(i%Deleted))
+	If m%Enabled Set:i%Enabled'="" i%Enabled=(..EnabledNormalize(i%Enabled))
+	If m%ErrorMessage Set:i%ErrorMessage'="" i%ErrorMessage=(..ErrorMessageNormalize(i%ErrorMessage))
+	If m%Frequency Set:i%Frequency'="" i%Frequency=(..FrequencyNormalize(i%Frequency))
+	If m%HospCode Set:i%HospCode'="" i%HospCode=(..HospCodeNormalize(i%HospCode))
+	If m%LastSyncTime Set:i%LastSyncTime'="" i%LastSyncTime=(..LastSyncTimeNormalize(i%LastSyncTime))
+	If m%LookbackDays Set:i%LookbackDays'="" i%LookbackDays=(..LookbackDaysNormalize(i%LookbackDays))
+	If m%ScheduledTime Set:i%ScheduledTime'="" i%ScheduledTime=(..ScheduledTimeNormalize(i%ScheduledTime))
+	If m%Status Set:i%Status'="" i%Status=(..StatusNormalize(i%Status))
+	If m%SyncType Set:i%SyncType'="" i%SyncType=(..SyncTypeNormalize(i%SyncType))
+	If m%UpdateDate Set:i%UpdateDate'="" i%UpdateDate=(..UpdateDateNormalize(i%UpdateDate))
+	If m%UpdateTime Set:i%UpdateTime'="" i%UpdateTime=(..UpdateTimeNormalize(i%UpdateTime))
+	Quit 1 }
+%OnDetermineClass(oid,class) public {
+	Set id=$listget($get(oid))
+	Quit:id="" $$Error^%apiOBJ(5812)
+	Set idclass=$lg($get(^BSHISSyncConfigD(id)),1)
+	If idclass="" { Set class="User.BSHISSyncConfig" Quit 1 }
+	Set class=$piece(idclass,$extract(idclass),*-1)
+	Set:class'["." class="User."_class
+	QUIT 1 }
+%PhysicalAddress(id,paddr)
+	if $Get(id)="" Quit $$Error^%apiOBJ(5813,$classname())
+	if (id="") { quit $$Error^%apiOBJ(5832,$classname(),id) }
+	s paddr(1)=$lb($Name(^BSHISSyncConfigD(id)),$classname(),"IDKEY","listnode",id)
+	s paddr=1
+	Quit 1
+%PurgeIndices(idxlist="",lockExtent=0,pIgnoreIndexList="") public {
+	Set locked=0,sc=1
+	Try {
+		if ($listlength(idxlist)=1)&&($listget(idxlist,1)="") { return 1 }
+		Set tPtr=0
+		While $listnext(idxlist,tPtr,tIndex) {
+			continue:tIndex=""
+			If '($d(^oddCOM($classname(),"i",tIndex))) {
+				Set sc=$select(+sc:$$Error^%apiOBJ(5066,$classname()_"::"_tIndex),1:$$AppendStatus^%occSystem(sc,$$Error^%apiOBJ(5066,$classname()_"::"_tIndex)))
+			}
+		}
+		If ('sc) { Return sc }
+		If lockExtent {
+			Set sc=..%LockExtent(0)
+			If ('sc) { Return sc }
+			Set locked=1
+		}
+		If $system.CLS.IsMthd("%OnBeforePurgeIndices") {
+			Set sc=..%OnBeforePurgeIndices(.idxlist)
+			If (('sc))||(($listlength(idxlist)=1)&&($listget(idxlist,1)="")) {
+				If locked {
+					Do ..%SQLReleaseTableLock(0)
+				}
+				Return sc
+			}
+		}
+		if ((idxlist="")||($listfind(idxlist,"EnabledIndex"))),'$listfind(pIgnoreIndexList,"EnabledIndex") {
+			kill ^BSHISSyncConfigI("EnabledIndex")
+		}
+		if ((idxlist="")||($listfind(idxlist,"HospCodeIndex"))),'$listfind(pIgnoreIndexList,"HospCodeIndex") {
+			kill ^BSHISSyncConfigI("HospCodeIndex")
+		}
+		if ((idxlist="")||($listfind(idxlist,"StatusIndex"))),'$listfind(pIgnoreIndexList,"StatusIndex") {
+			kill ^BSHISSyncConfigI("StatusIndex")
+		}
+		Set sc=1
+		If $system.CLS.IsMthd("%OnAfterPurgeIndices") { Set sc=..%OnAfterPurgeIndices(.idxlist) }
+	} Catch tException {
+		Set sc=tException.AsStatus(),$ZE=""
+	}
+	If locked { Do ..%UnlockExtent(0) }
+	Quit sc }
+%SQLAcquireLock(%rowid,s=0,unlockref=0)
+	new %d,gotlock
+	set %d(1)=%rowid set s=$e("E",'unlockref)_$e("S",s)
+	lock +^BSHISSyncConfigD(%d(1))#s:$zu(115,4) set gotlock=$t
+	if gotlock,'unlockref { set:$case($SYSTEM.Lock.ReturnCode(),2:1,4:1,:0)&&($tlevel) %0CacheLock("User.BSHISSyncConfig","E")=1 }
+	set:gotlock&&unlockref unlockref=unlockref+1,unlockref(unlockref)=$lb($name(^BSHISSyncConfigD(%d(1))),"User.BSHISSyncConfig",s_"D")
+	QUIT gotlock
+%SQLAcquireTableLock(s=0,SQLCODE,to="")
+	set s=$e("S",s) set:to="" to=$zu(115,4) lock +^BSHISSyncConfigD#s:to QUIT:$t 1 set SQLCODE=-110 if s="S" { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler35",,"SQLUser"_"."_"BS_HISSyncConfig") } else { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler36",,"SQLUser"_"."_"BS_HISSyncConfig") } QUIT 0
+	Quit
+%SQLBuildIndices(pIndices="",pLockFlag=0,pStartID="",pEndID="",pIgnoreIndexList="")
+	QUIT ..%BuildIndices(pIndices,,pLockFlag,,pStartID,pEndID,pIgnoreIndexList)
+%SQLBuildPurgeIndexForRow(pIndices="",pActions="BP",pLockRow=1,%d,%e,pIgnoreIndexList="")
+	// Purge and build index nodes for a single row using given values, return Status Code
+	new sn,tSC,tLock set tSC=1,pActions=$zcvt(pActions,"U")
+	try {
+		if $g(%d(1))="" { set tSC=$select(+tSC:$$Error^%apiOBJ(5521,-108,"RowID value must be specified in %d(1) when calling %SQLBuildPurgeIndexForRow for table 'SQLUser.BS_HISSyncConfig'"),1:$$AppendStatus^%occSystem(tSC,$$Error^%apiOBJ(5521,-108,"RowID value must be specified in %d(1) when calling %SQLBuildPurgeIndexForRow for table 'SQLUser.BS_HISSyncConfig'"))) RETURN tSC }
+		if pLockRow { if '..%SQLAcquireLock(%d(1)) { set tSC=$select(+tSC:$$Error^%apiOBJ(5521,-114,"Unable to lock row in table 'SQLUser.BS_HISSyncConfig' with %ID = '"_%d(1)_"'"),1:$$AppendStatus^%occSystem(tSC,$$Error^%apiOBJ(5521,-114,"Unable to lock row in table 'SQLUser.BS_HISSyncConfig' with %ID = '"_%d(1)_"'"))) RETURN tSC  } else { set tLock=1 }}
+		if ((pIndices="")||($lf(pIndices,"EnabledIndex"))),'$listfind(pIgnoreIndexList,"EnabledIndex") {
+			if pActions["P" {
+				set sn(1)=%e(10) set:sn(1)="" sn(1)=-1E14 set sn(2)=%d(1) k ^BSHISSyncConfigI("EnabledIndex",sn(1),sn(2))
+			}
+			if pActions["B" {
+				set sn(1)=%d(10) set:sn(1)="" sn(1)=-1E14 set sn(2)=%d(1) set ^BSHISSyncConfigI("EnabledIndex",sn(1),sn(2))=%d(20)
+			}
+		}
+		if ((pIndices="")||($lf(pIndices,"HospCodeIndex"))),'$listfind(pIgnoreIndexList,"HospCodeIndex") {
+			if pActions["P" {
+				set sn(1)=%e(5) set sn(2)=%d(1) k ^BSHISSyncConfigI("HospCodeIndex",sn(1),sn(2))
+			}
+			if pActions["B" {
+				set sn(1)=%d(5) set sn(2)=%d(1) set ^BSHISSyncConfigI("HospCodeIndex",sn(1),sn(2))=%d(20)
+			}
+		}
+		if ((pIndices="")||($lf(pIndices,"StatusIndex"))),'$listfind(pIgnoreIndexList,"StatusIndex") {
+			if pActions["P" {
+				set sn(1)=%e(12) set:sn(1)="" sn(1)=-1E14 set sn(2)=%d(1) k ^BSHISSyncConfigI("StatusIndex",sn(1),sn(2))
+			}
+			if pActions["B" {
+				set sn(1)=%d(12) set:sn(1)="" sn(1)=-1E14 set sn(2)=%d(1) set ^BSHISSyncConfigI("StatusIndex",sn(1),sn(2))=%d(20)
+			}
+		}
+		if pLockRow { do ..%SQLReleaseLock(%d(1),0,0) set tLock=0 }
+	}
+	catch {
+		if $g(tLock) { do ..%SQLReleaseLock(%d(1),0,0) }
+		set tSC=$select(+tSC:$$Error^%apiOBJ(5594,$ze),1:$$AppendStatus^%occSystem(tSC,$$Error^%apiOBJ(5594,$ze)))
+	}
+	QUIT tSC
+%SQLCopyIcolIntoName()
+	if %oper="DELETE" {
+		set:$d(%d(1)) %f("ID")=%d(1)
+		QUIT
+	}
+	set:$d(%d(1)) %f("ID")=%d(1) set:$a(%e,2)&&$d(%d(2)) %f("Deleted")=%d(2) set:$a(%e,3)&&$d(%d(3)) %f("DeleteDate")=%d(3) set:$a(%e,4)&&$d(%d(4)) %f("DeleteTime")=%d(4) set:$a(%e,5)&&$d(%d(5)) %f("HospCode")=%d(5) set:$a(%e,6)&&$d(%d(6)) %f("SyncType")=%d(6) set:$a(%e,7)&&$d(%d(7)) %f("Frequency")=%d(7) set:$a(%e,8)&&$d(%d(8)) %f("ScheduledTime")=%d(8) set:$a(%e,9)&&$d(%d(9)) %f("LookbackDays")=%d(9) set:$a(%e,10)&&$d(%d(10)) %f("Enabled")=%d(10) set:$a(%e,11)&&$d(%d(11)) %f("LastSyncTime")=%d(11) set:$a(%e,12)&&$d(%d(12)) %f("Status")=%d(12) set:$a(%e,13)&&$d(%d(13)) %f("ErrorMessage")=%d(13) set:$a(%e,14)&&$d(%d(14)) %f("CreateDate")=%d(14) set:$a(%e,15)&&$d(%d(15)) %f("CreateTime")=%d(15) set:$a(%e,16)&&$d(%d(16)) %f("CreateUser_Dr")=%d(16) set:$a(%e,17)&&$d(%d(17)) %f("UpdateDate")=%d(17) set:$a(%e,18)&&$d(%d(18)) %f("UpdateTime")=%d(18) set:$a(%e,19)&&$d(%d(19)) %f("UpdateUser_Dr")=%d(19) set:$a(%e,20)&&$d(%d(20)) %f("x__classname")=%d(20)
+	QUIT
+%SQLDefineiDjVars(%d,subs,master)
+	QUIT
+%SQLDelete(%rowid,%check,%tstart=1,%mv=0,%polymorphic=0)
+	// SQL DELETE method for table SQLUser.BS_HISSyncConfig
+	new bva,ce,%d,dc,%e,%ele,%itm,%key,%l,%nc,omcall,%oper,%pos,%s,sn,sqlcode,subs set %oper="DELETE",sqlcode=0,%ROWID=%rowid,%d(1)=%rowid,%e(1)=%rowid,%l=$c(0)
+	if '$d(%0CacheSQLRA) { new %0CacheSQLRA set omcall=1 }
+	if '$a(%check,2) {
+		new %ls lock +^BSHISSyncConfigD(%d(1))#"E":$zu(115,4) set %ls=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,4:2,2:2,1:3,:""))
+		set:%ls=2 $e(%check,2)=$c(1) set:%ls=2&&($tlevel) %0CacheLock("User.BSHISSyncConfig","E")=1 set:$case(%ls,1:1,2:1,:0) $e(%l)=$c(1)
+		if '%ls||(%ls=3) { set SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer",$s('%ls:"SQLFiler40",1:"SQLFiler55"),,%oper,"SQLUser"_"."_"BS_HISSyncConfig",$g(%d(1))) RETURN  }
+	}
+	if %tstart { TSTART:($zu(115,1)=1)||('$TLEVEL&&($zu(115,1)=2))  }
+	set $zt="ERRORDelete"
+	do ..%SQLGetOld(%rowid,.%d,.%e,.sqlcode) if sqlcode { set SQLCODE=-106 do ..%SQLEExit() QUIT  }
+	if %e(20)'="" { set sn=$p(%e(20),$e(%e(20)),$l(%e(20),$e(%e(20)))-1) if "BSHISSyncConfig"'=sn { new %f do ..%SQLCopyIcolIntoName() do $classmethod(sn,"%SQLDelete",%rowid,%check,%tstart,%mv,1) QUIT  }}
+	if '$a(%check),'$zu(115,7) do  if sqlcode set SQLCODE=sqlcode do ..%SQLEExit() QUIT  
+	. new %fk,%k,%p,%st,%t,%z set %k="",%p("%1")="%d(1),",%p("IDKEY")="%d(1),"
+	. for  quit:sqlcode<0  set %k=$o(^rINDEXEXT("F","User.BSHISSyncConfig",%k)) quit:%k=""  set %t="" for  set %t=$o(^rINDEXEXT("F","User.BSHISSyncConfig",%k,"f",%t)) quit:%t=""  set %st=(%t="User.BSHISSyncConfig") set %fk="" for  set %fk=$o(^rINDEXEXT("F","User.BSHISSyncConfig",%k,"f",%t,%fk)) quit:%fk=""  x "set %z=$classmethod(%t,%fk_""SQLFKeyRefAction"",%st,%k,$a(%check,2),"_%p(%k)_")" if %z set sqlcode=-124 quit  
+	set ce="" for  { set ce=$order(^oddSQL("SQLUser","BS_HISSyncConfig","DC",ce)) quit:ce=""   do $classmethod(ce,"%SQLDeleteChildren",%d(1),%check,.sqlcode) quit:sqlcode<0  } if sqlcode<0 { set SQLCODE=sqlcode do ..%SQLEExit() QUIT } // Delete any children
+	if '$a(%check,3) {
+		set sn(1)=%e(10) set:sn(1)="" sn(1)=-1E14 set sn(2)=%d(1) k ^BSHISSyncConfigI("EnabledIndex",sn(1),sn(2))
+		set sn(1)=%e(5) set sn(2)=%d(1) k ^BSHISSyncConfigI("HospCodeIndex",sn(1),sn(2))
+		set sn(1)=%e(12) set:sn(1)="" sn(1)=-1E14 set sn(2)=%d(1) k ^BSHISSyncConfigI("StatusIndex",sn(1),sn(2))
+	}
+	k ^BSHISSyncConfigD(%d(1))
+	do ..%SQLUnlock() TCOMMIT:%tstart&&($zu(115,1)=1)
+	set SQLCODE=0 kill:$g(omcall) %0CacheSQLRA
+	QUIT
+ERRORDelete	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler51",,%oper,"SQLUser"_"."_"BS_HISSyncConfig",$ze) if $ze["<FRAMESTACK>" { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler52",,$ze,%oper,"SQLUser"_"."_"BS_HISSyncConfig") do ##Class(%SYS.System).WriteToConsoleLog(%msg) if ($zu(67,10,$j)=1)||($zu(67,10,$j)=3) { write !,%msg h 3 } HALT  } do ..%SQLEExit() QUIT
+	Quit
+%SQLDeleteTempStreams()
+	// Delete all temporary streams
+	QUIT
+%SQLEExit()
+	do ..%SQLUnlock() 
+	if %tstart,$zu(115,1)=1,$TLEVEL { set %tstart=0 TROLLBACK 1 } kill:$g(omcall) %0CacheSQLRA QUIT  
+	Quit
+%SQLExists(pLockOnly=0,pUnlockRef,%pVal...)
+	// SQL Foreign Key validation entry point for Key %1.  Called by FKeys that reference this Key to see if the row is defined
+	new id set id=%pVal(1)
+	if pLockOnly>=0 { if '..%SQLGetLock(id,1,.pUnlockRef) { set sqlcode=-114,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler39",,"SQLUser"_"."_"BS_HISSyncConfig"_":"_"%1") QUIT 0 } }
+	if pLockOnly<1 {
+		new qv set qv=$d(^BSHISSyncConfigD(%pVal(1))) QUIT:pLockOnly=-1 qv
+		do:'$g(pUnlockRef) ..%SQLReleaseLock(id,1) quit qv
+	}
+	else { do:'$g(pUnlockRef) ..%SQLReleaseLock(id,1) QUIT 1 }
+	Quit
+%SQLGetLock(pRowId,pShared=0,pUnlockRef)
+	QUIT ..%SQLAcquireLock(pRowId,pShared,.pUnlockRef)
+%SQLGetOld(%rowid,%d,%e,sqlcode)
+	new s set %d(1)=%rowid,s="" if '$d(^BSHISSyncConfigD(%d(1)),s) { set sqlcode=100 quit  }
+	 S $lg(%e(20),,,,%e(5),,,,,%e(10),,%e(12))=s
+	QUIT
+%SQLGetOldAll()
+	new s set %d(1)=%rowid,s="" if '$d(^BSHISSyncConfigD(%d(1)),s) { set sqlcode=100 quit  }
+	 S $lg(%e(20),%e(2),%e(3),%e(4),%e(5),%e(6),%e(7),%e(8),%e(9),%e(10),%e(11),%e(12),%e(13),%e(14),%e(15),%e(16),%e(17),%e(18),%e(19))=s
+	QUIT
+%SQLGetOldIndex(%rowid,%d,pF=0,sqlcode)
+	try {
+		new tClass,tF,tOid,tSC
+		set tOid=..%ComposeOid(%rowid)
+		if ''..%OnDetermineClass(tOid,.tClass),tClass'=$classname() {
+			set tF=1 do $classmethod(tClass,"%SQLGetOldIndex",%rowid,,.tF,.sqlcode)
+			set:$d(tF("Enabled")) %d(10)=tF("Enabled") set:$d(tF("x__classname")) %d(20)=tF("x__classname") set:$d(tF("HospCode")) %d(5)=tF("HospCode") set:$d(tF("Status")) %d(12)=tF("Status") 
+			RETURN
+		}
+	}
+	catch { }
+	new s set %d(1)=%rowid,s="" if '$d(^BSHISSyncConfigD(%d(1)),s) { set sqlcode=100 quit  }
+	 S $lg(%e(20),,,,%e(5),,,,,%e(10),,%e(12))=s
+	if pF { set:$d(%d(10)) pF("Enabled")=%d(10) set:$d(%d(20)) pF("x__classname")=%d(20) set:$d(%d(5)) pF("HospCode")=%d(5) set:$d(%d(12)) pF("Status")=%d(12)  }
+	set sqlcode=0
+	QUIT
+%SQLInsert(%d,%check,%inssel,%vco,%tstart=1,%mv=0)
+	// SQL INSERT method for table SQLUser.BS_HISSyncConfig
+	new bva,%ele,%itm,%key,%f,%l,%n,%nc,%oper,%pos,%s,sqlcode,sn,subs,icol set %oper="INSERT",sqlcode=0,%l=$c(0,0,0)
+	if $a(%check,7) { new %diu merge %diu=%d }
+	if $d(%d(1)),'$zu(115,11) { if %d(1)'="" { set SQLCODE=-111,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler6",,"ID","SQLUser"_"."_"BS_HISSyncConfig") RETURN ""  } kill %d(1) } 
+	if '$a(%check),'..%SQLValidateFields(.sqlcode) { set SQLCODE=sqlcode RETURN "" }
+	do ..%SQLNormalizeFields()
+	if %tstart { TSTART:($zu(115,1)=1)||('$TLEVEL&&($zu(115,1)=2))  } set $zt="ERRORInsert"
+	set:'$d(%d(2)) %d(2)=0 set:'$d(%d(9)) %d(9)=3 set:'$d(%d(10)) %d(10)=0 set:'$d(%d(12)) %d(12)="idle"
+	if '$a(%check) {
+		do {
+			if $g(%vco)'="" { d @%vco quit:sqlcode<0  }
+			do:$g(%d(2))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,3)) do:$g(%d(5))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,6)) do:$g(%d(6))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,7)) do:$g(%d(7))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,8)) do:$g(%d(14))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,15)) do:$g(%d(15))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,16)) do:$g(%d(16))="" ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,17)) 
+			quit:sqlcode<0		// A required field was missing
+		} while 0
+		if sqlcode<0 { set SQLCODE=sqlcode do ..%SQLEExit() RETURN "" }		// A constraint failed
+	}
+	if '$d(%d(1)) { set %d(1)=$i(^BSHISSyncConfigD) } elseif %d(1)>$g(^BSHISSyncConfigD) { if $i(^BSHISSyncConfigD,$zabs(%d(1)-$g(^BSHISSyncConfigD))) {}} elseif $d(^BSHISSyncConfigD(%d(1))) { set SQLCODE=-119,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler33",,"ID",%d(1),"SQLUser"_"."_"BS_HISSyncConfig"_"."_"ID") do ..%SQLEExit() RETURN "" }
+	for icol=20,10,5,12 { set:'($d(%d(icol))#2) %d(icol)="" }
+	if '$a(%check,2) {
+		new %ls lock +^BSHISSyncConfigD(%d(1))#"E":$zu(115,4) set %ls=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,4:2,2:2,1:3,:""))
+		set:%ls=2 $e(%check,2)=$c(1) set:%ls=2&&($tlevel) %0CacheLock("User.BSHISSyncConfig","E")=1 set:$case(%ls,1:1,2:1,:0) $e(%l)=$c(1)
+		if '%ls||(%ls=3) { set SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer",$s('%ls:"SQLFiler40",1:"SQLFiler55"),,%oper,"SQLUser"_"."_"BS_HISSyncConfig",$g(%d(1))) do ..%SQLEExit() RETURN ""  }
+	}
+	set ^BSHISSyncConfigD(%d(1))=$lb(%d(20),%d(2),%d(3),%d(4),%d(5),%d(6),%d(7),%d(8),%d(9),%d(10),%d(11),%d(12),%d(13),%d(14),%d(15),%d(16),%d(17),%d(18),%d(19))
+	if '$a(%check,3) {
+		set sn(1)=%d(10) set:sn(1)="" sn(1)=-1E14 set sn(2)=%d(1) set ^BSHISSyncConfigI("EnabledIndex",sn(1),sn(2))=%d(20)
+		set sn(1)=%d(5) set sn(2)=%d(1) set ^BSHISSyncConfigI("HospCodeIndex",sn(1),sn(2))=%d(20)
+		set sn(1)=%d(12) set:sn(1)="" sn(1)=-1E14 set sn(2)=%d(1) set ^BSHISSyncConfigI("StatusIndex",sn(1),sn(2))=%d(20)
+	}
+	lock:$a(%l) -^BSHISSyncConfigD(%d(1))#"E"
+	TCOMMIT:%tstart&&($zu(115,1)=1)
+	set SQLCODE=0
+	QUIT %d(1) 			// %SQLInsert
+ERRORInsert	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler51",,%oper,"SQLUser"_"."_"BS_HISSyncConfig",$ze)
+	if $ze["<FRAMESTACK>" { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler52",,$ze,%oper,"SQLUser"_"."_"BS_HISSyncConfig") do ##Class(%SYS.System).WriteToConsoleLog(%msg) if ($zu(67,10,$j)=1)||($zu(67,10,$j)=3) { write !,%msg h 3 } HALT  }
+	do ..%SQLEExit()
+	RETURN ""
+	Quit
+%SQLInvalid(pIcol,pVal) public {
+	set:$l($g(pVal))>40 pVal=$e(pVal,1,40)_"..." do:'$d(%n) ..%SQLnBuild() set %msg=$s($g(%msg)'="":%msg_$c(13,10),1:"")_$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler37",,"SQLUser"_"."_"BS_HISSyncConfig"_"."_$lg(%n,pIcol),$s($g(pVal)'="":$s(pVal="":"<NULL>",pVal=$c(0):"<EMPTY STRING>",1:"'"_pVal_"'"),1:"")),sqlcode=$s(%oper="INSERT":-104,1:-105)
+	QUIT sqlcode }
+%SQLMissing(fname)
+	set sqlcode=-108,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler47",,fname,"SQLUser"_"."_"BS_HISSyncConfig") quit
+%SQLNormalizeFields()
+	set:$g(%d(11))'="" %d(11)=$$NormalizeField11(%d(11))
+	new %f for %f=3,14,17 { set:$g(%d(%f))'="" %d(%f)=$s($zu(115,13)&&(%d(%f)=$c(0)):"",1:%d(%f)\1) }
+	for %f=4,15,18 { set:$g(%d(%f))'="" %d(%f)=$select($zu(115,13)&&(%d(%f)=$c(0)):"",1:%d(%f)) }
+	for %f=2,9,16,19 { set:$g(%d(%f))'="" %d(%f)=$select(%d(%f)=$c(0)&&$zu(115,13):"",1:%d(%f)\1) }
+	set:$g(%d(10))'="" %d(10)=%d(10)\1
+	QUIT
+NormalizeField11(%val) {	Quit $s(%val="":"",$zu(115,13)&&(%val=$c(0)):"",%val=(%val\1):$zd(%val,3,,,,,,,"error")_" 00:00:00",%val?1.2N1":"2N1":"2N.1(1"."1.N):$zd($h,3)_" "_%val,$l(%val)=10:%val_" 00:00:00",$zdth(%val,3,,,,,,,,"")="":"error",1:$zdt($zdth($p(%val,"."),3,,,,,,,,""),3)_$s(+$p(%val,".",2)=0:"",1:+("."_$p(%val,".",2))))
+}
+	Quit
+%SQLPurgeIndices(pIndices="",pLockExtent=0,pIgnoreIndexList="")
+	QUIT ..%PurgeIndices(pIndices,pLockExtent,pIgnoreIndexList)
+%SQLQuickLoad(%rowid,%nolock=0,pkey=0,qq=0)
+	// Get fields from row where SQLRowID=%rowid
+	new d,i,il,subs set:%nolock=2 %nolock=1
+	if %nolock=0 { if '..%SQLAcquireLock(%rowid) { set %qrc=114,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler45",,"SQLUser"_"."_"BS_HISSyncConfig",%rowid),%ROWCOUNT=0 QUIT  } set:$zu(115,2) il=$zu(115,2,0) }
+	new s,ul set ul=0,d(1)=%rowid if $zu(115,2)=1 { lock +^BSHISSyncConfigD(d(1))#"S":$zu(115,4) if $t { set ul=1 } else { set %qrc=114,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler46",,"SQLUser"_"."_"BS_HISSyncConfig",%rowid),%ROWCOUNT=0 quit  } }
+	if '$d(^BSHISSyncConfigD(d(1)),s) { set SQLCODE=100,%qrc=100 if %nolock=0 { do:$g(il) $zu(115,2,il) }} else { set SQLCODE=0
+	if qq { set d(20)=$lg(s) if d(20)'="" { new sn set sn=$p(d(20),$e(d(20)),$l(d(20),$e(d(20)))-1) if "BSHISSyncConfig"'=sn { if %nolock=0 { do ..%SQLReleaseLock(%rowid,0,1) do:$g(il) $zu(115,2,il) } kill d set:sn'["." sn="User."_sn do $classmethod(sn,"%SQLQuickLoad",%rowid,%nolock,0,1) QUIT  }}}
+	set d(2)=$lg(s,2) set d(3)=$lg(s,3) set d(4)=$lg(s,4) set d(5)=$lg(s,5) set d(6)=$lg(s,6) set d(7)=$lg(s,7) set d(8)=$lg(s,8) set d(9)=$lg(s,9) set d(10)=$lg(s,10) set d(11)=$lg(s,11) set d(12)=$lg(s,12) set d(13)=$lg(s,13) set d(14)=$lg(s,14) set d(15)=$lg(s,15) set d(16)=$lg(s,16) set d(17)=$lg(s,17) set d(18)=$lg(s,18) set d(19)=$lg(s,19) set d(20)=$lg(s)  }
+	do ..%SQLQuickLogicalToOdbc(.d)
+	if SQLCODE set %ROWCOUNT=0 set:SQLCODE<0 SQLCODE=-SQLCODE lock:ul -^BSHISSyncConfigD(d(1))#"SI" set %qrc=SQLCODE QUIT
+	set:qq d=$zobjexport("User.BSHISSyncConfig",18),d=$zobjexport(20,18) set i=-1 for  { set i=$o(d(i)) quit:i=""  set d=$zobjexport(d(i),18) } set %qrc=0,%ROWCOUNT=1 lock:ul -^BSHISSyncConfigD(d(1))#"SI" if %nolock=0 { do ..%SQLReleaseLock(%rowid,0,0) do:$g(il) $zu(115,2,il) } QUIT
+	Quit
+%SQLReleaseLock(%rowid,s=0,i=0,e="")
+	new %d
+	set:e="" e=1 set %d(1)=%rowid set s=$e("E",e)_$e("S",s)_$e("D",i)
+	lock -^BSHISSyncConfigD(%d(1))#s
+	QUIT
+%SQLReleaseTableLock(s=0,i=0)
+	set s=$e("S",s)_$e("D",i) lock -^BSHISSyncConfigD#s QUIT 1
+	Quit
+%SQLUnlock()
+	lock:$a(%l) -^BSHISSyncConfigD(%d(1))#"E"
+	QUIT
+%SQLUnlockError(cname)
+	set sqlcode=-110 if %oper="DELETE" { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler48",,"SQLUser"_"."_"BS_HISSyncConfig",cname) } else { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler49",,"SQLUser"_"."_"BS_HISSyncConfig",cname) } quit
+	Quit
+%SQLUpdate(%rowid,%check,%d,%vco,%tstart=1,%mv=0,%polymorphic=0,%soid)
+	// SQL UPDATE method for table SQLUser.BS_HISSyncConfig
+	new %e,bva,%ele,%itm,%key,%f,%l,%n,%nc,%oper,%pos,%s,icol,omcall,s,sn,sqlcode,subs,t set %oper="UPDATE",sqlcode=0,%ROWID=%rowid,$e(%e,1)=$c(0),%l=$c(0,0,0)
+	if '$d(%0CacheSQLRA) { new %0CacheSQLRA set omcall=1 }
+	if '$a(%check,7) {
+		if '$a(%check),'..%SQLValidateFields(.sqlcode) { set SQLCODE=sqlcode QUIT  }
+		do ..%SQLNormalizeFields()
+	}
+	if $d(%d(1)),%d(1)'=%rowid { set SQLCODE=-107,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler16",,"ID","SQLUser"_"."_"BS_HISSyncConfig") QUIT  }
+	for icol=2:1:20 { set $e(%e,icol)=$c($d(%d(icol))) }
+	set %d(1)=%rowid,%e(1)=%rowid
+	if '$a(%check,2) {
+		new %ls lock +^BSHISSyncConfigD(%d(1))#"E":$zu(115,4) set %ls=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,4:2,2:2,1:3,:""))
+		set:%ls=2 $e(%check,2)=$c(1) set:%ls=2&&($tlevel) %0CacheLock("User.BSHISSyncConfig","E")=1 set:$case(%ls,1:1,2:1,:0) $e(%l)=$c(1)
+		if '%ls||(%ls=3) { set SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer",$s('%ls:"SQLFiler40",1:"SQLFiler55"),,%oper,"SQLUser"_"."_"BS_HISSyncConfig",$g(%d(1))) RETURN  }
+	}
+	if %tstart { TSTART:($zu(115,1)=1)||('$TLEVEL&&($zu(115,1)=2))  }
+	set $zt="ERRORUpdate"
+	if $g(%vco)="" { do ..%SQLGetOld(%rowid,.%d,.%e,.sqlcode) i sqlcode { s SQLCODE=-109 do ..%SQLEExit() QUIT  } for icol=20,10,5,12 { set:'$d(%d(icol)) %d(icol)=%e(icol) set:%d(icol)=%e(icol) $e(%e,icol)=$c(0) }} else { do ..%SQLGetOldAll() if sqlcode { set SQLCODE=-109 do ..%SQLEExit() QUIT  } for icol=2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 { set:'$d(%d(icol)) %d(icol)=%e(icol) set:%d(icol)=%e(icol) $e(%e,icol)=$c(0) }}
+	if %e(20)'="" set sn=$p(%e(20),$e(%e(20)),$l(%e(20),$e(%e(20)))-1) if "BSHISSyncConfig"'=sn new %f do ..%SQLCopyIcolIntoName() do $classmethod(sn,"%SQLUpdate",%rowid,%check,.%d,$g(%vco),%tstart,%mv,1) QUIT
+	if '$a(%check) {
+		do {
+			if $g(%vco)'="" { d @%vco quit:sqlcode<0  }
+			if $a(%e,2),$g(%d(2))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,3)) }
+			if $a(%e,5),$g(%d(5))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,6)) }
+			if $a(%e,6),$g(%d(6))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,7)) }
+			if $a(%e,7),$g(%d(7))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,8)) }
+			if $a(%e,14),$g(%d(14))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,15)) }
+			if $a(%e,15),$g(%d(15))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,16)) }
+			if $a(%e,16),$g(%d(16))="" { do ..%SQLnBuild():'$d(%n),..%SQLMissing($lg(%n,17)) }
+			quit:sqlcode
+		} while 0
+		if sqlcode { set SQLCODE=sqlcode do ..%SQLEExit() QUIT  }
+	}
+	if $s($a(%e,2):1,$a(%e,3):1,$a(%e,4):1,$a(%e,5):1,$a(%e,6):1,$a(%e,7):1,$a(%e,8):1,$a(%e,9):1,$a(%e,10):1,$a(%e,11):1,$a(%e,12):1,$a(%e,13):1,$a(%e,14):1,$a(%e,15):1,$a(%e,16):1,$a(%e,17):1,$a(%e,18):1,$a(%e,19):1,1:$a(%e,20)) {
+		set ^BSHISSyncConfigD(%d(1))=$listupdate($g(^BSHISSyncConfigD(%d(1))),1,$a(%e,20):%d(20),$a(%e,2):%d(2),$a(%e,3):%d(3),$a(%e,4):%d(4),$a(%e,5):%d(5),$a(%e,6):%d(6),$a(%e,7):%d(7),$a(%e,8):%d(8),$a(%e,9):%d(9),$a(%e,10):%d(10),$a(%e,11):%d(11),$a(%e,12):%d(12),$a(%e,13):%d(13),$a(%e,14):%d(14),$a(%e,15):%d(15),$a(%e,16):%d(16),$a(%e,17):%d(17),$a(%e,18):%d(18),$a(%e,19):%d(19))
+	}
+	if '$a(%check,3) { 
+		if $a(%e,10)||$a(%e,20) {	// EnabledIndex index map
+			if $a(%e,10) { set sn(1)=%e(10) set:sn(1)="" sn(1)=-1E14 set sn(2)=%d(1) k ^BSHISSyncConfigI("EnabledIndex",sn(1),sn(2)) }
+			set sn(1)=%d(10) set:sn(1)="" sn(1)=-1E14 set sn(2)=%d(1) set ^BSHISSyncConfigI("EnabledIndex",sn(1),sn(2))=%d(20)
+		}
+		if $a(%e,5)||$a(%e,20) {	// HospCodeIndex index map
+			if $a(%e,5) { set sn(1)=%e(5) set sn(2)=%d(1) k ^BSHISSyncConfigI("HospCodeIndex",sn(1),sn(2)) }
+			set sn(1)=%d(5) set sn(2)=%d(1) set ^BSHISSyncConfigI("HospCodeIndex",sn(1),sn(2))=%d(20)
+		}
+		if $a(%e,12)||$a(%e,20) {	// StatusIndex index map
+			if $a(%e,12) { set sn(1)=%e(12) set:sn(1)="" sn(1)=-1E14 set sn(2)=%d(1) k ^BSHISSyncConfigI("StatusIndex",sn(1),sn(2)) }
+			set sn(1)=%d(12) set:sn(1)="" sn(1)=-1E14 set sn(2)=%d(1) set ^BSHISSyncConfigI("StatusIndex",sn(1),sn(2))=%d(20)
+		}
+	}
+	do ..%SQLUnlock() TCOMMIT:%tstart&&($zu(115,1)=1)
+	set SQLCODE=0 kill:$g(omcall) %0CacheSQLRA
+	QUIT
+ERRORUpdate	set $zt="",SQLCODE=-415,%msg=$s($g(%msg)'="":%msg_" -- ",1:"")_$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler51",,%oper,"SQLUser"_"."_"BS_HISSyncConfig",$ze) if $ze["<FRAMESTACK>" { set %msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler52",,$ze,%oper,"SQLUser"_"."_"BS_HISSyncConfig") do ##Class(%SYS.System).WriteToConsoleLog(%msg) if ($zu(67,10,$j)=1)||($zu(67,10,$j)=3) { write !,%msg h 3 } HALT  } do ..%SQLEExit() QUIT  
+	Quit
+%SQLValidateFields(sqlcode)
+	if $g(%d(4))'="",'($select($zu(115,13)&&(%d(4)=$c(0)):1,$isvalidnum(%d(4),,0,86400)&&(%d(4)'=86400):1,'$isvalidnum(%d(4)):$$Error^%apiOBJ(7207,%d(4)),%d(4)<0:$$Error^%apiOBJ(7204,%d(4),0),1:$$Error^%apiOBJ(7203,%d(4),86400))) { set sqlcode=..%SQLInvalid(4+1,%d(4)) } 
+	if $g(%d(15))'="",'($select($zu(115,13)&&(%d(15)=$c(0)):1,$isvalidnum(%d(15),,0,86400)&&(%d(15)'=86400):1,'$isvalidnum(%d(15)):$$Error^%apiOBJ(7207,%d(15)),%d(15)<0:$$Error^%apiOBJ(7204,%d(15),0),1:$$Error^%apiOBJ(7203,%d(15),86400))) { set sqlcode=..%SQLInvalid(15+1,%d(15)) } 
+	if $g(%d(18))'="",'($select($zu(115,13)&&(%d(18)=$c(0)):1,$isvalidnum(%d(18),,0,86400)&&(%d(18)'=86400):1,'$isvalidnum(%d(18)):$$Error^%apiOBJ(7207,%d(18)),%d(18)<0:$$Error^%apiOBJ(7204,%d(18),0),1:$$Error^%apiOBJ(7203,%d(18),86400))) { set sqlcode=..%SQLInvalid(18+1,%d(18)) } 
+	if $g(%d(10))'="",'($$ValidateField10(%d(10))) { set sqlcode=..%SQLInvalid(10+1,%d(10)) } 
+	if $g(%d(11))'="",'($$ValidateField11(%d(11))) { set sqlcode=..%SQLInvalid(11+1,%d(11)) } 
+	new %f for %f=3,14,17 { if $g(%d(%f))'="",'($s($zu(115,13)&&(%d(%f)=$c(0)):1,$isvalidnum(%d(%f),0,0,2980013):1,'$isvalidnum(%d(%f)):$$Error^%apiOBJ(7207,%d(%f)),%d(%f)<0:$$Error^%apiOBJ(7204,%d(%f),0),1:$$Error^%apiOBJ(7203,%d(%f),2980013))) set sqlcode=..%SQLInvalid(%f+1,$g(%d(%f))) quit  } 
+	for %f=2,9 { if $g(%d(%f))'="",'($select(%d(%f)=$c(0)&&$zu(115,13):1,$isvalidnum(%d(%f),0):1,1:$$Error^%apiOBJ(7207,%d(%f)))) set sqlcode=..%SQLInvalid(%f+1,$g(%d(%f))) quit  } 
+	for %f=6,7,12 { if $g(%d(%f))'="",'(($l(%d(%f))'>20)) set sqlcode=..%SQLInvalid(%f+1,$g(%d(%f))) quit  } 
+	if $g(%d(13))'="",'(($l(%d(13))'>2000)) { set sqlcode=..%SQLInvalid(13+1,%d(13)) } 
+	for %f=5,8 { if $g(%d(%f))'="",'(($l(%d(%f))'>50)) set sqlcode=..%SQLInvalid(%f+1,$g(%d(%f))) quit  } 
+	QUIT 'sqlcode
+ValidateField10(%val="") {	Quit $isvalidnum(%val,0,0,2)&&(+%val'=2)
+}
+ValidateField11(%val) {	Quit:$zu(115,13)&&(%val=$c(0)) 1
+	Set val=%val,%val=$select(%val=(%val\1):$zd(%val,3,,,,,,,"error")_" 00:00:00",%val?1.2N1":"2N1":"2N.1(1"."1.N):$zd($h,3)_" "_%val,$length(%val)=10:%val_" 00:00:00",1:%val)
+	Quit:($length(%val)<19||($zdth(%val,3,,,,,,,,"")="")) $$Error^%apiOBJ(7208,val)
+	Quit 1
+}
+	Quit
+%SQLnBuild() public {
+	set %n=$lb(,"ID","Deleted","DeleteDate","DeleteTime","HospCode","SyncType","Frequency","ScheduledTime","LookbackDays","Enabled","LastSyncTime","Status","ErrorMessage","CreateDate","CreateTime","CreateUser_Dr","UpdateDate","UpdateTime","UpdateUser_Dr","x__classname")
+	QUIT }
+%Save(related=1) public {
+	Set $ZTrap="%SaveERR"
+	New %objTX Set sc=1,traninit=0 If '$data(%objTX2) New %objTX2 Set %objTX2=1
+	If +$g(%objtxSTATUS)=0 { Set traninit=1 k %objtxSTATUS,%objtxLIST,%objtxOIDASSIGNED,%objtxOIDUNASSIGNED,%objtxMODIFIED,%objtxVERSION k:'$TLevel %objtxTID,%objtxID i '$zu(115,9) { s %objtxSTATUS=1 } else { TStart  s %objtxSTATUS=2 } }
+	If $get(%objTX2(+$this)) Set sc=..%BuildObjectGraph(1) Quit:('sc) sc Set intRef=+$this,objValue=$get(%objTX(1,+$g(%objTX(0,intRef)),1)),sc=..%SerializeObject(.objValue,1) Set:(''sc) %objTX(1,%objTX(0,intRef),1)=objValue Quit sc
+	Set sc=..%BuildObjectGraph(related+2) If ('sc) ZTrap "SG"
+	If '$data(%objTX(2)) s sc=1 GoTo %SaveCOMMIT
+	Set %objTX(3)=0,i="" For  Set i=$order(%objTX(2,i),1,data) Quit:i=""  Set intRef=$li(data) If '$data(%objTX(1,+$g(%objTX(0,intRef)),2)) Set %objTX(3,$increment(%objTX(3)))=%objTX(1,%objTX(0,intRef)) Kill %objTX(2,i),%objTX(11,intRef)
+	For ptr=1:1 Quit:ptr>%objTX(3)  Set objRef=%objTX(3,ptr),objValue=$get(%objTX(1,+$g(%objTX(0,+objRef)),1)),sc=objRef.%SerializeObject(.objValue) Do  Set %objTX(1,%objTX(0,+objRef),1)=objValue Kill %objTX(1,%objTX(0,+objRef),3) Do $system.CLS.SetModified(objRef,0)
+	. If ('sc) ZTrap "SG"
+	. i $g(%objtxSTATUS)=2 { Set %objtxMODIFIED(+objRef)=$system.CLS.GetModifiedBits(objRef) }
+	. Set intSucc="" For  Set intSucc=$order(%objTX(1,%objTX(0,+objRef),3,intSucc)) Quit:intSucc=""  Kill %objTX(1,%objTX(0,+objRef),3,intSucc),%objTX(1,intSucc,2,%objTX(0,+objRef)) If '$data(%objTX(1,intSucc,2)) Set %objTX(3,$increment(%objTX(3)))=%objTX(1,intSucc) Kill:$d(%objTX(11,+%objTX(1,intSucc))) %objTX(2,%objTX(11,+%objTX(1,intSucc))),%objTX(11,+%objTX(1,intSucc))
+	Kill %objTX(3) Set %objTX(3)=0 For  Set pserial=0 Do  Quit:'pserial
+	. Set i="" For  Set i=$order(%objTX(2,i),1,data) Quit:i=""  Set intPred="",intRef=$li(data) For  Set intPred=$order(%objTX(1,%objTX(0,intRef),2,intPred)) Quit:intPred=""  If $get(%objTX(1,intPred,6))=1 Set objValue=$get(%objTX(1,intPred,1)),sc=(%objTX(1,intPred)).%SerializeObject(.objValue,1) If ('sc) { If $d(%objTX(11,+%objTX(1,intPred))) { Set %objTX(2,%objTX(11,+%objTX(1,intPred)),1)=sc } Else { Set %objTX(2,$i(%objTX(2)),1)=sc,%objTX(11,+%objTX(1,intPred))=%objTX(2) } } If (''sc) Set pserial=1,%objTX(1,intPred,1)=objValue Do
+	. . Set intSucc="" For  Set intSucc=$order(%objTX(1,intPred,3,intSucc)) Quit:intSucc=""  Kill %objTX(1,intPred,3,intSucc),%objTX(1,intSucc,2,intPred) If '$data(%objTX(1,intSucc,2)) Set %objTX(3,$i(%objTX(3)))=%objTX(1,intSucc) Kill:$d(%objTX(11,+%objTX(1,intSucc))) %objTX(2,%objTX(11,+%objTX(1,intSucc))),%objTX(11,+%objTX(1,intSucc))
+	. . For ptr=1:1 Quit:ptr>%objTX(3)  Set objSerialize=%objTX(3,ptr),objValue=$get(%objTX(1,+$g(%objTX(0,+objSerialize)),1)),sc=objSerialize.%SerializeObject(.objValue) Do  Set %objTX(1,%objTX(0,+objSerialize),1)=objValue Kill %objTX(1,%objTX(0,+objSerialize),3) Do $system.CLS.SetModified(objSerialize,0)
+	. . . If ('sc) ZTrap "SG"
+	. . . i $g(%objtxSTATUS)=2 { Set %objtxMODIFIED(+objSerialize)=$system.CLS.GetModifiedBits(objSerialize) }
+	. . . Set intSucc="" For  Set intSucc=$order(%objTX(1,%objTX(0,+objSerialize),3,intSucc)) Quit:intSucc=""  Kill %objTX(1,%objTX(0,+objSerialize),3,intSucc),%objTX(1,intSucc,2,%objTX(0,+objSerialize)) If '$data(%objTX(1,intSucc,2)) Set %objTX(3,$i(%objTX(3)))=%objTX(1,intSucc) Kill:$d(%objTX(11,+%objTX(1,intSucc))) %objTX(2,%objTX(11,+%objTX(1,intSucc))),%objTX(11,+%objTX(1,intSucc))
+	. . Kill %objTX(3) Set %objTX(3)=0
+	If $data(%objTX(2))>2 {
+		Set sc=$$Error^%apiOBJ(5827,$classname())
+		set i="" for  set i=$order(%objTX(2,i)) quit:i=""  if ('$Get(%objTX(2,i,1),1)) set sc=$$EmbedStatus^%apiOBJ(sc,%objTX(2,i,1))
+	 	ZTrap "SG"
+	}
+	Set cmd="" For  Set cmd=$order(%objTX(9,cmd)) Quit:cmd=""  Xecute cmd
+%SaveCOMMIT	If traninit { i $g(%objtxSTATUS)=1 { k %objtxSTATUS } else { If $Tlevel { TCommit  } k %objtxSTATUS,%objtxLIST,%objtxOIDASSIGNED,%objtxOIDUNASSIGNED,%objtxMODIFIED,%objtxVERSION k:'$TLevel %objtxTID,%objtxID } }
+	Do $system.CLS.SetModified(0) Quit sc
+%SaveERR	Set $ZTrap="" If $extract($zerror,1,5)'="<ZSG>" Set sc=$$Error^%apiOBJ(5002,$ZE)
+	If $get(traninit) { i $g(%objtxSTATUS)=2 { s sc=$select(+sc:$$%TRollBack^%occTransaction(),1:$$AppendStatus^%occSystem(sc,$$%TRollBack^%occTransaction())) k %objtxTID,%objtxID } else { k %objtxSTATUS } }
+	Quit sc }
+%SaveData(id) public {
+	try {
+		set id=$listget(i%"%%OID") if id'="" { set insert=0,idassigned=1 } else { set insert=1,idassigned=0 }
+		set lock=0,lockok=0,tSharedLock=0
+		if 'idassigned { set id=$i(^BSHISSyncConfigD) do ..%IdSet(id) set:$g(%objtxSTATUS)=2 %objtxOIDASSIGNED(+$this)="" }
+		set zzc10v1=$s(i%Status'="":i%Status,1:-1E14)
+		set zzc10v2=$s(i%Enabled'="":i%Enabled,1:-1E14)
+		try {
+			set tInnerException = ""
+			;
+			if 'insert {
+				if (i%%Concurrency<4)&&(i%%Concurrency) { lock +(^BSHISSyncConfigD(id)#"E"):$zu(115,4) set lockok=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,2:2,4:2,:0)) set:lockok=2&&($tlevel) %0CacheLock($classname(),"E")=1 if lockok { set lock=1 } else { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
+				if ('$Data(^BSHISSyncConfigD(id))) {
+					set insert=1
+					if lock { lock -(^BSHISSyncConfigD(id)#"E") set (lock,lockok) = 0 }
+				}
+			}
+			if insert {
+				if ('lockok&&..%Concurrency&&$tlevel)||(i%%Concurrency=4) {  lock +(^BSHISSyncConfigD(id)#"E"):$zu(115,4) set lockok=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,2:2,4:2,:0)) set:(lockok=2&&(i%%Concurrency'=4)) %0CacheLock($classname(),"E")=1 set:lockok lock=1 if 'lockok { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
+				if i%%Concurrency=3 { lock +(^BSHISSyncConfigD(id)#"ES") set tSharedLock=1 }
+				set ^BSHISSyncConfigD(id)=$lb("",i%Deleted,i%DeleteDate,i%DeleteTime,i%HospCode,i%SyncType,i%Frequency,i%ScheduledTime,i%LookbackDays,i%Enabled,i%LastSyncTime,i%Status,i%ErrorMessage,i%CreateDate,i%CreateTime,i%CreateUserDr,i%UpdateDate,i%UpdateTime,i%UpdateUserDr)
+				set ^BSHISSyncConfigI("EnabledIndex",zzc10v2,id)=""
+				set ^BSHISSyncConfigI("HospCodeIndex",i%HospCode,id)=""
+				set ^BSHISSyncConfigI("StatusIndex",zzc10v1,id)=""
+			}
+			else {
+				set zzc31v1=^BSHISSyncConfigD(id)
+				set zzc31v2=$listget(zzc31v1,12)
+				set zzc31v3=$listget(zzc31v1,5)
+				set zzc31v4=$listget(zzc31v1,10)
+				if (i%Enabled'=zzc31v4) {
+					kill ^BSHISSyncConfigI("EnabledIndex",$s(zzc31v4'="":zzc31v4,1:-1E14),id)
+					set ^BSHISSyncConfigI("EnabledIndex",zzc10v2,id)=""
+				}
+				if (i%HospCode'=zzc31v3) {
+					kill ^BSHISSyncConfigI("HospCodeIndex",zzc31v3,id)
+					set ^BSHISSyncConfigI("HospCodeIndex",i%HospCode,id)=""
+				}
+				if (i%Status'=zzc31v2) {
+					kill ^BSHISSyncConfigI("StatusIndex",$s(zzc31v2'="":zzc31v2,1:-1E14),id)
+					set ^BSHISSyncConfigI("StatusIndex",zzc10v1,id)=""
+				}
+				set ^BSHISSyncConfigD(id)=$lb("",i%Deleted,i%DeleteDate,i%DeleteTime,i%HospCode,i%SyncType,i%Frequency,i%ScheduledTime,i%LookbackDays,i%Enabled,i%LastSyncTime,i%Status,i%ErrorMessage,i%CreateDate,i%CreateTime,i%CreateUserDr,i%UpdateDate,i%UpdateTime,i%UpdateUserDr)
+			}
+			set tStatus = 1
+		}
+		catch tInnerException {
+			if ('idassigned) { Set $zobjoid("",$listget(i%"%%OID"))="",i%"%%OID"="" kill:$g(%objtxSTATUS)=2 %objtxOIDASSIGNED(+$this) }
+			if (tSharedLock) {  lock -(^BSHISSyncConfigD(id)#"ES") } elseif (lockok=1)&&(insert)&&(i%%Concurrency=4) {  lock -(^BSHISSyncConfigD(id)) }
+		}
+		if lock lock -(^BSHISSyncConfigD(id)#"E")
+		if $Isobject(tInnerException) { throw tInnerException }
+	}
+	catch tException {
+		set tStatus = tException.AsStatus()
+	}
+	quit tStatus }
+%SaveDirect(id="",idList="",data,concurrency=-1) public {
+	try {
+		set zzc5v1=$li(idList,1)
+		set zzc5v2=$listget(data,12)
+		set zzc5v3=$listget(data,5)
+		set zzc5v4=$listget(data,10)
+		set zzc5v5=$listget(data,1)
+		if concurrency=-1 { set concurrency=$zu(115,10) }
+		if id'="" { set insert=0,idassigned=1 } else { set insert=1,idassigned=0 }
+		set lock=0,tSharedLock=0
+		if 'idassigned { set id=$i(^BSHISSyncConfigD) }
+		set zzc10v1=$s(zzc5v2'="":zzc5v2,1:-1E14)
+		set zzc10v2=$s(zzc5v4'="":zzc5v4,1:-1E14)
+		try {
+			set tInnerException = ""
+			;
+			if 'insert {
+				if concurrency { lock +(^BSHISSyncConfigD(id)#"E"):$zu(115,4) set lock=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,2:2,4:2,:0)) set:lock=2&&($tlevel) %0CacheLock($classname(),"E")=1 if 'lock { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
+				if ('$Data(^BSHISSyncConfigD(id))) {
+					set insert=1
+					if lock { lock -(^BSHISSyncConfigD(id)#"E") set (lock,lockok) = 0 }
+				}
+			}
+			if insert {
+				if concurrency { lock +(^BSHISSyncConfigD(id)#"E"):$zu(115,4) set lock=$s('$t:0,1:$case($SYSTEM.Lock.ReturnCode(),0:1,2:2,4:2,:0)) set:lock=2&&($tlevel) %0CacheLock($classname(),"E")=1 if 'lock { Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5803,$classname())) } }
+				set ^BSHISSyncConfigD(id)=data
+				set ^BSHISSyncConfigI("EnabledIndex",zzc10v2,id)=zzc5v5
+				set ^BSHISSyncConfigI("HospCodeIndex",zzc5v3,id)=zzc5v5
+				set ^BSHISSyncConfigI("StatusIndex",zzc10v1,id)=zzc5v5
+			}
+			else {
+				set zzc31v1=^BSHISSyncConfigD(zzc5v1)
+				set zzc31v2=$listget(zzc31v1,12)
+				set zzc31v3=$listget(zzc31v1,5)
+				set zzc31v4=$listget(zzc31v1,10)
+				if (zzc5v4'=zzc31v4) {
+					kill ^BSHISSyncConfigI("EnabledIndex",$s(zzc31v4'="":zzc31v4,1:-1E14),zzc5v1)
+					set ^BSHISSyncConfigI("EnabledIndex",zzc10v2,id)=zzc5v5
+				}
+				if (zzc5v3'=zzc31v3) {
+					kill ^BSHISSyncConfigI("HospCodeIndex",zzc31v3,zzc5v1)
+					set ^BSHISSyncConfigI("HospCodeIndex",zzc5v3,id)=zzc5v5
+				}
+				if (zzc5v2'=zzc31v2) {
+					kill ^BSHISSyncConfigI("StatusIndex",$s(zzc31v2'="":zzc31v2,1:-1E14),zzc5v1)
+					set ^BSHISSyncConfigI("StatusIndex",zzc10v1,id)=zzc5v5
+				}
+				set ^BSHISSyncConfigD(id)=data
+			}
+			set tStatus = 1
+		}
+		catch tInnerException {
+		}
+		if lock lock -(^BSHISSyncConfigD(id)#"E")
+		if $Isobject(tInnerException) { throw tInnerException }
+	}
+	catch tException {
+		set tStatus = tException.AsStatus()
+	}
+	quit tStatus }
+%SaveIndices(pStartId="",pEndId="",lockExtent=0) public {
+	If lockExtent {
+		Set sc=..%LockExtent(0)
+		Quit:('sc) sc
+	}
+	s id=$order(^BSHISSyncConfigD(pStartId),-1),tEndId=$S(pEndId'="":pEndId,1:pStartId)
+BSLoop	s id=$O(^BSHISSyncConfigD(id)) g:(id="")||(id]]tEndId) BSLoopDun
+	Set bsv0N1=$Get(^BSHISSyncConfigD(id))
+	Set bsv0N2=$listget(bsv0N1,10)
+	Set bsv0N3=$s(bsv0N2'="":bsv0N2,1:-1E14)
+	Set ^BSHISSyncConfigI("EnabledIndex",bsv0N3,id)=$listget(bsv0N1,1)
+	Set bsv0N4=$listget(bsv0N1,5)
+	Set ^BSHISSyncConfigI("HospCodeIndex",bsv0N4,id)=$listget(bsv0N1,1)
+	Set bsv0N5=$listget(bsv0N1,12)
+	Set bsv0N6=$s(bsv0N5'="":bsv0N5,1:-1E14)
+	Set ^BSHISSyncConfigI("StatusIndex",bsv0N6,id)=$listget(bsv0N1,1)
+	g BSLoop
+BSLoopDun
+	If lockExtent { Do ..%UnlockExtent(0) }
+	Quit 1
+CatchError	Set $ZTrap=""
+	If $ZE'="" {
+		Set sc = $$Error^%apiOBJ(5002,$ZE)
+	}
+	If lockExtent { Do ..%UnlockExtent(0) }
+	Quit sc }
+%SerializeObject(serial,partial=0) public {
+	try {
+		If $get(%objTX2(+$this)) { Set partial = 1 } ElseIf ('partial) { Set %objTX2(+$this) = 1 }
+		Set sc=..%ValidateObject(,0) Throw:('sc) ##class(%Exception.StatusException).ThrowIfInterrupt(sc)
+		Set sc=..%NormalizeObject() Throw:('sc) ##class(%Exception.StatusException).ThrowIfInterrupt(sc)
+		If r%CreateUserDr'="" { Set:'$data(%objTX(0,+r%CreateUserDr)) %objTX(0,+r%CreateUserDr)=$i(%objTX(1)),%objTX(1,%objTX(0,+r%CreateUserDr))=r%CreateUserDr,%objTX(1,%objTX(0,+r%CreateUserDr),1)=..CreateUserDrGetObject(1),%objTX(1,%objTX(0,+r%CreateUserDr),6)=1 Set M%CreateUserDr=1,i%CreateUserDr=$listget(%objTX(1,%objTX(0,+r%CreateUserDr),1)) }
+		If i%CreateUserDr="" Throw ##class(%Exception.StatusException).ThrowIfInterrupt($$Error^%apiOBJ(5659,$classname()_"::"_"CreateUserDr"))
+		If r%UpdateUserDr'="" { Set:'$data(%objTX(0,+r%UpdateUserDr)) %objTX(0,+r%UpdateUserDr)=$i(%objTX(1)),%objTX(1,%objTX(0,+r%UpdateUserDr))=r%UpdateUserDr,%objTX(1,%objTX(0,+r%UpdateUserDr),1)=..UpdateUserDrGetObject(1),%objTX(1,%objTX(0,+r%UpdateUserDr),6)=1 Set M%UpdateUserDr=1,i%UpdateUserDr=$listget(%objTX(1,%objTX(0,+r%UpdateUserDr),1)) }
+		s:$g(%objtxSTATUS)=2 %objtxLIST(+$this)=$this
+		Set id=$listget(serial),sc=..%SaveData(.id) If ('sc) { Throw ##class(%Exception.StatusException).ThrowIfInterrupt(sc) }
+		Set serial=(..%Oid())
+		if 'partial {
+			Set %objTX2(+$this) = 0
+		}
+		set sc=1
+	}
+	catch tException {
+		If 'partial { Set %objTX2(+$this) = 0 }
+		set sc = tException.AsStatus()
+	}
+	Quit sc }
+%AddToSaveSet(depth=3,refresh=0) public {
+	If $data(%objTX(0,+$this)) && ('refresh) Quit 1
+	Set sc=1,intOref=+$this
+	If refresh,$data(%objTX(0,intOref),index) Set intPoref="" For  Set intPoref=$order(%objTX(1,index,2,intPoref)) Quit:intPoref=""  Kill %objTX(1,%objTX(0,intPoref),3,index),%objTX(1,index,2,%objTX(0,intPoref))
+	Set serial=i%"%%OID",%objTX(0,intOref)=$i(%objTX(1)),%objTX(1,%objTX(1))=$this,%objTX(1,%objTX(1),1)=serial,%objTX(1,%objTX(1),6)=1 If (serial '= "") && (depth<2) { Quit 1 } Else { Set %objTX(7,%objTX(1))=$lb(intOref,1) }
+	Set Poref=r%CreateUserDr If Poref'="" Set:'$data(%objTX(0,+Poref)) %objTX(6,$i(%objTX(6)))=Poref Set %objTX(8,$i(%objTX(8)))=$lb(+Poref,intOref,2)
+	Set Poref=r%UpdateUserDr If Poref'="" Set:'$data(%objTX(0,+Poref)) %objTX(6,$i(%objTX(6)))=Poref Set %objTX(8,$i(%objTX(8)))=$lb(+Poref,intOref,2)
+exit	Quit sc }
+%SortBegin(idxlist="",excludeunique=0)
+	if $select(idxlist="":1,$listfind(idxlist,"EnabledIndex"):1,1:0) If $SortBegin(^BSHISSyncConfigI("EnabledIndex"))
+	if $select(idxlist="":1,$listfind(idxlist,"HospCodeIndex"):1,1:0) If $SortBegin(^BSHISSyncConfigI("HospCodeIndex"))
+	if $select(idxlist="":1,$listfind(idxlist,"StatusIndex"):1,1:0) If $SortBegin(^BSHISSyncConfigI("StatusIndex"))
+	Quit 1
+%SortEnd(idxlist="",commit=1,excludeunique=0) public {
+	if $select(idxlist="":1,$listfind(idxlist,"EnabledIndex"):1,1:0) If $SortEnd(^BSHISSyncConfigI("EnabledIndex"),commit)
+	if $select(idxlist="":1,$listfind(idxlist,"HospCodeIndex"):1,1:0) If $SortEnd(^BSHISSyncConfigI("HospCodeIndex"),commit)
+	if $select(idxlist="":1,$listfind(idxlist,"StatusIndex"):1,1:0) If $SortEnd(^BSHISSyncConfigI("StatusIndex"),commit)
+	Quit 1 }
+%UnlockExtent(shared=0,immediate=0) public {
+	If 'shared {
+		If 'immediate {
+			Lock -^BSHISSyncConfigD
+			 Quit 1
+		}
+		Lock -^BSHISSyncConfigD#"I"
+		Quit 1
+	}
+	If 'immediate {
+		Lock -^BSHISSyncConfigD#"S"
+		Quit 1
+	}
+	Lock -^BSHISSyncConfigD#"SI"
+	Quit 1 }
+%UnlockId(id,shared=0,immediate=0) public {
+	If 'shared {
+		If 'immediate {
+			Lock -(^BSHISSyncConfigD(id)#"E")
+			Quit 1
+		}
+		Lock -(^BSHISSyncConfigD(id)#"IE")
+		Quit 1
+	}
+	If 'immediate {
+		Lock -(^BSHISSyncConfigD(id)#"SE")
+		Quit 1
+	}
+	Lock -(^BSHISSyncConfigD(id)#"SIE")
+	Quit 1 }
+%ValidateIndices(idxList="",autoCorrect=0,lockOption=1,multiProcess=1)
+	if '$listvalid(idxList) { QUIT $$Error^%apiOBJ(5591,"##class(User.BSHISSyncConfig).%ValidateIndices()","idxList",""""" or a $list of index names") }
+	if $case(autoCorrect,1:0,0:0,:1) { QUIT $$Error^%apiOBJ(5591,"##class(User.BSHISSyncConfig).%ValidateIndices()","autoCorrect","'0' or '1'") }
+	if $case(lockOption,2:0,1:0,0:0,:1) { QUIT $$Error^%apiOBJ(5591,"##class(User.BSHISSyncConfig).%ValidateIndices()","lockOption","'0', '1' or '2'") }
+	if $case(multiProcess,1:0,0:0,:1) { QUIT $$Error^%apiOBJ(5591,"##class(User.BSHISSyncConfig).%ValidateIndices()","multiProcess","'0' or '1'") }
+	new mapList QUIT $$ValidateIndices^%SYS.SECURITY("User.BSHISSyncConfig",idxList,autoCorrect,lockOption,multiProcess)
+%ValidateObject(force=0,checkserial=1) public {
+	set sc=1
+	If r%CreateUserDr="",i%CreateUserDr="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::CreateUserDr("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
+	If '$system.CLS.GetModified() Quit sc
+	Set iv=..CreateDate If iv="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::CreateDate("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
+	If m%CreateDate Set rc=(..CreateDateIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"CreateDate",iv)
+	Set iv=..CreateTime If iv="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::CreateTime("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
+	If m%CreateTime Set rc=(..CreateTimeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"CreateTime",iv)
+	If m%DeleteDate Set iv=..DeleteDate If iv'="" Set rc=(..DeleteDateIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"DeleteDate",iv)
+	If m%DeleteTime Set iv=..DeleteTime If iv'="" Set rc=(..DeleteTimeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"DeleteTime",iv)
+	Set iv=..Deleted If iv="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::Deleted("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
+	If m%Deleted Set rc=(..DeletedIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"Deleted",iv)
+	If m%Enabled Set iv=..Enabled If iv'="" Set rc=(..EnabledIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"Enabled",iv)
+	If m%ErrorMessage Set iv=..ErrorMessage If iv'="" Set rc=(..ErrorMessageIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"ErrorMessage",iv)
+	Set iv=..Frequency If iv="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::Frequency("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
+	If m%Frequency Set rc=(..FrequencyIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"Frequency",iv)
+	Set iv=..HospCode If iv="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::HospCode("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
+	If m%HospCode Set rc=(..HospCodeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"HospCode",iv)
+	If m%LastSyncTime Set iv=..LastSyncTime If iv'="" Set rc=(..LastSyncTimeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"LastSyncTime",iv)
+	If m%LookbackDays Set iv=..LookbackDays If iv'="" Set rc=(..LookbackDaysIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"LookbackDays",iv)
+	If m%ScheduledTime Set iv=..ScheduledTime If iv'="" Set rc=(..ScheduledTimeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"ScheduledTime",iv)
+	If m%Status Set iv=..Status If iv'="" Set rc=(..StatusIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"Status",iv)
+	Set iv=..SyncType If iv="" Set rc=$$Error^%apiOBJ(5659,$classname()_"::SyncType("_$this_",ID="_..%Id()_")"),sc=$select(+sc:rc,1:$$AppendStatus^%occSystem(sc,rc))
+	If m%SyncType Set rc=(..SyncTypeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"SyncType",iv)
+	If m%UpdateDate Set iv=..UpdateDate If iv'="" Set rc=(..UpdateDateIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"UpdateDate",iv)
+	If m%UpdateTime Set iv=..UpdateTime If iv'="" Set rc=(..UpdateTimeIsValid(iv)) If ('rc) Set sc=$$EmbedErr^%occSystem(sc,rc,5802,"UpdateTime",iv)
+	Quit sc }
+zFromDynamicObj(pDynamicObject) public {
+	set sc=1
+	try {
+		if (pDynamicObject.%IsDefined("CreateDate")) && (..CreateDate'=pDynamicObject."CreateDate") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."CreateDate"
+					set value=$METHOD($THIS,"CreateDateXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."CreateDate"
+					set $ZERROR=""
+				}
+				set ..CreateDate=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("CreateTime")) && (..CreateTime'=pDynamicObject."CreateTime") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."CreateTime"
+					set value=$METHOD($THIS,"CreateTimeXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."CreateTime"
+					set $ZERROR=""
+				}
+				set ..CreateTime=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("CreateUserDr")) {
+			try {
+				set newIdvalue=pDynamicObject."CreateUserDr"
+				set existingIdValue=..CreateUserDrGetObjectId()
+				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"CreateUserDr")=##class(User.HBUser).%OpenId(newIdvalue)
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("DeleteDate")) && (..DeleteDate'=pDynamicObject."DeleteDate") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."DeleteDate"
+					set value=$METHOD($THIS,"DeleteDateXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."DeleteDate"
+					set $ZERROR=""
+				}
+				set ..DeleteDate=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("DeleteTime")) && (..DeleteTime'=pDynamicObject."DeleteTime") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."DeleteTime"
+					set value=$METHOD($THIS,"DeleteTimeXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."DeleteTime"
+					set $ZERROR=""
+				}
+				set ..DeleteTime=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("Deleted")) && (..Deleted'=pDynamicObject."Deleted") {
+			try {
+				set value=pDynamicObject."Deleted"
+				set ..Deleted=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("Enabled")) && (..Enabled'=pDynamicObject."Enabled") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."Enabled"
+					set value=$METHOD($THIS,"EnabledXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."Enabled"
+					set $ZERROR=""
+				}
+				set ..Enabled=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("ErrorMessage")) && (..ErrorMessage'=pDynamicObject."ErrorMessage") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."ErrorMessage"
+					set value=$METHOD($THIS,"ErrorMessageXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."ErrorMessage"
+					set $ZERROR=""
+				}
+				set ..ErrorMessage=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("Frequency")) && (..Frequency'=pDynamicObject."Frequency") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."Frequency"
+					set value=$METHOD($THIS,"FrequencyXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."Frequency"
+					set $ZERROR=""
+				}
+				set ..Frequency=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("HospCode")) && (..HospCode'=pDynamicObject."HospCode") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."HospCode"
+					set value=$METHOD($THIS,"HospCodeXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."HospCode"
+					set $ZERROR=""
+				}
+				set ..HospCode=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("LastSyncTime")) && (..LastSyncTime'=pDynamicObject."LastSyncTime") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."LastSyncTime"
+					set value=$METHOD($THIS,"LastSyncTimeXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."LastSyncTime"
+					set $ZERROR=""
+				}
+				set ..LastSyncTime=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("LookbackDays")) && (..LookbackDays'=pDynamicObject."LookbackDays") {
+			try {
+				set value=pDynamicObject."LookbackDays"
+				set ..LookbackDays=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("ScheduledTime")) && (..ScheduledTime'=pDynamicObject."ScheduledTime") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."ScheduledTime"
+					set value=$METHOD($THIS,"ScheduledTimeXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."ScheduledTime"
+					set $ZERROR=""
+				}
+				set ..ScheduledTime=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("Status")) && (..Status'=pDynamicObject."Status") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."Status"
+					set value=$METHOD($THIS,"StatusXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."Status"
+					set $ZERROR=""
+				}
+				set ..Status=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("SyncType")) && (..SyncType'=pDynamicObject."SyncType") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."SyncType"
+					set value=$METHOD($THIS,"SyncTypeXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."SyncType"
+					set $ZERROR=""
+				}
+				set ..SyncType=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("UpdateDate")) && (..UpdateDate'=pDynamicObject."UpdateDate") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."UpdateDate"
+					set value=$METHOD($THIS,"UpdateDateXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."UpdateDate"
+					set $ZERROR=""
+				}
+				set ..UpdateDate=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("UpdateTime")) && (..UpdateTime'=pDynamicObject."UpdateTime") {
+			try {
+				try {
+					set tDynamicValue=pDynamicObject."UpdateTime"
+					set value=$METHOD($THIS,"UpdateTimeXSDToLogical",tDynamicValue)
+					set:((tDynamicValue'="")&&(value="")) value=tDynamicValue
+				} catch(ex) {
+					set value=pDynamicObject."UpdateTime"
+					set $ZERROR=""
+				}
+				set ..UpdateTime=value
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+		if (pDynamicObject.%IsDefined("UpdateUserDr")) {
+			try {
+				set newIdvalue=pDynamicObject."UpdateUserDr"
+				set existingIdValue=..UpdateUserDrGetObjectId()
+				set:(existingIdValue'=newIdvalue) $PROPERTY($this,"UpdateUserDr")=##class(User.HBUser).%OpenId(newIdvalue)
+			} catch(ex) {
+				set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+			}
+		}
+	} catch(ex) {
+		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+	}
+	quit sc }
+zToDynamicObj(pDynamicObject) public {
+	set sc=1
+	try {
+		set pDynamicObject={"ID":(..%Id()),"CreateDate":(..GetLogicalToXSDValue($This,"CreateDate",..CreateDate)),"CreateTime":(..GetLogicalToXSDValue($This,"CreateTime",..CreateTime)),"CreateUserDr":($CASE($ISOBJECT(..CreateUserDr),1:..CreateUserDr.%Id(),:"")),"DeleteDate":(..GetLogicalToXSDValue($This,"DeleteDate",..DeleteDate)),"DeleteTime":(..GetLogicalToXSDValue($This,"DeleteTime",..DeleteTime)),"Deleted":(..Deleted),"Enabled":(..GetLogicalToXSDValue($This,"Enabled",..Enabled)),"ErrorMessage":(..GetLogicalToXSDValue($This,"ErrorMessage",..ErrorMessage)),"Frequency":(..GetLogicalToXSDValue($This,"Frequency",..Frequency)),"HospCode":(..GetLogicalToXSDValue($This,"HospCode",..HospCode)),"LastSyncTime":(..GetLogicalToXSDValue($This,"LastSyncTime",..LastSyncTime)),"LookbackDays":(..LookbackDays),"ScheduledTime":(..GetLogicalToXSDValue($This,"ScheduledTime",..ScheduledTime)),"Status":(..GetLogicalToXSDValue($This,"Status",..Status)),"SyncType":(..GetLogicalToXSDValue($This,"SyncType",..SyncType)),"UpdateDate":(..GetLogicalToXSDValue($This,"UpdateDate",..UpdateDate)),"UpdateTime":(..GetLogicalToXSDValue($This,"UpdateTime",..UpdateTime)),"UpdateUserDr":($CASE($ISOBJECT(..UpdateUserDr),1:..UpdateUserDr.%Id(),:""))}
+	} catch(ex) {
+		set sc=$SYSTEM.Status.AppendStatus(ex.AsStatus(),sc)
+	}
+	quit sc }
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("User.BSHISSyncConfig",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"User.BSHISSyncConfig")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"User.BSHISSyncConfig")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="User.BSHISSyncConfig"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="BSHISSyncConfig"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"BSHISSyncConfig"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"BSHISSyncConfig"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set val=..Deleted
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"Deleted"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"long""",1:"")_">"_val_endprefix_"Deleted>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..DeleteDate
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"DeleteDate"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"date""",1:"")_">"_$select(val="":"",1:$zdate(val,3,,,,,-672045))_endprefix_"DeleteDate>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..DeleteTime
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"DeleteTime"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"time""",1:"")_">"_$select(val="":"",1:$ztime(val,1,$l($p(val,".",2)),,1)_"Z")_endprefix_"DeleteTime>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..HospCode
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"HospCode"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"HospCode>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..SyncType
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"SyncType"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"SyncType>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..Frequency
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"Frequency"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"Frequency>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..ScheduledTime
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"ScheduledTime"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"ScheduledTime>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..LookbackDays
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"LookbackDays"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"long""",1:"")_">"_val_endprefix_"LookbackDays>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..Enabled
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"Enabled"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"boolean""",1:"")_">"_$s(val:"true",1:"false")_endprefix_"Enabled>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..LastSyncTime
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"LastSyncTime"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"dateTime""",1:"")_">"_$select(val="":"",1:$translate(val," ","T")_"Z")_endprefix_"LastSyncTime>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..Status
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"Status"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"Status>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..ErrorMessage
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"ErrorMessage"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"string""",1:"")_">"_$select(val=$c(0):"",1:$select((val["<")||(val[">")||(val["&"):"<![CDATA["_$replace(val,"]]>","]]]]><![CDATA[>")_"]]>",1:val))_endprefix_"ErrorMessage>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..CreateDate
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"CreateDate"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"date""",1:"")_">"_$select(val="":"",1:$zdate(val,3,,,,,-672045))_endprefix_"CreateDate>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..CreateTime
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"CreateTime"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"time""",1:"")_">"_$select(val="":"",1:$ztime(val,1,$l($p(val,".",2)),,1)_"Z")_endprefix_"CreateTime>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..CreateUserDr
+ If $IsObject(val) , deepFlag {
+   Set id=""
+   If encoded,'inlineFlag {
+     Set temp=$select($parameter("User.HBUser","XMLSUMMARY")'="":-1,1:1)
+     Set id=+$get(idlist(temp*val))
+     If 'soap12 , (id=0) Set id=$increment(idlist),oreflist(temp*id)=val,idlist(temp*val)=id
+   }
+   If +id'=0 {
+     Set %xmlmsg=currentIndent_beginprefix_"CreateUserDr "_$select(soap12:soapPrefix_"ref=""",1:"href=""#")_"id"_id_""" />" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+   } Else { if id=0 Set id=$increment(idlist)
+     Set topArg="CreateUserDr",summaryArg=1,group=0,createId=$get(id),typeAttr=$select(encoded||xsitype:"*",1:"User.HBUser"),local=1,savexsiAttrs=xsiAttrs
+     Set sc=val.XMLExportInternal() Goto:'sc XMLExportExit Set xsiAttrs=savexsiAttrs
+   }
+ }
+ Set val=..UpdateDate
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"UpdateDate"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"date""",1:"")_">"_$select(val="":"",1:$zdate(val,3,,,,,-672045))_endprefix_"UpdateDate>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..UpdateTime
+ If val'="" {
+   Set %xmlmsg=currentIndent_beginprefix_"UpdateTime"_$select(xsitype:" "_xsiPrefix_"type="""_schemaPrefix_"time""",1:"")_">"_$select(val="":"",1:$ztime(val,1,$l($p(val,".",2)),,1)_"Z")_endprefix_"UpdateTime>" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ }
+ Set val=..UpdateUserDr
+ If $IsObject(val) , deepFlag {
+   Set id=""
+   If encoded,'inlineFlag {
+     Set temp=$select($parameter("User.HBUser","XMLSUMMARY")'="":-1,1:1)
+     Set id=+$get(idlist(temp*val))
+     If 'soap12 , (id=0) Set id=$increment(idlist),oreflist(temp*id)=val,idlist(temp*val)=id
+   }
+   If +id'=0 {
+     Set %xmlmsg=currentIndent_beginprefix_"UpdateUserDr "_$select(soap12:soapPrefix_"ref=""",1:"href=""#")_"id"_id_""" />" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+   } Else { if id=0 Set id=$increment(idlist)
+     Set topArg="UpdateUserDr",summaryArg=1,group=0,createId=$get(id),typeAttr=$select(encoded||xsitype:"*",1:"User.HBUser"),local=1,savexsiAttrs=xsiAttrs
+     Set sc=val.XMLExportInternal() Goto:'sc XMLExportExit Set xsiAttrs=savexsiAttrs
+   }
+ }
+ If indentFlag { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ } ElseIf $get(oreflist)'=1 {
+   Set oreflist=1
+   Set id=$order(oreflist(""))
+   While id'="" {
+     Set val=oreflist(id)
+     Kill oreflist(id)
+     Set group=0,createId=$zabs(id),typeAttr="*",local=savelocal,xsiAttrs=initialxsiAttrs
+     If $classname(val)="User.BSHISSyncConfig" {
+       Set attrsArg=attrsVal
+       Set topArg=tag,summaryArg=0
+       Set sc=val.XMLExportInternal()
+     } Else {
+       Set topArg="",summaryArg=(id<0)
+       Set sc=val.XMLExportInternal()
+     }
+     If 'sc Quit
+     Set id=$order(oreflist(""))
+   }
+   Kill oreflist
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("User.BSHISSyncConfig",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"User.BSHISSyncConfig")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+ If $get(checkRequired),(''sc) { Set nodelist=""
+   If '$data(exists("CreateDate")) Set nodelist=nodelist_"CreateDate, "
+   If '$data(exists("CreateTime")) Set nodelist=nodelist_"CreateTime, "
+   If '$data(exists("CreateUserDr")) Set nodelist=nodelist_"CreateUserDr, "
+   If '$data(exists("Deleted")) Set nodelist=nodelist_"Deleted, "
+   If '$data(exists("Frequency")) Set nodelist=nodelist_"Frequency, "
+   If '$data(exists("HospCode")) Set nodelist=nodelist_"HospCode, "
+   If '$data(exists("SyncType")) Set nodelist=nodelist_"SyncType, "
+   If nodelist'="" Set sc=$$Error^%apiOBJ(6318,$extract(nodelist,1,*-2))
+ }
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ If tag="Deleted" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   Set exists("Deleted")=1
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             Set data=$zstrip(data,"<>W",$c(13,10)) If data'="" Set data=$s($tr(data,"Ee(),.")'=data:"",1:$number(data,"I")) Goto:data="" XMLImportErrchild Goto:('$select(data=$c(0)&&$zu(115,13):1,$isvalidnum(data,0):1,1:$$Error^%apiOBJ(7207,data))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..Deleted=data
+   Goto XMLLOOP } }
+ If tag="DeleteDate" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             Set data=$zstrip(data,"<>W",$c(13,10)) If data'="" Set data=..DeleteDateXSDToLogical(data) Goto:data="" XMLImportErrchild Goto:('$s($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,0,0,2980013):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,2980013))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..DeleteDate=data
+   Goto XMLLOOP } }
+ If tag="DeleteTime" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             Set data=$zstrip(data,"<>W",$c(13,10)) If data'="" Set data=..DeleteTimeXSDToLogical(data) Goto:data="" XMLImportErrchild Goto:('$select($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,,0,86400)&&(data'=86400):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,86400))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..DeleteTime=data
+   Goto XMLLOOP } }
+ If tag="HospCode" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   Set exists("HospCode")=1
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(($l(data)'>50):1,1:$$Error^%apiOBJ(7201,data,50))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..HospCode=data
+   Goto XMLLOOP } }
+ If tag="SyncType" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   Set exists("SyncType")=1
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(($l(data)'>20):1,1:$$Error^%apiOBJ(7201,data,20))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..SyncType=data
+   Goto XMLLOOP } }
+ If tag="Frequency" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   Set exists("Frequency")=1
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(($l(data)'>20):1,1:$$Error^%apiOBJ(7201,data,20))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..Frequency=data
+   Goto XMLLOOP } }
+ If tag="ScheduledTime" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(($l(data)'>50):1,1:$$Error^%apiOBJ(7201,data,50))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..ScheduledTime=data
+   Goto XMLLOOP } }
+ If tag="LookbackDays" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             Set data=$zstrip(data,"<>W",$c(13,10)) If data'="" Set data=$s($tr(data,"Ee(),.")'=data:"",1:$number(data,"I")) Goto:data="" XMLImportErrchild Goto:('$select(data=$c(0)&&$zu(115,13):1,$isvalidnum(data,0):1,1:$$Error^%apiOBJ(7207,data))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..LookbackDays=data
+   Goto XMLLOOP } }
+ If tag="Enabled" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             Set data=$zstrip(data,"<>W",$c(13,10)) If data'="" Set data=$case(data,"true":1,"false":0,1:1,0:0,:"") Goto:data="" XMLImportErrchild Goto:('$s($isvalidnum(data,0,0,2)&&(+data'=2):1,1:$$Error^%apiOBJ(7206,data))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..Enabled=data
+   Goto XMLLOOP } }
+ If tag="LastSyncTime" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             Set data=$zstrip(data,"<>W",$c(13,10)) If data'="" Set data=..LastSyncTimeXSDToLogical(data) Goto:data="" XMLImportErrchild Goto:('..LastSyncTimeIsValid(data)) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..LastSyncTime=data
+   Goto XMLLOOP } }
+ If tag="Status" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(($l(data)'>20):1,1:$$Error^%apiOBJ(7201,data,20))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..Status=data
+   Goto XMLLOOP } }
+ If tag="ErrorMessage" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" If '##class(%XML.ImportHandler).SerializeNode(tree,child,0,0,.data,,,childlist) Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             If data="" Set data=$c(0)
+             If data'="" Goto:('$s(($l(data)'>2000):1,1:$$Error^%apiOBJ(7201,data,2000))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..ErrorMessage=data
+   Goto XMLLOOP } }
+ If tag="CreateDate" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   Set exists("CreateDate")=1
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             Set data=$zstrip(data,"<>W",$c(13,10)) If data'="" Set data=..CreateDateXSDToLogical(data) Goto:data="" XMLImportErrchild Goto:('$s($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,0,0,2980013):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,2980013))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..CreateDate=data
+   Goto XMLLOOP } }
+ If tag="CreateTime" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   Set exists("CreateTime")=1
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             Set data=$zstrip(data,"<>W",$c(13,10)) If data'="" Set data=..CreateTimeXSDToLogical(data) Goto:data="" XMLImportErrchild Goto:('$select($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,,0,86400)&&(data'=86400):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,86400))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..CreateTime=data
+   Goto XMLLOOP } }
+ If tag="CreateUserDr" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   Set exists("CreateUserDr")=1
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     Do XMLImportAttrchild()
+     Set class=$select(($zwascii($get(attributeList("type")),9)=1):$case($data(@(tree)@("d",$zlascii(attributeList("type"),13))),1:@(tree)@("d",$zlascii(attributeList("type"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("type"))),1:"")
+     If (class="") || (class="HBUser") {
+       Set class="User.HBUser"
+     } Else {
+       If $length(class,":")=2 Set class=$piece(class,":",2)
+       Set class=$get(^oddCOM("User.HBUser",85,"s",class))_$get(^oddXML("User.HBUser","s",class)) If class="" Set class=0
+       Set tmp=$get(@(tree)@("n",$zwascii(attributeList("type"),11)))
+       If (class=0)||(($listlength(class)>1)&&(tmp="")) Set class=$case($data(@(tree)@("d",$zlascii(attributeList("type"),13))),1:@(tree)@("d",$zlascii(attributeList("type"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("type"))) Goto XMLImportBadTypechild
+       If $listlength(class)>1 {
+         For tmpi=1:1:$listlength(class) {
+           If tmp=$parameter($list(class,tmpi),"NAMESPACE") Set class=$list(class,tmpi),tmpi=0 Quit
+         }
+         If tmpi Set class=$case($data(@(tree)@("d",$zlascii(attributeList("type"),13))),1:@(tree)@("d",$zlascii(attributeList("type"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("type"))) Goto XMLImportBadTypechild
+       } Else { Set class=$list(class) }
+     }
+     Set data=$classmethod(class,"XMLNew",handler,child,$this)
+     If $isobject(data) Set tag=@(tree)@("d",$zlascii(childlist,9)),nodeArg=child,nodeArgChildlist=childlist,bareProjection=0,summaryArg=1,keynameattr="",sc=data.XMLImportInternal() Goto:('sc) XMLImportExit
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   If data'="" Set ..CreateUserDr=data
+   Goto XMLLOOP } }
+ If tag="UpdateDate" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             Set data=$zstrip(data,"<>W",$c(13,10)) If data'="" Set data=..UpdateDateXSDToLogical(data) Goto:data="" XMLImportErrchild Goto:('$s($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,0,0,2980013):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,2980013))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..UpdateDate=data
+   Goto XMLLOOP } }
+ If tag="UpdateTime" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     If $zboolean(+($zlascii(childlist,13)#16),+1,1) { Set data=""
+     } Else {
+             If (($length(childlist)-$zwascii(childlist,17)-3)\4)>1 {
+               Set data="" Goto XMLImportErrchild
+             } Else { Set descriptor=$zlascii(childlist,$zwascii(childlist,17)) Set data=($zlascii(@(tree)@($piece(child,",",1)),$piece(child,",",2))\16)_","_$zwascii(childlist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set data=##class(%XML.ImportHandler).NextChild(tree,child,.childlist,data,.descriptor) } Else { Set data="" }}
+               If data'="" { Goto:(descriptor#16)=0 XMLImportErrchild Set data=@(tree)@("d",(descriptor\16)) }}
+             Set data=$zstrip(data,"<>W",$c(13,10)) If data'="" Set data=..UpdateTimeXSDToLogical(data) Goto:data="" XMLImportErrchild Goto:('$select($zu(115,13)&&(data=$c(0)):1,$isvalidnum(data,,0,86400)&&(data'=86400):1,'$isvalidnum(data):$$Error^%apiOBJ(7207,data),data<0:$$Error^%apiOBJ(7204,data,0),1:$$Error^%apiOBJ(7203,data,86400))) XMLImportErrchild
+     }
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   Set ..UpdateTime=data
+   Goto XMLLOOP } }
+ If tag="UpdateUserDr" {
+   If ($get(namespace)="")||$case($zwascii(childlist,19),0:1,nsIndex:1,:0) {
+   If encoded Set savechild=child,savechildlist=childlist
+   If encoded,$$XMLImportIdChild() {
+     Set data=idlist(child)
+   } Else { Goto:'sc XMLImportExit
+     Do XMLImportAttrchild()
+     Set class=$select(($zwascii($get(attributeList("type")),9)=1):$case($data(@(tree)@("d",$zlascii(attributeList("type"),13))),1:@(tree)@("d",$zlascii(attributeList("type"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("type"))),1:"")
+     If (class="") || (class="HBUser") {
+       Set class="User.HBUser"
+     } Else {
+       If $length(class,":")=2 Set class=$piece(class,":",2)
+       Set class=$get(^oddCOM("User.HBUser",85,"s",class))_$get(^oddXML("User.HBUser","s",class)) If class="" Set class=0
+       Set tmp=$get(@(tree)@("n",$zwascii(attributeList("type"),11)))
+       If (class=0)||(($listlength(class)>1)&&(tmp="")) Set class=$case($data(@(tree)@("d",$zlascii(attributeList("type"),13))),1:@(tree)@("d",$zlascii(attributeList("type"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("type"))) Goto XMLImportBadTypechild
+       If $listlength(class)>1 {
+         For tmpi=1:1:$listlength(class) {
+           If tmp=$parameter($list(class,tmpi),"NAMESPACE") Set class=$list(class,tmpi),tmpi=0 Quit
+         }
+         If tmpi Set class=$case($data(@(tree)@("d",$zlascii(attributeList("type"),13))),1:@(tree)@("d",$zlascii(attributeList("type"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("type"))) Goto XMLImportBadTypechild
+       } Else { Set class=$list(class) }
+     }
+     Set data=$classmethod(class,"XMLNew",handler,child,$this)
+     If $isobject(data) Set tag=@(tree)@("d",$zlascii(childlist,9)),nodeArg=child,nodeArgChildlist=childlist,bareProjection=0,summaryArg=1,keynameattr="",sc=data.XMLImportInternal() Goto:('sc) XMLImportExit
+     If encoded Do XMLImportAttrchild() If $data(attributeList("id")) Set idlist(child)=data
+   }
+   If encoded Set child=savechild,childlist=savechildlist
+   If data'="" Set ..UpdateUserDr=data
+   Goto XMLLOOP } }
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLIsObjectEmpty(ignoreNull)
+ If ..Deleted'="" Quit 0
+ If ..DeleteDate'="" Quit 0
+ If ..DeleteTime'="" Quit 0
+ If ..HospCode'="" Quit 0
+ If ..SyncType'="" Quit 0
+ If ..Frequency'="" Quit 0
+ If ..ScheduledTime'="" Quit 0
+ If ..LookbackDays'="" Quit 0
+ If ..Enabled'="" Quit 0
+ If ..LastSyncTime'="" Quit 0
+ If ..Status'="" Quit 0
+ If ..ErrorMessage'="" Quit 0
+ If ..CreateDate'="" Quit 0
+ If ..CreateTime'="" Quit 0
+ If $IsObject(..CreateUserDr) Quit 0
+ If ..UpdateDate'="" Quit 0
+ If ..UpdateTime'="" Quit 0
+ If $IsObject(..UpdateUserDr) Quit 0
+ Quit 1
+zXMLNew(document,node,containerOref="")
+	Quit (##class(User.BSHISSyncConfig).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("User.BSHISSyncConfig",top,format,namespacePrefix,input,refOnly,.schema)
+zCreateDateDisplayToLogical(%val) public {
+ q:%val="" "" set %val=$zdateh(%val,,,5,80,20,,,"Error: '"_%val_"' is an invalid DISPLAY Date value") q:%val||(%val=0) %val s %msg=%val ZTRAP "ODAT" }
+zCreateDateGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),14),1:"") }
+zCreateDateIsValid(%val) public {
+	Q $s($zu(115,13)&&(%val=$c(0)):1,$isvalidnum(%val,0,0,2980013):1,'$isvalidnum(%val):$$Error^%apiOBJ(7207,%val),%val<0:$$Error^%apiOBJ(7204,%val,0),1:$$Error^%apiOBJ(7203,%val,2980013)) }
+zCreateDateJSONToLogical(%val) public {
+   Quit $select(%val="":"",1:$zdateh(%val,3,,,,,-672045,,"")) }
+zCreateDateLogicalToDisplay(%val) public {
+	Quit $select(%val="":"",%val'?0.1"-"4N1"-"2N1"-"2N.1(1" "2N1":"2N1":"2N.1(1"."0.9N)):$zdate(%val,-1,,4,,,-672045),1:$$FormatJulian^%qarfunc(%val,-1)) }
+zCreateDateLogicalToJSON(%val) public {
+   quit $select(%val="":"",1:$zdate(%val,3,,,,,-672045)) }
+zCreateDateLogicalToOdbc(%val="") public {
+	Quit $select(%val="":"",%val'?0.1"-"4N1"-"2N1"-"2N.1(1" "2N1":"2N1":"2N.1(1"."0.9N)):$zdate(%val,3,,,,,-672045),1:$piece(%val," ",1)) }
+zCreateDateLogicalToXSD(%val) public {
+   quit $select(%val="":"",1:$zdate(%val,3,,,,,-672045)) }
+zCreateDateNormalize(%val) public {
+   Quit $s($zu(115,13)&&(%val=$c(0)):"",1:%val\1) }
+zCreateDateOdbcToLogical(%val="") public {
+ quit:%val=""||($zu(115,13)&&(%val=$c(0))) "" quit:$isvalidnum(%val) %val set %val=$zdateh(%val,3,,,,,,,"Error: '"_%val_"' is an invalid ODBC/JDBC Date value") q:%val||(%val=0) %val s %msg=%val ZTRAP "ODAT" }
+zCreateDateXSDToLogical(%val) public {
+   Set len=$length(%val)
+   If len'=10 {
+       If $extract(%val,len)="Z" {
+           Set %val=$extract(%val,1,len-1),len=len-1
+       } ElseIf $case($extract(%val,len-5),"+":1,"-":1,:0) {
+           Set %val=$extract(%val,1,len-6),len=len-6
+       }
+   }
+   If $extract(%val,11,19)="T00:00:00" {
+       If (len=19)||(($extract(%val,20,21)=".0")&&($translate($extract(%val,22,len),"0","")="")) {
+           Set %val=$extract(%val,1,10)
+       }
+   }
+   Quit $select(%val="":"",1:$zdateh(%val,3,,,,,-672045,,"")) }
+zCreateTimeDisplayToLogical(%val) public {
+ quit:%val="" "" s %val=$ztimeh(%val,,"Error: '"_%val_"' is an invalid DISPLAY Time value") q:%val||(%val=0) %val s %msg=%val ZTRAP "OTIM" }
+zCreateTimeGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),15),1:"") }
+zCreateTimeIsValid(%val) public {
+	Quit $select($zu(115,13)&&(%val=$c(0)):1,$isvalidnum(%val,,0,86400)&&(%val'=86400):1,'$isvalidnum(%val):$$Error^%apiOBJ(7207,%val),%val<0:$$Error^%apiOBJ(7204,%val,0),1:$$Error^%apiOBJ(7203,%val,86400)) }
+zCreateTimeLogicalToDisplay(%val) public {
+	Quit $select(%val="":"",1:$ztime(%val,,$l($p(%val,".",2)))) }
+zCreateTimeLogicalToOdbc(%val="") public {
+	Quit $select(%val="":"",1:$ztime(%val,,$l($p(%val,".",2)),,1)) }
+zCreateTimeLogicalToXSD(%val) public {
+	Quit $select(%val="":"",1:$ztime(%val,1,$l($p(%val,".",2)),,1)_"Z") }
+zCreateTimeNormalize(%val) public {
+	Quit $select($zu(115,13)&&(%val=$c(0)):"",1:%val) }
+zCreateTimeOdbcToLogical(%val="") public {
+	quit:%val=""||($zu(115,13)&&(%val=$c(0))) ""  quit:$isvalidnum(%val) %val s %val=$ztimeh(%val,,"Error: '"_%val_"' is an invalid ODBC/JDBC Time value",1) q:%val||(%val=0) %val s %msg=%val ZTRAP "OTIM" }
+zCreateTimeXSDToLogical(%val) public {
+ If $get(%val)="" Quit ""
+ If $length(%val,"T")=2 Set %val=$piece(%val,"T",2)
+ Set len=$length(%val)
+ If $extract(%val,len)="Z" {
+   Set %val=$extract(%val,1,len-1)
+ } ElseIf $case($extract(%val,len-5),"+":1,"-":1,:0) {
+   If $extract(%val,len-2)'=":" Quit ""
+   Set s=$ztimeh($extract(%val,1,len-6),1,"",1) If s="" Quit ""
+   Set z=($extract(%val,len-4,len-3)*60+$extract(%val,len-1,len))*60
+   If $extract(%val,len-5)="-" {
+     Set s=s+z
+   } Else {
+     Set s=s-z
+   }
+   Quit s#86400
+ }
+ Quit $ztimeh(%val,1,"",1) }
+zCreateUserDrGetObject(force=0) public {
+	Quit $select(r%CreateUserDr=""||(i%CreateUserDr'=""):$select(i%CreateUserDr="":"",1:$listbuild(i%CreateUserDr_"")),(''..CreateUserDr.%GetSwizzleObject(force,.oid)):oid,1:"") }
+zCreateUserDrGetObjectId(force=0) public {
+	Quit $listget(..CreateUserDrGetObject(force)) }
+zCreateUserDrGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),16),1:"") }
+zCreateUserDrGetSwizzled(noswizzle=0) public {
+	If noswizzle Quit r%CreateUserDr
+	If i%CreateUserDr="" Quit ""
+	Set oref=##class(User.HBUser).%Open($select(i%CreateUserDr="":"",1:$listbuild(i%CreateUserDr_"")),,.sc) If ('sc) Do:$get(^%SYS("ThrowSwizzleError"),0) $zutil(96,3,19,1) Quit ""
+	Set modstate=$system.CLS.GetModifiedBits() Set r%CreateUserDr=oref Do $system.CLS.SetModifiedBits(modstate)
+	Quit oref }
+zCreateUserDrNewObject() public {
+	Set newobject=##class(User.HBUser).%New() If newobject="" Quit ""
+	Set ..CreateUserDr=newobject
+	Quit newobject }
+zCreateUserDrSetObject(newvalue) public {
+	If newvalue'="",$data(i%CreateUserDr,tmp),tmp=$listget(newvalue) Quit 1
+	Set i%CreateUserDr=$listget(newvalue),r%CreateUserDr=0,r%CreateUserDr=""
+	Quit 1 }
+zCreateUserDrSetObjectId(newid) public {
+	Quit ..CreateUserDrSetObject($select(newid="":"",1:$listbuild(newid_""))) }
+zCreateUserDrUnSwizzle(force=0) public {
+	If r%CreateUserDr="" Quit 1
+	Set sc=..CreateUserDr.%GetSwizzleObject(force,.newvalue) Quit:('sc) sc
+	Set modstate=$system.CLS.GetModifiedBits() Set r%CreateUserDr="" Do $system.CLS.SetModifiedBits(modstate)
+	Set i%CreateUserDr=$listget(newvalue)
+	Quit 1 }
+zDeleteDateGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),3),1:"") }
+zDeleteTimeGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),4),1:"") }
+zDeletedDisplayToLogical(%val) public {
+	Q $select(%val="":"",%val=$c(0)&&$zu(115,13):"",1:$s($in(%val,"","")'="":+$in(%val,"",%val),1:%val)) }
+zDeletedGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),2),1:"") }
+zDeletedIsValid(%val) public {
+	Quit $select(%val=$c(0)&&$zu(115,13):1,$isvalidnum(%val,0):1,1:$$Error^%apiOBJ(7207,%val)) }
+zDeletedNormalize(%val) public {
+	Quit $select(%val=$c(0)&&$zu(115,13):"",1:%val\1) }
+zDeletedXSDToLogical(%val) public {
+	Q $s($tr(%val,"Ee(),.")'=%val:"",1:$number(%val,"I")) }
+zEnabledDisplayToLogical(%val) public {
+	Quit ''%val }
+zEnabledGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),10),1:"") }
+zEnabledIsValid(%val="") public {
+	Q $s($isvalidnum(%val,0,0,2)&&(+%val'=2):1,1:$$Error^%apiOBJ(7206,%val)) }
+zEnabledLogicalToXSD(%val) public {
+	Q $s(%val:"true",1:"false") }
+zEnabledNormalize(%val) public {
+	Quit %val\1 }
+zEnabledXSDToLogical(%val) public {
+	Q $case(%val,"true":1,"false":0,1:1,0:0,:"") }
+zErrorMessageGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),13),1:"") }
+zFrequencyGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),7),1:"") }
+zHospCodeGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),5),1:"") }
+zLastSyncTimeGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),11),1:"") }
+zLastSyncTimeIsValid(%val) public {
+	Quit:$zu(115,13)&&(%val=$c(0)) 1
+	Set val=%val,%val=$select(%val=(%val\1):$zd(%val,3,,,,,,,"error")_" 00:00:00",%val?1.2N1":"2N1":"2N.1(1"."1.N):$zd($h,3)_" "_%val,$length(%val)=10:%val_" 00:00:00",1:%val)
+	Quit:($length(%val)<19||($zdth(%val,3,,,,,,,,"")="")) $$Error^%apiOBJ(7208,val)
+	Quit 1 }
+zLastSyncTimeLogicalToXSD(%val) public {
+	Quit $select(%val="":"",1:$translate(%val," ","T")_"Z") }
+zLastSyncTimeNormalize(%val) public {
+	Quit $s(%val="":"",$zu(115,13)&&(%val=$c(0)):"",%val=(%val\1):$zd(%val,3,,,,,,,"error")_" 00:00:00",%val?1.2N1":"2N1":"2N.1(1"."1.N):$zd($h,3)_" "_%val,$l(%val)=10:%val_" 00:00:00",$zdth(%val,3,,,,,,,,"")="":"error",1:$zdt($zdth($p(%val,"."),3,,,,,,,,""),3)_$s(+$p(%val,".",2)=0:"",1:+("."_$p(%val,".",2)))) }
+zLastSyncTimeOdbcToLogical(%val) public {
+	Quit:%val="" ""
+	If $zdth(%val,3,,,,,,,,"")'="" {
+		Set %val=$zdt($zdth(%val,3),3,,$l($p(%val,".",2)))
+	} elseif $zdth(%val,-1,,,,,,,,"")'="" {
+		Set %val=$zdt($zdth(%val,-1),3,,$l($p(%val,".",2)))
+	}
+	Quit $s(%val'[".":%val,1:$zstrip($zstrip(%val,">","0"),">",".")) }
+zLastSyncTimeXSDToLogical(%val) public {
+	If $length($get(%val),"T")'=2 Quit ""
+	Set dt=$translate(%val,"T"," ")
+	Set len=$length(%val)
+	If $extract(%val,len)="Z" {
+		Set dt=$extract(dt,1,len-1)
+	} ElseIf $case($extract(%val,len-5),"+":1,"-":1,:0) {
+		If $extract(%val,len-2)'=":" Quit ""
+		Set dt=$extract(dt,1,len-6)
+		Set f=$piece(dt,".",2) If f'="" Set f="."_f,dt=$piece(dt,".")
+		Set t=$zdatetimeh(dt,3,1,,,,,,,"") If t="" Quit ""
+		Set d=$piece(t,",")
+		Set s=$piece(t,",",2)
+		Set z=($extract(%val,len-4,len-3)*60+$extract(%val,len-1,len))*60
+		If $extract(%val,len-5)="-" {
+			Set s=s+z
+			If s>=(24*60*60) Set d=d+1,s=s-(24*60*60)
+		} Else {
+			Set s=s-z
+			If s<0 Set d=d-1,s=s+(24*60*60)
+		}
+		Set dt=$zdatetime(d_","_s,3,1,0,,,,,,,"")
+		Quit $select(dt="":"",1:dt_f)
+	}
+	If $zdatetimeh(dt,3,1,,,,,,,"")="" Quit ""
+	Quit dt }
+zLookbackDaysGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),9),1:"") }
+zScheduledTimeGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),8),1:"") }
+zStatusGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),12),1:"") }
+zSyncTypeGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),6),1:"") }
+zUpdateDateGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),17),1:"") }
+zUpdateTimeGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),18),1:"") }
+zUpdateUserDrGetObject(force=0) public {
+	Quit $select(r%UpdateUserDr=""||(i%UpdateUserDr'=""):$select(i%UpdateUserDr="":"",1:$listbuild(i%UpdateUserDr_"")),(''..UpdateUserDr.%GetSwizzleObject(force,.oid)):oid,1:"") }
+zUpdateUserDrGetObjectId(force=0) public {
+	Quit $listget(..UpdateUserDrGetObject(force)) }
+zUpdateUserDrGetStored(id) public {
+	Quit $Select(id'="":$listget($g(^BSHISSyncConfigD(id)),19),1:"") }
+zUpdateUserDrGetSwizzled(noswizzle=0) public {
+	If noswizzle Quit r%UpdateUserDr
+	If i%UpdateUserDr="" Quit ""
+	Set oref=##class(User.HBUser).%Open($select(i%UpdateUserDr="":"",1:$listbuild(i%UpdateUserDr_"")),,.sc) If ('sc) Do:$get(^%SYS("ThrowSwizzleError"),0) $zutil(96,3,19,1) Quit ""
+	Set modstate=$system.CLS.GetModifiedBits() Set r%UpdateUserDr=oref Do $system.CLS.SetModifiedBits(modstate)
+	Quit oref }
+zUpdateUserDrNewObject() public {
+	Set newobject=##class(User.HBUser).%New() If newobject="" Quit ""
+	Set ..UpdateUserDr=newobject
+	Quit newobject }
+zUpdateUserDrSetObject(newvalue) public {
+	If newvalue'="",$data(i%UpdateUserDr,tmp),tmp=$listget(newvalue) Quit 1
+	Set i%UpdateUserDr=$listget(newvalue),r%UpdateUserDr=0,r%UpdateUserDr=""
+	Quit 1 }
+zUpdateUserDrSetObjectId(newid) public {
+	Quit ..UpdateUserDrSetObject($select(newid="":"",1:$listbuild(newid_""))) }
+zUpdateUserDrUnSwizzle(force=0) public {
+	If r%UpdateUserDr="" Quit 1
+	Set sc=..UpdateUserDr.%GetSwizzleObject(force,.newvalue) Quit:('sc) sc
+	Set modstate=$system.CLS.GetModifiedBits() Set r%UpdateUserDr="" Do $system.CLS.SetModifiedBits(modstate)
+	Set i%UpdateUserDr=$listget(newvalue)
+	Quit 1 }
+zExtentExecute(%qHandle) [ SQLCODE ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	Set sc=1
+	s %qHandle=$i(%objcn)
+	 ;---&sql(DECLARE QExtent CURSOR FOR
+ 	 ;---		 SELECT ID FROM SQLUser.BS_HISSyncConfig)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	
+	 ;---&sql(OPEN QExtent)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	do %QExtent0o
+	If SQLCODE { Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.%Message=$g(%msg) Set sc=$$Error^%apiOBJ(5821,"SQLCODE = "_SQLCODE) } Else { Set sc=1 }
+	Quit sc }
+zExtentClose(%qHandle) [ SQLCODE ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	 ;---&sql(CLOSE QExtent)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	do %QExtent0c
+	If SQLCODE { Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.%Message=$g(%msg) Set sc=$$Error^%apiOBJ(5540,SQLCODE,$get(%msg)) } Else { Set sc=1 }
+	Kill %objcsc(%qHandle),%objcsp(%qHandle),%objcss(%qHandle),%objcst(%qHandle),%objcsl(%qHandle),%objcsR(%qHandle),%objcsZ(%qHandle),%objcsd(%qHandle)
+	Quit sc }
+zExtentFetch(%qHandle,Row,AtEnd=0) [ SQLCODE ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	Set Row="",AtEnd=0
+	 ;---&sql(FETCH QExtent INTO :c1)
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+	try { do %QExtent0f if SQLCODE'=0 { quit } s c1=%objcsd(%qHandle,9) } catch { do %0Ferr }
+	If 'SQLCODE { Set Row=$lb(c1) Set sc=1 }
+	ElseIf SQLCODE=100 { Set AtEnd=1,sc=1 Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.%ROWCOUNT=$g(%ROWCOUNT) }
+	Else { Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.Message=$g(%msg) Set AtEnd=1,sc=$$Error^%apiOBJ(5540,SQLCODE,$get(%msg)) }
+	QUIT sc }
+zExtentFetchRows(%qHandle,FetchCount=0,RowSet,ReturnCount,AtEnd) [ SQLCODE ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	Set RowSet="",ReturnCount=0,AtEnd=0
+	For {
+		 ;---&sql(FETCH QExtent INTO :c1)
+ 		 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE
+		try { do %QExtent0f if SQLCODE'=0 { quit } s c1=%objcsd(%qHandle,9) } catch { do %0Ferr }
+		If 'SQLCODE { Set RowSet=RowSet_$lb(c1),ReturnCount=ReturnCount+1 Quit:(ReturnCount=FetchCount)||(($l(RowSet)+($l(RowSet)\ReturnCount))>24000) } Else { Set AtEnd=1 Quit }
+	}
+	If 'SQLCODE { Set sc=1 } ElseIf SQLCODE=100 { Set sc=1 Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.%ROWCOUNT=$g(%ROWCOUNT) } Else { Set:$isobject($g(%sqlcontext)) %sqlcontext.%SQLCODE=SQLCODE,%sqlcontext.Message=$g(%msg) Set sc=$$Error^%apiOBJ(5540,SQLCODE,$get(%msg)) }
+	Quit sc }
+zExtentSendODBC(%qHandle,array,qacn,%qrc,piece,ColumnCount) [ SQLCODE ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	set %qrc=0,piece=0
+	for {
+		set rc=..ExtentFetch(.%qHandle,.row,.atend)
+		if ('rc) { set %qrc=-400 set:$isobject($get(%sqlcontext)) %sqlcontext.SQLCode=-400,%sqlcontext.Message=$g(%msg) do ProcessError^%ourProcedure(rc,$get(%sqlcontext),.%qrc,.%msg),Logerr^%SYS.SQLSRV(%qrc,"","SP",.%msg) RETURN  }
+		if row="" { set %qrc=100 set:$isobject($get(%sqlcontext)) %sqlcontext.SQLCode=100 RETURN  }
+		if $g(%protocol)>50 { RETURN:$zobjexport(row,60) }
+		else {
+			if %protocol>46 { for piece=1:1:ColumnCount { goto:$zobjexport($lg(row,piece),50) SPDone } }
+			else { for piece=1:1:ColumnCount { goto:$zobjexport($lg(row,piece),7) SPDone } }
+		}
+	}
+	QUIT
+SPDone	set:%protocol>46 piece=piece+1
+	kill array(qacn)
+	for i=piece:1:ColumnCount { set array(qacn,i)=$lg(row,i) }
+	QUIT }
+ q
+%QExtent0o 
+ try { s SQLCODE=$s($g(%objcsd(%qHandle,0)):-101,1:0) q:SQLCODE'=0 
+ n %sqltime s %sqltime=$zh
+ s %objcsd(%qHandle,1)=0,%objcsd(%qHandle,2)=$g(%0CacheRowLimit,9223372036854775807)
+ s %objcsd(%qHandle,3)=$zu(115,2)
+ s %objcsd(%qHandle,4)=0,%objcsd(%qHandle,5)=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s %objcsd(%qHandle,0)=1,SQLCODE=0
+ s:$d(%sqltime) %objcsd(%qHandle,6)=$g(%objcsd(%qHandle,6))+$zh-%sqltime
+ } catch { d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg) k %objcsd(%qHandle) }
+ q
+%0Ffirst 
+ ; asl MOD# 2
+ s %objcsd(%qHandle,7)=""
+%0FmBk1 s %objcsd(%qHandle,7)=$o(^BSHISSyncConfigI("EnabledIndex",%objcsd(%qHandle,7)))
+ i %objcsd(%qHandle,7)="" g %0FmBdun
+ s %objcsd(%qHandle,8)=$s(%objcsd(%qHandle,7)=-1E14:"",1:%objcsd(%qHandle,7))
+ s %objcsd(%qHandle,9)=""
+%0FmBk2 s %objcsd(%qHandle,9)=$o(^BSHISSyncConfigI("EnabledIndex",%objcsd(%qHandle,7),%objcsd(%qHandle,9)))
+ i %objcsd(%qHandle,9)="" g %0FmBk1
+ goto:%objcsd(%qHandle,3)'=1 %0FmBuncommitted
+ if %objcsd(%qHandle,3)=1 {
+ 	lock +^BSHISSyncConfigD($p(%objcsd(%qHandle,9),"||",1))#"S":$zu(115,4)
+ 	if $t { set %objcsd(%qHandle,5)=$name(^BSHISSyncConfigD($p(%objcsd(%qHandle,9),"||",1)))_"#""SI""",%objcsd(%qHandle,4)=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_HISSyncConfig for RowID value: "_%objcsd(%qHandle,9) ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ i %objcsd(%qHandle,9)'="",$d(^BSHISSyncConfigD(%objcsd(%qHandle,9)))
+ e  g %0FmCdun
+%0FmBuncommitted ;
+ s:$g(SQLCODE)'<0 SQLCODE=0 s %ROWCOUNT=$i(%objcsd(%qHandle,1)),%ROWID=%objcsd(%qHandle,9),%objcsd(%qHandle,0)=10
+ //-- FETCH Output
+ s:$d(%sqltime) %objcsd(%qHandle,6)=$g(%objcsd(%qHandle,6))+$zh-%sqltime
+ quit
+%QExtent0f //-- FETCH tag
+ i '$g(%objcsd(%qHandle,0)) { s SQLCODE=-102 q  } i %objcsd(%qHandle,0)=100 { s SQLCODE=100 q  } s SQLCODE=0
+ i %objcsd(%qHandle,2),%objcsd(%qHandle,1)'<%objcsd(%qHandle,2) { s SQLCODE=100,%ROWCOUNT=%objcsd(%qHandle,1),%objcsd(%qHandle,0)=100 q }
+ n %sqltime s %sqltime=$zh
+ g %0Ffirst:%objcsd(%qHandle,0)=1
+%0FmCdun if $g(%objcsd(%qHandle,3))=1 { if $g(%objcsd(%qHandle,4))=1 { l -@%objcsd(%qHandle,5) s %objcsd(%qHandle,4)=0 } elseif $g(%objcsd(%qHandle,4))=2 { do $classmethod($li(%objcsd(%qHandle,5)),"%UnlockId",$li(%objcsd(%qHandle,5),2),1,1)  s %objcsd(%qHandle,4)=0 }}
+ g %0FmBk2
+%0FmBdun 
+%0FmAdun 
+ s %ROWCOUNT=%objcsd(%qHandle,1),SQLCODE=100,%objcsd(%qHandle,0)=100
+ s:$d(%sqltime) %objcsd(%qHandle,6)=$g(%objcsd(%qHandle,6))+$zh-%sqltime
+ //-- no [more] data
+ quit
+%QExtent0c i '$g(%objcsd(%qHandle,0)) { s SQLCODE=-102 q  }
+ n %sqltime s %sqltime=$zh
+ set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(%objcsd(%qHandle,1)),1:0)
+ if $g(%objcsd(%qHandle,3))=1 {
+ 	if $g(%objcsd(%qHandle,4))=1 { l -@%objcsd(%qHandle,5) s %objcsd(%qHandle,4)=0 } elseif $g(%objcsd(%qHandle,4))=2 { do $classmethod($li(%objcsd(%qHandle,5)),"%UnlockId",$li(%objcsd(%qHandle,5),2),1,1)  s %objcsd(%qHandle,4)=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(%objcsd(%qHandle,6))+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"Jqbskf1Pzw4fSppKyi3F/YAgN/I="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"Jqbskf1Pzw4fSppKyi3F/YAgN/I=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ k %objcsd(%qHandle)
+ s SQLCODE=0
+ s:$g(SQLCODE)'<0 SQLCODE=0
+ kill %objcsd(%qHandle,10)
+ quit  // close
+%0Ferr d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ s %objcsd(%qHandle,0)=100
+ quit  // error
+zExtentFunc() public {
+	try {
+		set tSchemaPath = ##class(%SQL.Statement).%ClassPath($classname())
+			set tStatement = ##class(%SQL.Statement).%New(,tSchemaPath)
+			do tStatement.prepare(" SELECT ID FROM SQLUser . BS_HISSyncConfig")
+		set tResult = tStatement.%Execute()
+	}
+	catch tException { if '$Isobject($Get(tResult)) { set tResult = ##class(%SQL.StatementResult).%New() } set tResult.%SQLCODE=tException.AsSQLCODE(),tResult.%Message=tException.AsSQLMessage() }
+	Quit tResult }
+zExtentGetInfo(colinfo,parminfo,idinfo,%qHandle,extoption=0,extinfo) public {
+ s parminfo=""
+	s:'($d(^oddCOM($classname(),"q","Extent",21),clientinfo)#2)&&'$s($d(^(2),clientinfo)#2&&(clientinfo'=$classname()):$d(^oddCOM(clientinfo,"q","Extent",21),clientinfo)#2||($d(^oddDEF(clientinfo,"q","Extent",21),clientinfo)#2),1:$d(^oddDEF($classname(),"q","Extent",21),clientinfo)#2) clientinfo=""
+	Set:extoption extinfo=$s($d(^oddCOM($classname(),"q","Extent",38))#2:^(38),$d(^oddCOM($g(^(2),$classname()),"q","Extent",38))#2:^(38),1:$s($d(^oddDEF($g(^oddCOM($classname(),"q","Extent",2),$classname()),"q","Extent",38))#2:^(38),1:""))
+	If clientinfo'="" Set colinfo=$listget(clientinfo,1),parminfo=$listget(clientinfo,2),idinfo=$listget(clientinfo,3) Quit 1
+	Set colinfo="",parminfo="",idinfo=$listbuild(0)
+	Set sc=$$externaltype^%apiOLE("%Library.Integer",.exttypes,"0")
+	Quit:('sc) sc
+	s:'($d(^oddCOM($classname(),"q","Extent",23),names)#2)&&'$s($d(^(2),names)#2&&(names'=$classname()):$d(^oddCOM(names,"q","Extent",23),names)#2||($d(^oddDEF(names,"q","Extent",23),names)#2),1:$d(^oddDEF($classname(),"q","Extent",23),names)#2) names=""
+	s:'($d(^oddCOM($classname(),"q","Extent",22),captions)#2)&&'$s($d(^(2),captions)#2&&(captions'=$classname()):$d(^oddCOM(captions,"q","Extent",22),captions)#2||($d(^oddDEF(captions,"q","Extent",22),captions)#2),1:$d(^oddDEF($classname(),"q","Extent",22),captions)#2) captions=""
+	For i=1:1:1 Set colinfo=colinfo_$listbuild($listbuild($listget(names,i),$piece(exttypes,",",i),$listget(captions,i)))
+	Set idinfo=$listbuild(1,$classname())
+	s ^oddCOM($classname(),"q","Extent",21)=$listbuild(colinfo,parminfo,idinfo)
+	Quit 1 }
+zExtentGetODBCInfo(colinfo,parminfo,qHandle) public {
+	set version = $Select($Get(%protocol,41)>40:4,1:3)
+	Set metadata=$lb(1,1,"ID",4,10,0,2,"ID","BS_HISSyncConfig","SQLUser","",$c(0,0,0,0,0,0,0,0,0,0,0,1),0)
+	Set colcount=$li(metadata,2),cmdlen=colcount*10,parmcount=$li(metadata,3+cmdlen),pmdlen=parmcount*6,parminfo=$li(metadata,cmdlen+3,cmdlen+pmdlen+3)
+	If version=4 {
+		Set colinfo=$li(metadata,2,2+cmdlen)
+	} Else {
+		Set colinfo=$li(metadata,2,2)
+		For i=0:1:colcount-1 Set colinfo=colinfo_$list(metadata,3+(i*10),11+(i*10))
+	}
+	Quit 1 }
+zEnabledIndexExists(K1,id="") [ K1,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	 ;---&sql(SELECT %ID INTO :id FROM SQLUser.BS_HISSyncConfig WHERE (:K1 is not null and Enabled = :K1) OR (:K1 IS NULL AND Enabled IS NULL))
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, K1, SQLCODE, id
+	do %0Lo
+	Quit $select('SQLCODE:1,1:0) }
+ q
+%0Lo n sqldata12d,sqldata13d,sqldata14d,sqldata15d,sqldata16d,sqldata17d,sqldata18d,sqldata19d,sqldata20d,sqldata21d,sqldata24d,sqldata25d,sqldata3d,sqldata5d,sqldata6d,sqldata4d,sqldata8d,sqldata9d,sqldata11d
+ s $zt="%0Lerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata12d=$zu(115,2)
+ s sqldata13d=0,sqldata14d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata3d=$g(K1),sqldata5d=$s($g(K1)="":"",$isvalidnum(K1):+K1,1:K1),sqldata6d=$g(K1)
+ s SQLCODE=100
+ ; asl MOD# 2
+ s sqldata4d=sqldata5d s sqldata15d=$s(sqldata4d="":-1E14,1:sqldata4d)
+ s sqldata8d="",sqldata16d=1,sqldata9d="",sqldata17d=1,sqldata11d=""
+ g %0LmBk1
+%0LmBqt1 s sqldata8d="" q
+%0LmBpt1 s sqldata16d=0
+ i '(sqldata3d'="") g %0LmBqt1
+ s sqldata18d=sqldata5d
+ s sqldata19d=$s(sqldata18d'="":sqldata18d,1:-1E14)
+ i '(sqldata18d'="") g %0LmBqt1
+ g %0LmBft1:sqldata8d=""
+%0LmBat1 g %0LmBpt1:sqldata16d
+ g %0LmBgt1:$d(^BSHISSyncConfigI("EnabledIndex",sqldata19d,sqldata8d))
+%0LmBft1 g %0LmBpt1:sqldata16d
+ s sqldata8d=$o(^BSHISSyncConfigI("EnabledIndex",sqldata19d,sqldata8d))
+ q:sqldata8d=""
+%0LmBgt1 q
+%0LmBqt2 s sqldata9d="" q
+%0LmBpt2 s sqldata17d=0
+ i '(sqldata6d="") g %0LmBqt2
+ s sqldata20d=""
+ s sqldata21d=$s(sqldata20d'="":sqldata20d,1:-1E14)
+ g %0LmBft2:sqldata9d=""
+%0LmBat2 g %0LmBpt2:sqldata17d
+ g %0LmBgt2:$d(^BSHISSyncConfigI("EnabledIndex",sqldata21d,sqldata9d))
+%0LmBft2 g %0LmBpt2:sqldata17d
+ s sqldata9d=$o(^BSHISSyncConfigI("EnabledIndex",sqldata21d,sqldata9d))
+ q:sqldata9d=""
+%0LmBgt2 q
+%0LmBat3 i sqldata8d="",sqldata9d="" s sqldata8d=sqldata11d d %0LmBat1 s sqldata9d=sqldata11d d %0LmBat2 g %0LmBgt3
+ i sqldata8d'="",sqldata11d]]sqldata8d s sqldata8d=sqldata11d d %0LmBat1
+ i sqldata9d'="",sqldata11d]]sqldata9d s sqldata9d=sqldata11d d %0LmBat2
+ g %0LmBgt3
+%0LmBft3 d %0LmBft1:sqldata8d=sqldata11d,%0LmBft2:sqldata9d=sqldata11d
+%0LmBgt3 s sqldata11d=$S(sqldata8d="":sqldata9d,sqldata9d="":sqldata8d,sqldata9d]]sqldata8d:sqldata8d,1:sqldata9d) q
+%0LmBk1 d %0LmBft3
+ i sqldata11d="" g %0LmBdun
+ s id=sqldata11d
+ goto:sqldata12d'=1 %0LmBuncommitted
+ if sqldata12d=1 {
+ 	lock +^BSHISSyncConfigD($p(id,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata14d=$name(^BSHISSyncConfigD($p(id,"||",1)))_"#""SI""",sqldata13d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_HISSyncConfig for RowID value: "_id ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ i id'="" s sqldata24d="" i $d(^BSHISSyncConfigD(id),sqldata24d)
+ e  g %0LmCdun
+ S sqldata4d=$lg(sqldata24d,10)
+ g:'(((sqldata4d'="")&&((sqldata3d'="")&&(sqldata4d=sqldata5d)))||((sqldata6d="")&&(sqldata4d=""))) %0LmCdun
+%0LmBuncommitted ;
+ s SQLCODE=0 g %0Lc
+%0LmCdun if $g(sqldata12d)=1 { if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }}
+ g %0LmBk1
+%0LmBdun 
+%0LmAdun 
+%0Lc set %ROWCOUNT='SQLCODE
+ if $g(sqldata12d)=1 {
+ 	if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata25d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"pmjBuFWRxZbUP9uOlvM5PqoMMX4="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"pmjBuFWRxZbUP9uOlvM5PqoMMX4=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Lerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Lc
+zHospCodeIndexExists(K1,id="") [ K1,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	 ;---&sql(SELECT %ID INTO :id FROM SQLUser.BS_HISSyncConfig WHERE (:K1 is not null and HospCode = :K1) OR (:K1 IS NULL AND HospCode IS NULL))
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, K1, SQLCODE, id
+	do %0No
+	Quit $select('SQLCODE:1,1:0) }
+ q
+%0No n sqldata12d,sqldata13d,sqldata14d,sqldata22d,sqldata23d,sqldata3d,sqldata5d,sqldata6d,sqldata4d,sqldata8d,sqldata9d,sqldata10d,sqldata11d
+ s $zt="%0Nerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata12d=$zu(115,2)
+ s sqldata13d=0,sqldata14d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata3d=$g(K1),sqldata5d=$g(K1),sqldata6d=$g(K1)
+ s SQLCODE=100
+ s sqldata9d=$zu(28,sqldata5d,7)
+ i '(sqldata3d'="") g %0NmAdun
+ ; asl MOD# 2
+ s sqldata4d=""
+%0NmBk1 s sqldata4d=$o(^BSHISSyncConfigI("HospCodeIndex",sqldata4d))
+ i sqldata4d="" g %0NmBdun
+ s sqldata8d=$zu(28,sqldata4d,7)
+ s id=""
+%0NmBk2 s id=$o(^BSHISSyncConfigI("HospCodeIndex",sqldata4d,id))
+ i id="" g %0NmBk1
+ i '(sqldata8d=sqldata9d) g %0NmBk2
+ goto:sqldata12d'=1 %0NmBuncommitted
+ if sqldata12d=1 {
+ 	lock +^BSHISSyncConfigD($p(id,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata14d=$name(^BSHISSyncConfigD($p(id,"||",1)))_"#""SI""",sqldata13d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_HISSyncConfig for RowID value: "_id ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata10d=$zlist(sqldata8d)
+ i id'="" s sqldata22d="" i $d(^BSHISSyncConfigD(id),sqldata22d)
+ e  g %0NmCdun
+ S sqldata4d=$lg(sqldata22d,5)
+ s sqldata8d=$zu(28,sqldata4d,7)
+ s sqldata11d=$zlist(sqldata8d)
+ g:sqldata10d'=sqldata11d %0NmCdun
+%0NmBuncommitted ;
+ s SQLCODE=0 g %0Nc
+%0NmCdun if $g(sqldata12d)=1 { if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }}
+ g %0NmBk2
+%0NmBdun 
+%0NmAdun 
+%0Nc set %ROWCOUNT='SQLCODE
+ if $g(sqldata12d)=1 {
+ 	if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata23d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"VRaoCP+LnVbzSKgH5PR30RiMkhc="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"VRaoCP+LnVbzSKgH5PR30RiMkhc=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Nerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Nc
+zIDKEYCheck(K1,lockonly=0,concurrency=-1) public {
+	s id=K1,exists=..%ExistsId(id) q:'exists $s('lockonly:$$Error^%apiOBJ(5797,$classname(),"IDKEY",id),1:1) s:concurrency=-1 concurrency=$select(..#DEFAULTCONCURRENCY="$zu(115,10)":$zu(115,10),1:$xecute("q "_..#DEFAULTCONCURRENCY)) if concurrency { s status=..%LockId(id,1) q:('status) status } if 'lockonly { s exists=..%ExistsId(id) d:concurrency ..%UnlockId(id,1,0) quit $s('exists:$$Error^%apiOBJ(5797,$classname(),"IDKEY",id),1:1) } else { d:concurrency ..%UnlockId(id,1,0) q 1 }
+}
+zIDKEYDelete(K1,concurrency=-1) public {
+	Quit ..%DeleteId(.K1,concurrency) }
+zIDKEYExists(K1,id="") public {
+	s id=K1 q ..%ExistsId(K1) }
+zIDKEYOpen(K1,concurrency=-1,sc) public { s:'($d(sc)#2) sc=1
+	Quit ..%OpenId(.K1,concurrency,.sc) }
+zIDKEYSQLCheckUnique(pFromOrig=0,%pID,%pVals...)
+ QUIT $$Error^%apiOBJ(5758,"%Persistent::IDKEYSQLCheckUnique")
+zIDKEYSQLExists(pLockOnly=0,pUnlockRef,%pVal...)
+	// SQL Foreign Key validation entry point for Key IDKEY.  Called by FKeys that reference this Key to see if the row is defined
+	new id set id=%pVal(1)
+	if pLockOnly>=0 { if '..%SQLGetLock(id,1,.pUnlockRef) { set sqlcode=-114,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler39",,"SQLUser"_"."_"BS_HISSyncConfig"_":"_"IDKEY") QUIT 0 } }
+	if pLockOnly<1 {
+		new qv set qv=$d(^BSHISSyncConfigD(%pVal(1))) QUIT:pLockOnly=-1 qv
+		do:'$g(pUnlockRef) ..%SQLReleaseLock(id,1) quit qv
+	}
+	else { do:'$g(pUnlockRef) ..%SQLReleaseLock(id,1) QUIT 1 }
+	Quit
+zIDKEYSQLFindPKeyByConstraint(%con)
+ QUIT $$Error^%apiOBJ(5758,"%Persistent::IDKEYSQLFindPKeyByConstraint")
+zIDKEYSQLFindRowIDByConstraint(%con,pInternal=0)
+ QUIT $$Error^%apiOBJ(5758,"%Persistent::IDKEYSQLFindRowIDByConstraint")
+zStatusIndexExists(K1,id="") [ K1,SQLCODE,id ] public { New %ROWCOUNT,%ROWID,%msg,SQLCODE 
+	 ;---&sql(SELECT %ID INTO :id FROM SQLUser.BS_HISSyncConfig WHERE (:K1 is not null and Status = :K1) OR (:K1 IS NULL AND Status IS NULL))
+ 	 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, K1, SQLCODE, id
+	do %0Po
+	Quit $select('SQLCODE:1,1:0) }
+ q
+%0Po n sqldata12d,sqldata13d,sqldata14d,sqldata18d,sqldata23d,sqldata24d,sqldata3d,sqldata5d,sqldata6d,sqldata4d,sqldata8d,sqldata9d,sqldata10d,sqldata11d
+ s $zt="%0Perr"
+ n %sqltime s %sqltime=$zh
+ s sqldata12d=$zu(115,2)
+ s sqldata13d=0,sqldata14d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata3d=$g(K1),sqldata5d=$g(K1),sqldata6d=$g(K1)
+ s SQLCODE=100
+ s sqldata9d=$zu(28,sqldata5d,7)
+ ; asl MOD# 2
+ s sqldata18d=""
+%0PmBk1 s sqldata18d=$o(^BSHISSyncConfigI("StatusIndex",sqldata18d))
+ i sqldata18d="" g %0PmBdun
+ s sqldata4d=$s(sqldata18d=-1E14:"",1:sqldata18d)
+ s sqldata8d=$zu(28,sqldata4d,7)
+ s id=""
+%0PmBk2 s id=$o(^BSHISSyncConfigI("StatusIndex",sqldata18d,id))
+ i id="" g %0PmBk1
+ i '(((sqldata8d'=" ")&&((sqldata3d'="")&&(sqldata8d=sqldata9d)))||((sqldata6d="")&&(sqldata8d=" "))) g %0PmBk2
+ goto:sqldata12d'=1 %0PmBuncommitted
+ if sqldata12d=1 {
+ 	lock +^BSHISSyncConfigD($p(id,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata14d=$name(^BSHISSyncConfigD($p(id,"||",1)))_"#""SI""",sqldata13d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_HISSyncConfig for RowID value: "_id ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata10d=$zlist(sqldata8d)
+ i id'="" s sqldata23d="" i $d(^BSHISSyncConfigD(id),sqldata23d)
+ e  g %0PmCdun
+ S sqldata4d=$lg(sqldata23d,12)
+ s sqldata8d=$zu(28,sqldata4d,7)
+ s sqldata11d=$zlist(sqldata8d)
+ g:sqldata10d'=sqldata11d %0PmCdun
+%0PmBuncommitted ;
+ s SQLCODE=0 g %0Pc
+%0PmCdun if $g(sqldata12d)=1 { if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }}
+ g %0PmBk2
+%0PmBdun 
+%0PmAdun 
+%0Pc set %ROWCOUNT='SQLCODE
+ if $g(sqldata12d)=1 {
+ 	if $g(sqldata13d)=1 { l -@sqldata14d s sqldata13d=0 } elseif $g(sqldata13d)=2 { do $classmethod($li(sqldata14d),"%UnlockId",$li(sqldata14d,2),1,1)  s sqldata13d=0 }
+ }
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata24d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"00tMtxSgOjL6dUrH/qAoAk0LYys="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"00tMtxSgOjL6dUrH/qAoAk0LYys=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Perr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Pc

@@ -282,282 +282,241 @@ export const saveSettlement = (
   return invoke('02010029', [params]);
 };
 
-/** 删除结算清单 (02010035) */
-export const deleteSettlement = (
-  settlementNo: string
-): Promise<ApiResponse> => {
-  return invoke('02010035', [{ settlementNo }]);
+
+// ========== HIS数据同步专用接口 (02010067) ==========
+
+/** 获取HIS患者就诊信息 (02010067) */
+export const getHisPatientAdmInfo = (
+  params: {
+    admID: string;
+    hospID?: string;
+  }
+): Promise<ApiResponse<any>> => {
+  return invoke('02010067', [params]);
 };
 
-/** 提交结算 (02010036) */
-export const submitSettlement = (
-  settlementNo: string
-): Promise<ApiResponse> => {
-  return invoke('02010036', [{ settlementNo }]);
+/**
+ * 获取HIS住院患者列表 (02010067)
+ * 入参：stDate（开始日期）、endDate（结束日期）
+ */
+export const getHisInpatientList = (
+  params: { stDate: string; endDate: string }
+): Promise<ApiResponse<any>> => {
+  return invoke('02010067', [params]);
 };
 
-/** 取消结算 (02010037) */
-export const cancelSettlement = (
-  settlementNo: string
-): Promise<ApiResponse> => {
-  return invoke('02010037', [{ settlementNo }]);
+// ========== 已同步患者查询 (02010075) ==========
+
+/** 已同步患者查询参数 */
+export interface QuerySyncedPatientsParams {
+  patientName?: string;
+  medicalRecordNo?: string;
+  admDateStart?: string;
+  admDateEnd?: string;
+}
+
+/** 已同步患者记录 */
+export interface SyncedPatientItem {
+  admissionNo: string;
+  medicalRecordNo: string;
+  patientName: string;
+  sex: string;
+  age: number;
+  department: string;
+  doctor: string;
+  mainDiagnosisCode: string;
+  mainDiagnosisName: string;
+  mainProcedureCode: string;
+  mainProcedureName: string;
+  totalCost: number;
+  admissionDate: string;
+  dischargeDate: string;
+}
+
+/**
+ * 查询已同步患者列表 (02010075)
+ * 用于HIS数据同步监控页面
+ */
+export const querySyncedPatients = (
+  params: QuerySyncedPatientsParams,
+  pagination: Pagination
+): Promise<ApiResponse<PageResult<SyncedPatientItem>>> => {
+  return invoke('02010075', [params], undefined, pagination);
 };
 
-// ========== 数据同步监控 (02010050, 02010051, 02010052) ==========
+// ========== 患者详情查询 (02010076) ==========
 
-/** 同步任务记录 */
-export interface SyncTaskItem {
-  id: string;
+/** 患者详情 */
+export interface PatientDetail {
+  admInfo: {
+    admDr: string;
+    admissionNo: string;
+    patID: string;
+    medicalRecordNo: string;
+    patientName: string;
+    sexCode: string;
+    sexDesc: string;
+    patNo: string;
+    admDocDesc: string;
+    admNurDesc: string;
+    admDateTime: string;
+    admInDays: number;
+    admDiag: string;
+    inLocDesc: string;
+    inWardDesc: string;
+    createDate: string;
+    createTime: string;
+  };
+  diseList: Array<{
+    diseSn: number;
+    diseCode: string;
+    diseName: string;
+    mainFlag: string;
+    diseType: string;
+  }>;
+  oprnList: Array<{
+    oprnSn: number;
+    oprnCode: string;
+    oprnName: string;
+    mainFlag: string;
+    oprnDate: string;
+  }>;
+}
+
+/** 查询患者详情 (02010076) */
+export const queryPatientDetail = (
+  params: { admID: string }
+): Promise<ApiResponse<PatientDetail>> => {
+  return invoke('02010076', [params]);
+};
+
+// ========== 同步日志查询 (02010077) ==========
+
+/** 同步日志记录 */
+export interface SyncLogItem {
+  id: number;
   taskName: string;
-  taskType: string;
-  taskTypeDesc: string;
-  dataSource: string;
-  dataSourceDesc: string;
-  
-  // 同步范围
-  startDate: string;
-  endDate: string;
-  department?: string;
-  departmentName?: string;
-  
-  // 同步统计
+  syncType: string;
+  startTime: string;
+  endTime: string;
+  statusCode: string;
   totalCount: number;
   successCount: number;
-  failCount: number;
-  skipCount: number;
-  
-  // 状态
-  status: string;
-  statusDesc: string;
-  progress: number;
-  
-  // 时间
-  startTime: string;
-  endTime?: string;
-  duration?: number;
-  
-  // 创建信息
-  createUser: string;
-  createUserName: string;
-  createTime: string;
-  
-  // 错误信息
-  errorMsg?: string;
+  failedCount: number;
+  errorMessage: string;
 }
 
-/** 查询同步任务参数 */
-export interface QuerySyncTaskParams {
-  taskName?: string;
-  taskType?: string;
-  dataSource?: string;
-  status?: string;
+/** 查询同步日志参数 */
+export interface QuerySyncLogsParams {
+  syncType?: string;
+  statusCode?: string;
   startDate?: string;
   endDate?: string;
 }
 
-/** 查询同步任务 (02010050) */
-export const querySyncTasks = (
-  params: QuerySyncTaskParams,
+/**
+ * 查询同步日志列表 (02010077)
+ * 用于HIS数据同步日志查询页面
+ */
+export const querySyncLogs = (
+  params: QuerySyncLogsParams,
   pagination: Pagination
-): Promise<ApiResponse<PageResult<SyncTaskItem>>> => {
-  return invoke('02010050', [params], undefined, pagination);
+): Promise<ApiResponse<PageResult<SyncLogItem>>> => {
+  return invoke('02010077', [params], undefined, pagination);
 };
 
-/** 同步任务详情 */
-export interface SyncTaskDetail extends SyncTaskItem {
-  // 同步明细
-  detailList: Array<{
-    id: string;
-    admissionNo: string;
-    patientName: string;
-    operation: string;
-    status: string;
-    statusDesc: string;
-    errorMsg?: string;
-    syncTime: string;
-  }>;
-}
+// ========== HIS同步任务管理 (02010078, 02010079, 02010080, 02010081) ==========
 
-/** 查询同步任务详情 (02010051) */
-export const querySyncTaskDetail = (
-  taskId: string
-): Promise<ApiResponse<SyncTaskDetail>> => {
-  return invoke('02010051', [{ taskId }]);
-};
-
-/** 创建同步任务参数 */
-export interface CreateSyncTaskParams {
-  taskName: string;
-  taskType: string;
-  dataSource: string;
-  startDate: string;
-  endDate: string;
-  department?: string;
-}
-
-/** 创建同步任务 (02010052) */
-export const createSyncTask = (
-  params: CreateSyncTaskParams
-): Promise<ApiResponse<{ taskId: string }>> => {
-  return invoke('02010052', [params]);
-};
-
-/** 取消同步任务 (02010053) */
-export const cancelSyncTask = (
-  taskId: string
-): Promise<ApiResponse> => {
-  return invoke('02010053', [{ taskId }]);
-};
-
-/** 删除同步任务 (02010054) */
-export const deleteSyncTask = (
-  taskId: string
-): Promise<ApiResponse> => {
-  return invoke('02010054', [{ taskId }]);
-};
-
-/** 重新执行同步任务 (02010055) */
-export const retrySyncTask = (
-  taskId: string
-): Promise<ApiResponse> => {
-  return invoke('02010055', [{ taskId }]);
-};
-
-/** 数据同步统计 */
-export interface SyncStatistics {
-  totalTaskCount: number;
-  runningTaskCount: number;
-  successTaskCount: number;
-  failTaskCount: number;
-  
-  todaySyncCount: number;
-  todaySuccessCount: number;
-  todayFailCount: number;
-  
-  last7DaysStats: Array<{
-    date: string;
-    totalCount: number;
-    successCount: number;
-    failCount: number;
-  }>;
-  
-  dataSourceStats: Array<{
-    dataSource: string;
-    dataSourceDesc: string;
-    totalCount: number;
-    successCount: number;
-    failCount: number;
-  }>;
-}
-
-/** 获取数据同步统计 (02010056) */
-export const getSyncStatistics = (
-  params: {
-    startDate?: string;
-    endDate?: string;
-  }
-): Promise<ApiResponse<SyncStatistics>> => {
-  return invoke('02010056', [params]);
-};
-
-// ========== 数据质量检查 (02010057, 02010058) ==========
-
-/** 数据质量检查记录 */
-export interface DataQualityItem {
-  id: string;
-  checkType: string;
-  checkTypeDesc: string;
-  checkItem: string;
-  checkItemDesc: string;
-  
-  // 检查对象
-  admissionNo: string;
-  patientName: string;
-  department: string;
-  departmentName: string;
-  
-  // 检查结果
-  checkResult: string;
-  checkResultDesc: string;
-  issueDesc: string;
-  suggestion: string;
-  
-  // 处理状态
-  status: string;
-  statusDesc: string;
-  handleUser?: string;
-  handleTime?: string;
-  handleRemark?: string;
-  
-  // 时间
-  checkTime: string;
-}
-
-/** 查询数据质量检查参数 */
-export interface QueryDataQualityParams {
-  checkType?: string;
-  checkItem?: string;
-  admissionNo?: string;
-  patientName?: string;
-  department?: string;
-  checkResult?: string;
-  status?: string;
+/** 执行同步任务参数 */
+export interface ExecuteSyncTaskParams {
+  hospCode: string;
+  syncType: string;  // incremental/full
+  lookbackDays?: number;
   startDate?: string;
   endDate?: string;
 }
 
-/** 查询数据质量检查 (02010057) */
-export const queryDataQuality = (
-  params: QueryDataQualityParams,
-  pagination: Pagination
-): Promise<ApiResponse<PageResult<DataQualityItem>>> => {
-  return invoke('02010057', [params], undefined, pagination);
-};
-
-/** 处理数据质量问题 (02010058) */
-export const handleDataQualityIssue = (
-  params: {
-    id: string;
-    handleRemark: string;
-  }
-): Promise<ApiResponse> => {
-  return invoke('02010058', [params]);
-};
-
-/** 数据质量统计 */
-export interface DataQualityStatistics {
-  totalCheckCount: number;
-  normalCount: number;
-  warningCount: number;
-  errorCount: number;
-  
-  pendingHandleCount: number;
-  handledCount: number;
-  ignoredCount: number;
-  
-  checkTypeStats: Array<{
-    checkType: string;
-    checkTypeDesc: string;
-    totalCount: number;
-    warningCount: number;
-    errorCount: number;
-  }>;
-  
-  departmentStats: Array<{
-    department: string;
-    departmentName: string;
-    totalCount: number;
-    warningCount: number;
-    errorCount: number;
-  }>;
+/** 同步配置 */
+export interface SyncConfig {
+  id?: string;
+  hospCode: string;
+  syncType: string;
+  frequency: string;  // manual/hourly/daily/weekly
+  scheduledTime?: string;
+  lookbackDays?: number;
+  enabled?: boolean;
 }
 
-/** 获取数据质量统计 (02010059) */
-export const getDataQualityStatistics = (
-  params: {
-    startDate?: string;
-    endDate?: string;
-  }
-): Promise<ApiResponse<DataQualityStatistics>> => {
-  return invoke('02010059', [params]);
+/** 同步状态 */
+export interface SyncStatus {
+  status: string;
+  lastSyncTime?: string;
+  lastSyncStatus?: string;
+  errorMessage?: string;
+}
+
+/**
+ * 执行同步任务 (02010078)
+ */
+export const executeSyncTask = (
+  params: ExecuteSyncTaskParams
+): Promise<ApiResponse<any>> => {
+  return invoke('02010078', [params]);
+};
+
+/**
+ * 查询同步配置 (02010079)
+ */
+export const getSyncConfig = (
+  params: { hospCode: string }
+): Promise<ApiResponse<SyncConfig>> => {
+  return invoke('02010079', [params]);
+};
+
+/**
+ * 保存同步配置 (02010080)
+ */
+export const saveSyncConfig = (
+  params: SyncConfig
+): Promise<ApiResponse<any>> => {
+  return invoke('02010080', [params]);
+};
+
+/**
+ * 查询同步状态 (02010081)
+ */
+export const getSyncStatus = (
+  params: { hospCode: string }
+): Promise<ApiResponse<SyncStatus>> => {
+  return invoke('02010081', [params]);
+};
+
+// ========== HIS服务配置管理 (02010069, 02010070) ==========
+
+/** HIS服务配置 */
+export interface HisServiceConfig {
+  hisProtocol?: string;  // http 或 https
+  hisIP: string;
+  hisPort: string;
+  hisURL: string;
+  authorization: string;
+}
+
+/**
+ * 获取HIS服务配置 (02010070)
+ * 用于同步HIS数据前获取服务连接配置
+ */
+export const getHisServiceConfig = (
+  params: { hospCode: string }
+): Promise<ApiResponse<HisServiceConfig>> => {
+  return invoke('02010070', [params]);
+};
+
+/**
+ * 保存HIS服务配置 (02010069)
+ */
+export const saveHisServiceConfig = (
+  params: HisServiceConfig & { hospCode: string }
+): Promise<ApiResponse<any>> => {
+  return invoke('02010069', [params]);
 };

@@ -663,6 +663,7 @@ export const getPolicyTypeData = (): Promise<ApiResponse<PolicyTypeItem[]>> => {
 /** 医疗机构记录 */
 export interface HospitalInfoItem {
   id: string;
+  hospCode: string;
   code: string;
   descripts: string;
   descriptsSPCode: string;

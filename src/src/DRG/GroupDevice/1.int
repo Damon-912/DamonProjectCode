@@ -1,7 +1,7 @@
 ROUTINE src.DRG.GroupDevice.1 [Type=INT,Generated]
  ;src.DRG.GroupDevice.1
- ;Generated for class src.DRG.GroupDevice.  Do NOT edit. 06/04/2026 04:38:08AM
- ;;4D6F5269;src.DRG.GroupDevice
+ ;Generated for class src.DRG.GroupDevice.  Do NOT edit. 06/04/2026 04:49:25AM
+ ;;74304567;src.DRG.GroupDevice
  ;
 zBuildMultiCodeWhere(fieldName,codeList)
 	set codeCount = $LISTLENGTH(codeList)
@@ -4888,239 +4888,216 @@ zLogCheckInfo(logType,logContent)
     w $ZDATETIME($HOROLOG,3) _ " | " _ logType _ " | " _ logContent _ $C(13,10)
 	Quit
 zQueryDRGGroupRecord(postObj)
-    try
-    {
-    	new (postObj)
-	    set resultObj={"errorCode":"0","errorMessage":"","result":{}}
-	    set pageSize="",currentPage=1,count=0,dataArr=[]
+	new (postObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{}}
+	set pageSize="",currentPage=1,count=0,dataArr=[]
+	try
+	{
 		if (postObj.%IsDefined("pagination")'=0) 
 		{
-	        set pagationObj=postObj.pagination.%Get(0)
+			set pagationObj=postObj.pagination.%Get(0)
 			set pageSize=pagationObj.pageSize
-		    set currentPage=pagationObj.currentPage
+			set currentPage=pagationObj.currentPage
 		}
-        // 3. 获取查询条件
-        set params=postObj.params.%Get(0)
-        set admID = params.admID
-        set medcasNo = params.medcasNo
-        set patientName = params.patientName
-        set psnNo = params.psnNo
-        set drg = params.drg
-        set mainDiagnosisCode = params.mainDiagnosisCode
-        set startDate = params.startDate
-        set endDate = params.endDate
-        set department = params.department
-        set groupStage = params.groupStage
-        // 就诊时间范围查询条件
-        set admStartDate = params.admStartDate
-        set admEndDate = params.admEndDate
-        set discgStartDate = params.discgStartDate
-        set discgEndDate = params.discgEndDate
-        set settleStartDate = params.settleStartDate
-        set settleEndDate = params.settleEndDate
-        // 4. 构建SQL条件（使用参数化查询防止SQL注入）
-        set sqlWhere = " WHERE ActiveFlag = '1'"
-        set sqlParams = []
-        if (admID '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND AdmID = ?"
-            do sqlParams.%Push(admID)
-        }
-        if (medcasNo '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND MedcasNo = ?"
-            do sqlParams.%Push(medcasNo)
-        }
-        if (patientName '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND PatientName LIKE ?"
-            do sqlParams.%Push("%"_patientName_"%")
-        }
-        if (psnNo '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND PsnNo LIKE ?"
-            do sqlParams.%Push("%"_psnNo_"%")
-        }
-        if (drg '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND DRG = ?"
-            do sqlParams.%Push(drg)
-        }
-        if (mainDiagnosisCode '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND MainDiagnosisCode = ?"
-            do sqlParams.%Push(mainDiagnosisCode)
-        }
-        if (department '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND Department = ?"
-            do sqlParams.%Push(department)
-        }
-        if (groupStage '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND GroupStage = ?"
-            do sqlParams.%Push(groupStage)
-        }
-        if (startDate '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND CreateDate >= ?"
-            do sqlParams.%Push($ZDATEH(startDate, 3))
-        }
-        if (endDate '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND CreateDate <= ?"
-            do sqlParams.%Push($ZDATEH(endDate, 3))
-        }
-        // 入院时间范围查询
-        if (admStartDate '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND AdmDateTime >= ?"
-            do sqlParams.%Push($ZDATEH(admStartDate, 3))
-        }
-        if (admEndDate '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND AdmDateTime <= ?"
-            do sqlParams.%Push($ZDATEH(admEndDate, 3))
-        }
-        // 出院时间范围查询
-        if (discgStartDate '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND DiscgDateTime >= ?"
-            do sqlParams.%Push($ZDATEH(discgStartDate, 3))
-        }
-        if (discgEndDate '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND DiscgDateTime <= ?"
-            do sqlParams.%Push($ZDATEH(discgEndDate, 3))
-        }
-        // 结算时间范围查询
-        if (settleStartDate '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND SettleDateTime >= ?"
-            do sqlParams.%Push($ZDATEH(settleStartDate, 3))
-        }
-        if (settleEndDate '= "")
-        {
-            set sqlWhere = sqlWhere _ " AND SettleDateTime <= ?"
-            do sqlParams.%Push($ZDATEH(settleEndDate, 3))
-        }
-        // 5. 查询总记录数
-        set totalSql = "SELECT COUNT(*) AS total FROM BS_DRGGroupRecord " _ sqlWhere
-        set stmt = ##class(%SQL.Statement).%New()
-        set sc = stmt.%Prepare(totalSql)
-        set total = 0
-        if ((''sc))
-        {
-            set rs = stmt.%Execute(sqlParams...)
-            if (rs.%Next())
-            {
-                set total = rs.total
-            }
-        }
-        set resultObj.result.total = total
-        // 6. 如果没有记录，直接返回
-        if (total = 0)
-        {
-            return resultObj
-        }
-        // 7. 计算分页参数
-        set page = currentPage
-        set limit = pageSize
-        set startRow = (page - 1) * limit
-        // 8. 查询数据列表（使用对象方式构建返回结构）
-        set dataSql = "SELECT ID FROM BS_DRGGroupRecord " _ sqlWhere _ " ORDER BY CreateDate DESC, CreateTime DESC"
-        set stmt = ##class(%SQL.Statement).%New()
-        set sc = stmt.%Prepare(dataSql)
-        set rows = []
-        set rowIndex = 0
-        set skipCount = 0
-        if ((''sc))
-        {
-            set rs = stmt.%Execute(sqlParams...)
-            while (rs.%Next())
-            {
-                set rowIndex = rowIndex + 1
-                // 分页处理：跳过前面的记录
-                if (rowIndex <= startRow)
-                {
-                    continue
-                }
-                // 限制返回数量
-                if (rows.%Size() >= limit)
-                {
-                    quit
-                }
-                // 使用对象方式获取完整数据
-                set record = ##class(User.BSDRGGroupRecord).%OpenId(rs.ID)
-                if (record '= "")
-                {
-                    set row = {}
-                    set row.id = record.%Id()
-                    set row.admID = record.AdmID
-                    set row.medcasNo = record.MedcasNo
-                    set row.patientName = record.PatientName
-                    set row.psnNo = record.PsnNo
-                    set row.insuranceAreaCode = record.InsuranceAreaCode
-                    set row.insuType = record.InsuType
-                    set row.sex = record.Sex
-                    set row.age = record.Age
-                    // 诊断信息
-                    set row.mainDiagnosisCode = record.MainDiagnosisCode
-                    set row.mainDiagnosisName = record.MainDiagnosisName
-                    set row.diaTypeCode = record.DiaTypeCode
-                    set row.diagnosisCode = record.DiagnosisCode
-                    set row.diagnosisName = record.DiagnosisName
-                    set row.mainOperationCode = record.MainOperationCode
-                    set row.mainOperationName = record.MainOperationName
-                    // DRG分组结果
-                    set row.drg = record.DRG
-                    set row.drgDesc = record.DRGDesc
-                    set row.weight = record.Weight
-                    set row.benchmarkCost = record.BenchmarkCost
-                    set row.ccFlag = record.CCFlag
-                    set row.mccFlag = record.MCCFlag                    
-                    set row.groupTime = $ZDATETIME(record.GroupTime, 3)
-                    set row.groupStage = record.GroupStage
-                    set row.remark = record.Remark
-                    // 科室信息
-                    set row.department = record.Department
-                    set row.departmentDesc = record.DepartmentDesc
-                    // 机构信息
-                    set row.fixmedinsCode = record.FixmedinsCode
-                    set row.fixmedinsName = record.FixmedinsName
-                    // 时间信息
-                    set row.createDate = $ZD(record.CreateDate, 3)
-                    set row.createTime = $ZT(record.CreateTime, 1)
-                    set row.updateDate = $ZD(record.UpdateDate, 3)
-                    set row.updateTime = $ZT(record.UpdateTime, 1)
-                    // 就诊时间信息
-                    set row.admDateTime = ""
-                    set row.discgDateTime = ""
-                    set row.settleDateTime = ""
-                    if (record.AdmDateTime '= "") set row.admDateTime = $ZDATETIME(record.AdmDateTime, 3)
-                    if (record.DiscgDateTime '= "") set row.discgDateTime = $ZDATETIME(record.DiscgDateTime, 3)
-                    if (record.SettleDateTime '= "") set row.settleDateTime = $ZDATETIME(record.SettleDateTime, 3)
-                    set count=count+1
-                    if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
-                    do rows.%Push(row)
-                }
-            }
-        }
-		set resultObj.result.rows=rows
-		set resultObj.result.total=total
-    }
-    catch(e)
-    {
-        set status = e.AsStatus()
-        set errorCode = $piece(##class(%SYSTEM.Status).GetErrorCodes(status), ",")
-        set errorMsg = $replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"), "^", " ")
-        set errorInfo = "查询DRG分组记录异常：类=" _ $ClassName() _ "，错误：" _ errorMsg
-        // 记录错误日志
-        set errorLogID = ##class(src.Interface.Message).InsErrRecord("02010036", errorInfo, errorMsg)
-        set resultObj.errorCode = "-99"
-        set resultObj.errorMessage = "查询DRG分组记录异常（日志ID："_errorLogID_"）："_errorMsg
-    }
-    quit resultObj
+		set params=postObj.params.%Get(0)
+		set admID=params.admID
+		set medcasNo=params.medcasNo
+		set patientName=params.patientName
+		set psnNo=params.psnNo
+		set drg=params.drg
+		set mainDiagnosisCode=params.mainDiagnosisCode
+		set startDate=params.startDate
+		set endDate=params.endDate
+		set department=params.department
+		set groupStage=params.groupStage
+		set admStartDate=params.admStartDate
+		set admEndDate=params.admEndDate
+		set discgStartDate=params.discgStartDate
+		set discgEndDate=params.discgEndDate
+		set settleStartDate=params.settleStartDate
+		set settleEndDate=params.settleEndDate
+		set sql=" SELECT ID,AdmID,MedcasNo,PatientName,PsnNo,InsuranceAreaCode,InsuType,Sex,Age,"
+		       _" MainDiagnosisCode,MainDiagnosisName,DiaTypeCode,DiagnosisCode,DiagnosisName,MainOperationCode,MainOperationName,"
+		       _" DRG,DRGDesc,Weight,BenchmarkCost,CCFlag,MCCFlag,GroupTime,GroupStage,Remark,"
+		       _" Department,DepartmentDesc,FixmedinsCode,FixmedinsName,"
+		       _" CreateDate,CreateTime,UpdateDate,UpdateTime,"
+		       _" AdmDateTime,DiscgDateTime,SettleDateTime "
+		       _" FROM BS_DRGGroupRecord WHERE ActiveFlag = '1'"
+		if admID'=""
+		{
+			set sql=sql_" AND AdmID = '"_admID_"'" 
+		}
+		if medcasNo'=""
+		{
+			set sql=sql_" AND MedcasNo = '"_medcasNo_"'" 
+		}
+		if patientName'=""
+		{
+			set sql=sql_" AND PatientName LIKE '%"_patientName_"%'" 
+		}
+		if psnNo'=""
+		{
+			set sql=sql_" AND PsnNo LIKE '%"_psnNo_"%'" 
+		}
+		if drg'=""
+		{
+			set sql=sql_" AND DRG = '"_drg_"'" 
+		}
+		if mainDiagnosisCode'=""
+		{
+			set sql=sql_" AND MainDiagnosisCode = '"_mainDiagnosisCode_"'" 
+		}
+		if department'=""
+		{
+			set sql=sql_" AND Department = '"_department_"'" 
+		}
+		if groupStage'=""
+		{
+			set sql=sql_" AND GroupStage = '"_groupStage_"'" 
+		}
+		if startDate'=""
+		{
+			set sql=sql_" AND CreateDate >= "_$ZDATEH(startDate,3)
+		}
+		if endDate'=""
+		{
+			set sql=sql_" AND CreateDate <= "_$ZDATEH(endDate,3)
+		}
+		if admStartDate'=""
+		{
+			set sql=sql_" AND AdmDateTime >= "_$ZDATEH(admStartDate,3)
+		}
+		if admEndDate'=""
+		{
+			set sql=sql_" AND AdmDateTime <= "_$ZDATEH(admEndDate,3)
+		}
+		if discgStartDate'=""
+		{
+			set sql=sql_" AND DiscgDateTime >= "_$ZDATEH(discgStartDate,3)
+		}
+		if discgEndDate'=""
+		{
+			set sql=sql_" AND DiscgDateTime <= "_$ZDATEH(discgEndDate,3)
+		}
+		if settleStartDate'=""
+		{
+			set sql=sql_" AND SettleDateTime >= "_$ZDATEH(settleStartDate,3)
+		}
+		if settleEndDate'=""
+		{
+			set sql=sql_" AND SettleDateTime <= "_$ZDATEH(settleEndDate,3)
+		}
+		set sql=sql_" ORDER BY CreateDate DESC, CreateTime DESC"
+		set sqlObj=##class(%SQL.Statement).%New(1)
+		set sc=sqlObj.%Prepare(sql)
+		set result=sqlObj.%Execute()
+		while result.%Next(sc)	
+		{
+			set id=result.ID
+			set admID=result.AdmID
+			set medcasNo=result.MedcasNo
+			set patientName=result.PatientName
+			set psnNo=result.PsnNo
+			set insuranceAreaCode=result.InsuranceAreaCode
+			set insuType=result.InsuType
+			set sex=result.Sex
+			set age=result.Age
+			set mainDiagnosisCode=result.MainDiagnosisCode
+			set mainDiagnosisName=result.MainDiagnosisName
+			set diaTypeCode=result.DiaTypeCode
+			set diagnosisCode=result.DiagnosisCode
+			set diagnosisName=result.DiagnosisName
+			set mainOperationCode=result.MainOperationCode
+			set mainOperationName=result.MainOperationName
+			set drg=result.DRG
+			set drgDesc=result.DRGDesc
+			set weight=result.Weight
+			set benchmarkCost=result.BenchmarkCost
+			set ccFlag=result.CCFlag
+			set mccFlag=result.MCCFlag
+			set groupTime=result.GroupTime
+			set groupTimeDisplay=""
+			if groupTime'="" set groupTimeDisplay=$ZDATETIME(groupTime,3)
+			set groupStage=result.GroupStage
+			set remark=result.Remark
+			set department=result.Department
+			set departmentDesc=result.DepartmentDesc
+			set fixmedinsCode=result.FixmedinsCode
+			set fixmedinsName=result.FixmedinsName
+			set createDate=result.CreateDate
+			set createDateDisplay=""
+			if createDate'="" set createDateDisplay=$ZD(createDate,3)
+			set createTime=result.CreateTime
+			set createTimeDisplay=""
+			if createTime'="" set createTimeDisplay=$ZT(createTime,1)
+			set updateDate=result.UpdateDate
+			set updateDateDisplay=""
+			if updateDate'="" set updateDateDisplay=$ZD(updateDate,3)
+			set updateTime=result.UpdateTime
+			set updateTimeDisplay=""
+			if updateTime'="" set updateTimeDisplay=$ZT(updateTime,1)
+			set admDateTime=result.AdmDateTime
+			set admDateTimeDisplay=""
+			if admDateTime'="" set admDateTimeDisplay=$ZDATETIME(admDateTime,3)
+			set discgDateTime=result.DiscgDateTime
+			set discgDateTimeDisplay=""
+			if discgDateTime'="" set discgDateTimeDisplay=$ZDATETIME(discgDateTime,3)
+			set settleDateTime=result.SettleDateTime
+			set settleDateTimeDisplay=""
+			if settleDateTime'="" set settleDateTimeDisplay=$ZDATETIME(settleDateTime,3)
+			set dataObj={}
+			set dataObj.id=id
+			set dataObj.admID=admID
+			set dataObj.medcasNo=medcasNo
+			set dataObj.patientName=patientName
+			set dataObj.psnNo=psnNo
+			set dataObj.insuranceAreaCode=insuranceAreaCode
+			set dataObj.insuType=insuType
+			set dataObj.sex=sex
+			set dataObj.age=age
+			set dataObj.mainDiagnosisCode=mainDiagnosisCode
+			set dataObj.mainDiagnosisName=mainDiagnosisName
+			set dataObj.diaTypeCode=diaTypeCode
+			set dataObj.diagnosisCode=diagnosisCode
+			set dataObj.diagnosisName=diagnosisName
+			set dataObj.mainOperationCode=mainOperationCode
+			set dataObj.mainOperationName=mainOperationName
+			set dataObj.drg=drg
+			set dataObj.drgDesc=drgDesc
+			set dataObj.weight=weight
+			set dataObj.benchmarkCost=benchmarkCost
+			set dataObj.ccFlag=ccFlag
+			set dataObj.mccFlag=mccFlag
+			set dataObj.groupTime=groupTimeDisplay
+			set dataObj.groupStage=groupStage
+			set dataObj.remark=remark
+			set dataObj.department=department
+			set dataObj.departmentDesc=departmentDesc
+			set dataObj.fixmedinsCode=fixmedinsCode
+			set dataObj.fixmedinsName=fixmedinsName
+			set dataObj.createDate=createDateDisplay
+			set dataObj.createTime=createTimeDisplay
+			set dataObj.updateDate=updateDateDisplay
+			set dataObj.updateTime=updateTimeDisplay
+			set dataObj.admDateTime=admDateTimeDisplay
+			set dataObj.discgDateTime=discgDateTimeDisplay
+			set dataObj.settleDateTime=settleDateTimeDisplay
+			set count=count+1
+			if pageSize'="" continue:(count<((currentPage-1)*pageSize+1))||(count>((currentPage)*pageSize))
+			do dataArr.%Push(dataObj)
+		}
+		set resultObj.result.rows=dataArr
+		set resultObj.result.total=count
+	}catch(e){
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="查询DRG分组记录出现问题:w ##class("_$ClassName()_").QueryDRGGroupRecord("_postObj.%ToJSON()_")"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("02010036",errorInfo,errorMessage)
+		set resultObj={}
+		set resultObj.errorCode="-99"
+		set resultObj.errorMessage="查询DRG分组记录异常（日志ID："_errorLogID_"）："_errorMessage
+	}
+	quit resultObj
 zSaveDRGGroupRecord(jsonObj)
 	new (jsonObj)
 	set params = ##class(%Library.DynamicArray).%New()	

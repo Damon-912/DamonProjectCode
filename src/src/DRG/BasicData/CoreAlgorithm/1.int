@@ -1,6 +1,6 @@
 ROUTINE src.DRG.BasicData.CoreAlgorithm.1 [Type=INT,Generated]
  ;src.DRG.BasicData.CoreAlgorithm.1
- ;Generated for class src.DRG.BasicData.CoreAlgorithm.  Do NOT edit. 06/04/2026 02:32:38AM
+ ;Generated for class src.DRG.BasicData.CoreAlgorithm.  Do NOT edit. 06/15/2026 01:34:08AM
  ;;526F4D76;src.DRG.BasicData.CoreAlgorithm
  ;
 zConfirmImportDIPCoreAlgorithm(jsonObj)

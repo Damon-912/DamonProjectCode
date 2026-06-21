@@ -1,0 +1,150 @@
+{
+  "name": "iris-native-mcp",
+  "version": "1.0.1",
+  "description": "IRIS Native API MCP服务器 - 直接查询IRIS数据库",
+  
+  "iris": {
+    "host": "111.229.137.113",
+    "port": 1972,
+    "namespace": "DRG",
+    "username": "_SYSTEM",
+    "password": "123456",
+    "timeout": 30000
+  },
+  
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8090,
+    "mode": "http",
+    "cors": true,
+    "auth": {
+      "enabled": false,
+      "type": "api_key",
+      "api_key": "drg-mcp-access-key-2026"
+    }
+  },
+  
+  "tools": [
+    {
+      "name": "execute_sql",
+      "description": "执行SQL查询",
+      "parameters": {
+        "sql": {
+          "type": "string",
+          "description": "SQL查询语句",
+          "required": true
+        },
+        "params": {
+          "type": "array",
+          "description": "查询参数",
+          "required": false
+        }
+      }
+    },
+    {
+      "name": "call_class_method",
+      "description": "调用IRIS类方法",
+      "parameters": {
+        "class_name": {
+          "type": "string",
+          "description": "类名，如 DRG.HISData.SyncEngine",
+          "required": true
+        },
+        "method_name": {
+          "type": "string",
+          "description": "方法名",
+          "required": true
+        },
+        "arguments": {
+          "type": "array",
+          "description": "方法参数",
+          "required": false
+        }
+      }
+    },
+    {
+      "name": "query_table",
+      "description": "查询IRIS表数据",
+      "parameters": {
+        "table": {
+          "type": "string",
+          "description": "表名",
+          "required": true
+        },
+        "fields": {
+          "type": "array",
+          "description": "字段列表",
+          "required": false
+        },
+        "where": {
+          "type": "string",
+          "description": "WHERE条件",
+          "required": false
+        },
+        "limit": {
+          "type": "number",
+          "description": "限制条数",
+          "required": false,
+          "default": 100
+        }
+      }
+    },
+    {
+      "name": "insert_data",
+      "description": "插入数据到IRIS表",
+      "parameters": {
+        "table": {
+          "type": "string",
+          "description": "表名",
+          "required": true
+        },
+        "data": {
+          "type": "object",
+          "description": "插入的数据",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "update_data",
+      "description": "更新IRIS表数据",
+      "parameters": {
+        "table": {
+          "type": "string",
+          "description": "表名",
+          "required": true
+        },
+        "data": {
+          "type": "object",
+          "description": "更新的数据",
+          "required": true
+        },
+        "where": {
+          "type": "string",
+          "description": "WHERE条件",
+          "required": true
+        }
+      }
+    }
+  ],
+  
+  "resources": [
+    {
+      "name": "iris_connection",
+      "type": "database",
+      "description": "IRIS数据库连接",
+      "uri": "iris://111.229.137.113:1972/DRG"
+    },
+    {
+      "name": "iris_tables",
+      "type": "schema",
+      "description": "IRIS表结构信息",
+      "uri": "iris://111.229.137.113:1972/DRG/schema"
+    }
+  ],
+  
+  "logging": {
+    "level": "info",
+    "file": "logs/iris-mcp.log"
+  }
+}

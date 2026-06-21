@@ -1,7 +1,7 @@
 ROUTINE src.Rest.Internal.Map.1 [Type=INT,Generated]
  ;src.Rest.Internal.Map.1
- ;Generated for class src.Rest.Internal.Map.  Do NOT edit. 03/21/2026 05:33:30PM
- ;;77786966;src.Rest.Internal.Map
+ ;Generated for class src.Rest.Internal.Map.  Do NOT edit. 06/15/2026 11:16:28AM
+ ;;506E7239;src.Rest.Internal.Map
  ;
 zCheckLisence() public {
 	quit 0	//不再验证授权码 modify by liangjiaquan 2022.2.27
@@ -251,7 +251,8 @@ zgetStringParams(input="") public {
     Quit 1 }
 zpostMutipleParams() public {
 	Set postObj=##class(%Library.DynamicObject).%FromJSON(%request.Content)
-    Try {
+    Try
+    {
 	    set rtn=..CheckLisence()
 	    quit:rtn'=0
 		If $Data(%response) Set %response.ContentType="application/json"

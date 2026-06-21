@@ -86,6 +86,9 @@ import SystemHospitals from './pages/System/Hospitals';
 import HISMedicalRecords from './pages/HIS/MedicalRecords';
 import HISSettlement from './pages/HIS/Settlement';
 import HISDataSync from './pages/HIS/DataSync';
+import SyncedPatients from './pages/HIS/SyncedPatients';
+import SyncLog from './pages/HIS/SyncLog';
+import SyncTaskConfig from './pages/HIS/SyncTaskConfig';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -161,6 +164,9 @@ const menuTitleMap: Record<string, string> = {
   'data-records': '病案数据查询',
   'data-settlement': '结算清单管理',
   'data-sync': '数据同步监控',
+  'data-synced-patients': '已同步患者查询',
+  'data-sync-log': '同步日志查询',
+  'data-sync-config': '同步任务配置',
   'basic-data-dict': 'DRG基础数据维护',
   'basic-data-drg-dict': '字典数据管理',
   'basic-data-table': '基础表数据维护',
@@ -250,6 +256,9 @@ const menuItems: MenuProps['items'] = [
       { key: 'data-records', label: '病案数据查询' },
       { key: 'data-settlement', label: '结算清单管理' },
       { key: 'data-sync', label: '数据同步监控' },
+      { key: 'data-synced-patients', label: '已同步患者查询' },
+      { key: 'data-sync-log', label: '同步日志查询' },
+      { key: 'data-sync-config', label: '同步任务配置' },
     ],
   },
   {
@@ -767,6 +776,12 @@ function App() {
         return <SystemInterfaces />;
       case 'system-logs':
         return <SystemInterfaceLogs />;
+      case 'data-synced-patients':
+        return <SyncedPatients />;
+      case 'data-sync-log':
+        return <SyncLog />;
+      case 'data-sync-config':
+        return <SyncTaskConfig />;
       default:
         return (
           <Card>

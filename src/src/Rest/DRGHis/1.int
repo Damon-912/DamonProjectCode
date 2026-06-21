@@ -1,0 +1,198 @@
+ROUTINE src.Rest.DRGHis.1 [Type=INT,Generated]
+ ;src.Rest.DRGHis.1
+ ;Generated for class src.Rest.DRGHis.  Do NOT edit. 06/14/2026 05:26:45PM
+ ;;736F6E33;src.Rest.DRGHis
+ ;
+zGetHisServiceConfig(pParams) public {
+        new (pParams)
+        set $zt="Error"
+        set tResultObj={"errorCode":"0","errorMessage":"","result":{}}
+        try {
+            set tParamObj=pParams.%Get(0)
+            set tRtn=##class(src.DRG.HISData.ConfigService).GetHisServiceConfig(tParamObj)
+            set tResultObj=tRtn
+        } catch tException {
+            set tResultObj.errorCode="-1"
+            set tResultObj.errorMessage=$System.Status.GetErrorText(tException.AsStatus(),"cn")
+        }
+        quit tResultObj
+    Error
+        set $zt=""
+        set tResultObj.errorCode="-1"
+        set tResultObj.errorMessage=$ze
+        quit tResultObj }
+zInvoke(pCode,pParams,pSession,pPagination) public {
+        new (pCode, pParams, pSession, pPagination)
+        set $zt="Error"
+        set tResultObj={"errorCode":"-1","errorMessage":"未知接口编码","result":{}}
+        try {
+            if pCode="02010060" {
+                set tRtn=..TriggerHisSync(pParams,pSession)
+                set tResultObj=tRtn
+                quit
+            }
+            if pCode="02010061" {
+                set tRtn=..QueryHisSyncLogs(pParams,pPagination)
+                set tResultObj=tRtn
+                quit
+            }
+            if pCode="02010062" {
+                set tRtn=..QuerySyncedPatients(pParams,pPagination)
+                set tResultObj=tRtn
+                quit
+            }
+            if pCode="02010063" {
+                set tRtn=..GetHisServiceConfig(pParams)
+                set tResultObj=tRtn
+                quit
+            }
+            if pCode="02010064" {
+                set tRtn=..SaveHisServiceConfig(pParams)
+                set tResultObj=tRtn
+                quit
+            }
+        } catch tException {
+            set tResultObj.errorCode="-1"
+            set tResultObj.errorMessage=$System.Status.GetErrorText(tException.AsStatus(),"cn")
+        }
+        quit tResultObj
+    Error
+        set $zt=""
+        set tResultObj.errorCode="-1"
+        set tResultObj.errorMessage=$ze
+        quit tResultObj }
+zQueryHisSyncLogs(pParams,pPagination) public {
+        new (pParams,pPagination)
+        set $zt="Error"
+        set tResultObj={"errorCode":"0","errorMessage":"","result":{"rows":[],"total":0}}
+        try {
+            set tSQL="SELECT * FROM BS_HIS_SyncLog WHERE 1=1"
+            set tParamsObj=pParams.%Get(0)
+            if $get(tParamsObj.syncType)'="" {
+                set tSQL=tSQL_" AND SyncType='"_$get(tParamsObj.syncType)_"'"
+            }
+            if $get(tParamsObj.status)'="" {
+                set tSQL=tSQL_" AND StatusCode='"_$get(tParamsObj.status)_"'"
+            }
+            set tStmt=##class(%SQL.Statement).%New()
+            do tStmt.%Prepare(tSQL)
+            set tRS=tStmt.%Execute()
+            set tRows=[]
+            set tCount=0
+            while tRS.%Next() {
+                set tCount=tCount+1
+                set tRow={"id":""}
+                set tRow.id=tRS.%Get("ID")
+                set tRow.taskName=tRS.%Get("TaskName")
+                set tRow.syncType=tRS.%Get("SyncType")
+                set tRow.status=tRS.%Get("StatusCode")
+                set tRow.totalCount=tRS.%Get("TotalCount")
+                set tRow.successCount=tRS.%Get("SuccessCount")
+                set tRow.failedCount=tRS.%Get("FailedCount")
+                set tRow.startTime=tRS.%Get("StartTime")
+                set tRow.endTime=tRS.%Get("EndTime")
+                do tRows.%Push(tRow)
+            }
+            set tResultObj.result.rows=tRows
+            set tResultObj.result.total=tCount
+        } catch tException {
+            set tResultObj.errorCode="-1"
+            set tResultObj.errorMessage=$System.Status.GetErrorText(tException.AsStatus(),"cn")
+        }
+        quit tResultObj
+    Error
+        set $zt=""
+        set tResultObj.errorCode="-1"
+        set tResultObj.errorMessage=$ze
+        quit tResultObj }
+zQuerySyncedPatients(pParams,pPagination) public {
+        new (pParams,pPagination)
+        set $zt="Error"
+        set tResultObj={"errorCode":"0","errorMessage":"","result":{"rows":[],"total":0}}
+        try {
+            set tSQL="SELECT p.AdmID,p.PatMedicalNo,p.PatName,p.AdmDateTime,p.InLocDesc,p.AdmDocDesc,d.MainDiagnosisCode,d.MainOperationCode,d.TotalCost FROM BS_HIS_PatAdm p LEFT JOIN BS_HIS_DRGParams d ON p.AdmID=d.AdmID WHERE p.Deleted=0"
+            set tParamsObj=pParams.%Get(0)
+            if $get(tParamsObj.patientName)'="" {
+                set tSQL=tSQL_" AND p.PatName LIKE '%"_$get(tParamsObj.patientName)_"%'"
+            }
+            if $get(tParamsObj.medicalRecordNo)'="" {
+                set tSQL=tSQL_" AND p.PatMedicalNo LIKE '%"_$get(tParamsObj.medicalRecordNo)_"%'"
+            }
+            set tStmt=##class(%SQL.Statement).%New()
+            do tStmt.%Prepare(tSQL)
+            set tRS=tStmt.%Execute()
+            set tRows=[]
+            set tCount=0
+            while tRS.%Next() {
+                set tCount=tCount+1
+                set tRow={"admissionNo":"","medicalRecordNo":"","patientName":"","sex":"","age":0,"department":"","doctor":"","mainDiagnosisCode":"","mainDiagnosisName":"","totalCost":0}
+                set tRow.admissionNo=tRS.%Get("AdmID")
+                set tRow.medicalRecordNo=tRS.%Get("PatMedicalNo")
+                set tRow.patientName=tRS.%Get("PatName")
+                set tRow.department=tRS.%Get("InLocDesc")
+                set tRow.doctor=tRS.%Get("AdmDocDesc")
+                set tRow.mainDiagnosisCode=tRS.%Get("MainDiagnosisCode")
+                set tRow.totalCost=tRS.%Get("TotalCost")
+                do tRows.%Push(tRow)
+            }
+            set tResultObj.result.rows=tRows
+            set tResultObj.result.total=tCount
+        } catch tException {
+            set tResultObj.errorCode="-1"
+            set tResultObj.errorMessage=$System.Status.GetErrorText(tException.AsStatus(),"cn")
+        }
+        quit tResultObj
+    Error
+        set $zt=""
+        set tResultObj.errorCode="-1"
+        set tResultObj.errorMessage=$ze
+        quit tResultObj }
+zSaveHisServiceConfig(pParams) public {
+        new (pParams)
+        set $zt="Error"
+        set tResultObj={"errorCode":"0","errorMessage":"","result":{}}
+        try {
+            set tParamObj=pParams.%Get(0)
+            set tRtn=##class(src.DRG.HISData.ConfigService).SaveHisServiceConfig(tParamObj)
+            set tResultObj=tRtn
+        } catch tException {
+            set tResultObj.errorCode="-1"
+            set tResultObj.errorMessage=$System.Status.GetErrorText(tException.AsStatus(),"cn")
+        }
+        quit tResultObj
+    Error
+        set $zt=""
+        set tResultObj.errorCode="-1"
+        set tResultObj.errorMessage=$ze
+        quit tResultObj }
+zTriggerHisSync(pParams,pSession) public {
+        new (pParams,pSession)
+        set $zt="Error"
+        set tResultObj={"errorCode":"0","errorMessage":"","result":{"taskId":""}}
+        try {
+            set tParamObj=pParams.%Get(0)
+            set tSyncType=$get(tParamObj.syncType,"incremental")
+            set tHospID=$get(tParamObj.hospID,"25")
+            if tSyncType="incremental" {
+                set tRtn=##class(src.DRG.HISData.SyncEngine).IncrementalSync(tHospID,3)
+            } else {
+                set tStartDate=$get(tParamObj.startDate,"")
+                set tEndDate=$get(tParamObj.endDate,"")
+                set tRtn=##class(src.DRG.HISData.SyncEngine).FullSync(tHospID,tStartDate,tEndDate)
+            }
+            if tRtn.errorCode="0" {
+                set tResultObj.result.taskId="TASK"_$replace($zd($h,3)_$replace($zt($p($h,",",2)),":","")
+            } else {
+                set tResultObj.errorCode=tRtn.errorCode
+                set tResultObj.errorMessage=tRtn.errorMessage
+            }
+        } catch tException {
+            set tResultObj.errorCode="-1"
+            set tResultObj.errorMessage=$System.Status.GetErrorText(tException.AsStatus(),"cn")
+        }
+        quit tResultObj
+    Error
+        set $zt=""
+        set tResultObj.errorCode="-1"
+        set tResultObj.errorMessage=$ze
+        quit tResultObj }

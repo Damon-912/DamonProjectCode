@@ -318,7 +318,7 @@ const Menus: React.FC = () => {
     {
       title: '序号',
       key: 'index',
-      width: 80,
+      width: 30,
       render: (_, __, index) => (
         <div style={{ textAlign: 'center' }}>{index + 1}</div>
       )
@@ -327,13 +327,13 @@ const Menus: React.FC = () => {
       title: '菜单编码',
       dataIndex: 'menuCode',
       key: 'menuCode',
-      width: 150
+      width: 100
     },
     {
       title: '菜单名称',
       dataIndex: 'menuName',
       key: 'menuName',
-      width: 200,
+      width: 180,
       render: (text: string) => (
         <span style={{ fontWeight: 'bold', fontSize: '14px' }}>{text}</span>
       )
@@ -364,21 +364,21 @@ const Menus: React.FC = () => {
       title: '父菜单',
       dataIndex: 'parentCode',
       key: 'parentCode',
-      width: 120,
+      width: 100,
       render: (parentCode: string) => parentCode || '-'
     },
     {
       title: '菜单路径',
       dataIndex: 'menuPath',
       key: 'menuPath',
-      width: 200,
+      width: 180,
       ellipsis: true
     },
     {
       title: '排序号',
       dataIndex: 'sortNo',
       key: 'sortNo',
-      width: 80
+      width: 60
     },
     {
       title: '状态',
@@ -397,7 +397,7 @@ const Menus: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 120,
+      width: 150,
       render: (_, record) => (
         <Space size="small">
           <Button

@@ -195,6 +195,19 @@ const Interfaces: React.FC = () => {
       ),
     },
     {
+      title: '接口来源',
+      key: 'interfaceSource',
+      width: 120,
+      render: (_, record) => {
+        // HIS接口编码范围：02010060~02010067
+        const code = record.code;
+        if (code >= '02010060' && code <= '02010067') {
+          return <Tag color="orange">HIS接口</Tag>;
+        }
+        return <Tag color="blue">DRG接口</Tag>;
+      },
+    },
+    {
       title: '产品类别',
       dataIndex: 'productCatDesc',
       width: 100,

@@ -104,7 +104,7 @@ const BasicDataMaintenance: React.FC = () => {
       const res = await queryBasicDataSub(
         { 
           dictID: selectedRow.dictID || selectedRow.id, 
-          code: subSearch.code || undefined,
+          Code: subSearch.code || undefined,
           desc: subSearch.desc || undefined,
           status: subSearch.status || undefined
         },

@@ -1,0 +1,1091 @@
+ROUTINE src.DRG.HISData.HisDataService.1 [Type=INT,Generated]
+ ;src.DRG.HISData.HisDataService.1
+ ;Generated for class src.DRG.HISData.HisDataService.  Do NOT edit. 06/20/2026 04:11:30PM
+ ;;32685634;src.DRG.HISData.HisDataService
+ ;
+zDeleteDiseInfo(pAdmRefID)
+     ;---&sql(DELETE FROM BS_HISDiseInfo WHERE Adm_Dr = :pAdmRefID)
+      ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, pAdmRefID
+    do %0Ao
+    return SQLCODE
+	Quit
+ q
+%0Ao n sqldata6d,sqldata7d,sqldata8d,sqldata9d,sqldata10d,sqldata11d,sqldata17d,sqldata20d,sqldata21d,sqldata2d,sqldata3d,sqldata1d,sqldata4d,sqldata5d
+ s $zt="%0Aerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata6d=0,sqldata7d=$g(%0CacheRowLimit,9223372036854775807)
+ s sqldata8d=$zu(115,2)
+ s sqldata9d=""
+ s sqldata2d=$s($g(pAdmRefID)="":"",$isvalidnum(pAdmRefID):+pAdmRefID,1:pAdmRefID)
+ s SQLCODE=100
+ If $zu(115,1)=2,'$TLEVEL { s sqldata10d=1 TSTART } If $zu(115,1) { s sqldata11d=1 TSTART  }
+ ; asl MOD# 2
+ s sqldata1d=sqldata2d
+ i sqldata1d="" g %0AmBdun
+ s sqldata3d=""
+%0AmBk1 s sqldata3d=$o(^BSHISDiseInfoI("AdmDrIndex",sqldata1d,sqldata3d))
+ i sqldata3d="" g %0AmBdun
+ set sqldata17d=##class(User.BSHISDiseInfo).%SQLGetLock(sqldata3d) i 'sqldata17d s SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler40",,"DELETE","SQLUser"_"."_"BS_HISDiseInfo",sqldata3d) g %0Ac
+ ; asl MOD# 3
+ s sqldata4d=$zlist(sqldata1d)
+ i sqldata3d'="" s sqldata20d="" i $d(^BSHISDiseInfoD(sqldata3d),sqldata20d)
+ e  g %0AmCdun
+ S sqldata1d=$lg(sqldata20d,5)
+ s sqldata5d=$zlist(sqldata1d)
+ g:sqldata4d'=sqldata5d %0AmCdun
+ do ##class(User.BSHISDiseInfo).%SQLDelete(sqldata3d,$c(0,2,0,0,0,0,0),'$g(sqldata11d))
+ i 'SQLCODE { i $i(sqldata6d)'<sqldata7d { d:sqldata17d=1 ##class(User.BSHISDiseInfo).%SQLReleaseLock(sqldata3d) g %0Ac }}
+%0AmCdun d:sqldata17d=1 ##class(User.BSHISDiseInfo).%SQLReleaseLock(sqldata3d) g:SQLCODE<0 %0Ac
+ g %0AmBk1
+%0AmBdun 
+%0AmAdun 
+%0Ac set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(sqldata6d),1:0)
+ If $zu(115,1),$g(sqldata11d) { TCOMMIT:SQLCODE'<0  TROLLBACK:SQLCODE<0 1 } TCOMMIT:SQLCODE=100&&(%ROWCOUNT=0)&&($g(sqldata10d))&&($zu(115,1)=2) 
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata21d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"D9YnORs4c1rqqC49qPfH1gJdDzs="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"D9YnORs4c1rqqC49qPfH1gJdDzs=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Aerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ d:$g(sqldata17d)=1 ##class(User.BSHISDiseInfo).%SQLReleaseLock(sqldata3d)
+ g %0Ac
+zDeleteOprnInfo(pAdmRefID)
+     ;---&sql(DELETE FROM BS_HISOprnInfo WHERE Adm_Dr = :pAdmRefID)
+      ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, pAdmRefID
+    do %0Co
+    return SQLCODE
+	Quit
+ q
+%0Co n sqldata6d,sqldata7d,sqldata8d,sqldata9d,sqldata10d,sqldata11d,sqldata17d,sqldata20d,sqldata21d,sqldata2d,sqldata3d,sqldata1d,sqldata4d,sqldata5d
+ s $zt="%0Cerr"
+ n %sqltime s %sqltime=$zh
+ s sqldata6d=0,sqldata7d=$g(%0CacheRowLimit,9223372036854775807)
+ s sqldata8d=$zu(115,2)
+ s sqldata9d=""
+ s sqldata2d=$s($g(pAdmRefID)="":"",$isvalidnum(pAdmRefID):+pAdmRefID,1:pAdmRefID)
+ s SQLCODE=100
+ If $zu(115,1)=2,'$TLEVEL { s sqldata10d=1 TSTART } If $zu(115,1) { s sqldata11d=1 TSTART  }
+ ; asl MOD# 2
+ s sqldata1d=sqldata2d
+ i sqldata1d="" g %0CmBdun
+ s sqldata3d=""
+%0CmBk1 s sqldata3d=$o(^BSHISOprnInfoI("AdmDrIndex",sqldata1d,sqldata3d))
+ i sqldata3d="" g %0CmBdun
+ set sqldata17d=##class(User.BSHISOprnInfo).%SQLGetLock(sqldata3d) i 'sqldata17d s SQLCODE=-110,%msg=$$FormatMessage^%occMessages(,"%SQL.Filer","SQLFiler40",,"DELETE","SQLUser"_"."_"BS_HISOprnInfo",sqldata3d) g %0Cc
+ ; asl MOD# 3
+ s sqldata4d=$zlist(sqldata1d)
+ i sqldata3d'="" s sqldata20d="" i $d(^BSHISOprnInfoD(sqldata3d),sqldata20d)
+ e  g %0CmCdun
+ S sqldata1d=$lg(sqldata20d,5)
+ s sqldata5d=$zlist(sqldata1d)
+ g:sqldata4d'=sqldata5d %0CmCdun
+ do ##class(User.BSHISOprnInfo).%SQLDelete(sqldata3d,$c(0,2,0,0,0,0,0),'$g(sqldata11d))
+ i 'SQLCODE { i $i(sqldata6d)'<sqldata7d { d:sqldata17d=1 ##class(User.BSHISOprnInfo).%SQLReleaseLock(sqldata3d) g %0Cc }}
+%0CmCdun d:sqldata17d=1 ##class(User.BSHISOprnInfo).%SQLReleaseLock(sqldata3d) g:SQLCODE<0 %0Cc
+ g %0CmBk1
+%0CmBdun 
+%0CmAdun 
+%0Cc set %ROWCOUNT=$s($g(SQLCODE)'<0:+$g(sqldata6d),1:0)
+ If $zu(115,1),$g(sqldata11d) { TCOMMIT:SQLCODE'<0  TROLLBACK:SQLCODE<0 1 } TCOMMIT:SQLCODE=100&&(%ROWCOUNT=0)&&($g(sqldata10d))&&($zu(115,1)=2) 
+ n context,tmp,count,total,mean s context=$system.Context.SQL()
+ if $d(%sqltime) { s %sqltime=$g(sqldata21d)+$zh-%sqltime
+ if $g(context.Stats)<$zu(99) { d AggregateStats^%SYS.SQLSRV() }
+ s tmp=$g(context.Stats($namespace,"zozGXVxWXPhrdqOYHk8l5S22KWM="))
+ s count=$lg(tmp,1),total=$lg(tmp,2),mean=total+%sqltime/(count+1)
+ s context.Stats($namespace,"zozGXVxWXPhrdqOYHk8l5S22KWM=")=$lb(count+1,total+%sqltime,$s(+count=0:0,1:(%sqltime-mean)**2+(count*((total/count-mean)**2+$lg(tmp,3)))/(count+1))) }
+ q
+%0Cerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ d:$g(sqldata17d)=1 ##class(User.BSHISOprnInfo).%SQLReleaseLock(sqldata3d)
+ g %0Cc
+zGetInpatientData(jsonObj)
+	//new (jsonObj, session, hospCode, hospID, firstItem, fixmedinsCode, fixmedinsName)
+	set resultObj={"errorCode":"-1","errorMessage":"","result":[]}
+	try
+	{			
+        set session=jsonObj.session.%Get(0)
+        set hospCode=session.hospCode
+        set hospID=session.hospID
+        ///获取HIS数据
+        set postObj={"params":(jsonObj.params),"code":"05900014","session":(jsonObj.session)}		
+		set rtn=##class(src.External.Service).HisService(postObj,hospCode)
+		if rtn="" 
+		{
+			set resultObj.errorCode="-1"
+			set resultObj.errorMessage="HIS接口调用失败! 入参报文如下："_postObj.%ToJSON()
+			quit
+		}
+		set resultObj={}.%FromJSON(rtn)	
+		//保存数据到本地表（传入医院信息）
+		if resultObj.errorCode="0" 
+		{
+			set saveRtn=..SaveInpatientData(resultObj.result)
+			///合并保存结果到返回对象
+			if saveRtn.errorCode'="0" 
+			{
+				set resultObj.errorCode=saveRtn.errorCode
+				set resultObj.errorMessage=saveRtn.errorMessage
+			}
+		}
+	}
+	catch tException 
+	{
+		set resultObj.errorCode="-1"
+		set resultObj.errorMessage=$System.Status.GetErrorText(tException.AsStatus(),"cn")
+	}
+	quit resultObj
+zGetInpatientFeeData(jsonObj)
+	Quit
+zLogSyncError(pAdmID,pTableName,pErrorMessage)
+	new (pAdmID, pTableName, pErrorMessage, errorInfo, errorLogID)
+	try 
+	{
+		set errorInfo="AdmID="_pAdmID_"，表："_pTableName_"，错误信息："_pErrorMessage
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,pErrorMessage)
+	} 
+	catch (e) 
+	{
+		///记录错误日志失败，不中断主流程
+	}
+	Quit
+zQueryPatientDetail(jsonObj)
+    new (jsonObj)
+    set resultObj = {"errorCode":"-1","errorMessage":"","result":{"admInfo":{},"diseList":[],"oprnList":[]}}
+    try {
+        // 1. 参数解析
+        set params = jsonObj.params.%Get(0)
+        set admID = $get(params.admID, "")
+        if admID = "" {
+            set resultObj.errorCode = "04000001"
+            set resultObj.errorMessage = "就诊ID不能为空"
+            quit
+        }
+        // 2. 查询就诊信息（改用 SQL 避免对象锁，且只取所需字段）
+        set admSql = "SELECT AdmID, PatID, PatMedicalNo, PatName, PatSexCode, PatSexDesc, " _
+                    "PatNo, AdmDocDesc, AdmNurDesc, AdmDateTime, AdmInDays, AdmDiag, " _
+                    "InLocDesc, InWardDesc, CreateDate, CreateTime " _
+                    "FROM BS_HISPatAdm " _
+                    "WHERE ID = ? AND Deleted = 0"
+        set admStmt = ##class(%SQL.Statement).%New(1)
+        do admStmt.%Prepare(admSql)
+        set admRs = admStmt.%Execute(admID)
+        if 'admRs.%Next() {
+            set resultObj.errorCode = "04000002"
+            set resultObj.errorMessage = "未找到就诊记录："_admID
+            do admRs.%Close()
+            quit
+        }
+        // 构造就诊信息 JSON，日期格式化为字符串
+        set admInfo = {}
+        set admInfo.admissionNo = admRs.%Get("AdmID")
+        set admInfo.patID = admRs.%Get("PatID")
+        set admInfo.medicalRecordNo = admRs.%Get("PatMedicalNo")
+        set admInfo.patientName = admRs.%Get("PatName")
+        set admInfo.sexCode = admRs.%Get("PatSexCode")
+        set admInfo.sexDesc = admRs.%Get("PatSexDesc")
+        set admInfo.patNo = admRs.%Get("PatNo")
+        set admInfo.admDocDesc = admRs.%Get("AdmDocDesc")
+        set admInfo.admNurDesc = admRs.%Get("AdmNurDesc")
+        // 日期时间转换
+        set admDateTime = admRs.%Get("AdmDateTime")
+        if admDateTime '= "" {
+            set admInfo.admDateTime = $zd(admDateTime, 3)  // YYYY-MM-DD
+        } else {
+            set admInfo.admDateTime = ""
+        }
+        set admInfo.admInDays = admRs.%Get("AdmInDays")
+        set admInfo.admDiag = admRs.%Get("AdmDiag")
+        set admInfo.inLocDesc = admRs.%Get("InLocDesc")
+        set admInfo.inWardDesc = admRs.%Get("InWardDesc")
+        set createDate = admRs.%Get("CreateDate")
+        set createTime = admRs.%Get("CreateTime")
+        if createDate '= "" {
+            set admInfo.createDate = $zd(createDate, 3)
+        } else {
+            set admInfo.createDate = ""
+        }
+        if createTime '= "" {
+            set admInfo.createTime = $zt(createTime, 2)  // HH:MM:SS
+        } else {
+            set admInfo.createTime = ""
+        }
+        do admRs.%Close()
+        set resultObj.result.admInfo = admInfo
+        // 3. 查询诊断列表（明确字段，参数化）
+        set diseList = []
+        set diseSql = "SELECT DiagSn, DiseCode, DiseName, MainFlag, DiseType " _
+                     "FROM BS_HISDiseInfo WHERE AdmDr = ? AND Deleted = 0 ORDER BY DiagSn"
+        set diseStmt = ##class(%SQL.Statement).%New(1)
+        do diseStmt.%Prepare(diseSql)
+        set diseRs = diseStmt.%Execute(admID)
+        while diseRs.%Next() {
+            set diseItem = {}
+            set diseItem.diseSn = diseRs.%Get("DiagSn")
+            set diseItem.diseCode = diseRs.%Get("DiseCode")
+            set diseItem.diseName = diseRs.%Get("DiseName")
+            set diseItem.mainFlag = diseRs.%Get("MainFlag")
+            set diseItem.diseType = diseRs.%Get("DiseType")
+            do diseList.%Push(diseItem)
+        }
+        do diseRs.%Close()
+        set resultObj.result.diseList = diseList
+        // 4. 查询手术列表
+        set oprnList = []
+        set oprnSql = "SELECT OprnSn, OprnCode, OprnName, MainFlag, OprnDate " _
+                     "FROM BS_HISOprnInfo WHERE AdmDr = ? AND Deleted = 0 ORDER BY OprnSn"
+        set oprnStmt = ##class(%SQL.Statement).%New(1)
+        do oprnStmt.%Prepare(oprnSql)
+        set oprnRs = oprnStmt.%Execute(admID)
+        while oprnRs.%Next() {
+            set oprnItem = {}
+            set oprnItem.oprnSn = oprnRs.%Get("OprnSn")
+            set oprnItem.oprnCode = oprnRs.%Get("OprnCode")
+            set oprnItem.oprnName = oprnRs.%Get("OprnName")
+            set oprnItem.mainFlag = oprnRs.%Get("MainFlag")
+            set oprnDate = oprnRs.%Get("OprnDate")
+            if oprnDate '= "" {
+                set oprnItem.oprnDate = $zd(oprnDate, 3)
+            } else {
+                set oprnItem.oprnDate = ""
+            }
+            do oprnList.%Push(oprnItem)
+        }
+        do oprnRs.%Close()
+        set resultObj.result.oprnList = oprnList
+        set resultObj.errorCode = "0"
+    }
+    catch e {
+        set resultObj.errorCode = "-1"
+        set resultObj.errorMessage = "查询患者详情失败：" _ $System.Status.GetErrorText(e.AsStatus())
+        // 可加入日志记录：do ##class(Util.Log).Error("QueryPatientDetail", e.DisplayString())
+    }
+    quit resultObj
+zQuerySyncLogs(jsonObj)
+    new (jsonObj)
+    set resultObj = {"errorCode":"-1","errorMessage":"","result":{"rows":[],"total":0}}
+    set pageSize = 20, currentPage = 1, total = 0, dataArr = []
+    try {
+        // 解析分页参数
+        if jsonObj.%IsDefined("pagination") && jsonObj.pagination.%Size() > 0 {
+            set paginationObj = jsonObj.pagination.%Get(0)
+            set pageSize = $select(paginationObj.pageSize '= "": +paginationObj.pageSize, 1: 20)
+            set currentPage = $select(paginationObj.currentPage '= "": +paginationObj.currentPage, 1: 1)
+        }
+        // 解析查询参数
+        set params = jsonObj.params.%Get(0)
+        set syncType = params.syncType
+        set statusCode = params.statusCode
+        set startDate = params.startDate
+        set endDate = params.endDate
+        // 使用参数化查询防止注入
+        set sql = "SELECT ID, TaskName, SyncType, StartTime, EndTime, StatusCode, " _
+                "TotalCount, SuccessCount, FailedCount, ErrorMessage " _
+                "FROM BS_HISSyncLog WHERE 1=1 "
+        set whereClause = ""
+        set args = []
+        if syncType '= "" {
+            set whereClause = whereClause _ "AND SyncType = ? "
+            do args.%Push(syncType)
+        }
+        if statusCode '= "" {
+            set whereClause = whereClause _ "AND StatusCode = ? "
+            do args.%Push(statusCode)
+        }
+        if startDate '= ""
+         {
+            // 将 startDate 转为当天 00:00:00
+            set whereClause = whereClause _ "AND StartTime >= TO_TIMESTAMP(?, 'YYYY-MM-DD HH24:MI:SS') "
+            do args.%Push(startDate _ " 00:00:00")
+        }
+        if endDate '= "" 
+        {
+            // 将 endDate 转为当天 23:59:59
+            set whereClause = whereClause _ "AND StartTime <= TO_TIMESTAMP(?, 'YYYY-MM-DD HH24:MI:SS') "
+            do args.%Push(endDate _ " 23:59:59")
+        }
+        // 先查询总记录数（优化分页）
+        set countSql = "SELECT COUNT(*) AS Total FROM BS_HISSyncLog WHERE 1=1 " _ whereClause
+        set countStmt = ##class(%SQL.Statement).%New(1)
+        do countStmt.%Prepare(countSql)
+        set countRs = countStmt.%Execute(args...)
+        if countRs.%Next() {
+            set total = countRs.%Get("Total")
+        }
+        do countRs.%Close()
+        // 计算 OFFSET
+        set offset = (currentPage - 1) * pageSize
+        // 主查询：添加分页（使用 OFFSET / FETCH 语法，Caché 2018+ 支持）
+        set dataSql = sql _ whereClause _ "ORDER BY StartTime DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY"
+        do args.%Push(offset)
+        do args.%Push(pageSize)
+        set dataStmt = ##class(%SQL.Statement).%New(1)
+        do dataStmt.%Prepare(dataSql)
+        set rs = dataStmt.%Execute(args...)
+        while rs.%Next() 
+        {
+            set row = {}
+            set row.id = rs.%Get("ID")
+            set row.taskName = rs.%Get("TaskName")
+            set row.syncType = rs.%Get("SyncType")
+            set row.startTime = rs.%Get("StartTime")
+            set row.endTime = rs.%Get("EndTime")
+            set row.statusCode = rs.%Get("StatusCode")
+            set row.totalCount = rs.%Get("TotalCount")
+            set row.successCount = rs.%Get("SuccessCount")
+            set row.failedCount = rs.%Get("FailedCount")
+            set row.errorMessage = rs.%Get("ErrorMessage")
+            do dataArr.%Push(row)
+        }
+        do rs.%Close()
+        set resultObj.result.rows = dataArr
+        set resultObj.result.total = total
+        set resultObj.errorCode = "0"
+    }
+    catch e {
+        set resultObj.errorCode = "-1"
+        set resultObj.errorMessage = "查询同步日志失败：" _ $System.Status.GetErrorText(e.AsStatus())
+    }
+    quit resultObj
+zQuerySyncedPatients(jsonObj)
+    new (jsonObj)
+    set resultObj = {"errorCode":"-1","errorMessage":"","result":{"rows":[],"total":0}}
+    set pageSize = 20, currentPage = 1, total = 0, dataArr = []
+    try {
+        // 1. 解析分页参数
+        if jsonObj.%IsDefined("pagination") && jsonObj.pagination.%Size() > 0 
+        {
+            set paginationObj = jsonObj.pagination.%Get(0)
+            set pageSize = $select(paginationObj.pageSize '= "": +paginationObj.pageSize, 1: 20)
+            set currentPage = $select(paginationObj.currentPage '= "": +paginationObj.currentPage, 1: 1)
+        }
+        // 2. 解析查询参数
+        set params = jsonObj.params.%Get(0)
+        set patientName = params.patientName
+        set medicalRecordNo = params.medicalRecordNo
+        set admDateStart = params.admDateStart
+        set admDateEnd = params.admDateEnd
+        // 3. 构建动态 WHERE 条件（参数化）
+        set whereClause = ""
+        set args = []
+        if patientName '= "" {
+            set whereClause = whereClause _ "AND a.PatName LIKE ? "
+            do args.%Push("%"_patientName_"%")
+        }
+        if medicalRecordNo '= "" {
+            set whereClause = whereClause _ "AND a.PatMedicalNo LIKE ? "
+            do args.%Push("%"_medicalRecordNo_"%")
+        }
+        if admDateStart '= "" {
+            // 转为当天 00:00:00
+            set whereClause = whereClause _ "AND a.AdmDateTime >= TO_TIMESTAMP(?, 'YYYY-MM-DD HH24:MI:SS') "
+            do args.%Push(admDateStart _ " 00:00:00")
+        }
+        if admDateEnd '= "" {
+            // 转为当天 23:59:59
+            set whereClause = whereClause _ "AND a.AdmDateTime <= TO_TIMESTAMP(?, 'YYYY-MM-DD HH24:MI:SS') "
+            do args.%Push(admDateEnd _ " 23:59:59")
+        }
+        // 4. 先查询总记录数
+        set countSql = "SELECT COUNT(*) AS Total FROM BS_HISPatAdm a WHERE 1=1 " _ whereClause
+        set countStmt = ##class(%SQL.Statement).%New(1)
+        do countStmt.%Prepare(countSql)
+        set countRs = countStmt.%Execute(args...)
+        if countRs.%Next() 
+        {
+            set total = countRs.%Get("Total")
+        }
+        do countRs.%Close()
+        // 如果没有数据，提前返回
+        if total = 0 
+        {
+            set resultObj.result.rows = []
+            set resultObj.result.total = 0
+            set resultObj.errorCode = "0"
+            quit
+        }
+        // 5. 主查询：使用 LEFT JOIN 一次性获取主诊断、主手术、总费用（避免子查询）
+        // 思路：
+        //    a) 主诊断：从 BS_HISDiseInfo 中取 MainFlag='Y' 的行，可能存在多条？取第一条（按 DiagSn）
+        //    b) 主手术：从 BS_HISOprnInfo 中取 MainFlag='Y' 的行，取第一条（按 OprnSn）
+        //    c) 总费用：从 BS_HISDRGParams 中取 TotalCost（每个 AdmDr 最多一条）
+        // 使用左连接，聚合时用 ROW_NUMBER 确保每条主记录只关联一条诊断/手术
+        // 注意：如果数据库版本不支持窗口函数，可使用子查询或 TOP 1 方式，但此处用窗口函数更简洁（IRIS 支持）
+        set mainSql = " SELECT a.AdmID, a.PatMedicalNo, a.PatName, a.PatSexCode, a.PatSexDesc, " _
+                      " a.InLocDesc, a.AdmDocDesc, a.AdmDateTime, d.DiseCode AS MainDiseCode, d.DiseName AS MainDiseName, " _
+                      " o.OprnCode AS MainOprnCode, o.OprnName AS MainOprnName, " _
+                      " p.TotalCost FROM BS_HISPatAdm a LEFT JOIN (SELECT AdmDr, DiseCode, DiseName, " _
+                      " ROW_NUMBER() OVER (PARTITION BY AdmDr ORDER BY DiagSn) AS rn " _
+                      " FROM BS_HISDiseInfo WHERE Deleted=0 AND MainFlag='Y') d ON a.ID = d.AdmDr AND d.rn = 1 " _
+                      " LEFT JOIN (SELECT AdmDr, OprnCode, OprnName,ROW_NUMBER() OVER (PARTITION BY AdmDr ORDER BY OprnSn) AS rn " _
+                      " FROM BS_HISOprnInfo WHERE Deleted=0 AND MainFlag='Y') o ON a.ID = o.AdmDr AND o.rn = 1 " _
+                      " LEFT JOIN (SELECT AdmDr, TotalCost FROM BS_HISDRGParams WHERE Deleted=0) p ON a.ID = p.AdmDr " _
+                      " WHERE 1=1 " _ whereClause _
+                      " ORDER BY a.AdmDateTime DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY"
+        set offset = (currentPage - 1) * pageSize
+        do args.%Push(offset)
+        do args.%Push(pageSize)
+        set dataStmt = ##class(%SQL.Statement).%New(1)
+        do dataStmt.%Prepare(mainSql)
+        set rs = dataStmt.%Execute(args...)
+        while rs.%Next() 
+        {
+            set row = {}
+            set row.admissionNo = rs.%Get("AdmID")
+            set row.medicalRecordNo = rs.%Get("PatMedicalNo")
+            set row.patientName = rs.%Get("PatName")
+            set row.sex = rs.%Get("PatSexCode")
+            set row.sexDesc = rs.%Get("PatSexDesc")
+            set row.department = rs.%Get("InLocDesc")
+            set row.doctor = rs.%Get("AdmDocDesc")
+            // 日期格式化（假设 AdmDateTime 是 %TimeStamp，可直接转字符串，但为了可读性可格式化）
+            set admDateTime = rs.%Get("AdmDateTime")
+            if admDateTime '= "" 
+            {
+                set row.admissionDate = $zdt(admDateTime, 3)  // YYYY-MM-DD HH:MM:SS
+            } 
+            else 
+            {
+                set row.admissionDate = ""
+            }
+            set row.mainDiagnosisCode = rs.%Get("MainDiseCode")
+            set row.mainDiagnosisName = rs.%Get("MainDiseName")
+            set row.mainProcedureCode = rs.%Get("MainOprnCode")
+            set row.mainProcedureName = rs.%Get("MainOprnName")
+            set row.totalCost = $get(rs.%Get("TotalCost"), 0)
+            do dataArr.%Push(row)
+        }
+        do rs.%Close()
+        set resultObj.result.rows = dataArr
+        set resultObj.result.total = total
+        set resultObj.errorCode = "0"
+    }
+    catch e {
+        set resultObj.errorCode = "-1"
+        set resultObj.errorMessage = "查询已同步患者失败：" _ $System.Status.GetErrorText(e.AsStatus())
+        // 可选：记录日志
+    }
+    quit resultObj
+zSaveInpatientData(pData)
+	//new (pData, i, item, admID, admData, drgResult, diseArr, diseItem, oprnArr, oprnItem, j, k, dataObj, data, insObj, rtn, admObj)
+	set resultObj={"errorCode":"0","errorMessage":"","result":{"successCount":0,"failedCount":0,"totalCount":0}}
+	set resultObj.result.totalCount=pData.%Size()
+	set (m,n)=0
+	///同步开始时间
+	set logStartTime=$zd(+$h,3)_" "_$zt($p($h,",",2))
+	try 
+	{
+		for i=0:1:pData.%Size()-1 
+		{
+			set item=pData.%Get(i)
+			set admID=item.admID  ///转为字符串			
+			///========= 1. 保存就诊信息 BSHISPatAdm =========
+			///先查询是否已存在，获取ID
+			set existsID=""
+			 ;---&sql(SELECT ID INTO :existsID FROM BS_HISPatAdm WHERE AdmID = :admID)
+ 			 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, admID, existsID
+			do %0Eo
+			set dataObj={}
+			if existsID'="" 
+			{
+				set dataObj.ID=existsID
+			}
+			set dataObj.AdmID=admID
+			set dataObj.PsnNo=item.drgParams.result.psnNo
+			set dataObj.PatID=item.patID
+			set dataObj.PatName=item.patName
+			set dataObj.Age=item.drgParams.result.age
+			set dataObj.PatSexCode=item.patSexCode
+			set dataObj.PatSexDesc=item.patSexDesc	
+			set dataObj.PatNo=item.patNo
+			set dataObj.PatMedicalNo=item.patMedicalNo
+			set dataObj.MdtrtArea=item.drgParams.result.mdtrtareaAreaCode
+			set dataObj.AdmvsArea=item.drgParams.result.insuranceAreaCode
+			set dataObj.InsuType=item.drgParams.result.insuType
+			set dataObj.DiagnosisCode=item.drgParams.result.diagnosisCode
+			set dataObj.DiagnosisName=item.drgParams.result.diagnosisName
+			set dataObj.GroupStage=item.drgParams.result.groupStage
+			set dataObj.DiaTypeCode=item.drgParams.result.diaTypeCode
+			set dataObj.MainDiagnosisCode=item.drgParams.result.mainDiagnosisCode
+			set dataObj.MainOperationCode=item.drgParams.result.mainOperationCode
+			set dataObj.SumAmt=item.drgParams.result.totalFee
+			set dataObj.AdmDocCode=item.drgParams.result.admDocCode
+			set dataObj.AdmDocDesc=item.admDocDesc
+			set dataObj.AdmNurCode=item.drgParams.result.admNurCode
+			set dataObj.AdmNurDesc=item.admNurDesc
+			set dataObj.AdmDateTime= item.admDateTime _":00"
+			set dataObj.AdmInDays=item.admInDays
+			set dataObj.AdmDiag=item.admDiag
+			set dataObj.FixmedinsCode=item.drgParams.result.fixmedinsCode
+			set dataObj.FixmedinsName=item.drgParams.result.fixmedinsName
+			set dataObj.GroupParam=item.drgParams.result.%ToJSON()
+			set dataObj.InLocDesc=item.inLocDesc
+			set dataObj.InWardDesc=item.inWardDesc
+			set dataObj.CreateDate=$zd(+$h,3)
+			set dataObj.CreateTime=$zt($p($h,",",2))
+			set dataObj.CreateUserDr="158"
+			set dataObj.UpdateDate=$zd(+$h,3)
+			set dataObj.UpdateTime=$zt($p($h,",",2))
+			set data=[]
+			do data.%Push(dataObj)
+			set insObj={}
+			set insObj.className="User.BSHISPatAdm"
+			set insObj.updateUserID="158"
+			set insObj.data=data
+			///根据ID是否为空决定新增还是更新
+			if existsID="" 
+			{
+				set rtn=##class(src.util.operatetable).Insert(.insObj)
+			} 
+			else 
+			{
+				set rtn=##class(src.util.operatetable).Update(.insObj)
+			}
+			if rtn.errorCode'=0 
+			{
+				///记录错误，继续下一条
+				do ..LogSyncError(admID,"BS_HISPatAdm",rtn.errorMessage)
+				set resultObj.result.failedCount=resultObj.result.failedCount+1
+				continue
+			}
+			//更新成功，重新获取ID
+			 ;---&sql(SELECT ID INTO :existsID FROM BS_HISPatAdm WHERE AdmID = :admID)
+ 			 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, admID, existsID
+			do %0Go
+			///获取刚保存的BSHISPatAdm对象（用于外键关联）
+			set admObj=##class(User.BSHISPatAdm).%OpenId(existsID)
+			if admObj="" 
+			{
+				set resultObj.result.failedCount=resultObj.result.failedCount+1
+				continue
+			}
+			//set resultObj.result.successCount=resultObj.result.successCount+1
+			///========= 2. 保存DRG参数 BSHISDRGParams =========
+			if $isobject(item.drgParams) && (item.drgParams.errorCode="0") 
+			{
+				if $isobject(item.drgParams.result) 
+				{
+					set drgResult=item.drgParams.result
+					///先查询是否已存在（主键是AdmDr）
+					set drgExistsID=""
+					set admRefID=admObj.%Id()
+					 ;---&sql(SELECT ID INTO :drgExistsID FROM BS_HISDRGParams WHERE Adm_Dr = :admRefID)
+ 					 ;--- ** SQL PUBLIC Variables: %ROWCOUNT, %ROWID, %msg, SQLCODE, admRefID, drgExistsID
+					do %0Io
+					set drgDataObj={}
+					if drgExistsID'="" 
+					{
+						set drgDataObj.ID=drgExistsID
+					}
+					set drgDataObj.AdmDr=admObj.%Id()
+					set drgDataObj.AdmID=admID
+					set drgDataObj.PsnNo=drgResult.psnNo
+					set drgDataObj.InsuranceAreaCode=drgResult.insuranceAreaCode
+					set drgDataObj.MdtrtareaAreaCode=drgResult.mdtrtareaAreaCode
+					set drgDataObj.InsuType=drgResult.insuType
+					set drgDataObj.DiagnosisCode=drgResult.diagnosisCode
+					set drgDataObj.DiagnosisName=drgResult.diagnosisName
+					set drgDataObj.GroupStage=drgResult.groupStage
+					set drgDataObj.DiaTypeCode=drgResult.diaTypeCode
+					set drgDataObj.UnionOprnFlag=drgResult.unionOprnFlag
+					set drgDataObj.MainDiagnosisCode=drgResult.mainDiagnosisCode
+					set drgDataObj.MainOperationCode=drgResult.mainOperationCode
+					set drgDataObj.Sex=drgResult.sex
+					set drgDataObj.Age=drgResult.age
+					set drgDataObj.AgeGroupDays=drgResult.ageGroupDays
+					set drgDataObj.NewbornFlag=drgResult.newbornFlag
+					set drgDataObj.RespiratorTime=drgResult.respiratorTime
+					set drgDataObj.EcmoFlag=drgResult.ecmoFlag
+					set drgDataObj.TransplantFlag=drgResult.transplantFlag
+					set drgDataObj.MarrowTransplantFlag=drgResult.marrowTransplantFlag
+					set drgDataObj.HivFlag=drgResult.hivFlag
+					set drgDataObj.TraumaLevel=drgResult.traumaLevel
+					set drgDataObj.Department=drgResult.department
+					set drgDataObj.DepartmentDesc=drgResult.departmentDesc
+					set drgDataObj.DischargeType=drgResult.dischargeType
+					set drgDataObj.HospitalDays=drgResult.hospitalDays
+					set drgDataObj.TotalCost=drgResult.totalCost
+					set drgDataObj.MedicalRecordID=drgResult.medicalRecordID
+					set drgDataObj.HisAdmId=drgResult.hisAdmId
+					set drgDataObj.PatientName=drgResult.patientName
+					set drgDataObj.DeptCode=drgResult.deptCode
+					set drgDataObj.DeptName=drgResult.deptName
+					set drgDataObj.DoctorCode=drgResult.doctorCode
+					set drgDataObj.DoctorName=drgResult.doctorName
+					set drgDataObj.TotalFee=drgResult.totalFee
+					set drgDataObj.MedicalRecordDr=drgResult.medicalRecordDr
+					set drgDataObj.FixmedinsCode=drgResult.fixmedinsCode
+					set drgDataObj.FixmedinsName=drgResult.fixmedinsName
+					set drgDataObj.DrgParamsStatus=item.drgParams.errorCode
+					set drgDataObj.CreateDate=$zd(+$h,3)
+					set drgDataObj.CreateTime=$zt($p($h,",",2))
+					set drgDataObj.CreateUserDr="158"
+					set drgData=[]
+					do drgData.%Push(drgDataObj)
+					set drgInsObj={}
+					set drgInsObj.className="User.BSHISDRGParams"
+					set drgInsObj.updateUserID="158"
+					set drgInsObj.data=drgData
+					///根据ID是否为空决定新增还是更新
+					if drgExistsID="" 
+					{
+						set rtn=##class(src.util.operatetable).Insert(.drgInsObj)
+					} 
+					else 
+					{
+						set rtn=##class(src.util.operatetable).Update(.drgInsObj)
+					}
+					if rtn.errorCode'=0 
+					{
+						do ..LogSyncError(admID,"BS_HISDRGParams",rtn.errorMessage)
+					}
+					///========= 3. 保存诊断信息 BSHISDiseInfo =========
+					set diseArr=drgResult.diseInfo
+					if $isobject(diseArr) && (diseArr.%Size()>0) 
+					{
+						///先删除该就诊的所有诊断记录
+						do ..DeleteDiseInfo(existsID)
+						///插入新的诊断记录
+						for j=0:1:diseArr.%Size()-1 
+						{
+							set diseItem=diseArr.%Get(j)
+							set diseDataObj={}
+							set diseDataObj.AdmDr=admObj.%Id()
+							set diseDataObj.AdmID=admID
+							set diseDataObj.DiagSn=diseItem.diagSn
+							set diseDataObj.DiagType=item.drgParams.result.diaTypeCode
+							set diseDataObj.MainFlag=diseItem.mainFlag
+							set diseDataObj.DiagCode=diseItem.diagCode
+							set diseDataObj.DiagName=diseItem.diagName
+							set diseDataObj.CreateDate=$zd(+$h,3)
+							set diseDataObj.CreateTime=$zt($p($h,",",2))
+							set diseDataObj.CreateUserDr="158"
+							set diseDataObj.UpdateDate=$zd(+$h,3)
+							set diseDataObj.UpdateTime=$zt($p($h,",",2))
+							set diseData=[]
+							do diseData.%Push(diseDataObj)
+							set diseInsObj={}
+							set diseInsObj.className="User.BSHISDiseInfo"
+							set diseInsObj.updateUserID="158"
+							set diseInsObj.data=diseData
+							set rtn=##class(src.util.operatetable).Insert(.diseInsObj)
+							if rtn.errorCode'=0 
+							{
+								do ..LogSyncError(admID_"_"_diseItem.diagCode,"BS_HISDiseInfo",rtn.errorMessage)
+							}
+						}
+					}
+					///========= 4. 保存手术信息 BSHISOprnInfo =========
+					set oprnArr=drgResult.oprnInfo
+					if $isobject(oprnArr) && (oprnArr.%Size()>0) 
+					{
+						///先删除该就诊的所有手术记录
+						do ..DeleteOprnInfo(existsID)
+						///插入新的手术记录
+						for k=0:1:oprnArr.%Size()-1 {
+							set oprnItem=oprnArr.%Get(k)
+							set oprnDataObj={}
+							set oprnDataObj.AdmDr=admObj.%Id()
+							set oprnDataObj.AdmID=admID
+							set oprnDataObj.OprnSn=oprnItem.oprnSn
+							set oprnDataObj.MainFlag=oprnItem.mainFlag
+							set oprnDataObj.OprnCode=oprnItem.oprnCode
+							set oprnDataObj.OprnName=oprnItem.oprnName
+							set oprnDataObj.OprnDate=oprnItem.oprnDate
+							set oprnDataObj.CreateDate=$zd(+$h,3)
+							set oprnDataObj.CreateTime=$zt($p($h,",",2))
+							set oprnDataObj.CreateUserDr="158"
+							set oprnData=[]
+							do oprnData.%Push(oprnDataObj)
+							set oprnInsObj={}
+							set oprnInsObj.className="User.BSHISOprnInfo"
+							set oprnInsObj.updateUserID="158"
+							set oprnInsObj.data=oprnData
+							set rtn=##class(src.util.operatetable).Insert(.oprnInsObj)
+							if rtn.errorCode'=0 
+							{
+								do ..LogSyncError(admID_"_"_oprnItem.oprnCode,"BS_HISOprnInfo",rtn.errorMessage)
+							}
+						}
+					}
+					//set resultObj.result.successCount=resultObj.result.successCount+1
+				}
+			}
+			set resultObj.result.successCount=resultObj.result.successCount+1
+		}
+		///写入同步日志 BS_HISSyncLog
+		do ..WriteSyncLog(logStartTime,resultObj)
+	} 
+	catch e 
+	{
+		set status=e.AsStatus()
+		set errorMessage=$replace(##class(%SYSTEM.Status).GetErrorText(status,"cn"),"^"," ")
+		set errorInfo="保存HIS住院患者数据出现问题:"_$classname()_".SaveInpatientData()"
+		set errorLogID=##class(src.Interface.Message).InsErrRecord("04000007",errorInfo,errorMessage)
+		set resultObj.errorCode="04000007"
+		set resultObj.errorMessage=##class(src.Interface.Message).GetErrorMessage("04000007")_errorLogID_",错误提示："_errorMessage
+		///写入同步日志（异常）
+		do ..WriteSyncLog(logStartTime,resultObj)
+	}
+	quit resultObj
+ q
+%0Eo n sqldata10d,sqldata11d,sqldata12d,sqldata20d,sqldata4d,sqldata6d,sqldata7d,sqldata8d,sqldata3d,sqldata9d
+ s $zt="%0Eerr"
+ s sqldata10d=$zu(115,2)
+ s sqldata11d=0,sqldata12d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(admID)
+ s SQLCODE=100
+ s sqldata7d=$zu(28,sqldata4d,7)
+ ; asl MOD# 2
+ s sqldata6d=sqldata7d
+ i sqldata6d="" g %0EmBdun
+ s existsID=""
+ s existsID=$o(^BSHISPatAdmI("AdmIDIndex",sqldata6d,existsID))
+ i existsID="" g %0EmBdun
+ goto:sqldata10d'=1 %0EmBuncommitted
+ if sqldata10d=1 {
+ 	lock +^BSHISPatAdmD($p(existsID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata12d=$name(^BSHISPatAdmD($p(existsID,"||",1)))_"#""SI""",sqldata11d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_HISPatAdm for RowID value: "_existsID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata8d=$zlist(sqldata6d)
+ i existsID'="" s sqldata20d="" i $d(^BSHISPatAdmD(existsID),sqldata20d)
+ e  g %0EmCdun
+ S sqldata3d=$lg(sqldata20d,5)
+ s sqldata6d=$zu(28,sqldata3d,7)
+ s sqldata9d=$zlist(sqldata6d)
+ g:sqldata8d'=sqldata9d %0EmCdun
+%0EmBuncommitted ;
+ s SQLCODE=0 g %0Ec
+%0EmCdun if $g(sqldata10d)=1 { if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }}
+%0EmBdun 
+%0EmAdun 
+%0Ec set %ROWCOUNT='SQLCODE
+ if $g(sqldata10d)=1 {
+ 	if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }
+ }
+ q
+%0Eerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Ec
+%0Go n sqldata10d,sqldata11d,sqldata12d,sqldata20d,sqldata4d,sqldata6d,sqldata7d,sqldata8d,sqldata3d,sqldata9d
+ s $zt="%0Gerr"
+ s sqldata10d=$zu(115,2)
+ s sqldata11d=0,sqldata12d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$g(admID)
+ s SQLCODE=100
+ s sqldata7d=$zu(28,sqldata4d,7)
+ ; asl MOD# 2
+ s sqldata6d=sqldata7d
+ i sqldata6d="" g %0GmBdun
+ s existsID=""
+ s existsID=$o(^BSHISPatAdmI("AdmIDIndex",sqldata6d,existsID))
+ i existsID="" g %0GmBdun
+ goto:sqldata10d'=1 %0GmBuncommitted
+ if sqldata10d=1 {
+ 	lock +^BSHISPatAdmD($p(existsID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata12d=$name(^BSHISPatAdmD($p(existsID,"||",1)))_"#""SI""",sqldata11d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_HISPatAdm for RowID value: "_existsID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata8d=$zlist(sqldata6d)
+ i existsID'="" s sqldata20d="" i $d(^BSHISPatAdmD(existsID),sqldata20d)
+ e  g %0GmCdun
+ S sqldata3d=$lg(sqldata20d,5)
+ s sqldata6d=$zu(28,sqldata3d,7)
+ s sqldata9d=$zlist(sqldata6d)
+ g:sqldata8d'=sqldata9d %0GmCdun
+%0GmBuncommitted ;
+ s SQLCODE=0 g %0Gc
+%0GmCdun if $g(sqldata10d)=1 { if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }}
+%0GmBdun 
+%0GmAdun 
+%0Gc set %ROWCOUNT='SQLCODE
+ if $g(sqldata10d)=1 {
+ 	if $g(sqldata11d)=1 { l -@sqldata12d s sqldata11d=0 } elseif $g(sqldata11d)=2 { do $classmethod($li(sqldata12d),"%UnlockId",$li(sqldata12d,2),1,1)  s sqldata11d=0 }
+ }
+ q
+%0Gerr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Gc
+%0Io n sqldata8d,sqldata9d,sqldata10d,sqldata18d,sqldata4d,sqldata3d,sqldata6d,sqldata7d
+ s $zt="%0Ierr"
+ s sqldata8d=$zu(115,2)
+ s sqldata9d=0,sqldata10d=""
+ d:$zu(115,15) $system.ECP.Sync()
+ s sqldata4d=$s($g(admRefID)="":"",$isvalidnum(admRefID):+admRefID,1:admRefID)
+ s SQLCODE=100
+ ; asl MOD# 2
+ s sqldata3d=sqldata4d
+ i sqldata3d="" g %0ImBdun
+ s drgExistsID=""
+ s drgExistsID=$o(^BSHISDRGParamsI("AdmDrIndex",sqldata3d,drgExistsID))
+ i drgExistsID="" g %0ImBdun
+ goto:sqldata8d'=1 %0ImBuncommitted
+ if sqldata8d=1 {
+ 	lock +^BSHISDRGParamsD($p(drgExistsID,"||",1))#"S":$zu(115,4)
+ 	if $t { set sqldata10d=$name(^BSHISDRGParamsD($p(drgExistsID,"||",1)))_"#""SI""",sqldata9d=1 }
+ 	else { s SQLCODE=-114,%msg="Unable to acquire shared lock on table SQLUser.BS_HISDRGParams for RowID value: "_drgExistsID ztrap "LOCK"  }
+ }
+ ; asl MOD# 3
+ s sqldata6d=$zlist(sqldata3d)
+ i drgExistsID'="" s sqldata18d="" i $d(^BSHISDRGParamsD(drgExistsID),sqldata18d)
+ e  g %0ImCdun
+ S sqldata3d=$lg(sqldata18d,5)
+ s sqldata7d=$zlist(sqldata3d)
+ g:sqldata6d'=sqldata7d %0ImCdun
+%0ImBuncommitted ;
+ s SQLCODE=0 g %0Ic
+%0ImCdun if $g(sqldata8d)=1 { if $g(sqldata9d)=1 { l -@sqldata10d s sqldata9d=0 } elseif $g(sqldata9d)=2 { do $classmethod($li(sqldata10d),"%UnlockId",$li(sqldata10d,2),1,1)  s sqldata9d=0 }}
+%0ImBdun 
+%0ImAdun 
+%0Ic set %ROWCOUNT='SQLCODE
+ if $g(sqldata8d)=1 {
+ 	if $g(sqldata9d)=1 { l -@sqldata10d s sqldata9d=0 } elseif $g(sqldata9d)=2 { do $classmethod($li(sqldata10d),"%UnlockId",$li(sqldata10d,2),1,1)  s sqldata9d=0 }
+ }
+ q
+%0Ierr s $zt=""
+ d SQLRunTimeError^%apiSQL($ze,.SQLCODE,.%msg)
+ g %0Ic
+zWriteSyncLog(pStartTime,pResultObj)
+    try 
+    {
+        // 构造数据对象
+        set dataObj = {}
+        set dataObj.TaskName = "获取HIS住院患者数据"
+        set dataObj.SyncType = "manual"
+        set dataObj.StartTime = pStartTime
+        set dataObj.EndTime =$zd(+$h,3)_" "_$zt($p($h,",",2))  // YYYY-MM-DD HH:MM:SS
+        set total = pResultObj.result.totalCount
+        set success = pResultObj.result.successCount
+        set failed = pResultObj.result.failedCount
+        set dataObj.TotalCount = total
+        set dataObj.SuccessCount = success
+        set dataObj.FailedCount = failed
+		set dataObj.CreateDate=$zd(+$h,3)
+		set dataObj.CreateTime=$zt($p($h,",",2))
+		set dataObj.CreateUserDr="158"
+		set dataObj.UpdateDate=$zd(+$h,3)
+		set dataObj.UpdateTime=$zt($p($h,",",2))
+        // 状态码计算
+        if failed = 0
+        {
+            set statusCode = "success"
+        } 
+        elseif success = 0 
+        {
+            set statusCode = "failed"
+        } 
+        else 
+        {
+            set statusCode = "partial"
+        }
+        set dataObj.StatusCode = statusCode
+        set dataObj.ErrorMessage = "同步完成：成功"_success_"条，失败"_failed_"条,"_pResultObj.result.errorMessage
+        // 构造调用对象
+        set insObj = {}
+        set insObj.className = "User.BSHISSyncLog"
+        set insObj.updateUserID = "158"
+        set dataList = []
+        do dataList.%Push(dataObj)
+        set insObj.data = dataList
+        // 调用 operatetable 插入
+        set rtn = ##class(src.util.operatetable).Insert(.insObj)
+        if rtn.errorCode '= 0 
+        {
+	        do ..LogSyncError(00000,"BS_HISSyncLog",rtn.errorMessage)
+            // 记录失败日志（可忽略或写入系统日志）
+            // 为保持兼容，不抛出异常
+        }
+    } catch (e) {
+        // 日志写入失败不抛出异常，保持原有设计
+    }
+	Quit
+zXMLDTD(top,format,input,dtdlist)
+ Quit ##class(%XML.Implementation).XMLDTD("src.DRG.HISData.HisDataService",.top,.format,.input,.dtdlist)
+zXMLExportInternal()
+ New tag,summary,attrsVal,savelocal,aval,k,tmpPrefix,prefixDepth,hasNoContent,hasElement,topAttrs,beginprefix,endprefix,savexsiAttrs,initialxsiAttrs,initlist,initialCR,inlineFlag,popAtEnd,saveTopPrefix,saveTypesPrefix,saveAttrsPrefix,saveUsePrefix,initlist
+ Set $ztrap="XMLExportInternalTrap",popAtEnd=0
+ Set summary=summaryArg,initialxsiAttrs=xsiAttrs
+ If group Quit $$Error^%apiOBJ(6386,"src.DRG.HISData.HisDataService")
+ If indentFlag Set initialCR=($extract(currentIndent,1,2)=$c(13,10))
+ Set id=createId
+ Set temp=""
+ If id'="" {
+   If $piece($get(idlist(+$this)),",",2)'="" Quit 1
+   Set idlist(+$this)=id_",1"
+ }
+ If encoded Set initlist=$lb($get(oreflist),inlineFlagArg),oreflist=1,inlineFlag=inlineFlagArg
+ If 'nocycle,('encoded||inlineFlag) {
+   If $data(oreflist($this)) Quit $$Error^%apiOBJ(6296,"src.DRG.HISData.HisDataService")
+   Set oreflist($this)=""
+ }
+ Set tag=$get(topArg)
+ Set tmpi=(($get(typeAttr)'="")&&(typeAttr'="src.DRG.HISData.HisDataService"))
+ If $IsObject(namespaces) {
+     Set popAtEnd=1,saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+     Set sc=namespaces.PushNodeForExport("",$get(local,0),(encoded||tmpi),"",,.topPrefix,.topAttrs,.typesPrefix,.attrsPrefix,.usePrefix)
+     If 'sc Quit sc
+   Set beginprefix=$select(namespaces.ElementQualified&&usePrefix:typesPrefix,1:"")
+   If topAttrs'="" Set temp=temp_" "_topAttrs
+   If tag="" Set tag="HisDataService"
+   Set xsitype=namespaces.OutputTypeAttribute
+ } Else {
+   Set saveTopPrefix=topPrefix,saveTypesPrefix=typesPrefix,saveAttrsPrefix=attrsPrefix,saveUsePrefix=usePrefix
+   Set typesPrefix=namespaces If (typesPrefix'=""),($extract(typesPrefix,*)'=":") Set typesPrefix=typesPrefix_":"
+   If 'encoded Set namespaces=""
+   Set (topPrefix,attrsPrefix,topAttrs,beginprefix)=""
+   If tag="" Set tag=typesPrefix_"HisDataService"
+   Set xsitype=0
+ }
+ Set local=+$get(local),savelocal=local
+ Set endprefix="</"_beginprefix,beginprefix="<"_beginprefix
+ If tmpi Set temp=temp_" "_xsiPrefix_"type="""_typesPrefix_"HisDataService"""_xsiAttrs,xsiAttrs=""
+   If id'="" Set temp=" "_$select($get(soap12):soapPrefix_"id",1:"id")_"=""id"_id_""""_temp
+ If encoded Set temp=temp_xsiAttrs,xsiAttrs=""
+ If indentFlag Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If encoded Set currentIndent=$select(initialCR:"",1:$c(13,10))_currentIndent_indentChars
+ If tag[":" Set topPrefix=$piece(tag,":"),tag=$piece(tag,":",2)  If topPrefix'="" Set topPrefix=topPrefix_":"
+ Set %xmlmsg="<"_topPrefix_tag_temp if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set attrsVal=attrsArg,attrsArg="" Set %xmlmsg=attrsVal if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ Set %xmlmsg=">" if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }
+ If indentFlag,encoded { Set currentIndent=$extract(currentIndent,1,*-$length(indentChars)) Set %xmlmsg=currentIndent if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg }}
+ Set %xmlmsg="</"_topPrefix_tag_">"
+ if $data(%xmlBlock) { Do xeWrite^%occXMLInternal } else { write %xmlmsg } If indentFlag,'initialCR if $data(%xmlBlock) { Set %xmlmsg="" Do xeWriteLine^%occXMLInternal } else { write ! } Set $extract(currentIndent,1,2)=""
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ If encoded Set oreflist=$list(initlist),inlineFlag=$list(initlist,2)
+ If 'encoded||inlineFlag {
+   If 'nocycle Kill oreflist($this)
+ }
+ Quit sc
+XMLExportInternalTrap Set $ztrap=""
+ If $data(val) , $IsObject(val) , ($piece($ze,">",1)="<METHOD DOES NOT EXIST") {
+   Set sc=$$Error^%apiOBJ(6249,$classname(val))
+ } Else {
+   Set sc=$$Error^%apiOBJ(5002,$ze)
+ }
+XMLExportExit 
+ If '$IsObject(namespaces) || (popAtEnd=1) Set topPrefix=saveTopPrefix,typesPrefix=saveTypesPrefix,attrsPrefix=saveAttrsPrefix,usePrefix=saveUsePrefix
+ If popAtEnd Do namespaces.PopNode()
+ Quit sc
+zXMLGetSchemaImports(imports,classes)
+ Quit ##class(%XML.Implementation).XMLGetSchemaImports("src.DRG.HISData.HisDataService",.imports,.classes)
+zXMLImportAttributes()
+ ;
+ Quit 1
+XMLImportAttrErr Quit $$Error^%apiOBJ(6260,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportFixedAttrErr Quit $$Error^%apiOBJ(6320,ref,$get(@(tree)@("d",$zlascii(attributeList(ref),13))),@(tree)@("d",$zlascii(nodelist,9))_$$XMLImportAttrLocation(nodelist))
+XMLImportAttrLocation(nodelist) new msg,loc
+ Set loc=$lb($zlascii(nodelist,21),$zlascii(nodelist,25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+zXMLImportInternal()
+ New child,childlist,node,nodelist,inner,innerlist,data,encodedArray,key,nsIndex,savechild,savechildlist,saveinner,saveinnnerlist,exists
+ Set $ztrap="XMLImportInternalTrap"
+ Set encoded=$case($piece(fmt,",",1),"":0,"literal":0,"encoded":1,"encoded12":1,:"")
+ If encoded="" Quit $$Error^%apiOBJ(6231,fmt)
+ Set nsIndex=$select($get(namespace)="":"",1:$get(@(tree)@("N",namespace)))
+ Set node=nodeArg,nodelist=nodeArgChildlist
+ If tag'=@(tree)@("d",$zlascii(nodelist,9)) Set inner=node Goto XMLImportMalformed
+ If bareProjection Quit $$Error^%apiOBJ(6386,"src.DRG.HISData.HisDataService")
+ If encoded {
+   Do XMLImportAttrnode() If $data(attributeList("id")) Set idlist(node)=$this
+ }
+ If $zboolean(+($zlascii(nodelist,13)#16),+1,1) Quit 1
+ Set sc=$$XMLImportElements()
+XMLImportExit Quit sc
+XMLImportElements() ;
+XMLLOOP1 Set descriptor=$zlascii(nodelist,$zwascii(nodelist,17)) Set child=($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)_","_$zwascii(nodelist,17) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else { Set child="" }} For { Quit:child=""  Quit:(descriptor#16)'=2  Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} } Goto XMLLOOP2
+XMLLOOP For  { Set descriptor=$piece(child,",",2)+4 Set child=$piece(child,",",1)_","_descriptor Set descriptor=$zlascii(nodelist,descriptor) If (descriptor#16)=3 { If (descriptor\16)'=0 { Set child=##class(%XML.ImportHandler).NextChild(tree,node,.nodelist,child,.descriptor) } Else {Set child="" }} Quit:child=""  Quit:(descriptor#16)'=2  }
+XMLLOOP2 If child="" Quit sc
+ If (descriptor#16)'=0 Set inner=child Goto XMLImportMalformedNoTag
+ Set childlist=@(tree)@((descriptor\16))
+ Set tag=@(tree)@("d",$zlascii(childlist,9))
+ Goto XMLImportBadTagchild
+XMLImportBadTagchild Set inner=child
+XMLImportBadTag Quit $$Error^%apiOBJ(6237,tag_$$XMLImportLocation(inner))
+XMLImportBadTypenode Set inner=node Goto XMLImportBadType
+XMLImportBadTypechild Set inner=child
+XMLImportBadType Quit $$Error^%apiOBJ(6277,class,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner))
+XMLImportErrnode Set inner=node Goto XMLImportErr
+XMLImportErrchild Set inner=child
+XMLImportErr
+ Set data=##class(%XML.ImportHandler).GetNextChild(tree,inner,"")
+ If (data'="") {
+   If ($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))#16)'=0 {
+     Quit $$Error^%apiOBJ(6232,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),$extract(@(tree)@("d",($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),1,200))
+   } Else {
+     Quit $$Error^%apiOBJ(6253,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner),@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(data,",",1)),$piece(data,",",2))\16)),9)))
+   }
+ } Else {
+   Quit $$Error^%apiOBJ(6252,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner))
+ }
+XMLImportIdErr Set sc=$$Error^%apiOBJ(6236,id,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformed Set sc=$$Error^%apiOBJ(6233,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)))_$$XMLImportLocation(inner)) Quit sc
+XMLImportMalformedNoTag Set node=$select($piece(inner,",",1)<=0:0,1:$zlascii(@(tree)@($piece(inner,",",1)),1)_","_$zlascii(@(tree)@($piece(inner,",",1)),5)),sc=$$Error^%apiOBJ(6254,$select(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16))),$select(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))#16)=0:@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),9)),1:@(tree)@("d",($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)))_$$XMLImportLocation(node)) Quit sc
+XMLImportNSchild Set inner=child
+XMLImportNS Set sc=$$Error^%apiOBJ(6235,@(tree)@("d",$zlascii(@(tree)@(($zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2))\16)),9))_$$XMLImportLocation(inner)) Quit sc
+XMLImportLocation(node) new msg,loc
+ Set loc=$lb($zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),21),$zlascii(@(tree)@(($zlascii(@(tree)@($piece(node,",",1)),$piece(node,",",2))\16)),25))
+ If loc="" Quit ""
+ Set msg=$get(^%qMsg("%ObjectErrors",$s(""'="":$zcvt("","L"),1:$s($mvv(58)="":"en",1:$mvv(58))),"XMLImportLocation")," (%1,%2)")
+ Quit $$FormatText^%occMessages(msg,$listget(loc,1),$listget(loc,2))
+XMLImportInternalTrap Set $ztrap=""
+ Set loc=$select($ZE["<CLASS DOES NOT EXIST>":" for element "_tag_$$XMLImportLocation(child),1:"")
+ Quit $$Error^%apiOBJ(5002,$ZE_loc)
+XMLImportIdChild() Set inner=child,innerlist=childlist,tmp=$$XMLImportId(),child=inner,childlist=innerlist Quit tmp
+XMLImportId() ;
+ Do XMLImportAttrinner()
+ If $data(attributeList("href")) {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("href"),13))),1:@(tree)@("d",$zlascii(attributeList("href"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("href")))
+   If $extract(id)="#" {
+     Set tmp=$select($get(@(tree)@("i",$extract(id,2,*)))="":"",1:$piece(@(tree)@("i",$extract(id,2,*)),",",1)_","_$piece(@(tree)@("i",$extract(id,2,*)),",",2)) If tmp="" Goto XMLImportIdErr
+     Set inner=tmp
+     Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+   }
+ } ElseIf $data(attributeList("ref")),($get(@(tree)@("n",$zwascii(attributeList("ref"),9)))="http://www.w3.org/2003/05/soap-encoding") {
+   Set id=$case($data(@(tree)@("d",$zlascii(attributeList("ref"),13))),1:@(tree)@("d",$zlascii(attributeList("ref"),13)),0:"",:##class(%XML.ImportHandler).GetAttribute(tree,attributeList("ref")))
+   Set tmp=$select($get(@(tree)@("i",id))="":"",1:$piece(@(tree)@("i",id),",",1)_","_$piece(@(tree)@("i",id),",",2)) If tmp="" Goto XMLImportIdErr
+   Set inner=tmp
+   Set descriptor=$zlascii(@(tree)@($piece(inner,",",1)),$piece(inner,",",2)) Set innerlist=@(tree)@((descriptor\16))
+ } ElseIf '$data(attributeList("id")) {
+   Quit 0
+ }
+ Quit $data(idlist(inner))
+XMLImportAttrnode()
+ If $get(attributeList)=node Quit
+ Kill attributeList
+ Set attributeList=node
+ Set offset=29 While offset<$zwascii(nodelist,17) { Set attribute=$extract(nodelist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrchild()
+ If $get(attributeList)=child Quit
+ Kill attributeList
+ Set attributeList=child
+ Set offset=29 While offset<$zwascii(childlist,17) { Set attribute=$extract(childlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+XMLImportAttrinner()
+ If $get(attributeList)=inner Quit
+ Kill attributeList
+ Set attributeList=inner
+ Set offset=29 While offset<$zwascii(innerlist,17) { Set attribute=$extract(innerlist,offset,offset+15)
+    Set attrname=@(tree)@("d",$zlascii(attribute,1))
+    Set attributeList(attrname)=attribute
+ Set offset=offset+16 }
+ Quit
+zXMLNew(document,node,containerOref="")
+	Quit (##class(src.DRG.HISData.HisDataService).%New())
+zXMLSchema(top="",format="",namespacePrefix="",input=0,refOnly=0,schema)
+ Quit ##class(%XML.Implementation).XMLSchema("src.DRG.HISData.HisDataService",top,format,namespacePrefix,input,refOnly,.schema)

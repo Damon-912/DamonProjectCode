@@ -61,7 +61,7 @@ echo 服务器日志:
 echo ===============================================
 echo 按 Ctrl+C 停止服务器...
 echo.
-node mcp-drg-server.js
+node server.js
 
 if errorlevel 1 (
     echo.

@@ -14,10 +14,18 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/iris-api/invoke': {
-        target: 'http://111.229.137.113:52773/csp/drg/sysInternalMutiple',
+      // 开发环境代理：处理 /dipapp/iris-api/* 请求
+      // 将所有 /dipapp/iris-api 前缀的请求转发到 IRIS 后端
+      '/dipapp/iris-api': {
+        target: 'http://111.229.137.113:52773',
         changeOrigin: true,
-        rewrite: () => ''
+        rewrite: () => '/csp/drg/sysInternalMutiple'
+      },
+      // 兼容不带 /dipapp 前缀的请求（如有）
+      '/iris-api': {
+        target: 'http://111.229.137.113:52773',
+        changeOrigin: true,
+        rewrite: () => '/csp/drg/sysInternalMutiple'
       }
     }
   },

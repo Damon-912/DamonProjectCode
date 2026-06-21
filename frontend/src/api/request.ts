@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // 创建 axios 实例
 const request = axios.create({
-  baseURL: '/iris-api', // 通过 Nginx 代理访问 IRIS
+  baseURL: '/dipapp/iris-api', // 通过 Nginx 代理访问 IRIS
   timeout: 30000,
 });
 
@@ -56,8 +56,8 @@ export interface SessionInfo {
 
   provID: string;
   cityID: string;
-  areaCode:string;
-  medinsLv:string;
+  areaCode: string;
+  medinsLv: string;
   path: string;
   sessionID: string;
   errorMessageTime: string;
@@ -99,7 +99,7 @@ export const getDefaultSession = (): SessionInfo => {
         provID: session.provID || '',
         cityID: session.cityID || '',
         areaCode: session.areaCode || '',
-        medinsLv:session.medinsLv || '',
+        medinsLv: session.medinsLv || '',
         path: session.path || '',
         sessionID: session.sessionID || '',
         errorMessageTime: session.errorMessageTime || '',
@@ -136,8 +136,8 @@ export const getDefaultSession = (): SessionInfo => {
 
     provID: '',
     cityID: '',
-    areaCode:'',
-    medinsLv:'',
+    areaCode: '',
+    medinsLv: '',
     path: '',
     sessionID: '',
     errorMessageTime: '',

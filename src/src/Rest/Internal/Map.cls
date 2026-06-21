@@ -47,7 +47,8 @@ ClassMethod postMutipleParams() As %Status
     #Dim status as %Status
     #Dim %response As %CSP.Response
 	Set postObj=##class(%DynamicObject).%FromJSON(%request.Content)
-    Try {
+    Try
+    {
 	    set rtn=..CheckLisence()
 	    quit:rtn'=0
 		If $Data(%response) Set %response.ContentType="application/json"

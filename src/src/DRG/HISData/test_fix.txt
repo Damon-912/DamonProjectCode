@@ -1,0 +1,13 @@
+测试：从HIS返回值中获取医院信息
+
+根据之前的HIS返回值样例，医院信息应该在:
+- item.drgParams.result.fixmedinsCode
+- item.drgParams.result.fixmedinsName
+
+修改思路：
+1. 在GetInpatientData方法中，调用HIS接口后，从返回值中提取医院信息
+2. 将医院信息传递给SaveInpatientData方法
+3. 在SaveInpatientData方法中，保存就诊信息时同时保存医院信息到BSHISPatAdm表
+
+当前代码已经添加了FixmedinsCode和FixmedinsName字段到BSHISPatAdm表
+需要调整的是GetInpatientData方法中获取医院信息的逻辑

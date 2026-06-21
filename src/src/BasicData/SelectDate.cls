@@ -300,7 +300,7 @@ ClassMethod FindHospDetail(postObj)
 	try
 	{
 		set tStatement = ##class(%SQL.Statement).%New(1)
-		set sql= " SELECT ID, OrganizationCode as Code, Descripts, HospGrade_Dr AS MedinsLv,"
+		set sql= " SELECT ID, Code as HospCode, OrganizationCode as Code, Descripts, HospGrade_Dr AS MedinsLv,"
 		       _ " HospGrade_Dr->Descripts gradeDesc, HospType_Dr,HospType_Dr->descripts typeDesc, "
 		       _ " HospNature_Dr, HospNature_Dr->descripts natureDesc, ProvID_Dr,ProvID_Dr->Descripts proDesc, "
 		       _ " CityID_Dr, CityID_Dr->Descripts cityDesc,AreaID_Dr, AreaID_Dr->Descripts areaDesc, Active, "
@@ -320,6 +320,7 @@ ClassMethod FindHospDetail(postObj)
 		while result.%Next(.sc){
 			set dataObj={}
 			set dataObj.id=result.%Get("ID")
+			set dataObj.hospCode=result.%Get("HospCode")
 			set dataObj.code=result.%Get("Code")
 			set dataObj.descripts=result.%Get("Descripts")
 			

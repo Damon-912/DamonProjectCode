@@ -1,7 +1,7 @@
 ROUTINE src.BasicData.SelectDate.1 [Type=INT,Generated]
  ;src.BasicData.SelectDate.1
- ;Generated for class src.BasicData.SelectDate.  Do NOT edit. 05/25/2026 06:57:57PM
- ;;506F3077;src.BasicData.SelectDate
+ ;Generated for class src.BasicData.SelectDate.  Do NOT edit. 06/16/2026 03:44:44PM
+ ;;50397136;src.BasicData.SelectDate
  ;
 zFindHospDetail(postObj)
     new (postObj)
@@ -20,7 +20,7 @@ zFindHospDetail(postObj)
 	try
 	{
 		set tStatement = ##class(%SQL.Statement).%New(1)
-		set sql= " SELECT ID, OrganizationCode as Code, Descripts, HospGrade_Dr AS MedinsLv,"
+		set sql= " SELECT ID, Code as HospCode, OrganizationCode as Code, Descripts, HospGrade_Dr AS MedinsLv,"
 		       _ " HospGrade_Dr->Descripts gradeDesc, HospType_Dr,HospType_Dr->descripts typeDesc, "
 		       _ " HospNature_Dr, HospNature_Dr->descripts natureDesc, ProvID_Dr,ProvID_Dr->Descripts proDesc, "
 		       _ " CityID_Dr, CityID_Dr->Descripts cityDesc,AreaID_Dr, AreaID_Dr->Descripts areaDesc, Active, "
@@ -38,6 +38,7 @@ zFindHospDetail(postObj)
 		while result.%Next(.sc){
 			set dataObj={}
 			set dataObj.id=result.%Get("ID")
+			set dataObj.hospCode=result.%Get("HospCode")
 			set dataObj.code=result.%Get("Code")
 			set dataObj.descripts=result.%Get("Descripts")
 			set dataObj.provinceId=result.%Get("ProvID_Dr")
